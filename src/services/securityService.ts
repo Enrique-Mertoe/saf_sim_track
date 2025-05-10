@@ -170,13 +170,14 @@ export const securityService = {
     updateLastLogin: async (): Promise<void> => {
         const {user} = await authService.getCurrentUser();
         if (!user) throw new Error('No authenticated user found');
-
+        const date = new Date().toISOString();
         const {error} = await supabase
             .from('user_security_activity')
             .upsert({
                 user_id: user.id,
-                last_login: new Date().toISOString(),
-            });
+                last_login: date,
+            }, {onConflict: "user_id"});
+        console.log(error)
 
         if (error) throw error;
     },

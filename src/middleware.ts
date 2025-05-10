@@ -7,6 +7,7 @@ import {Database} from "@/types/database.types";
 const freePaths = [
     '/accounts',
     "/api/auth",
+    "/tt1",
 ];
 
 export async function middleware(req: NextRequest) {
@@ -26,13 +27,16 @@ export async function middleware(req: NextRequest) {
         // IMPORTANT: Check the session, not just the user
         const {data: {session}} = await supabase.auth.getSession();
         if (!session) {
+          // await Accounts.logout();
             const loginUrl = new URL('/accounts/login', req.url);
             loginUrl.searchParams.set('from', req.nextUrl.pathname);
             return NextResponse.redirect(loginUrl);
         }
+        // await Accounts.session(session, supabase)
         return res;
     } catch (error) {
         console.error("Auth middleware error:", error);
+        // await Accounts.logout();
         return NextResponse.redirect(new URL('/accounts/login', req.url));
     }
 }

@@ -1,6 +1,12 @@
+export enum UserStatus {
+    ACTIVE = "ACTIVE",
+    SUSPENDED = "SUSPENDED",
+    PENDING_APPROVAL = "PENDING_APPROVAL"
+}
+
 export enum UserRole {
     ADMIN = 'admin',
-    TEAM_LEADER = 'team_leader',
+    TEAM_LEADER = 'TEAM_LEADER',
     STAFF = 'staff'
 }
 

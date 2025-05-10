@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import {flushSession, getSession} from "@/lib/session";
 import {adminAuth, adminFirestore as admin} from "@/lib/firebase/admin";
 import {authService} from "@/services";
+import Accounts from "@/lib/accounts";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -185,46 +186,12 @@ async function register(data: CreateUserData) {
 }
 
 // Login user
-async function login(data: LoginData) {
+async function login(data: any) {
     try {
-        const {email, password} = data;
-
-        // Find the user
-        const user = await prisma.user.findUnique({
-            where: {email},
-            include: {
-                detail: true,
-                systemUser: true
-            }
-        });
-
-        if (!user) {
-            return makeResponse({error: "Invalid email or password"});
-        }
-
-        // Check password
-        const passwordMatch = await bcrypt.compare(password, user.password);
-
-        if (!passwordMatch) {
-            return makeResponse({error: "Invalid email or password"});
-        }
-
-        // Generate token
-        const token = jwt.sign({id: user.id}, JWT_SECRET, {expiresIn: '7d'});
-
-        // Set the token in a cookie
-        cookies().set('auth_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60, // 7 days
-            path: '/'
-        });
-
+        await Accounts.session(data)
         return makeResponse({
             ok: true,
             message: 'Login successful',
-            user: mapUser(user)
         });
     } catch (error) {
         return makeResponse({error: `Login failed: ${error}`});

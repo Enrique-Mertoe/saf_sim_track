@@ -1,10 +1,10 @@
 "use client"
 import {useRef, useState} from "react";
 import {ArrowLeft, Check, Info, Upload, UserPlus, X} from "lucide-react";
-import {addDoc, collection} from "firebase/firestore";
-import {getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import useApp from "@/ui/provider/AppProvider";
-import {db, storage} from "@/lib/firebase/client";
+import {onboardingService, storageService} from "@/services";
+import {generateUUID} from "@/helper";
+import {UserRole} from "@/models";
 
 export default function OnboardStaff() {
     const {user} = useApp();
@@ -28,12 +28,6 @@ export default function OnboardStaff() {
         idBackImageURL: null
     });
 
-    const staffRoles = [
-        {value: "van_ba", label: "Van BA"},
-        {value: "mpesaOnlyAgent", label: "Mpesa Only Agent"},
-        {value: "fieldAgent", label: "Field Agent"},
-        {value: "supportStaff", label: "Support Staff"}
-    ];
 
     const handleChange = (e) => {
         const {name, value} = e.target;
@@ -120,47 +114,55 @@ export default function OnboardStaff() {
         }
     };
 
-    const uploadImageToStorage = async (file, path) => {
-        if (!storage)
-            return console.log("no storage")
-        const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, file);
-        return await getDownloadURL(snapshot.ref);
-    };
-
     const handleSubmit = async (e) => {
+        if (step !== 3)
+            return
         e.preventDefault();
 
         try {
             setLoading(true);
             setError("");
 
-            // Upload ID images to Firebase Storage
-            const idFrontURL = await uploadImageToStorage(
-                formData.idFrontImage,
-                `id-images/${user?.id}/${formData.idNumber}_front_${Date.now()}`
+            const key =
+                `team-${generateUUID()}-${formData.idNumber}${Date.now()}`
+            const {url: idFrontURL} = await storageService.uploadIdFrontImage(
+                key,
+                formData.idFrontImage as File,
             );
 
-            const idBackURL = await uploadImageToStorage(
-                formData.idBackImage,
-                `id-images/${user?.id}/${formData.idNumber}_back_${Date.now()}`
+            const {url: idBackURL} = await storageService.uploadIdBackImage(
+                key,
+                formData.idBackImage as File,
             );
 
-            // Add staff request to Firestore
-            await addDoc(collection(db, "staffRequests"), {
-                staffName: formData.fullName,
-                staffIdNumber: formData.idNumber,
-                staffPhone: formData.phoneNumber,
-                staffMobigoNumber: formData.mobigoNumber,
-                staffRole: formData.staffRole,
-                idFrontImageURL: idFrontURL,
-                idBackImageURL: idBackURL,
-                teamLeaderId: user.id,
-                teamLeaderName: user.fullName,
-                teamId: user.teamId || null,
-                requestedAt: new Date().toISOString(),
-                status: "pending"
-            });
+            const {data, error} = await onboardingService.createRequest({
+                full_name: formData.fullName,
+                id_back_url: idBackURL,
+                id_front_url: idFrontURL,
+                id_number: formData.idNumber,
+                phone_number: formData.phoneNumber,
+                request_type: "ONBOARDING",
+                requested_by_id: user?.id ?? '',
+                team_id: user?.team_id,
+                role: UserRole.STAFF
+
+            })
+            if (error)
+                throw error
+            // await addDoc(collection(db, "staffRequests"), {
+            //     staffName: formData.fullName,
+            //     staffIdNumber: formData.idNumber,
+            //     staffPhone: formData.phoneNumber,
+            //     staffMobigoNumber: formData.mobigoNumber,
+            //     staffRole: formData.staffRole,
+            //     idFrontImageURL: idFrontURL,
+            //     idBackImageURL: idBackURL,
+            //     teamLeaderId: user.id,
+            //     teamLeaderName: user.fullName,
+            //     teamId: user.teamId || null,
+            //     requestedAt: new Date().toISOString(),
+            //     status: "pending"
+            // });
 
             setSuccess(true);
             resetForm();
@@ -389,12 +391,12 @@ export default function OnboardStaff() {
 
                     <div>
                         <p className="text-sm text-gray-500">Staff Role</p>
-                        <p className="font-medium">{staffRoles.find(r => r.value === formData.staffRole)?.label || formData.staffRole}</p>
+                        <p className="font-medium">{formData.staffRole}</p>
                     </div>
 
                     <div>
                         <p className="text-sm text-gray-500">Team Leader</p>
-                        <p className="font-medium">{user?.fullName || 'Current user'}</p>
+                        <p className="font-medium">{user?.full_name || 'Current user'}</p>
                     </div>
                 </div>
 

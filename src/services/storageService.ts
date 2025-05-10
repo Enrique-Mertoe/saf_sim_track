@@ -9,7 +9,7 @@ export const storageService = {
 
     const { data, error } = await supabase
       .storage
-      .from('id_documents')
+      .from('id-documents')
       .upload(fileName, file, {
         cacheControl: '3600',
         upsert: true
@@ -21,7 +21,7 @@ export const storageService = {
 
     const { data: { publicUrl } } = supabase
       .storage
-      .from('id_documents')
+      .from('id-documents')
       .getPublicUrl(data.path);
 
     return { url: publicUrl, error: null };
@@ -35,7 +35,7 @@ export const storageService = {
 
     const { data, error } = await supabase
       .storage
-      .from('id_documents')
+      .from('id-documents')
       .upload(fileName, file, {
         cacheControl: '3600',
         upsert: true
@@ -47,7 +47,7 @@ export const storageService = {
 
     const { data: { publicUrl } } = supabase
       .storage
-      .from('id_documents')
+      .from('id-documents')
       .getPublicUrl(data.path);
 
     return { url: publicUrl, error: null };
@@ -100,12 +100,12 @@ export const storageService = {
     // Get public URLs
     const { data: { publicUrl: frontUrl } } = supabase
       .storage
-      .from('customer_documents')
+      .from('customer-documents')
       .getPublicUrl(frontData.path);
 
     const { data: { publicUrl: backUrl } } = supabase
       .storage
-      .from('customer_documents')
+      .from('customer-documents')
       .getPublicUrl(backData.path);
 
     return {

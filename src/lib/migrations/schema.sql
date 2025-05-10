@@ -258,7 +258,7 @@ BEGIN
   RETURN EXISTS (
     SELECT 1 FROM users
     WHERE auth_user_id = auth.uid()
-    AND role = 'team_leader'
+     AND role ILIKE 'team_leader'
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -1,9 +1,7 @@
-// services/userService.ts
-// User management related functions
-
 import {createSupabaseClient} from "@/lib/supabase";
 import {UserCreate, UserUpdate} from "@/models";
 import {createServerSupabaseClient} from "@/lib/server-supabase";
+import {UserRole} from "@/types";
 
 // import { createSupabaseClient } from '../lib/supabase';
 // import { createServerSupabaseClient } from '../lib/server-supabase';

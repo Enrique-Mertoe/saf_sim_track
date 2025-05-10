@@ -66,3 +66,565 @@
     animation: fade-in 0.3s ease-out forwards;
   }
 }
+
+
+/*dialog css*/
+
+.modal {
+  --bs-dialog-zindex: 1055;
+  --bs-dialog-width: 500px;
+  --bs-dialog-padding: 1rem;
+  --bs-dialog-margin: 0.5rem;
+  --bs-dialog-color: ;
+  --bs-dialog-bg: var(--bs-body-bg);
+  --bs-dialog-border-color: var(--bs-border-color-translucent);
+  --bs-dialog-border-width: 0;
+  --bs-dialog-border-radius: 0.313rem;
+  --bs-dialog-box-shadow: var(--bs-box-shadow-sm);
+  --bs-dialog-inner-border-radius: 0.313rem;
+  --bs-dialog-header-padding-x: 1rem;
+  --bs-dialog-header-padding-y: 1rem;
+  --bs-dialog-header-padding: 1rem 1rem;
+  --bs-dialog-header-border-color: var(--bs-border-color);
+  --bs-dialog-header-border-width: var(--bs-border-width);
+  --bs-dialog-title-line-height: 1.5;
+  --bs-dialog-footer-gap: 0.5rem;
+  --bs-dialog-footer-bg: ;
+  --bs-dialog-footer-border-color: var(--bs-border-color);
+  --bs-dialog-footer-border-width: var(--bs-border-width);
+  position: fixed;
+  inset: 0;
+  z-index: var(--bs-dialog-zindex);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  outline: 0;
+  transition: opacity .3s;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-dialog {
+  position: relative;
+  width: auto;
+  margin: var(--bs-dialog-margin);
+  pointer-events: none;
+}
+
+.modal.fade .dialog-dialog {
+  transition: transform 0.2s ease-out;
+  transform: scale(1.07);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.fade .dialog-dialog {
+    -webkit-transition: none;
+    transition: none;
+  }
+}
+
+.modal.show .dialog-dialog {
+  -webkit-transform: none;
+  transform: none;
+}
+
+.modal.dialog-static .dialog-dialog {
+  -webkit-transform: scale(1.02);
+  transform: scale(1.02);
+}
+
+.dialog-dialog-scrollable {
+  height: calc(100% - var(--bs-dialog-margin) * 2);
+}
+
+.dialog-dialog-scrollable .dialog-content {
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.dialog-dialog-scrollable .dialog-body {
+  overflow-y: auto;
+}
+
+.dialog-dialog-centered {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  min-height: calc(100% - var(--bs-dialog-margin) * 2);
+}
+
+
+.dialog-content {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+  color: var(--bs-dialog-color);
+  pointer-events: auto;
+  background-color: #ffffff;
+  background-clip: padding-box;
+  border: var(--bs-dialog-border-width) solid var(--bs-dialog-border-color);
+  border-radius: var(--bs-dialog-border-radius);
+  outline: 0;
+}
+
+.dialog-backdrop {
+  --bs-backdrop-zindex: 1050;
+  --bs-backdrop-bg: #000;
+  --bs-backdrop-opacity: 0.5;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--bs-backdrop-zindex);
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bs-backdrop-bg);
+}
+
+.dialog-backdrop.fade {
+  opacity: 0;
+}
+
+.dialog-backdrop.show {
+  opacity: var(--bs-backdrop-opacity);
+}
+
+.dialog-header {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  padding: var(--bs-dialog-header-padding);
+  border-bottom: var(--bs-dialog-header-border-width) solid var(--bs-dialog-header-border-color);
+  border-top-left-radius: var(--bs-dialog-inner-border-radius);
+  border-top-right-radius: var(--bs-dialog-inner-border-radius);
+}
+
+.dialog-header .btn-close {
+  padding: calc(var(--bs-dialog-header-padding-y) * 0.5) calc(var(--bs-dialog-header-padding-x) * 0.5);
+  margin: calc(-0.5 * var(--bs-dialog-header-padding-y)) calc(-0.5 * var(--bs-dialog-header-padding-x)) calc(-0.5 * var(--bs-dialog-header-padding-y)) auto;
+}
+
+.dialog-title {
+  margin-bottom: 0;
+  line-height: var(--bs-dialog-title-line-height);
+}
+
+.dialog-body {
+  position: relative;
+  -webkit-box-flex: 1;
+  -ms-flex: 1 1 auto;
+  flex: 1 1 auto;
+  padding: var(--bs-dialog-padding);
+}
+
+.dialog-footer {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  padding: calc(var(--bs-dialog-padding) - var(--bs-dialog-footer-gap) * 0.5);
+  background-color: var(--bs-dialog-footer-bg);
+  border-top: var(--bs-dialog-footer-border-width) solid var(--bs-dialog-footer-border-color);
+  border-bottom-right-radius: var(--bs-dialog-inner-border-radius);
+  border-bottom-left-radius: var(--bs-dialog-inner-border-radius);
+}
+
+.dialog-footer > * {
+  margin: calc(var(--bs-dialog-footer-gap) * 0.5);
+}
+
+@media (min-width: 576px) {
+  .modal {
+    --bs-dialog-margin: 1.75rem;
+    --bs-dialog-box-shadow: var(--bs-box-shadow);
+  }
+
+  .dialog-dialog {
+    max-width: var(--bs-dialog-width);
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .dialog-sm {
+    --bs-dialog-width: 300px;
+  }
+}
+
+@media (min-width: 992px) {
+  .dialog-lg,
+  .dialog-xl {
+    --bs-dialog-width: 800px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dialog-xl {
+    --bs-dialog-width: 1140px;
+  }
+}
+
+.dialog-fullscreen {
+  width: 100vw;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+}
+
+.dialog-fullscreen .dialog-content {
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.dialog-fullscreen .dialog-header,
+.dialog-fullscreen .dialog-footer {
+  border-radius: 0;
+}
+
+.dialog-fullscreen .dialog-body {
+  overflow-y: auto;
+}
+
+@media (max-width: 575.98px) {
+  .dialog-fullscreen-sm-down {
+    width: 100vw;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+  }
+
+  .dialog-fullscreen-sm-down .dialog-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-sm-down .dialog-header,
+  .dialog-fullscreen-sm-down .dialog-footer {
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-sm-down .dialog-body {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dialog-fullscreen-md-down {
+    width: 100vw;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+  }
+
+  .dialog-fullscreen-md-down .dialog-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-md-down .dialog-header,
+  .dialog-fullscreen-md-down .dialog-footer {
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-md-down .dialog-body {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .dialog-fullscreen-lg-down {
+    width: 100vw;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+  }
+
+  .dialog-fullscreen-lg-down .dialog-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-lg-down .dialog-header,
+  .dialog-fullscreen-lg-down .dialog-footer {
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-lg-down .dialog-body {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .dialog-fullscreen-xl-down {
+    width: 100vw;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+  }
+
+  .dialog-fullscreen-xl-down .dialog-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-xl-down .dialog-header,
+  .dialog-fullscreen-xl-down .dialog-footer {
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-xl-down .dialog-body {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1399.98px) {
+  .dialog-fullscreen-xxl-down {
+    width: 100vw;
+    max-width: none;
+    height: 100%;
+    margin: 0;
+  }
+
+  .dialog-fullscreen-xxl-down .dialog-content {
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-xxl-down .dialog-header,
+  .dialog-fullscreen-xxl-down .dialog-footer {
+    border-radius: 0;
+  }
+
+  .dialog-fullscreen-xxl-down .dialog-body {
+    overflow-y: auto;
+  }
+}
+
+
+
+
+/* src/styles/dialog-animations.css */
+
+/* Fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-fade-in {
+  animation-name: fadeIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-in-out;
+}
+
+.animate-fade-out {
+  animation-name: fadeOut;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-in-out;
+}
+
+/* Zoom animations */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes zoomOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.animate-zoom-in {
+  animation-name: zoomIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.animate-zoom-out {
+  animation-name: zoomOut;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.6, -0.28, 0.735, 0.045);
+}
+
+/* Slide Up animations */
+@keyframes slideUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+}
+
+.animate-slide-up-in {
+  animation-name: slideUpIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.animate-slide-up-out {
+  animation-name: slideUpOut;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+/* Slide Down animations */
+@keyframes slideDownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+.animate-slide-down-in {
+  animation-name: slideDownIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.animate-slide-down-out {
+  animation-name: slideDownOut;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+/* Slide Left animations */
+@keyframes slideLeftIn {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideLeftOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+}
+
+.animate-slide-left-in {
+  animation-name: slideLeftIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.animate-slide-left-out {
+  animation-name: slideLeftOut;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+
+/* Slide Right animations */
+@keyframes slideRightIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRightOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+}
+
+.animate-slide-right-in {
+  animation-name: slideRightIn;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.animate-slide-right-out {
+  animation-name: slideRightOut;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}

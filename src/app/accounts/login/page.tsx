@@ -4,6 +4,8 @@ import {Activity, Eye, EyeOff, Lock, User, Phone, AlertCircle} from 'lucide-reac
 import {useRouter} from 'next/navigation';
 import toast from "react-hot-toast";
 import {authService} from "@/services";
+import useApp from "@/ui/provider/AppProvider";
+import {$} from "@/lib/request";
 
 // Define a utility for animations
 const fadeIn = (delay = 0) => {
@@ -14,6 +16,7 @@ const fadeIn = (delay = 0) => {
 };
 
 export default function LoginPage() {
+
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loginMethod, setLoginMethod] = useState('email');
@@ -85,6 +88,21 @@ export default function LoginPage() {
         setErrors(newErrors);
         return isValid;
     };
+    const signIn = async (data: any, cb?: Closure) => {
+        $.post<User>({
+            url: "/api/auth",
+            data: {
+                action: "login",
+                data
+            },
+            contentType: $.JSON
+        }).then(async () => {
+            cb?.(true)
+        }).catch(() => {
+            cb?.(false)
+            toast.error("unable to Login")
+        })
+    }
 
     const handleSubmit = async (e) => {
         if (e && e.preventDefault) {
@@ -97,29 +115,16 @@ export default function LoginPage() {
                 if (res.error) {
                     throw res.error.message;
                 }
-                if (res.data?.session)
-                    toast.success('Login successful');
-                location.href = "/dashboard";
-                // const userCredential = await signInWithEmailAndPassword(auth, formValues.email, formValues.password);
-                // const user = userCredential.user;
 
-                // Get ID token
-                // const idToken = await user.getIdToken();
-                //
-                // // Send token to backend to create a session cookie
-                // const response = await fetch('/api/auth/session', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //     },
-                //     body: JSON.stringify({idToken}),
-                // });
-                // if (response.ok) {
-                //     location.href = "/dashboard";
-                // } else {
-                //     const data = await response.json();
-                //     throw new Error(data.error || 'Failed to login user');
-                // }
+                if (res.data?.session)
+                    signIn(res.data?.session.user, ok => {
+                        if (ok) {
+                            toast.success('Login successful');
+                            location.href = "/dashboard";
+                        } else {
+                            throw ('Unable to login. Try again!');
+                        }
+                    })
             } catch (err: any) {
                 toast.error(`Login failed. ${err}`);
                 setErrors(prev => ({...prev, general: err.message || 'Failed to login'}));

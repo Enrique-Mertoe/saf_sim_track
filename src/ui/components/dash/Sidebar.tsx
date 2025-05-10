@@ -6,12 +6,12 @@ import Link from 'next/link';
 import {motion, AnimatePresence} from 'framer-motion';
 import {
     Award, Grid, LogOut, Map, Phone, PieChart,
-    RefreshCw, Settings, UserPlus, Users, Loader2
+    RefreshCw, Settings, UserPlus, Users,
 } from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
 import {create} from 'zustand';
 import Signal from "@/lib/Signal";
-import {$} from "@/lib/request";
+import {UserRole} from "@/models";
 
 // Store for tracking page loads and transitions
 interface NavigationStore {
@@ -203,20 +203,20 @@ export default function Sidebar() {
             {href: '/analytics', icon: PieChart, label: 'Analytics'}
         );
         // Role-specific items
-        if (user?.role === 'admin') {
+        if (user?.role === UserRole.ADMIN) {
             navItems.push(
-                {href: '/users', icon: Users, label: 'Users'},
-                {href: '/team', icon: UserPlus, label: 'Teams'},
+                {href: '/dashboard/users', icon: Users, label: 'Users'},
+                {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
                 {href: '/map', icon: Map, label: 'Location'},
                 {href: '/settings', icon: Settings, label: 'Settings'}
             );
-        } else if (user?.role === 'teamLeader') {
+        } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
-                {href: '/team', icon: UserPlus, label: 'My Team'},
+                {href: '/dashboard/team', icon: UserPlus, label: 'My Team'},
                 {href: '/map', icon: Map, label: 'Location'},
                 {href: '/settings', icon: Settings, label: 'Settings'}
             );
-        } else if (user?.role === 'staff') {
+        } else if (user?.role === UserRole.STAFF) {
             navItems.push(
                 {href: '/contacts', icon: Phone, label: 'Contacts'},
                 {href: '/achievements', icon: Award, label: 'Achievements'}

@@ -1,11 +1,5 @@
-// services/teamService.ts
-// Team management related functions
-
 import {createSupabaseClient} from "@/lib/supabase";
 import {TeamCreate, TeamUpdate} from "@/models";
-
-// import { createSupabaseClient } from '../lib/supabase';
-// import { Team, TeamCreate, TeamUpdate } from '../models';
 
 export const teamService = {
     // Get all teams
@@ -48,7 +42,6 @@ export const teamService = {
             .from('teams')
             .insert(teamData)
             .select()
-            .single();
     },
 
     // Update an existing team

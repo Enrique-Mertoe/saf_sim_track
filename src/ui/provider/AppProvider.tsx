@@ -5,6 +5,8 @@ import {User} from "@/models";
 import {AnimatePresence, motion} from "framer-motion";
 import {Loader2} from "lucide-react";
 import {useNavigationStore} from "@/lib/nav-store";
+import {$} from "@/lib/request";
+import {toast} from "react-hot-toast";
 
 interface AppContextType {
     user: User | null,
@@ -20,17 +22,23 @@ export const AppProvider: React.FC<{
     const [user, setUser] = useState<User | null>(null)
     const [pageLoading, setPageLoading] = useState<boolean>(true)
     const signOut = async () => {
-        // $.post({
-        //     url: "/api/auth",
-        //     data: {
-        //         action: "logout"
-        //     },
-        //     contentType: $.JSON
-        // }).then(() => location.reload())
-        // alert()
-        // await authService.signOut()
-        location.reload()
+        const t_id = toast.loading("Loging out.")
+        $.post<User>({
+            url: "/api/auth",
+            data: {
+                action: "logout"
+            },
+            contentType: $.JSON
+        }).then(async () => {
+            await authService.signOut();
+            location.reload();
+        }).catch(() => {
+            toast.error("unable to logout")
+        }).done(() => {
+            toast.dismiss(t_id)
+        })
     }
+
     const handler: AppContextType = {
         user,
         signOut, pageLoading

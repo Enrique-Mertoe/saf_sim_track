@@ -62,7 +62,15 @@ export const authService = {
 
     async changePassword(password: string) {
         const supabase = createSupabaseClient();
-        return await supabase.auth.updateUser({password});
+        console.log('password--', (await authService.getCurrentUser()).user)
+        supabase.auth.updateUser({password}).then(res=>{
+            alert()
+        }).catch(res=>{
+            alert()
+        });
+        return {
+            data: {}, error: {}
+        }
     },
     updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
         const supabase = createSupabaseClient();

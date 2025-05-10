@@ -1,7 +1,6 @@
 // types/index.ts
 import {Timestamp} from 'firebase/firestore';
-
-export type UserRole = 'admin' | 'teamLeader' | 'staff';
+import {UserRole} from "@/models";
 
 export interface Team {
     id: string;

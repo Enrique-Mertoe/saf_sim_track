@@ -1,4 +1,5 @@
-import {OnboardingRequestStatus, StaffType} from "@/models/types";
+import {OnboardingRequestStatus, StaffType, UserRole} from "@/models/types";
+import {User} from "@/models/users";
 
 export interface OnboardingRequest {
     id: string;
@@ -10,10 +11,12 @@ export interface OnboardingRequest {
     id_back_url: string;
     phone_number: string;
     mobigo_number?: string;
+    requestedBy?:User
     role: UserRole;
     team_id?: string;
     staff_type?: StaffType;
     status: OnboardingRequestStatus;
+    requestT_type: "ONBOARDING" | "DELETION";
     reviewed_by_id?: string;
     review_date?: string;
     review_notes?: string;
@@ -28,6 +31,7 @@ export interface OnboardingRequestCreate {
     phone_number: string;
     mobigo_number?: string;
     role: UserRole;
+    request_type: "ONBOARDING" | "DELETION";
     team_id?: string;
     staff_type?: StaffType;
 }
