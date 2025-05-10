@@ -1,8 +1,9 @@
 import CreateUserModal from "@/app/dashboard/users/components/CreateUserModal";
 import RequestDetailViewer from "@/app/dashboard/users/components/req_view";
-import {OnboardingRequest, User} from "@/models";
+import {OnboardingRequest, User, UserRole} from "@/models";
+import OnboardStaff from "@/app/dashboard/staff/page.view";
 
-export const CreateUser = (dialog: any, {onClose}: {
+export const CreateUser = (dialog: any, user: User, {onClose}: {
     onClose?: Closure
 }) => {
     const onclose = () => {
@@ -11,13 +12,14 @@ export const CreateUser = (dialog: any, {onClose}: {
     }
 
     const d = dialog.create({
-        content: <CreateUserModal onClose={onclose}/>,
+        content: user.role === UserRole.ADMIN ? <CreateUserModal onClose={onclose}/> :
+            user.role === UserRole.TEAM_LEADER ? <OnboardStaff/> : <></>,
         cancelable: !0,
         size: "lg"
     });
 }
 
-export const ViewRequest = (dialog: any,user:User, request: OnboardingRequest, {onClose}: {
+export const ViewRequest = (dialog: any, user: User, request: OnboardingRequest, {onClose}: {
     onClose?: Closure
 }) => {
     const onclose = () => {
