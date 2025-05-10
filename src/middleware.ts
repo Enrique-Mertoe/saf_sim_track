@@ -1,8 +1,7 @@
 // middleware.ts
 import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
-import {createMiddlewareClient} from '@supabase/auth-helpers-nextjs';
-import {Database} from "@/types/database.types";
+import {updateSession} from "@/lib/supabase/middleware";
 
 const freePaths = [
     '/accounts',
@@ -21,24 +20,25 @@ export async function middleware(req: NextRequest) {
         return res;
     }
 
-    const supabase = createMiddlewareClient<Database>({req, res});
-
-    try {
-        // IMPORTANT: Check the session, not just the user
-        const {data: {session}} = await supabase.auth.getSession();
-        if (!session) {
-          // await Accounts.logout();
-            const loginUrl = new URL('/accounts/login', req.url);
-            loginUrl.searchParams.set('from', req.nextUrl.pathname);
-            return NextResponse.redirect(loginUrl);
-        }
-        // await Accounts.session(session, supabase)
-        return res;
-    } catch (error) {
-        console.error("Auth middleware error:", error);
-        // await Accounts.logout();
-        return NextResponse.redirect(new URL('/accounts/login', req.url));
-    }
+    // const supabase = createMiddlewareClient<Database>({req, res});
+    //
+    // try {
+    //     // IMPORTANT: Check the session, not just the user
+    //     const {data: {session}} = await supabase.auth.getSession();
+    //     if (!session) {
+    //       // await Accounts.logout();
+    //         const loginUrl = new URL('/accounts/login', req.url);
+    //         loginUrl.searchParams.set('from', req.nextUrl.pathname);
+    //         return NextResponse.redirect(loginUrl);
+    //     }
+    //     // await Accounts.session(session, supabase)
+    //     return res;
+    // } catch (error) {
+    //     console.error("Auth middleware error:", error);
+    //     // await Accounts.logout();
+    //     return NextResponse.redirect(new URL('/accounts/login', req.url));
+    // }
+    return await updateSession(req)
 }
 
 export const config = {

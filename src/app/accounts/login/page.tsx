@@ -119,16 +119,17 @@ export default function LoginPage() {
                 if (res.error) {
                     throw res.error.message;
                 }
+                toast.success('Login successful');
 
-                if (res.data?.session)
-                    signIn(res.data?.session.user, ok => {
-                        if (ok) {
-                            toast.success('Login successful');
-                            location.href = "/dashboard";
-                        } else {
-                            throw ('Unable to login. Try again!');
-                        }
-                    })
+                // if (res.data?.session)
+                //     signIn(res.data?.session.user, ok => {
+                //         if (ok) {
+                //             toast.success('Login successful');
+                location.href = "/dashboard";
+                //         } else {
+                //             throw ('Unable to login. Try again!');
+                //         }
+                //     })
             } catch (err: any) {
                 toast.error(`Login failed. ${err}`);
                 setErrors(prev => ({...prev, general: err.message || 'Failed to login'}));

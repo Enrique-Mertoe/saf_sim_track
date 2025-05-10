@@ -1,4 +1,4 @@
-import {createSupabaseClient} from "@/lib/supabase";
+import { createSupabaseClient } from "@/lib/supabase/client";
 import {OnboardingRequestCreate, OnboardingRequestStatus, OnboardingRequestUpdate} from "@/models";
 
 export const onboardingService = {

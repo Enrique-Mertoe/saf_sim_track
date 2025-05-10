@@ -1,4 +1,4 @@
-import {createSupabaseClient} from "@/lib/supabase";
+import {createSupabaseClient} from "@/lib/supabase/client";
 import {authService} from "./authService";
 import {SecurityActivity} from "@/types";
 

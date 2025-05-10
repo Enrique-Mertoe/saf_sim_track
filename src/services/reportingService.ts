@@ -1,4 +1,4 @@
-import { createSupabaseClient } from "@/lib/supabase";
+import { createSupabaseClient } from "@/lib/supabase/client";
 
 export const reportingService = {
   // Get overall sales summary

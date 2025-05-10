@@ -1,6 +1,5 @@
-import {createSupabaseClient} from "@/lib/supabase";
-import {User} from "@/models";
 import {securityService} from "@/services/securityService";
+import {createSupabaseClient} from "@/lib/supabase/client";
 
 export const authService = {
     // Sign in a user
@@ -24,8 +23,9 @@ export const authService = {
     // Get the current user from session
     async getCurrentUser() {
         const supabase = createSupabaseClient();
-        const {data: {session}, error} = await supabase.auth.getSession();
-        if (error || !session) {
+        const {data, error} = await supabase.auth.getUser();
+        console.log(data, error)
+        if (error || !data.user) {
             return {user: null, error};
         }
 
@@ -33,11 +33,11 @@ export const authService = {
         const {data: profile, error: profileError} = await supabase
             .from('users')
             .select('*')
-            .eq('id', session.user.id)
+            .eq('id', data.user.id)
             .single();
 
         return {
-            user: profile as User,
+            user: profile,
             error: profileError
         };
     },
@@ -63,9 +63,9 @@ export const authService = {
     async changePassword(password: string) {
         const supabase = createSupabaseClient();
         console.log('password--', (await authService.getCurrentUser()).user)
-        supabase.auth.updateUser({password}).then(res=>{
+        supabase.auth.updateUser({password}).then(res => {
             alert()
-        }).catch(res=>{
+        }).catch(res => {
             alert()
         });
         return {

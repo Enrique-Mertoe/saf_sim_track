@@ -2,7 +2,7 @@ import type {Metadata} from "next";
 import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
 import "./main.scss";
-import {SupabaseProvider} from "@/app/_providers/supabase-provider";
+// import {SupabaseProvider} from "@/app/_providers/supabase-provider";
 import {Toaster} from 'react-hot-toast';
 import React from "react";
 import {DialogProvider} from "@/app/_providers/dialog";
@@ -32,13 +32,13 @@ export default async function RootLayout({
         <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-        <SupabaseProvider>
+        {/*<SupabaseProvider>*/}
             <DialogProvider>
                 {/*<DialogStyles/>*/}
                 {children}
             </DialogProvider>
             <Toaster position="bottom-center"/>
-        </SupabaseProvider>
+        {/*</SupabaseProvider>*/}
         </body>
         </html>
     );

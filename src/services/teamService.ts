@@ -1,4 +1,4 @@
-import {createSupabaseClient} from "@/lib/supabase";
+import { createSupabaseClient } from "@/lib/supabase/client";
 import {TeamCreate, TeamUpdate} from "@/models";
 
 export const teamService = {

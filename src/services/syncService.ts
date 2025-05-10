@@ -1,4 +1,4 @@
-import {createSupabaseClient} from "@/lib/supabase";
+import {createSupabaseClient} from "@/lib/supabase/client";
 import {ActivityLogCreate, SIMCardCreate} from "@/models";
 
 export const syncService = {

@@ -1,6 +1,6 @@
 import {User} from "@/models";
 import {flushSession, getSession, setSession} from "@/lib/session";
-import {createServerSupabaseClient} from "@/lib/server-supabase";
+import {createServerClient} from "@/lib/supabase/server";
 
 class Accounts {
     static inst: Accounts | null = null
@@ -10,19 +10,27 @@ class Accounts {
         if (!session)
             return
         if (session.id !== user?.id) {
-            const {data: profile} = await createServerSupabaseClient()
+            const {data: profile} = await (await createServerClient())
                 .from('users')
                 .select('*')
                 .eq('id', session.id)
                 .single();
-            console.log("profile",profile)
+            console.log("profile", profile)
             await setSession("session-user", profile);
         }
         return
     }
 
     static async user() {
-        return (await getSession("session-user")) as User | null | undefined;
+        const user = (await (await createServerClient()).auth.getUser()).data.user
+        if (!user)
+            return
+        const {data: profile} = await (await createServerClient())
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+        return profile as User
     }
 
     static async logout() {
