@@ -19,7 +19,8 @@ const eslintConfig = [
         argsIgnorePattern: "^_",
         ignoreRestSiblings: true
       }],
-      "@typescript-eslint/no-explicit-any": "off"
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/no-unescaped-entities": "off"
     },
   },
 ];
