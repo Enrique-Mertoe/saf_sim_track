@@ -108,7 +108,7 @@ export default function LoginPage() {
         })
     }
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
         if (e && e.preventDefault) {
             e.preventDefault();
         }

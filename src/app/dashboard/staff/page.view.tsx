@@ -1,13 +1,13 @@
 "use client"
 import {useRef, useState} from "react";
 import {ArrowLeft, Check, Info, Upload, UserPlus, X} from "lucide-react";
-import useApp from "@/ui/provider/AppProvider";
 import {onboardingService, storageService} from "@/services";
 import {generateUUID} from "@/helper";
-import {UserRole} from "@/models";
+import {User, UserRole} from "@/models";
 
-export default function OnboardStaff() {
-    const {user} = useApp();
+export default function OnboardStaff({user, onClose}: {
+    user: User, onClose: Closure
+}) {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -477,15 +477,15 @@ export default function OnboardStaff() {
     );
 
     return (
-        <div className="container mx-auto px-4 py-6">
-            <div className="flex items-center justify-between mb-6">
+        <div className="mx-auto px-4 py-6">
+            <div className="flex items-center justify-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 flex items-center">
                     <UserPlus size={24} className="mr-2 text-green-600"/>
                     Onboard Staff
                 </h1>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6 max-w-3xl mx-auto">
+            <div >
                 {success ? (
                     renderSuccess()
                 ) : (

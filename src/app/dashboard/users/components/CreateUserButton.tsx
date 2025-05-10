@@ -1,15 +1,19 @@
 'use client';
 import CreateUserModal from './CreateUserModal';
 import {useDialog} from "@/app/_providers/dialog";
+import {CreateUser} from "@/ui/shortcuts";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function CreateUserButton() {
     const dialog = useDialog()
+    const {user} = useApp();
     const createHandler = () => {
-        const d = dialog.create({
-            content: <CreateUserModal onClose={() => d.dismiss()}/>,
-            size: "lg",
-            cancelable:false
-        })
+        // const d = dialog.create({
+        //     content: <CreateUserModal onClose={() => d.dismiss()}/>,
+        //     size: "lg",
+        //     cancelable:false
+        // })
+        CreateUser(dialog, user!, {})
     }
 
     return (
