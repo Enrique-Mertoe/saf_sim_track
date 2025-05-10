@@ -135,7 +135,7 @@ export default function OnboardStaff() {
                 formData.idBackImage as File,
             );
 
-            const {data, error} = await onboardingService.createRequest({
+            const {error} = await onboardingService.createRequest({
                 full_name: formData.fullName,
                 id_back_url: idBackURL,
                 id_front_url: idFrontURL,
@@ -426,7 +426,7 @@ export default function OnboardStaff() {
             <div className="bg-yellow-50 p-4 rounded-lg flex items-start space-x-3">
                 <Info size={20} className="text-yellow-600 flex-shrink-0 mt-0.5"/>
                 <div className="text-sm text-yellow-700">
-                    <p>Your request will be sent to an administrator for approval. You'll be notified once the request
+                    <p>Your request will be sent to an administrator for approval. You`ll be notified once the request
                         is approved or rejected.</p>
                 </div>
             </div>

@@ -1,11 +1,6 @@
 import {createSupabaseClient} from "@/lib/supabase";
-import {UserCreate, UserUpdate} from "@/models";
+import {UserCreate, UserRole, UserUpdate} from "@/models";
 import {createServerSupabaseClient} from "@/lib/server-supabase";
-import {UserRole} from "@/types";
-
-// import { createSupabaseClient } from '../lib/supabase';
-// import { createServerSupabaseClient } from '../lib/server-supabase';
-// import { User, UserCreate, UserUpdate, UserRole } from '../models';
 
 export const userService = {
     // Get all users (admins only)

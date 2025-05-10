@@ -182,7 +182,7 @@ export default function Sidebar() {
     };
 
     const toggleSidebar = () => {
-        setIsCollapsed(prev => {
+        setIsCollapsed(() => {
             const v = !isCollapsed;
             Signal.trigger("param-change", v)
             return v

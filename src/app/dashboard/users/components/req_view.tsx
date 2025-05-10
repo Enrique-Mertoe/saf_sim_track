@@ -37,7 +37,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
     };
 
     // Format date in a readable way
-    const formatDate = (dateString) => {
+    const formatDate = (dateString: string | number | Date) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -48,13 +48,13 @@ export default function RequestDetailViewer({request, user, onClose}: {
     };
 
     // Get appropriate status color
-    const getStatusColor = (status) => {
+    const getStatusColor = (status: OnboardingRequestStatus) => {
         switch (status) {
-            case 'pending':
+            case OnboardingRequestStatus.PENDING:
                 return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-            case 'approved':
+            case OnboardingRequestStatus.APPROVED:
                 return 'bg-green-100 text-green-800 border-green-300';
-            case 'rejected':
+            case OnboardingRequestStatus.REJECTED:
                 return 'bg-red-100 text-red-800 border-red-300';
             default:
                 return 'bg-gray-100 text-gray-800 border-gray-300';
@@ -62,7 +62,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
     };
 
     // Get appropriate request type color
-    const getRequestTypeColor = (type) => {
+    const getRequestTypeColor = (type: string) => {
         return type === 'ONBOARDING'
             ? 'bg-blue-100 text-blue-800 border-blue-300'
             : 'bg-purple-100 text-purple-800 border-purple-300';

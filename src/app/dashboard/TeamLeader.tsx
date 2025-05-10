@@ -1,5 +1,5 @@
 "use client"
-import {useState, useEffect} from 'react';
+import {useState, useEffect, SetStateAction} from 'react';
 import {
     UserPlus,
     Award,
@@ -149,11 +149,11 @@ const qualityDistributionData = [
 const COLORS = ['#4ade80', '#f87171'];
 
 export default function TeamLeader() {
-     const router = useRouter();
+    const router = useRouter();
     const [mounted, setMounted] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedStaff, setSelectedStaff] = useState(null);
-    const [teamStats, setTeamStats] = useState({
+    const [_isLoading, setIsLoading] = useState(true);
+    const [_selectedStaff, _setSelectedStaff] = useState(null);
+    const [_teamStats, setTeamStats] = useState({
         totalMembers: 0,
         activeSIM: 0,
         qualityPercentage: 0,
@@ -181,7 +181,7 @@ export default function TeamLeader() {
         return () => clearTimeout(timer);
     }, []);
 
-    const toggleStaffDetails = (id) => {
+    const toggleStaffDetails = (id: number | SetStateAction<null>) => {
         if (expandedStaff === id) {
             setExpandedStaff(null);
         } else {

@@ -1,7 +1,7 @@
 'use client';
 
-import {useEffect, useState} from 'react';
-import {OnboardingRequest, OnboardingRequestStatus, User} from "@/models";
+import {useCallback, useEffect, useState} from 'react';
+import {OnboardingRequest, OnboardingRequestStatus, User, UserStatus} from "@/models";
 import UserTable from "@/app/dashboard/users/components/UserTable";
 import CreateUserButton from "@/app/dashboard/users/components/CreateUserButton";
 import UserFilters from "@/app/dashboard/users/components/UserFilters";
@@ -23,17 +23,18 @@ export default function UsersPage() {
         search: '',
     });
 
+    const fetchUsers = useCallback(async () => {
+        try {
+            const {data} = await userService.getAllUsers()
+            setUsers(data as User[]);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const {data} = await userService.getAllUsers()
-                setUsers(data as User[]);
-            } catch (error) {
-                console.error('Error fetching users:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
         const fetchOnboard = async () => {
             try {
                 const {data} = await onboardingService.getAllRequests();
@@ -47,28 +48,29 @@ export default function UsersPage() {
 
         fetchUsers().then();
         fetchOnboard().then();
-    }, [ filters]);
+    }, [filters]);
 
     const handleFilterChange = (newFilters: any) => {
         setFilters({...filters, ...newFilters});
     };
 
-    const handleStatusChange = async (userId: string, newStatus: 'ACTIVE' | 'SUSPENDED') => {
+    const handleStatusChange = async (_userId: string, _newStatus: UserStatus) => {
         try {
-            const response = await fetch(`/api/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({status: newStatus}),
-            });
-
-            if (response.ok) {
-                // Update the user in the state
-                setUsers(users.map(user =>
-                    user.id === userId ? {...user, status: newStatus} : user
-                ));
-            }
+            fetchUsers().then();
+            //     const response = await fetch(`/api/users/${userId}/status`, {
+            //         method: 'PUT',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //         },
+            //         body: JSON.stringify({status: newStatus}),
+            //     });
+            //
+            //     if (response.ok) {
+            //         // Update the user in the state
+            //         setUsers(users.map(user =>
+            //             user.id === userId ? {...user, status: newStatus} : user
+            //         ));
+            //     }
         } catch (error) {
             console.error('Error updating user status:', error);
         }
