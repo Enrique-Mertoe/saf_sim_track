@@ -1,5 +1,5 @@
 import CreateUserModal from "@/app/dashboard/users/components/CreateUserModal";
-import RequestDetailViewer from "@/app/dashboard/users/components/req_view";
+import RequestDetailViewer from "@/app/dashboard/users/components/OnboardViewer";
 import {OnboardingRequest, User, UserRole} from "@/models";
 import OnboardStaff from "@/app/dashboard/staff/page.view";
 

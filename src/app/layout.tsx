@@ -6,6 +6,7 @@ import "./main.scss";
 import {Toaster} from 'react-hot-toast';
 import React from "react";
 import {DialogProvider} from "@/app/_providers/dialog";
+import {AlertDialog} from "@/ui/alert/AlertDialog";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default async function RootLayout({
                 {children}
             </DialogProvider>
             <Toaster position="bottom-center"/>
+        <AlertDialog/>
         {/*</SupabaseProvider>*/}
         </body>
         </html>

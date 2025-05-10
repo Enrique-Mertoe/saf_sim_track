@@ -14,6 +14,7 @@ import {useDialog} from "@/app/_providers/dialog";
 import {toast} from "react-hot-toast";
 import {$} from "@/lib/request";
 import {generatePassword, suggestRejection} from "@/helper";
+import alert from "@/ui/alert";
 
 // Define the necessary types based on your existing code
 export default function RequestDetailViewer({request, user, onClose}: {
@@ -122,6 +123,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                 id_back_url: request.id_back_url,
                 password: generatePassword()
             };
+            console.log(r_data)
             const addUser = () => {
                 return new Promise((resolve: any, reject: any) => {
                     $.post({
@@ -323,14 +325,14 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                                 <span className="text-gray-500">Target User:</span>
                                                                 <span
                                                                     className="font-medium">{
-                                                                     //@ts-ignore
+                                                                    //@ts-ignore
                                                                     request.targetUser?.fullName || 'N/A'}</span>
                                                             </li>
                                                             <li className="flex justify-between">
                                                                 <span className="text-gray-500">ID Number:</span>
                                                                 <span
                                                                     className="font-medium">{
-                                                                     //@ts-ignore
+                                                                    //@ts-ignore
                                                                     request.targetUser?.idNumber || 'N/A'}</span>
                                                             </li>
                                                             <li className="flex justify-between">
@@ -355,7 +357,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                             <span className="text-gray-500">Reviewed By:</span>
                                                             <span
                                                                 className="font-medium">{
-                                                                 //@ts-ignore
+                                                                //@ts-ignore
                                                                 request.reviewedBy?.full_name || 'N/A'}</span>
                                                         </li>
                                                         <li className="flex justify-between">
@@ -422,7 +424,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                         <h3 className="font-medium text-lg mt-1">Request {request.status.charAt(0).toUpperCase() + request.status.slice(1)}</h3>
                                                         <p className="text-gray-600 mt-1">
                                                             {
-                                                                 //@ts-ignore
+                                                                //@ts-ignore
                                                                 request.reviewedBy?.full_name || 'Administrator'} {request.status} the
                                                             request
                                                             {request.review_notes && `: "${request.review_notes}"`}
@@ -486,7 +488,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                                 onError={(e) => {
                                                                     storageService.getDataImage(request.id_front_url)
                                                                         .then(res => {
-                                                                             //@ts-ignore
+                                                                            //@ts-ignore
                                                                             e.target.src = res
                                                                         });
                                                                 }}
@@ -524,7 +526,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                                 onError={(e) => {
                                                                     storageService.getDataImage(request.id_back_url)
                                                                         .then(res => {
-                                                                             //@ts-ignore
+                                                                            //@ts-ignore
                                                                             e.target.src = res
                                                                         });
                                                                 }}
@@ -551,57 +553,90 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 disabled={approving}
-                                className="px-4 py-2 cursor-pointer bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                className="px-4 py-1 cursor-pointer bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                                 onClick={handleClose}
                             >
                                 Close
                             </motion.button>
 
-                            {user.role === UserRole.ADMIN && (
-                                <>
-                                    {request.status !== OnboardingRequestStatus.REJECTED &&
-                                        <motion.button
-                                            type={"button"}
-                                            whileHover={{scale: 1.05}}
-                                            whileTap={{scale: 0.95}}
-                                            onClick={() => {
-                                                reject()
-                                            }}
-                                            disabled={approving}
-                                            className="px-4 py-2 cursor-pointer bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                                        >
-                                            Reject
-                                        </motion.button>
-                                    }
-                                    {request.status !== OnboardingRequestStatus.APPROVED &&
-                                        <motion.button
-                                            onClick={() => {
-                                                approve()
-                                            }}
-                                            whileHover={{scale: 1.05}}
-                                            whileTap={{scale: 0.95}}
-                                            disabled={approving}
-                                            className="px-4 py-2 cursor-pointer flex place-items-center bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                                        >
-                                            {approving ? (
-                                                <>
-                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                         viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10"
-                                                                stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor"
-                                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    Approving...
-                                                </>
-                                            ) : (
-                                                'Approve'
-                                            )}
-                                        </motion.button>
-                                    }
-                                </>
-                            )}
+                            {user.role === UserRole.ADMIN ? (
+                                    <>
+                                        {request.status !== OnboardingRequestStatus.REJECTED &&
+                                            <motion.button
+                                                type={"button"}
+                                                whileHover={{scale: 1.05}}
+                                                whileTap={{scale: 0.95}}
+                                                onClick={() => {
+                                                    reject()
+                                                }}
+                                                disabled={approving}
+                                                className="px-4 py-1 cursor-pointer bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                            >
+                                                Reject
+                                            </motion.button>
+                                        }
+                                        {request.status !== OnboardingRequestStatus.APPROVED &&
+                                            <motion.button
+                                                onClick={() => {
+                                                    approve()
+                                                }}
+                                                whileHover={{scale: 1.05}}
+                                                whileTap={{scale: 0.95}}
+                                                disabled={approving}
+                                                className="px-4 py-1 cursor-pointer flex place-items-center bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                            >
+                                                {approving ? (
+                                                    <>
+                                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                             xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                             viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10"
+                                                                    stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor"
+                                                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Approving...
+                                                    </>
+                                                ) : (
+                                                    'Approve'
+                                                )}
+                                            </motion.button>
+                                        }
+                                    </>
+                                ) :
+                                <motion.button
+                                    whileHover={{scale: 1.05}}
+                                    whileTap={{scale: 0.95}}
+                                    disabled={approving}
+                                    className="px-4 py-1 cursor-pointer bg-red-500 text-white rounded-lg hover:bg-red-400 transition-colors"
+                                    onClick={() => {
+                                        alert.confirm({
+                                            title: "Onboarding request",
+                                            message: "This request will be deleted. Confirm to delete!",
+                                            onConfirm: () => {
+
+                                            },
+                                            type: alert.ERROR
+                                        })
+                                    }}
+                                >
+                                    {approving ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                 viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor"
+                                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Deleteing...
+                                        </>
+                                    ) : (
+                                        'Delete'
+                                    )}
+                                </motion.button>
+                            }
                         </div>
                     </motion.div>
                 </div>
@@ -610,7 +645,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
         </AnimatePresence>
     );
 }
- //@ts-ignore
+//@ts-ignore
 const RejectRequest = ({request, onClose, user, options}) => {
     const [rejectNotes, setRejectNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -622,7 +657,7 @@ const RejectRequest = ({request, onClose, user, options}) => {
         if (!options.reason && !rejectNotes.trim()) {
             setError('Please provide rejection notes');
             if (textareaRef.current) {
-                 //@ts-ignore
+                //@ts-ignore
                 textareaRef.current.focus();
             }
             return;
