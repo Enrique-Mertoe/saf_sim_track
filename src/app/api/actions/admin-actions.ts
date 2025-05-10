@@ -1,11 +1,11 @@
 import {NextResponse} from "next/server";
 import {UserCreate} from "@/models";
-import {createServerClient} from "@/lib/supabase/server";
+import {createSuperClient} from "@/lib/supabase/server";
 
 
 
 export async function createUser(userData: UserCreate) {
-    const serverSupabase = await createServerClient();
+    const serverSupabase = await createSuperClient();
 
     try {
         // First create the auth user
