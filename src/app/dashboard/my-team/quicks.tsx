@@ -69,13 +69,13 @@ export const TeamStats = () => {
     visible: { opacity: 1, y: 0 }
   };
 
-  const getStatusColor = (percentage) => {
+  const getStatusColor = (percentage:any) => {
     if (percentage >= 80) return 'bg-emerald-500';
     if (percentage >= 50) return 'bg-amber-500';
     return 'bg-rose-500';
   };
 
-  const handleCardClick = (cardName) => {
+  const handleCardClick = (cardName:any) => {
     setShowDetails(showDetails === cardName ? null : cardName);
   };
 

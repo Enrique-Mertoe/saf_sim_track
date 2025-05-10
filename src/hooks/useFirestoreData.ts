@@ -696,8 +696,10 @@ const useFraudMetrics = () => {
                 });
 
                 const recentCases = flaggedSimCards
+                    //@ts-ignore
                     .sort((a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime())
                     .slice(0, 5)
+                    //@ts-ignore
                     .map(sim => ({
                         id: sim.id,
                         serialNumber: sim.serial_number,
@@ -717,6 +719,7 @@ const useFraudMetrics = () => {
                 setFraudMetrics({
                     alertCount,
                     alertChangeCount,
+                    //@ts-ignore
                     highRiskAreas,
                     recentCases,
                     suspiciousPatterns

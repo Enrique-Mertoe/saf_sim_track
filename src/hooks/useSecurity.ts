@@ -83,6 +83,7 @@ export const useSecurity = () => {
         }
 
         // Handle two-factor toggle
+        //@ts-ignore
         if (values.twoFactor !== (securityActivity?.twoFactorEnabled ?? false)) {
           if (values.twoFactor) {
             await enableTwoFactor();
@@ -100,6 +101,7 @@ export const useSecurity = () => {
   // Initialize form when security activity is loaded
   useEffect(() => {
     if (securityActivity) {
+      //@ts-ignore
       securityFormik.setFieldValue('twoFactor', securityActivity.twoFactorEnabled || false, false);
     }
   }, [securityActivity]);

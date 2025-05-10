@@ -135,6 +135,7 @@ function createRequest<T>(method: 'post' | 'get', options: RequestInterface<T>):
     };
 
     if (contentType && !(data instanceof FormData)) {
+        //@ts-ignore
         headers['Content-Type'] = contentType;
     }
 

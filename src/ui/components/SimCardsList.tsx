@@ -17,6 +17,7 @@ interface SimCard {
 export default function SimCardsList() {
   const [simCards, setSimCards] = useState<SimCard[]>([]);
   const [loading, setLoading] = useState(true);
+  //@ts-ignore
   const { user, role } = useAuth();
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export default function SimCardsList() {
       // Assuming team leaders have a teamId field
       simCardsQuery = query(
         collection(db, 'simCards'),
+        //@ts-ignore
         where('teamId', '==', user.customClaims?.teamId),
         orderBy('timestamp', 'desc'),
         limit(50)

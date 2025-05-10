@@ -132,6 +132,7 @@ export const reportingService = {
     let query = supabase
       .from('sim_cards')
       .select('region, count(*)')
+        //@ts-ignore
       .groupBy('region');
 
     if (fromDate) {

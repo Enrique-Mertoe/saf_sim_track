@@ -170,14 +170,6 @@ const mockOnboardingRequests: OnboardingRequest[] = [
     status: "PENDING",
     createdAt: "2025-05-09T11:30:00Z"
   },
-  {
-    id: "r3",
-    requestType: "DELETION",
-    requestedBy: mockUsers[4],
-    targetUser: mockUsers[6],
-    status: "PENDING",
-    createdAt: "2025-05-10T08:45:00Z"
-  }
 ];
 
 // User Management Page Component

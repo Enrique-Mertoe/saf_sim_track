@@ -73,7 +73,6 @@ export const InputField: React.FC<InputFieldProps> = ({
 };
 
 // components/auth/Button.tsx
-import React from 'react';
 
 interface ButtonProps {
   type: 'button' | 'submit' | 'reset';
@@ -125,8 +124,6 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-// components/auth/Alert.tsx
-import React from 'react';
 
 interface AlertProps {
   type: 'error' | 'warning' | 'success' | 'info';
@@ -150,8 +147,6 @@ export const Alert: React.FC<AlertProps> = ({ type, message, icon }) => {
   );
 };
 
-// components/auth/LoadingSpinner.tsx
-import React from 'react';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -177,7 +172,6 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 };
 
 // components/auth/AuthLayout.tsx
-import React from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 
