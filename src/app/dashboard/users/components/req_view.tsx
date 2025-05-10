@@ -322,12 +322,16 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                             <li className="flex justify-between">
                                                                 <span className="text-gray-500">Target User:</span>
                                                                 <span
-                                                                    className="font-medium">{request.targetUser?.fullName || 'N/A'}</span>
+                                                                    className="font-medium">{
+                                                                     //@ts-ignore
+                                                                    request.targetUser?.fullName || 'N/A'}</span>
                                                             </li>
                                                             <li className="flex justify-between">
                                                                 <span className="text-gray-500">ID Number:</span>
                                                                 <span
-                                                                    className="font-medium">{request.targetUser?.idNumber || 'N/A'}</span>
+                                                                    className="font-medium">{
+                                                                     //@ts-ignore
+                                                                    request.targetUser?.idNumber || 'N/A'}</span>
                                                             </li>
                                                             <li className="flex justify-between">
                                                                 <span className="text-gray-500">Reason:</span>
@@ -350,7 +354,9 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                         <li className="flex justify-between">
                                                             <span className="text-gray-500">Reviewed By:</span>
                                                             <span
-                                                                className="font-medium">{request.reviewedBy?.full_name || 'N/A'}</span>
+                                                                className="font-medium">{
+                                                                 //@ts-ignore
+                                                                request.reviewedBy?.full_name || 'N/A'}</span>
                                                         </li>
                                                         <li className="flex justify-between">
                                                             <span className="text-gray-500">Review Date:</span>
@@ -415,7 +421,9 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                         <p className="text-sm text-gray-500">{formatDate(request.review_date || request.created_at)}</p>
                                                         <h3 className="font-medium text-lg mt-1">Request {request.status.charAt(0).toUpperCase() + request.status.slice(1)}</h3>
                                                         <p className="text-gray-600 mt-1">
-                                                            {request.reviewedBy?.full_name || 'Administrator'} {request.status} the
+                                                            {
+                                                                 //@ts-ignore
+                                                                request.reviewedBy?.full_name || 'Administrator'} {request.status} the
                                                             request
                                                             {request.review_notes && `: "${request.review_notes}"`}
                                                         </p>
@@ -478,6 +486,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                                 onError={(e) => {
                                                                     storageService.getDataImage(request.id_front_url)
                                                                         .then(res => {
+                                                                             //@ts-ignore
                                                                             e.target.src = res
                                                                         });
                                                                 }}
@@ -515,6 +524,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                                 onError={(e) => {
                                                                     storageService.getDataImage(request.id_back_url)
                                                                         .then(res => {
+                                                                             //@ts-ignore
                                                                             e.target.src = res
                                                                         });
                                                                 }}
@@ -600,7 +610,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
         </AnimatePresence>
     );
 }
-
+ //@ts-ignore
 const RejectRequest = ({request, onClose, user, options}) => {
     const [rejectNotes, setRejectNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -612,6 +622,7 @@ const RejectRequest = ({request, onClose, user, options}) => {
         if (!options.reason && !rejectNotes.trim()) {
             setError('Please provide rejection notes');
             if (textareaRef.current) {
+                 //@ts-ignore
                 textareaRef.current.focus();
             }
             return;

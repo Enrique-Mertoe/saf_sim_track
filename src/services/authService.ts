@@ -65,7 +65,7 @@ export const authService = {
         console.log('password--', (await authService.getCurrentUser()).user)
         supabase.auth.updateUser({password}).then(res => {
             alert()
-        }).catch(res => {
+        }).catch(_res => {
             alert()
         });
         return {

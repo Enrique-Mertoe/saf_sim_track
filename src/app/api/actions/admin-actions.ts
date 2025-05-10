@@ -13,7 +13,7 @@ class AdminActions {
         const {error} = await userService.createUser(data)
         console.log(error)
         if (error) {
-            return makeResponse({error: error.message})
+            return makeResponse({error: (error as any).message})
         }
         return makeResponse({ok: true})
     }

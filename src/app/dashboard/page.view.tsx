@@ -83,6 +83,7 @@ export default function SafaricomDashboard() {
                 }
 
                 // Aggregate data by month
+                //@ts-ignore
                 simData.forEach(sim => {
                     const saleDate = new Date(sim.sale_date);
                     const monthKey = monthNames[saleDate.getMonth()];
@@ -102,22 +103,30 @@ export default function SafaricomDashboard() {
 
                 const chartData = Object.keys(monthlySales).map(month => ({
                     name: month,
+                    //@ts-ignore
                     sales: monthlySales[month],
+                    //@ts-ignore
                     activations: monthlyActivations[month]
                 })).reverse();
-
+                //@ts-ignore
                 setSalesData(chartData);
 
                 // Calculate total stats
                 const totalSalesCount = simData.length;
+                //@ts-ignore
                 const activatedCount = simData.filter(sim => sim.status === SIMStatus.ACTIVATED).length;
+                //@ts-ignore
                 const pendingCount = simData.filter(sim => sim.status === SIMStatus.PENDING).length;
+                //@ts-ignore
                 const flaggedCount = simData.filter(sim => sim.status === SIMStatus.FLAGGED).length;
 
                 // Set pie chart data
                 setPieData([
+                    //@ts-ignore
                     {name: 'Activated', value: Math.round((activatedCount / totalSalesCount) * 100) || 0},
+                    //@ts-ignore
                     {name: 'Pending', value: Math.round((pendingCount / totalSalesCount) * 100) || 0},
+                    //@ts-ignore
                     {name: 'Flagged', value: Math.round((flaggedCount / totalSalesCount) * 100) || 0}
                 ]);
 
@@ -131,8 +140,10 @@ export default function SafaricomDashboard() {
 
                 // Get recent SIM cards
                 const recent = simData
+                    //@ts-ignore
                     .sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date))
                     .slice(0, 4)
+                    //@ts-ignore
                     .map(sim => ({
                         id: sim.id,
                         serial: sim.serial_number,
@@ -159,7 +170,7 @@ export default function SafaricomDashboard() {
                         target: 4000 // This would ideally come from a targets table
                     });
                 }
-
+                //@ts-ignore
                 setTeamPerformance(teamStats.slice(0, 4)); // Take top 4 teams
             }
         } catch (error) {
@@ -170,13 +181,13 @@ export default function SafaricomDashboard() {
     };
 
     useEffect(() => {
-        fetchDashboardData();
+        fetchDashboardData().then();
     }, [role]);
-
+    //@ts-ignore
     const toggleRole = () => {
         setRole(role === 'admin' ? 'teamLeader' : 'admin');
     };
-
+    //@ts-ignore
     const StatCard = ({title, value, icon, color, change}) => (
         <motion.div
             initial={{opacity: 0, y: 20}}
@@ -421,6 +432,7 @@ export default function SafaricomDashboard() {
                                     ) : recentSims.length > 0 ? (
                                         recentSims.map((sim, index) => (
                                             <motion.tr
+                                                //@ts-ignore
                                                 key={sim.id}
                                                 initial={{opacity: 0, y: 10}}
                                                 animate={{opacity: 1, y: 0}}
@@ -428,18 +440,29 @@ export default function SafaricomDashboard() {
                                                 whileHover={{backgroundColor: '#f9fafb'}}
                                             >
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {sim.serial.length > 10 ? `${sim.serial.substring(0, 5)}...${sim.serial.slice(-4)}` : sim.serial}
+
+                                                    {
+                                                        //@ts-ignore
+                                                        sim.serial.length > 10 ? `${sim.serial.substring(0, 5)}...${sim.serial.slice(-4)}` : sim.serial}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{sim.date}</td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {sim.agent.length > 10 ? `${sim.agent.substring(0, 5)}...` : sim.agent}
+
+                                                    {
+                                                        //@ts-ignore
+                                                        sim.agent.length > 10 ? `${sim.agent.substring(0, 5)}...` : sim.agent}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {sim.customer.length > 10 ? `${sim.customer.substring(0, 5)}...` : sim.customer}
+
+                                                    {
+                                                        //@ts-ignore
+                                                        sim.customer.length > 10 ? `${sim.customer.substring(0, 5)}...` : sim.customer}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              //@ts-ignore
                               sim.status === SIMStatus.ACTIVATED ? 'bg-green-100 text-green-800' :
+                                  //@ts-ignore
                                   sim.status === SIMStatus.PENDING ? 'bg-yellow-100 text-yellow-800' :
                                       'bg-red-100 text-red-800'
                           }`}>
@@ -504,15 +527,22 @@ export default function SafaricomDashboard() {
                                 <div className="flex justify-between items-center text-sm text-gray-600">
                                     <div className="flex items-center">
                                         <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                                        <span>Activated ({pieData[0]?.value || 0}%)</span>
+                                        <span>Activated ({
+
+                                             //@ts-ignore
+                                            pieData[0]?.value || 0}%)</span>
                                     </div>
                                     <div className="flex items-center">
                                         <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
-                                        <span>Pending ({pieData[1]?.value || 0}%)</span>
+                                        <span>Pending ({
+                                             //@ts-ignore
+                                            pieData[1]?.value || 0}%)</span>
                                     </div>
                                     <div className="flex items-center">
                                         <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                                        <span>Flagged ({pieData[2]?.value || 0}%)</span>
+                                        <span>Flagged ({
+                                             //@ts-ignore
+                                            pieData[2]?.value || 0}%)</span>
                                     </div>
                                 </div>
                             </div>

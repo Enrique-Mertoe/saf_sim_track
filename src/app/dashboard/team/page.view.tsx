@@ -81,7 +81,6 @@ export default function TeamsManagement() {
         try {
             const teamData: TeamUpdate = {
                 name: formData.name,
-                description: formData.description,
                 leader_id: formData.leader_id,
                 region: formData.region,
             };

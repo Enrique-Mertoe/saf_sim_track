@@ -67,7 +67,7 @@ const ResetPassword = () => {
         return "bg-green-500";
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
 
         // Reset states
@@ -111,7 +111,7 @@ const ResetPassword = () => {
             }, 3500);
 
         } catch (error) {
-            setError(error.message || 'An error occurred while resetting your password');
+            setError((error as any).message || 'An error occurred while resetting your password');
         } finally {
             setLoading(false);
         }

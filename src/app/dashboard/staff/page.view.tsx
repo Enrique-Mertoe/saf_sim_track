@@ -1,5 +1,5 @@
 "use client"
-import {useRef, useState} from "react";
+import {ChangeEvent, useRef, useState} from "react";
 import {ArrowLeft, Check, Info, Upload, UserPlus, X} from "lucide-react";
 import {onboardingService, storageService} from "@/services";
 import {generateUUID} from "@/helper";
@@ -29,7 +29,7 @@ export default function OnboardStaff({user, onClose}: {
     });
 
 
-    const handleChange = (e) => {
+    const handleChange = (e: any) => {
         const {name, value} = e.target;
         setFormData({
             ...formData,
@@ -37,7 +37,8 @@ export default function OnboardStaff({user, onClose}: {
         });
     };
 
-    const handleImageChange = (e, type) => {
+    const handleImageChange = (e: ChangeEvent<HTMLInputElement>, type: string) => {
+        // @ts-ignore
         const file = e.target.files[0];
         if (!file) return;
 
@@ -55,9 +56,11 @@ export default function OnboardStaff({user, onClose}: {
 
         const reader = new FileReader();
         reader.onload = (event) => {
+
             setFormData({
                 ...formData,
                 [type]: file,
+                // @ts-ignore
                 [`${type}URL`]: event.target.result
             });
         };
@@ -114,7 +117,7 @@ export default function OnboardStaff({user, onClose}: {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: any) => {
         if (step !== 3)
             return
         e.preventDefault();
@@ -127,19 +130,19 @@ export default function OnboardStaff({user, onClose}: {
                 `team-${generateUUID()}-${formData.idNumber}${Date.now()}`
             const {url: idFrontURL} = await storageService.uploadIdFrontImage(
                 key,
-                formData.idFrontImage as File,
+                formData.idFrontImage as unknown as File,
             );
 
             const {url: idBackURL} = await storageService.uploadIdBackImage(
                 key,
-                formData.idBackImage as File,
+                formData.idBackImage as unknown as File,
             );
 
             const {error} = await onboardingService.createRequest({
                 full_name: formData.fullName,
                 email: formData.email,
-                id_back_url: idBackURL,
-                id_front_url: idFrontURL,
+                id_back_url: idBackURL!,
+                id_front_url: idFrontURL!,
                 id_number: formData.idNumber,
                 phone_number: formData.phoneNumber,
                 request_type: "ONBOARDING",
@@ -291,6 +294,7 @@ export default function OnboardStaff({user, onClose}: {
                         </div>
                     ) : (
                         <div
+                            //@ts-ignore
                             onClick={() => idFrontRef.current.click()}
                             className="border-2 border-dashed border-gray-300 rounded-lg p-6 h-48 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 hover:bg-green-50"
                         >
@@ -305,7 +309,7 @@ export default function OnboardStaff({user, onClose}: {
                         ref={idFrontRef}
                         className="hidden"
                         accept="image/*"
-                        onChange={(e) => handleImageChange(e, 'idFrontImage')}
+                        onChange={e => handleImageChange(e, 'idFrontImage')}
                     />
                 </div>
 
@@ -330,6 +334,7 @@ export default function OnboardStaff({user, onClose}: {
                         </div>
                     ) : (
                         <div
+                            //@ts-ignore
                             onClick={() => idBackRef.current.click()}
                             className="border-2 border-dashed border-gray-300 rounded-lg p-6 h-48 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 hover:bg-green-50"
                         >
@@ -407,6 +412,7 @@ export default function OnboardStaff({user, onClose}: {
                         <div className="flex-1">
                             <p className="text-sm text-gray-500 mb-2">ID Front</p>
                             <img
+                                //@ts-ignore
                                 src={formData.idFrontImageURL}
                                 alt="ID Front"
                                 className="w-full h-32 object-cover rounded-lg border border-gray-300"
@@ -415,6 +421,7 @@ export default function OnboardStaff({user, onClose}: {
                         <div className="flex-1">
                             <p className="text-sm text-gray-500 mb-2">ID Back</p>
                             <img
+                                //@ts-ignore
                                 src={formData.idBackImageURL}
                                 alt="ID Back"
                                 className="w-full h-32 object-cover rounded-lg border border-gray-300"
@@ -485,7 +492,7 @@ export default function OnboardStaff({user, onClose}: {
                 </h1>
             </div>
 
-            <div >
+            <div>
                 {success ? (
                     renderSuccess()
                 ) : (

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import Link from 'next/link';
-import {User} from "@/models";
-import { formatDate } from '@/helper';
+import {User, UserStatus} from "@/models";
+import {formatDate} from '@/helper';
 
 type UserTableProps = {
   users: User[];
-  onStatusChange: (userId: string, status: 'ACTIVE' | 'SUSPENDED') => void;
+  onStatusChange: (userId: string, status: UserStatus) => void;
   onDeleteUser: (userId: string) => void;
 };
 
@@ -13,7 +13,7 @@ export default function UserTable({ users, onStatusChange, onDeleteUser }: UserT
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleStatusToggle = (user: User) => {
-    const newStatus = user.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
     onStatusChange(user.id, newStatus);
   };
 
@@ -70,7 +70,10 @@ export default function UserTable({ users, onStatusChange, onDeleteUser }: UserT
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.team_id?.teamName || '-'}
+
+                  {
+                     //@ts-ignore
+                    user.team_id?.name || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

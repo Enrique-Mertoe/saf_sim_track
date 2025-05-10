@@ -35,6 +35,9 @@ import {
 import Dashboard from "@/ui/components/dash/Dashboard";
 import {TeamStats} from "@/app/dashboard/my-team/quicks";
 import {useRouter} from "next/navigation";
+import {CreateUser} from "@/ui/shortcuts";
+import {useDialog} from "@/app/_providers/dialog";
+import useApp from "@/ui/provider/AppProvider";
 
 
 // Sample data for team members
@@ -149,7 +152,8 @@ const qualityDistributionData = [
 const COLORS = ['#4ade80', '#f87171'];
 
 export default function TeamLeader() {
-    const router = useRouter();
+    const dialog = useDialog()
+    const {user} = useApp()
     const [mounted, setMounted] = useState(false);
     const [_isLoading, setIsLoading] = useState(true);
     const [_selectedStaff, _setSelectedStaff] = useState(null);
@@ -160,7 +164,7 @@ export default function TeamLeader() {
         monthlyTarget: 0,
         targetCompletion: 0
     });
-    const [expandedStaff, setExpandedStaff] = useState(null);
+    const [expandedStaff, setExpandedStaff] = useState<number | null>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -181,7 +185,7 @@ export default function TeamLeader() {
         return () => clearTimeout(timer);
     }, []);
 
-    const toggleStaffDetails = (id: number | SetStateAction<null>) => {
+    const toggleStaffDetails = (id: number ) => {
         if (expandedStaff === id) {
             setExpandedStaff(null);
         } else {
@@ -208,9 +212,9 @@ export default function TeamLeader() {
                             <button
                                 type={"button"}
                                 onClick={() => {
-                                    router.push("/dashboard/staff")
+                                    CreateUser(dialog,user!,{})
                                 }}
-                                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium">
+                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
                                 <UserPlus className="h-4 w-4 mr-2"/>
                                 Add Team Member
                             </button>
@@ -372,7 +376,7 @@ export default function TeamLeader() {
                                                                 </div>
                                                                 <div className="w-full bg-gray-200 rounded-full h-2">
                                                                     <div
-                                                                        className="bg-indigo-600 h-2 rounded-full"
+                                                                        className="bg-green-600 h-2 rounded-full"
                                                                         style={{width: `${Math.min(100, Math.round((member.salesThisMonth / 150) * 100))}%`}}
                                                                     ></div>
                                                                 </div>
@@ -402,7 +406,7 @@ export default function TeamLeader() {
                                                         View Full Profile
                                                     </button>
                                                     <button
-                                                        className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-medium rounded">
+                                                        className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-medium rounded">
                                                         Send Message
                                                     </button>
                                                     <button
@@ -483,7 +487,7 @@ export default function TeamLeader() {
                             <div
                                 className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                                 <h2 className="text-lg font-medium text-gray-900">Recent Activity</h2>
-                                <button className="text-sm text-indigo-600 hover:text-indigo-800">View All</button>
+                                <button className="text-sm text-green-600 hover:text-green-800">View All</button>
                             </div>
                             <div className="divide-y divide-gray-100">
                                 {recentActivities.map((activity) => (
@@ -520,10 +524,10 @@ export default function TeamLeader() {
                                             <img
                                                 src="/api/placeholder/40/40"
                                                 alt="Jane Smith"
-                                                className="h-10 w-10 rounded-full object-cover border-2 border-indigo-500"
+                                                className="h-10 w-10 rounded-full object-cover border-2 border-green-500"
                                             />
                                             <span
-                                                className="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 bg-indigo-600 text-white text-xs font-bold rounded-full">1</span>
+                                                className="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 bg-green-600 text-white text-xs font-bold rounded-full">1</span>
                                         </div>
                                         <div className="ml-4 flex-1">
                                             <h3 className="text-sm font-medium text-gray-900">Jane Smith</h3>

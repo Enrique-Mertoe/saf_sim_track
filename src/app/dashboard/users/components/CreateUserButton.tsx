@@ -1,5 +1,4 @@
 'use client';
-import CreateUserModal from './CreateUserModal';
 import {useDialog} from "@/app/_providers/dialog";
 import {CreateUser} from "@/ui/shortcuts";
 import useApp from "@/ui/provider/AppProvider";

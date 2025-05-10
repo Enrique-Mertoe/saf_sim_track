@@ -95,7 +95,7 @@ export default function Create({onDismiss}: {
         }
     };
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e: any) => {
         const {name, value} = e.target;
         setFormData(prev => ({...prev, [name]: value}));
     };
@@ -245,6 +245,7 @@ export default function Create({onDismiss}: {
                     <label className="block text-sm font-medium text-gray-700">Team Leader</label>
                     <div className="relative">
                         <button
+                            //@ts-ignore
                             ref={leaderButtonRef}
                             type="button"
                             onClick={() => {
@@ -346,6 +347,7 @@ export default function Create({onDismiss}: {
                     <label className="block text-sm font-medium text-gray-700">Region</label>
                     <div className="relative">
                         <button
+                            //@ts-ignore
                             ref={regionButtonRef}
                             type="button"
                             onClick={() => {
@@ -377,6 +379,7 @@ export default function Create({onDismiss}: {
 
                         {regionDropdownOpen && (
                             <div
+                                //@ts-ignore
                                 ref={regionDropdownRef}
                                 className={`${
                                     regionDropdownPosition === "top"

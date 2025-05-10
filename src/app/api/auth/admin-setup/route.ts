@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
         if (res.error) {
             return NextResponse.json(
                 makeResponse({
-                    error: res.error.message
+                    error: (res.error as any).message
                 }),
                 {status: 500}
             );
