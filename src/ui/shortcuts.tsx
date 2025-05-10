@@ -1,7 +1,6 @@
-import {useDialog} from "@/app/_providers/dialog";
 import CreateUserModal from "@/app/dashboard/users/components/CreateUserModal";
 import RequestDetailViewer from "@/app/dashboard/users/components/req_view";
-import {OnboardingRequest} from "@/models";
+import {OnboardingRequest, User} from "@/models";
 
 export const CreateUser = (dialog: any, {onClose}: {
     onClose?: Closure
@@ -18,7 +17,7 @@ export const CreateUser = (dialog: any, {onClose}: {
     });
 }
 
-export const ViewRequest = (dialog: any,request:OnboardingRequest, {onClose}: {
+export const ViewRequest = (dialog: any,user:User, request: OnboardingRequest, {onClose}: {
     onClose?: Closure
 }) => {
     const onclose = () => {
@@ -27,7 +26,7 @@ export const ViewRequest = (dialog: any,request:OnboardingRequest, {onClose}: {
     }
 
     const d = dialog.create({
-        content: <RequestDetailViewer request={request} onClose={onclose}/>,
+        content: <RequestDetailViewer user={user} request={request} onClose={onclose}/>,
         cancelable: !0,
         size: "lg",
 

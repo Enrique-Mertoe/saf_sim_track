@@ -1,31 +1,18 @@
-import {useState, useEffect} from 'react';
-import {
-    ChevronDown,
-    User,
-    Calendar,
-    FileText,
-    CheckCircle,
-    XCircle,
-    Clock,
-    ArrowLeft,
-    Phone,
-    Briefcase,
-    MapPin,
-    CreditCard
-} from 'lucide-react';
-import {motion, AnimatePresence} from 'framer-motion';
-import {storageService} from "@/services";
-import {OnboardingRequest} from "@/models";
+import {useEffect, useRef, useState} from 'react';
+import {AlertTriangle, ArrowLeft, Briefcase, CheckCircle, CreditCard, User, X} from 'lucide-react';
+import {AnimatePresence, motion} from 'framer-motion';
+import {onboardingService, storageService} from "@/services";
+import {OnboardingRequest, OnboardingRequestStatus, User as User1, UserRole} from "@/models";
+import {useDialog} from "@/app/_providers/dialog";
 
 // Define the necessary types based on your existing code
-export default function RequestDetailViewer({request, onClose}: {
-    request: OnboardingRequest, onClose: Closure
+export default function RequestDetailViewer({request, user, onClose}: {
+    request: OnboardingRequest, onClose: Closure, user: User1
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('details');
     const [back_url, setBack] = useState<string | null>(null)
     const [front_url, setFront] = useState<string | null>(null)
-
     useEffect(() => {
         async function fetchBack() {
             setBack(await storageService.getDataImage(request.id_back_url))
@@ -80,6 +67,15 @@ export default function RequestDetailViewer({request, onClose}: {
             ? 'bg-blue-100 text-blue-800 border-blue-300'
             : 'bg-purple-100 text-purple-800 border-purple-300';
     };
+    const dialog = useDialog();
+
+    function reject() {
+        const dl = dialog.create({
+            content: <RejectRequest user={user} onClose={() => dl.dismiss()} request={request}/>,
+
+        })
+    }
+
 
     return (
         <AnimatePresence>
@@ -449,11 +445,15 @@ export default function RequestDetailViewer({request, onClose}: {
                                 Close
                             </motion.button>
 
-                            {request.status === 'pending' && (
+                            {user.role === UserRole.ADMIN && request.status === 'pending' && (
                                 <>
                                     <motion.button
+                                        type={"button"}
                                         whileHover={{scale: 1.05}}
                                         whileTap={{scale: 0.95}}
+                                        onClick={() => {
+                                            reject()
+                                        }}
                                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                                     >
                                         Reject
@@ -471,6 +471,139 @@ export default function RequestDetailViewer({request, onClose}: {
                     </motion.div>
                 </div>
             )}
+
         </AnimatePresence>
     );
+}
+
+const RejectRequest = ({request, onClose, user}) => {
+    const [rejectNotes, setRejectNotes] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+
+    const textareaRef = useRef(null);
+
+    const handleReject = async () => {
+        if (!rejectNotes.trim()) {
+            setError('Please provide rejection notes');
+            if (textareaRef.current) {
+                textareaRef.current.focus();
+            }
+            return;
+        }
+
+        setIsSubmitting(true);
+        setError('');
+
+        try {
+            // Call the service to update the request status
+            await onboardingService.updateRequestStatus(request.id, {
+                status: OnboardingRequestStatus.REJECTED,
+                reviewerId: user?.id,
+                review_notes: rejectNotes
+            });
+            onClose();
+        } catch (err) {
+            console.error('Error rejecting request:', err);
+            setError('Failed to reject the request. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    return (
+        <AnimatePresence>
+            {(
+                <div className="">
+                    <motion.div
+                        initial={{opacity: 0, y: 20}}
+                        animate={{opacity: 1, y: 0}}
+                        exit={{opacity: 0, y: 20}}
+                        transition={{duration: 0.3}}
+                        className="bg-white rounded-sm shadow-xl w-full overflow-hidden"
+                    >
+                        <div className="bg-red-500 p-4 text-white flex items-center justify-between">
+                            <div className="flex items-center">
+                                <AlertTriangle className="mr-2" size={20}/>
+                                <h3 className="font-bold text-lg">Reject Request</h3>
+                            </div>
+                            <button
+                                onClick={() => onClose()}
+                                className="hover:bg-white hover:bg-opacity-20 rounded-full p-1"
+                            >
+                                <X size={20}/>
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            <p className="mb-4">
+                                You are about to reject the {request.request_type.toLowerCase()} request for{' '}
+                                <span className="font-semibold">
+                    {request.request_type === 'ONBOARDING'
+                        ? request.full_name
+                        : request.targetUser?.fullName || 'this user'}
+                  </span>.
+                                Please provide a reason for the rejection:
+                            </p>
+
+                            {error && (
+                                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                                    <div className="flex">
+                                        <div className="flex-shrink-0">
+                                            <AlertTriangle className="h-5 w-5 text-red-500"/>
+                                        </div>
+                                        <div className="ml-3">
+                                            <p className="text-sm text-red-700">{error}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <textarea
+                                ref={textareaRef}
+                                value={rejectNotes}
+                                onChange={(e) => setRejectNotes(e.target.value)}
+                                placeholder="Enter rejection reason..."
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-32"
+                                disabled={isSubmitting}
+                            ></textarea>
+
+                            <div className="mt-6 flex justify-end space-x-3">
+                                <motion.button
+                                    whileHover={{scale: 1.05}}
+                                    whileTap={{scale: 0.95}}
+                                    onClick={() => onClose(false)}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                    disabled={isSubmitting}
+                                >
+                                    Cancel
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{scale: 1.05}}
+                                    whileTap={{scale: 0.95}}
+                                    onClick={handleReject}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor"
+                                                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Processing...
+                                        </>
+                                    ) : (
+                                        'Confirm Rejection'
+                                    )}
+                                </motion.button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    )
 }

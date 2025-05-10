@@ -17,6 +17,7 @@ export const userService = {
             .order('full_name');
     },
 
+
     // Get users by role
     async getUsersByRole(role: UserRole) {
         const supabase = createSupabaseClient();

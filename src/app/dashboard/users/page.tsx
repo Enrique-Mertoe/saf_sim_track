@@ -1,19 +1,21 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {OnboardingRequest, OnboardingRequestStatus, User, UserStatus} from "@/models";
+import {OnboardingRequest, OnboardingRequestStatus, User} from "@/models";
 import UserTable from "@/app/dashboard/users/components/UserTable";
 import CreateUserButton from "@/app/dashboard/users/components/CreateUserButton";
 import UserFilters from "@/app/dashboard/users/components/UserFilters";
 import Dashboard from "@/ui/components/dash/Dashboard";
 import {onboardingService, userService} from "@/services";
 import OnBoardTable from "@/app/dashboard/users/components/OnBoardTable";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
+    const {user} = useApp()
     const [requests, setRequests] = useState<OnboardingRequest[]>([]);
     const [activeTab, setActiveTab] = useState<"users" | "requests">("users");
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!user);
     const [filters, setFilters] = useState({
         role: '',
         team: '',
@@ -45,7 +47,7 @@ export default function UsersPage() {
 
         fetchUsers().then();
         fetchOnboard().then();
-    }, [filters]);
+    }, [ filters]);
 
     const handleFilterChange = (newFilters: any) => {
         setFilters({...filters, ...newFilters});

@@ -212,7 +212,7 @@ export default function Sidebar() {
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
-                {href: '/dashboard/team', icon: UserPlus, label: 'My Team'},
+                {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
                 {href: '/map', icon: Map, label: 'Location'},
                 {href: '/settings', icon: Settings, label: 'Settings'}
             );

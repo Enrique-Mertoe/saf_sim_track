@@ -1,7 +1,7 @@
 "use client"
 import {useState, useEffect, useCallback} from "react";
 import {teamService} from "@/services/teamService";
-import {TeamCreate, TeamUpdate} from "@/models";
+import {TeamUpdate} from "@/models";
 import Link from "next/link";
 import {useDialog} from "@/app/_providers/dialog";
 import Create from "@/app/dashboard/team/create";
@@ -31,7 +31,7 @@ export default function TeamsManagement() {
     const {user} = useApp()
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [showCreateModal, setShowCreateModal] = useState(false);
+    // const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
     const dialog = useDialog();
@@ -70,8 +70,8 @@ export default function TeamsManagement() {
             ]);
         };
 
-        fetchTeams();
-        fetchLeaders();
+        // fetchTeams();
+        // fetchLeaders();
     }, []);
 
 

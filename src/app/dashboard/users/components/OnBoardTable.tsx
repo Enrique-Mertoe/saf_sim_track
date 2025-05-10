@@ -1,6 +1,7 @@
 import {OnboardingRequest, OnboardingRequestStatus, User} from "@/models";
 import {ViewRequest} from "@/ui/shortcuts";
 import {useDialog} from "@/app/_providers/dialog";
+import useApp from "@/ui/provider/AppProvider";
 
 type OnBoardTableProps = {
     requests: OnboardingRequest[];
@@ -10,6 +11,7 @@ type OnBoardTableProps = {
 export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: OnBoardTableProps) {
     console.log(requests)
     const dialog = useDialog()
+    const {user} = useApp()
     return (
         <div className="bg-white rounded-md shadow overflow-hidden">
             <div className="overflow-x-auto">
@@ -80,8 +82,9 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <button
+                                        type={"button"}
                                         className="text-blue-600 hover:text-blue-900"
-                                        onClick={() =>  ViewRequest(dialog, request, {})}
+                                        onClick={() => ViewRequest(dialog, user, request, {})}
                                     >
                                         View
                                     </button>

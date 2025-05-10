@@ -44,6 +44,7 @@ export const teamService = {
             .select()
     },
 
+
     // Update an existing team
     async updateTeam(teamId: string, teamData: TeamUpdate) {
         const supabase = createSupabaseClient();
