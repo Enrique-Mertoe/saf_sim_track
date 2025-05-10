@@ -14,7 +14,7 @@ export default function ResetPasswordForm() {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('success');
 
-    const showNotification = (message, type = 'success') => {
+    const showNotification = (message: string, type = 'success') => {
         setToastMessage(message);
         setToastType(type);
         setShowToast(true);
@@ -29,7 +29,7 @@ export default function ResetPasswordForm() {
         }
     }, [showToast]);
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
         setLoading(true);
 
@@ -82,7 +82,7 @@ export default function ResetPasswordForm() {
                             transition={{delay: 0.3}}
                             className="text-center text-gray-600 mb-8 text-lg"
                         >
-                            We've sent a password reset link to <br/>
+                            We`ve sent a password reset link to <br/>
                             <span className="font-medium text-indigo-600">{email}</span>
                         </motion.p>
 
@@ -129,7 +129,7 @@ export default function ResetPasswordForm() {
                             transition={{delay: 0.2}}
                             className="text-center text-gray-600 mb-8"
                         >
-                            Enter your email address and we'll send you a link to reset your password.
+                            Enter your email address and we`ll send you a link to reset your password.
                         </motion.p>
 
                         <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,12 +1,18 @@
 "use client"
 import {createContext, ReactNode, useContext} from "react";
 
-type SettingType = {}
+type SettingType = {
+    action: Closure
+}
 const SettingContext = createContext<SettingType | undefined>(undefined)
 export const SettingsProvider = ({children}: {
     children: ReactNode
 }) => {
-    const handler: SettingType = {}
+    const handler: SettingType = {
+        action(_args): void {
+        }
+
+    }
     return (
         <SettingContext.Provider value={handler}>
             {children}

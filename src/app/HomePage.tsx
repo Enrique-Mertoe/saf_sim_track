@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { ArrowRight, Shield, BarChart3, Users } from 'lucide-react';
-import Link from 'next/link';
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
