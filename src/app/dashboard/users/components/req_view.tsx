@@ -13,7 +13,7 @@ import {
 import {useDialog} from "@/app/_providers/dialog";
 import {toast} from "react-hot-toast";
 import {$} from "@/lib/request";
-import {generatePassword} from "@/helper";
+import {generatePassword, suggestRejection} from "@/helper";
 
 // Define the necessary types based on your existing code
 export default function RequestDetailViewer({request, user, onClose}: {
@@ -79,9 +79,9 @@ export default function RequestDetailViewer({request, user, onClose}: {
     };
     const dialog = useDialog();
 
-    function reject() {
+    function reject(reason?: string) {
         const dl = dialog.create({
-            content: <RejectRequest user={user} onClose={(rejected: boolean) => {
+            content: <RejectRequest user={user} options={{reason}} onClose={(rejected: boolean) => {
                 dl.dismiss();
                 if (rejected)
                     setTimeout(() => onClose(rejected), 300);
@@ -168,6 +168,10 @@ export default function RequestDetailViewer({request, user, onClose}: {
                 duration: 3000
             });
             onboardingService.updateRequestStatus(request.id, currentState as any);
+            const reason = suggestRejection(err as string);
+            if (reason) {
+                reject(reason)
+            }
         } finally {
             setApproving(false);
         }
@@ -597,7 +601,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
     );
 }
 
-const RejectRequest = ({request, onClose, user}) => {
+const RejectRequest = ({request, onClose, user, options}) => {
     const [rejectNotes, setRejectNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -605,13 +609,16 @@ const RejectRequest = ({request, onClose, user}) => {
     const textareaRef = useRef(null);
 
     const handleReject = async () => {
-        if (!rejectNotes.trim()) {
+        if (!options.reason && !rejectNotes.trim()) {
             setError('Please provide rejection notes');
             if (textareaRef.current) {
                 textareaRef.current.focus();
             }
             return;
         }
+
+        const notes = options.reason ?
+            `${options.reason}\n ${rejectNotes}` : rejectNotes;
 
         setIsSubmitting(true);
         setError('');
@@ -621,7 +628,7 @@ const RejectRequest = ({request, onClose, user}) => {
             const {error} = await onboardingService.updateRequestStatus(request.id, {
                 status: OnboardingRequestStatus.REJECTED,
                 reviewerId: user?.id,
-                review_notes: rejectNotes
+                review_notes: notes
             });
             if (error)
                 throw error
@@ -681,15 +688,134 @@ const RejectRequest = ({request, onClose, user}) => {
                                     </div>
                                 </div>
                             )}
+                            {options.reason ? (
+                                <div className="mb-4">
+                                    <div className="flex flex-col space-y-3">
+                                        <div
+                                            className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-start space-x-3">
+                                            <div className="flex-shrink-0 text-red-500">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5"
+                                                     viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd"
+                                                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                                          clipRule="evenodd"/>
+                                                </svg>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-medium text-red-800">System Detected Issue</h4>
+                                                <p className="text-sm text-red-700 mt-1">{options.reason}</p>
+                                            </div>
+                                        </div>
 
-                            <textarea
-                                ref={textareaRef}
-                                value={rejectNotes}
-                                onChange={(e) => setRejectNotes(e.target.value)}
-                                placeholder="Enter rejection reason..."
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-32"
-                                disabled={isSubmitting}
-                            ></textarea>
+                                        <div className="text-sm text-gray-600 px-1">
+                                            You can add additional notes below (optional):
+                                        </div>
+
+                                        <textarea
+                                            value={rejectNotes}
+                                            onChange={(e) => setRejectNotes(e.target.value)}
+                                            placeholder="Add any additional rejection notes..."
+                                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-20 text-sm"
+                                            disabled={isSubmitting}
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mb-4">
+                                    <div className="mb-3">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Select a reason or enter custom notes:
+                                        </label>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                            {[
+                                                {icon: "user-x", text: "Duplicate user account"},
+                                                {icon: "file-x", text: "Invalid documentation"},
+                                                {icon: "shield-off", text: "Security concerns"},
+                                                {icon: "alert-circle", text: "Policy violation"}
+                                            ].map((reason, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => setRejectNotes(prev =>
+                                                        prev === reason.text ? "" : reason.text
+                                                    )}
+                                                    className={`flex items-center p-3 border rounded-lg transition-all ${
+                                                        rejectNotes === reason.text
+                                                            ? "bg-red-50 border-red-200 text-red-700"
+                                                            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                                                    }`}
+                                                >
+            <span className={`flex-shrink-0 mr-2 ${
+                rejectNotes === reason.text ? "text-red-500" : "text-gray-400"
+            }`}>
+              {reason.icon === "user-x" && (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="8.5" cy="7" r="4"></circle>
+                      <line x1="18" y1="8" x2="23" y2="13"></line>
+                      <line x1="23" y1="8" x2="18" y2="13"></line>
+                  </svg>
+              )}
+                {reason.icon === "file-x" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <path d="M14 2v6h6"></path>
+                        <line x1="9" y1="15" x2="15" y2="9"></line>
+                        <line x1="15" y1="15" x2="9" y2="9"></line>
+                    </svg>
+                )}
+                {reason.icon === "shield-off" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"></path>
+                        <path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                )}
+                {reason.icon === "alert-circle" && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                )}
+            </span>
+                                                    <span className="text-sm">{reason.text}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="relative">
+        <textarea
+            ref={textareaRef}
+            value={rejectNotes}
+            onChange={(e) => setRejectNotes(e.target.value)}
+            placeholder="Enter custom rejection reason..."
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-24 pr-10"
+            disabled={isSubmitting}
+        ></textarea>
+                                            {rejectNotes && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setRejectNotes("")}
+                                                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                                                    aria-label="Clear text"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"
+                                                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round"
+                                                              strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="mt-6 flex justify-end space-x-3">
                                 <motion.button
