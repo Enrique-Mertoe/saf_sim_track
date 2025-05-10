@@ -1,9 +1,19 @@
 import {useEffect, useRef, useState} from 'react';
 import {AlertTriangle, ArrowLeft, Briefcase, CheckCircle, CreditCard, User, X} from 'lucide-react';
 import {AnimatePresence, motion} from 'framer-motion';
-import {onboardingService, storageService} from "@/services";
-import {OnboardingRequest, OnboardingRequestStatus, User as User1, UserRole} from "@/models";
+import {logService, onboardingService, storageService, userService} from "@/services";
+import {
+    ActivityLogCreate,
+    OnboardingRequest,
+    OnboardingRequestStatus, OnboardingRequestUpdate,
+    User as User1,
+    UserCreate,
+    UserRole
+} from "@/models";
 import {useDialog} from "@/app/_providers/dialog";
+import {toast} from "react-hot-toast";
+import {$} from "@/lib/request";
+import {generatePassword} from "@/helper";
 
 // Define the necessary types based on your existing code
 export default function RequestDetailViewer({request, user, onClose}: {
@@ -78,6 +88,89 @@ export default function RequestDetailViewer({request, user, onClose}: {
             }} request={request}/>,
 
         })
+    }
+
+    const [approving, setApproving] = useState<boolean>(false)
+    const currentState = {
+        status: request.status,
+        reviewerId: request.reviewed_by_id,
+        review_notes: request.review_notes
+
+    }
+
+    async function approve() {
+        setApproving(true)
+        try {
+            // Call the service to update the request status
+            const {error} = await onboardingService.updateRequestStatus(request.id, {
+                status: OnboardingRequestStatus.APPROVED,
+                reviewerId: user?.id,
+                review_notes: "Request Accepted"
+            });
+            if (error)
+                throw error
+            const r_data = {
+                full_name: request.full_name,
+                email: request.email,
+                id_number: request.id_number,
+                phone_number: request.phone_number,
+                mobigo_number: request.mobigo_number || undefined,
+                role: request.role,
+                team_id: request.team_id || undefined,
+                staff_type: request.staff_type || undefined,
+                id_front_url: request.id_front_url,
+                id_back_url: request.id_back_url,
+                password: generatePassword()
+            };
+            const addUser = () => {
+                return new Promise((resolve: any, reject: any) => {
+                    $.post({
+                        url: "/api/actions",
+                        contentType: $.JSON,
+                        data: {
+                            action: "admin",
+                            target: "create_user",
+                            data: r_data
+                        }
+                    }).then(async res => {
+                        if (!res.ok) {
+                            throw res.message
+                        }
+                        const log_data: ActivityLogCreate = {
+                            user_id: request.requested_by_id,
+                            action_type: 'ONBOARDING_APPROVED',
+                            details: {
+                                onboarding_request_id: request.id,
+                                auth_user_id: user.id
+                            },
+                            is_offline_action: false
+
+                        }
+                        const {error: error_log} = await logService.createLog([log_data])
+                        if (error_log)
+                            reject(error_log.message)
+                        resolve(res.data)
+
+                    }).catch(err => {
+                        const message = err.message || 'Failed to create user';
+                        reject(message)
+                    });
+                })
+            };
+            await addUser();
+            setTimeout(() => {
+                onClose(!0);
+            }, 1500);
+
+        } catch (err) {
+            console.error('Error approving request:', err);
+            toast.error('Failed to approve the request. Please try again.', {
+                duration: 3000
+            });
+            onboardingService.updateRequestStatus(request.id, currentState as any);
+        } finally {
+            setApproving(false);
+        }
     }
 
 
@@ -443,7 +536,8 @@ export default function RequestDetailViewer({request, user, onClose}: {
                             <motion.button
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                disabled={approving}
+                                className="px-4 py-2 cursor-pointer bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                                 onClick={handleClose}
                             >
                                 Close
@@ -459,7 +553,8 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                             onClick={() => {
                                                 reject()
                                             }}
-                                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                            disabled={approving}
+                                            className="px-4 py-2 cursor-pointer bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                                         >
                                             Reject
                                         </motion.button>
@@ -467,13 +562,28 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                     {request.status !== OnboardingRequestStatus.APPROVED &&
                                         <motion.button
                                             onClick={() => {
-                                                reject()
+                                                approve()
                                             }}
                                             whileHover={{scale: 1.05}}
                                             whileTap={{scale: 0.95}}
-                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                            disabled={approving}
+                                            className="px-4 py-2 cursor-pointer flex place-items-center bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                                         >
-                                            Approve
+                                            {approving ? (
+                                                <>
+                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                         viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10"
+                                                                stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor"
+                                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Approving...
+                                                </>
+                                            ) : (
+                                                'Approve'
+                                            )}
                                         </motion.button>
                                     }
                                 </>

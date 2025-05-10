@@ -631,3 +631,159 @@ AFTER INSERT ON teams
 FOR EACH ROW
 EXECUTE FUNCTION update_user_team_id();
 
+
+-- Function to create a user when onboarding request is approved
+CREATE OR REPLACE FUNCTION public.handle_approved_onboarding_request()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only proceed if the status was changed to 'APPROVED'
+  IF NEW.status = 'APPROVED' AND (OLD.status != 'APPROVED' OR OLD.status IS NULL) THEN
+    -- Insert new user based on the approved onboarding request
+    INSERT INTO public.users (
+      id,
+      created_at,
+      email,
+      full_name,
+      id_number,
+      id_front_url,
+      id_back_url,
+      phone_number,
+      mobigo_number,
+      role,
+      team_id,
+      status,
+      staff_type,
+      is_active
+    ) VALUES (
+      gen_random_uuid(), -- Generate a new UUID
+      NOW(), -- Current timestamp
+      lower(regexp_replace(NEW.full_name, '[^a-zA-Z0-9]', '', 'g') || '@' || NEW.id_number || '.temp'), -- Generate temporary email from name and ID
+      NEW.full_name,
+      NEW.id_number,
+      NEW.id_front_url,
+      NEW.id_back_url,
+      NEW.phone_number,
+      NEW.mobigo_number,
+      NEW.role,
+      NEW.team_id,
+      'ACTIVE', -- Set initial status to ACTIVE
+      NEW.staff_type,
+      true -- Set is_active to true
+    );
+
+    -- Log this activity
+    INSERT INTO public.activity_logs (
+      id,
+      created_at,
+      user_id,
+      action_type,
+      details,
+      ip_address,
+      is_offline_action
+    ) VALUES (
+      gen_random_uuid(),
+      NOW(),
+      NEW.reviewed_by_id,
+      'USER_CREATED',
+      jsonb_build_object(
+        'request_id', NEW.id,
+        'full_name', NEW.full_name,
+        'role', NEW.role,
+        'team_id', NEW.team_id
+      ),
+      NULL,
+      false
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to execute the function when onboarding request is updated
+DROP TRIGGER IF EXISTS on_onboarding_request_approved ON public.onboarding_requests;
+CREATE TRIGGER on_onboarding_request_approved
+  AFTER UPDATE OF status
+  ON public.onboarding_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_approved_onboarding_request();
+
+-- Additional trigger for directly creating approved requests
+DROP TRIGGER IF EXISTS on_onboarding_request_insert_approved ON public.onboarding_requests;
+CREATE TRIGGER on_onboarding_request_insert_approved
+  AFTER INSERT
+  ON public.onboarding_requests
+  FOR EACH ROW
+  WHEN (NEW.status = 'APPROVED')
+  EXECUTE FUNCTION public.handle_approved_onboarding_request();
+
+
+
+
+-- Function to handle approved deletion requests
+CREATE OR REPLACE FUNCTION public.handle_approved_deletion_request()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only proceed if the status was changed to 'APPROVED' and it's a deletion request
+  IF NEW.status = 'APPROVED' AND NEW.request_type = 'DELETION' AND
+     (OLD.status != 'APPROVED' OR OLD.status IS NULL) THEN
+
+    -- Determine if we should completely delete or just deactivate the user
+    -- For this example, we'll deactivate by setting is_active to false and status to SUSPENDED
+    -- You could modify this to DELETE FROM users if you want permanent deletion
+
+    UPDATE public.users
+    SET
+      status = 'SUSPENDED',
+      is_active = false
+    WHERE id_number = NEW.id_number;
+
+    -- Log this activity
+    INSERT INTO public.activity_logs (
+      id,
+      created_at,
+      user_id,
+      action_type,
+      details,
+      ip_address,
+      is_offline_action
+    ) VALUES (
+      gen_random_uuid(),
+      NOW(),
+      NEW.reviewed_by_id,
+      'USER_DEACTIVATED',
+      jsonb_build_object(
+        'request_id', NEW.id,
+        'id_number', NEW.id_number,
+        'reason', 'Deletion request approved'
+      ),
+      NULL,
+      false
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to execute the function when deletion request is approved
+DROP TRIGGER IF EXISTS on_deletion_request_approved ON public.onboarding_requests;
+CREATE TRIGGER on_deletion_request_approved
+  AFTER UPDATE OF status
+  ON public.onboarding_requests
+  FOR EACH ROW
+  WHEN (NEW.request_type = 'DELETION')
+  EXECUTE FUNCTION public.handle_approved_deletion_request();
+
+-- Additional trigger for directly creating approved deletion requests
+DROP TRIGGER IF EXISTS on_deletion_request_insert_approved ON public.onboarding_requests;
+CREATE TRIGGER on_deletion_request_insert_approved
+  AFTER INSERT
+  ON public.onboarding_requests
+  FOR EACH ROW
+  WHEN (NEW.status = 'APPROVED' AND NEW.request_type = 'DELETION')
+  EXECUTE FUNCTION public.handle_approved_deletion_request();
+
+-- Enable the pgcrypto extension for password hashing
+-- This must be run by a superuser
+CREATE EXTENSION IF NOT EXISTS pgcrypto;

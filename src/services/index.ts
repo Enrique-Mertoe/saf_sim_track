@@ -7,3 +7,4 @@ export * from './storageService';
 export * from './reportingService';
 export * from './syncService';
 export * from './securityService';
+export * from './logService';

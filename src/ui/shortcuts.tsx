@@ -27,7 +27,7 @@ export const ViewRequest = (dialog: any,user:User, request: OnboardingRequest, {
 
     const d = dialog.create({
         content: <RequestDetailViewer user={user} request={request} onClose={onclose}/>,
-        cancelable: !0,
+        cancelable: !1,
         size: "lg",
 
     });

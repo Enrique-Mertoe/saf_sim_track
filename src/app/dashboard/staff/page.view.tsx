@@ -137,6 +137,7 @@ export default function OnboardStaff() {
 
             const {error} = await onboardingService.createRequest({
                 full_name: formData.fullName,
+                email: formData.email,
                 id_back_url: idBackURL,
                 id_front_url: idFrontURL,
                 id_number: formData.idNumber,

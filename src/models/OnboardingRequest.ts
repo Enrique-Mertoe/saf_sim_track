@@ -7,6 +7,7 @@ export interface OnboardingRequest {
     created_at: string;
     requested_by_id: string;
     full_name: string;
+    email: string;
     id_number: string;
     id_front_url: string;
     id_back_url: string;
@@ -27,6 +28,7 @@ export interface OnboardingRequest {
 export interface OnboardingRequestCreate {
     requested_by_id: string;
     full_name: string;
+    email: string;
     id_number: string;
     id_front_url: string;
     id_back_url: string;
