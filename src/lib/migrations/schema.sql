@@ -613,3 +613,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 --   '0 0 * * *', -- Run at midnight every day
 --   'SELECT cleanup_expired_sessions();'
 -- );
+
+   -- First, create a trigger function
+CREATE OR REPLACE FUNCTION update_user_team_id()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE users
+  SET team_id = NEW.id
+  WHERE id = NEW.leader_id;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_leader_team_id
+AFTER INSERT ON teams
+FOR EACH ROW
+EXECUTE FUNCTION update_user_team_id();
+

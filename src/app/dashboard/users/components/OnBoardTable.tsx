@@ -1,4 +1,6 @@
 import {OnboardingRequest, OnboardingRequestStatus, User} from "@/models";
+import {ViewRequest} from "@/ui/shortcuts";
+import {useDialog} from "@/app/_providers/dialog";
 
 type OnBoardTableProps = {
     requests: OnboardingRequest[];
@@ -7,7 +9,7 @@ type OnBoardTableProps = {
 };
 export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: OnBoardTableProps) {
     console.log(requests)
-
+    const dialog = useDialog()
     return (
         <div className="bg-white rounded-md shadow overflow-hidden">
             <div className="overflow-x-auto">
@@ -34,9 +36,9 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                             <tr key={request.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${request.requestT_type === "ONBOARDING" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                          ${request.request_type === "ONBOARDING" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
                         `}>
-                          {request.requestT_type}
+                          {request.request_type}
                         </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -44,14 +46,12 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                     <div className="text-sm text-gray-500">{request.requestedBy?.role}</div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    {request.requestT_type === "ONBOARDING" && request.userData ? (
+                                    {request.request_type === "ONBOARDING" ? (
                                         <>
                                             <div className="font-medium text-gray-900">{request.full_name}</div>
                                             <div className="text-sm text-gray-500">ID: {request.id_number}</div>
-                                            <div className="text-sm text-gray-500">{request.phone_number}</div>
-                                            <div className="text-sm text-gray-500">Role: {request.role}</div>
                                             <div
-                                                className="text-sm text-gray-500">Team: {request.team_id?.name || "N/A"}</div>
+                                                className="text-sm text-gray-500">Team: {request.teams?.name || "N/A"}</div>
                                         </>
                                     ) : request.targetUser ? (
                                         <>
@@ -81,7 +81,7 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <button
                                         className="text-blue-600 hover:text-blue-900"
-                                        onClick={() => handleViewRequest(request)}
+                                        onClick={() =>  ViewRequest(dialog, request, {})}
                                     >
                                         View
                                     </button>
@@ -101,10 +101,11 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                             </button>
                                         </>
                                     )}
-                                    {request.requestT_type === "ONBOARDING" && request.id_front_url && (
+                                    {request.request_type === "ONBOARDING" && request.id_front_url && (
                                         <button
                                             className="text-purple-600 hover:text-purple-900"
                                             onClick={() => {
+                                                ViewRequest(dialog, request, {})
                                                 // setCurrentIDUrls({
                                                 //     front: request.idFrontUrl,
                                                 //     back: request.idBackUrl

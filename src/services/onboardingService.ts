@@ -11,7 +11,7 @@ export const onboardingService = {
         *,
         requestedBy:requested_by_id(full_name,role),
         reviewedBy:reviewed_by_id(full_name,role),
-        teams:team_id(name)
+        teams:team_id(*)
       `)
             .order('created_at', {ascending: false});
     },

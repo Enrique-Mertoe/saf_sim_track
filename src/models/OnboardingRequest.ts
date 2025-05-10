@@ -1,5 +1,6 @@
 import {OnboardingRequestStatus, StaffType, UserRole} from "@/models/types";
 import {User} from "@/models/users";
+import {Team} from "@/models/teams";
 
 export interface OnboardingRequest {
     id: string;
@@ -14,9 +15,10 @@ export interface OnboardingRequest {
     requestedBy?:User
     role: UserRole;
     team_id?: string;
+    teams?: Team;
     staff_type?: StaffType;
     status: OnboardingRequestStatus;
-    requestT_type: "ONBOARDING" | "DELETION";
+    request_type: "ONBOARDING" | "DELETION";
     reviewed_by_id?: string;
     review_date?: string;
     review_notes?: string;
