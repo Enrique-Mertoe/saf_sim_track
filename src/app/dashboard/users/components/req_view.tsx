@@ -71,7 +71,11 @@ export default function RequestDetailViewer({request, user, onClose}: {
 
     function reject() {
         const dl = dialog.create({
-            content: <RejectRequest user={user} onClose={() => dl.dismiss()} request={request}/>,
+            content: <RejectRequest user={user} onClose={(rejected: boolean) => {
+                dl.dismiss();
+                if (rejected)
+                    setTimeout(() => onClose(rejected), 300);
+            }} request={request}/>,
 
         })
     }
@@ -445,26 +449,33 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                 Close
                             </motion.button>
 
-                            {user.role === UserRole.ADMIN && request.status === 'pending' && (
+                            {user.role === UserRole.ADMIN && (
                                 <>
-                                    <motion.button
-                                        type={"button"}
-                                        whileHover={{scale: 1.05}}
-                                        whileTap={{scale: 0.95}}
-                                        onClick={() => {
-                                            reject()
-                                        }}
-                                        className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                                    >
-                                        Reject
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{scale: 1.05}}
-                                        whileTap={{scale: 0.95}}
-                                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                                    >
-                                        Approve
-                                    </motion.button>
+                                    {request.status !== OnboardingRequestStatus.REJECTED &&
+                                        <motion.button
+                                            type={"button"}
+                                            whileHover={{scale: 1.05}}
+                                            whileTap={{scale: 0.95}}
+                                            onClick={() => {
+                                                reject()
+                                            }}
+                                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                        >
+                                            Reject
+                                        </motion.button>
+                                    }
+                                    {request.status !== OnboardingRequestStatus.APPROVED &&
+                                        <motion.button
+                                            onClick={() => {
+                                                reject()
+                                            }}
+                                            whileHover={{scale: 1.05}}
+                                            whileTap={{scale: 0.95}}
+                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                        >
+                                            Approve
+                                        </motion.button>
+                                    }
                                 </>
                             )}
                         </div>
@@ -497,12 +508,15 @@ const RejectRequest = ({request, onClose, user}) => {
 
         try {
             // Call the service to update the request status
-            await onboardingService.updateRequestStatus(request.id, {
+            const {error} = await onboardingService.updateRequestStatus(request.id, {
                 status: OnboardingRequestStatus.REJECTED,
                 reviewerId: user?.id,
                 review_notes: rejectNotes
             });
-            onClose();
+            if (error)
+                throw error
+
+            onClose(!0);
         } catch (err) {
             console.error('Error rejecting request:', err);
             setError('Failed to reject the request. Please try again.');

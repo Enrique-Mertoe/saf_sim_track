@@ -84,7 +84,12 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                     <button
                                         type={"button"}
                                         className="text-blue-600 hover:text-blue-900"
-                                        onClick={() => ViewRequest(dialog, user, request, {})}
+                                        onClick={() => ViewRequest(dialog, user, request, {
+                                            onClose: (reload: boolean) => {
+                                                if (reload)
+                                                    alert()
+                                            }
+                                        })}
                                     >
                                         View
                                     </button>
