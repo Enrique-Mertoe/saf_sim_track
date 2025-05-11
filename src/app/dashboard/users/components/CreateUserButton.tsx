@@ -2,6 +2,7 @@
 import {useDialog} from "@/app/_providers/dialog";
 import {CreateUser} from "@/ui/shortcuts";
 import useApp from "@/ui/provider/AppProvider";
+import Signal from "@/lib/Signal";
 
 export default function CreateUserButton() {
     const dialog = useDialog()

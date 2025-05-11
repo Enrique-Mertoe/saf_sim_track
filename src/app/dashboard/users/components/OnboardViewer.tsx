@@ -15,6 +15,7 @@ import {toast} from "react-hot-toast";
 import {$} from "@/lib/request";
 import {generatePassword, suggestRejection} from "@/helper";
 import alert from "@/ui/alert";
+import Signal from "@/lib/Signal";
 
 // Define the necessary types based on your existing code
 export default function RequestDetailViewer({request, user, onClose}: {
@@ -84,8 +85,10 @@ export default function RequestDetailViewer({request, user, onClose}: {
         const dl = dialog.create({
             content: <RejectRequest user={user} options={{reason}} onClose={(rejected: boolean) => {
                 dl.dismiss();
-                if (rejected)
+                if (rejected) {
+                    Signal.trigger("fetchOnboard")
                     setTimeout(() => onClose(rejected), 300);
+                }
             }} request={request}/>,
 
         })
@@ -97,6 +100,18 @@ export default function RequestDetailViewer({request, user, onClose}: {
         reviewerId: request.reviewed_by_id,
         review_notes: request.review_notes
 
+    }
+
+    async function deleteRequest() {
+        const baseUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/id-documents/`;
+        const frontPath = request.id_front_url.replace(baseUrl, '');
+        const backPath = request.id_back_url.replace(baseUrl, '');
+        await storageService.deleteFiles("id-documents", [frontPath, backPath])
+        const {error} = await onboardingService.deleteRequest(request.id);
+        if (error)
+            throw error
+        Signal.trigger("fetchOnboard")
+        return "Request Deleted!"
     }
 
     async function approve() {
@@ -123,7 +138,6 @@ export default function RequestDetailViewer({request, user, onClose}: {
                 id_back_url: request.id_back_url,
                 password: generatePassword()
             };
-            console.log(r_data)
             const addUser = () => {
                 return new Promise((resolve: any, reject: any) => {
                     $.post({
@@ -139,7 +153,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                             throw res.message
                         }
                         const log_data: ActivityLogCreate = {
-                            user_id: request.requested_by_id,
+                            user_id: user.id,
                             action_type: 'ONBOARDING_APPROVED',
                             details: {
                                 onboarding_request_id: request.id,
@@ -160,6 +174,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                 })
             };
             await addUser();
+            Signal.trigger("fetchOnboard")
             setTimeout(() => {
                 onClose(!0);
             }, 1500);
@@ -613,10 +628,12 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                         alert.confirm({
                                             title: "Onboarding request",
                                             message: "This request will be deleted. Confirm to delete!",
-                                            onConfirm: () => {
-
-                                            },
-                                            type: alert.ERROR
+                                            task: deleteRequest,
+                                            type: alert.ERROR,
+                                            onConfirm: res => {
+                                                alert.success(res)
+                                                onClose(true)
+                                            }
                                         })
                                     }}
                                 >

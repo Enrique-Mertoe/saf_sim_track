@@ -7,6 +7,7 @@ import {CheckCircle, AlertCircle, Upload, X, ArrowRight, Loader2} from 'lucide-r
 import {storageService, teamService} from "@/services";
 import {generatePassword, generateUUID} from "@/helper";
 import {$} from "@/lib/request";
+import Signal from "@/lib/Signal";
 
 type CreateUserModalProps = {
     onClose: () => void;
@@ -242,6 +243,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                         // onClose();
                         if (onSuccess) onSuccess();
                     }, 1500);
+                    Signal.trigger("fetchOnboard")
                 }).catch(err => {
                     throw new Error(err.message || 'Failed to create user');
                 });

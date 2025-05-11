@@ -1,6 +1,6 @@
 import {makeResponse} from "@/helper";
 import {NextRequest} from "next/server";
-import AdminActions from "@/app/api/actions/admin-actions";
+import AdminActions, {Logs} from "@/app/api/actions/admin-actions";
 
 interface ApiRequest {
     action: string;
@@ -17,6 +17,8 @@ class ApiHandler {
         switch (action) {
             case "admin":
                 return await AdminActions.builder(target as string, data);
+            case "logs":
+                return await Logs.builder(target as string, data);
             default:
                 return await this._b(action, data)
         }

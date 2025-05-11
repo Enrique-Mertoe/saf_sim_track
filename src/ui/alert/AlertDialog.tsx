@@ -41,22 +41,26 @@ interface AlertItem {
     position: string;
 }
 
-interface ConfirmDialogProps {
+type TaskType<T> = () => T | Promise<T>;
+
+interface ConfirmDialogProps<T = any> {
     isOpen: boolean;
     title: string;
     message: string;
     type: ConfirmType;
-    onConfirm: () => void;
+    onConfirm: (...args: any) => void;
     onDismiss: () => void;
     onCancel: () => void;
+    task?: TaskType<T>;
 }
 
-interface ConfirmDialogInstance {
+interface ConfirmDialogInstance<T = any> {
     title?: string;
     message: string;
     type?: ConfirmType;
-    onConfirm?: () => void;
+    onConfirm?: (res?: T) => void;
     onCancel?: () => void;
+    task?: TaskType<T>;
 }
 
 // Context
@@ -75,7 +79,7 @@ export function _addAlert(...args: any[]) {
     Signal.trigger("add-alert", ...args)
 }
 
-export function _alert_confirm(args: ConfirmDialogInstance) {
+export function _alert_confirm(args: ConfirmDialogInstance<any>) {
     Signal.trigger("add-alert-confirm", args)
 }
 
@@ -132,16 +136,17 @@ export const AlertDialog = () => {
              message,
              type,
              onConfirm,
-             onCancel
-         }: ConfirmDialogInstance
+             onCancel, task,
+         }: ConfirmDialogInstance<any>
         ) => {
             setConfirmDialog({
                 isOpen: true,
                 title: title || '',
                 type: type || ConfirmType.DEFAULT,
                 message,
-                onConfirm: () => {
-                    onConfirm?.();
+                task,
+                onConfirm: res => {
+                    onConfirm?.(res);
                 },
                 onDismiss: () => {
                     setConfirmDialog((prev) => ({...prev, isOpen: false}));
@@ -302,11 +307,14 @@ const ConfirmDialog = ({
                            onConfirm,
                            onDismiss,
                            type,
+                           task,
                            onCancel,
                        }: ConfirmDialogProps) => {
     const [isVisible, setIsVisible] = useState(false);
     const btnRef = useRef<HTMLButtonElement | null>(null);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [taskRunning, setTaskRunning] = useState<boolean>(false)
+    const [taskError, setTaskError] = useState<string>('')
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isOpen) {
@@ -317,10 +325,20 @@ const ConfirmDialog = ({
         }
         return () => clearTimeout(timer);
     }, [isOpen]);
-    const Confirm = () => {
-        setIsVisible(false)
-        onConfirm?.();
-        setTimeout(() => onDismiss(), 300)
+    const Confirm = async () => {
+        try {
+            let res = undefined
+            if (task)
+                res = await runTask()
+            setIsVisible(false)
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+            res ? onConfirm?.(res)
+                : onConfirm?.();
+            setTimeout(() => onDismiss(), 300)
+        } catch (e: any) {
+            e = new Error(e);
+            setTaskError(e.message || "Cant process task")
+        }
     }
 
     useEffect(() => {
@@ -334,6 +352,21 @@ const ConfirmDialog = ({
 
         return () => clearInterval(interval);
     }, [isVisible]);
+
+    const runTask = async () => {
+        setTaskRunning(true)
+        setTaskError('')
+        return new Promise(async (resolve, reject) => {
+            try {
+                const res = await task?.()
+                resolve(res)
+            } catch (e) {
+                reject(e)
+            } finally {
+                setTaskRunning(false)
+            }
+        })
+    }
     const getThemeColors = () => {
         switch (type) {
             case ConfirmType.ERROR:
@@ -568,16 +601,41 @@ const ConfirmDialog = ({
                     <p className={`text-sm text-gray-500 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
                         {message}
                     </p>
+                    {
+                        taskRunning ?
+                            <div className="flex justify-center items-center h-34">
+                                <div
+                                    className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div>
+                            </div> : ''
+                    }
+                    {
+                        taskError ?
+                            <div
+                                className="flex items-center p-3 my-2 bg-red-50 border border-red-200 rounded-md shadow-sm transition-all duration-700 delay-100 animate-pulse">
+                                <div className="mr-3 text-red-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20"
+                                         fill="currentColor">
+                                        <path fillRule="evenodd"
+                                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                              clipRule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <p className="text-sm font-medium text-red-800">
+                                    {taskError}
+                                </p>
+                            </div> : ''
+                    }
                 </div>
 
                 <div className="bg-gray-50 px-6 py-2 flex justify-end space-x-3">
                     <button
+                        disabled={taskRunning}
                         onClick={() => {
                             setIsVisible(false);
                             setTimeout(onDismiss, 500);
                             onCancel();
                         }}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-sm group"
+                        className="px-4 cursor-pointer py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-sm group"
                     >
           <span className="flex items-center">
             <svg
@@ -593,9 +651,10 @@ const ConfirmDialog = ({
           </span>
                     </button>
                     <button
+                        disabled={taskRunning}
                         ref={btnRef}
                         onClick={() => Confirm()}
-                        className={`px-4 py-2 text-sm font-medium text-white ${theme.buttonBg} hover:${theme.buttonHoverBg} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:${theme.buttonRingColor} rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-md relative overflow-hidden group`}
+                        className={`px-4 py-2 cursor-pointer text-sm font-medium text-white ${theme.buttonBg} hover:${theme.buttonHoverBg} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:${theme.buttonRingColor} rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-md relative overflow-hidden group`}
                     >
           <span className="relative z-10 flex items-center">
             <svg

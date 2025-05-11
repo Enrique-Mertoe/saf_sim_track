@@ -9,6 +9,7 @@ import Dashboard from "@/ui/components/dash/Dashboard";
 import {onboardingService, userService} from "@/services";
 import OnBoardTable from "@/app/dashboard/users/components/OnBoardTable";
 import useApp from "@/ui/provider/AppProvider";
+import Signal from "@/lib/Signal";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -33,22 +34,30 @@ export default function UsersPage() {
             setLoading(false);
         }
     }, []);
+    const fetchOnboard = useCallback(async () => {
+        try {
+            const {data} = await onboardingService.getAllRequests();
+            setRequests(data as OnboardingRequest[]);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
-        const fetchOnboard = async () => {
-            try {
-                const {data} = await onboardingService.getAllRequests();
-                setRequests(data as OnboardingRequest[]);
-            } catch (error) {
-                console.error('Error fetching users:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchUsers().then();
         fetchOnboard().then();
-    }, [filters]);
+    }, [fetchOnboard, fetchUsers, filters]);
+    useEffect(() => {
+        Signal.on("fetchOnboard", () => {
+            fetchUsers().then();
+            fetchOnboard().then();
+        });
+        return () => {
+            Signal.off("fetchOnboard")
+        }
+    }, [fetchOnboard, fetchUsers]);
 
     const handleFilterChange = (newFilters: any) => {
         setFilters({...filters, ...newFilters});

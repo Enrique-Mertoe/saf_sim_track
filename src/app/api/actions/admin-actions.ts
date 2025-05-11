@@ -3,7 +3,6 @@ import {UserCreate} from "@/models";
 import {createSuperClient} from "@/lib/supabase/server";
 
 
-
 export async function createUser(userData: UserCreate) {
     const serverSupabase = await createSuperClient();
 
@@ -54,6 +53,7 @@ export async function createUser(userData: UserCreate) {
         return {data: null, error};
     }
 }
+
 function makeResponse(data: { error?: string; [key: string]: any }) {
     if (data.error) {
         return NextResponse.json({error: data.error}, {status: 400});
@@ -86,3 +86,34 @@ class AdminActions {
 }
 
 export default AdminActions
+
+class LogActions {
+    static async supabase() {
+        return await createSuperClient();
+    }
+
+    static async create_log(data: any) {
+        const {error} = await (await this.supabase()).from('activity_logs')
+            .insert(data);
+        console.log(error)
+        if (error) {
+            return makeResponse({error: (error as any).message})
+        }
+        return makeResponse({ok: true})
+    }
+
+    static async builder(target: string, data: any) {
+        try {
+            const action = (LogActions as any)[target];
+            if (typeof action === 'function') {
+                return await action(data);
+            } else {
+                throw new Error(`Action '${target}' is not a function`);
+            }
+        } catch (error) {
+            return makeResponse({error: (error as Error).message});
+        }
+    }
+}
+
+export const Logs = LogActions;

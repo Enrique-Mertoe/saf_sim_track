@@ -9,7 +9,6 @@ type OnBoardTableProps = {
     onDeleteUser: (userId: string) => void;
 };
 export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: OnBoardTableProps) {
-    console.log(requests)
     const dialog = useDialog()
     const {user} = useApp()
     return (

@@ -4,6 +4,7 @@ import {ArrowLeft, Check, Info, Upload, UserPlus, X} from "lucide-react";
 import {onboardingService, storageService} from "@/services";
 import {generateUUID} from "@/helper";
 import {User, UserRole} from "@/models";
+import Signal from "@/lib/Signal";
 
 export default function OnboardStaff({user, onClose}: {
     user: User, onClose: Closure
@@ -170,6 +171,7 @@ export default function OnboardStaff({user, onClose}: {
 
             setSuccess(true);
             resetForm();
+            Signal.trigger("fetchOnboard")
         } catch (error) {
             console.error("Error submitting staff request:", error);
             setError("Failed to submit request. Please try again.");

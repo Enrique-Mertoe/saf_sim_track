@@ -1,4 +1,4 @@
-import { createSupabaseClient } from "@/lib/supabase/client";
+import {createSupabaseClient} from "@/lib/supabase/client";
 import {OnboardingRequestCreate, OnboardingRequestStatus, OnboardingRequestUpdate} from "@/models";
 
 export const onboardingService = {
@@ -81,6 +81,13 @@ export const onboardingService = {
             .insert(requestData)
             .select()
             .single();
+    },
+    async deleteRequest(requestId: string) {
+        const supabase = createSupabaseClient();
+        return supabase
+            .from('onboarding_requests')
+            .delete()
+            .eq('id', requestId);
     },
 
     // Update request status (approve/reject)
