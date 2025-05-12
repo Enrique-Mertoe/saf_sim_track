@@ -6,10 +6,6 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {authService} from "@/services";
 
 // Type definitions
-interface WelcomePageProps {
-    resetToken?: string;
-}
-
 interface FormState {
     password: string;
     confirmPassword: string;
