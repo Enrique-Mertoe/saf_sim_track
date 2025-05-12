@@ -21,7 +21,7 @@ interface FormErrors {
     general?: string;
 }
 
-const WelcomePage: React.FC<WelcomePageProps> = () => {
+const WelcomePage: React.FC<WelcomePageProps> = ({resetToken}) => {
     const [token, setAccessToken] = useState<string | null>(null);
     const [formState, setFormState] = useState<FormState>({
         password: '',
