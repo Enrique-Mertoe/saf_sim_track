@@ -62,15 +62,7 @@ export const authService = {
 
     async changePassword(password: string) {
         const supabase = createSupabaseClient();
-        console.log('password--', (await authService.getCurrentUser()).user)
-        supabase.auth.updateUser({password}).then(res => {
-            alert()
-        }).catch(_res => {
-            alert()
-        });
-        return {
-            data: {}, error: {}
-        }
+        return supabase.auth.updateUser({password});
     },
     updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
         const supabase = createSupabaseClient();
@@ -95,5 +87,20 @@ export const authService = {
 
         // Update last password change timestamp
         await securityService.updateLastPasswordChange();
+    },
+    signWithToken: async ({access_token, refresh_token}: any) => {
+        const supabase = createSupabaseClient();
+        return await supabase.auth.setSession({access_token, refresh_token});
+    },
+    tokenAuthorise(hash: string) {
+        const params = new URLSearchParams(hash.replace(/^#/, ''));
+
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        // const type = params.get('type');
+        if (access_token && refresh_token) {
+            return authService.signWithToken({access_token, refresh_token})
+        }
+        return {data: null, error: "InValid operation"}
     }
 };

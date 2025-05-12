@@ -157,7 +157,7 @@ export default function TeamLeader() {
     const [mounted, setMounted] = useState(false);
     const [_isLoading, setIsLoading] = useState(true);
     const [_selectedStaff, _setSelectedStaff] = useState(null);
-    const [_teamStats, setTeamStats] = useState({
+    const [teamStats, setTeamStats] = useState({
         totalMembers: 0,
         activeSIM: 0,
         qualityPercentage: 0,
@@ -180,7 +180,7 @@ export default function TeamLeader() {
             });
 
             setIsLoading(false);
-        }, 1200);
+        }, );
 
         return () => clearTimeout(timer);
     }, []);
@@ -203,7 +203,7 @@ export default function TeamLeader() {
                     {/* Page Header */}
                     <div className="mb-8 flex flex-wrap justify-between items-center">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">My Team</h1>
+                            <h1 className="text-3xl font-bold text-gray-900">Welcome {user?.full_name}</h1>
                             <p className="mt-1 text-gray-600">
                                 Manage your team members and track performance metrics
                             </p>
@@ -228,6 +228,7 @@ export default function TeamLeader() {
 
                     {/* Team Overview Stats */}
                     <TeamStats/>
+
                     {/* Team Performance Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         {/* Daily Performance Chart */}

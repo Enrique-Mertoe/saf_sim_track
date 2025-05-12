@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIM Card Management System - SIM Registration</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <!-- Sidebar -->
+    <div class="flex h-screen bg-gray-100">
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="flex flex-col w-64 bg-green-700 text-white">
+                <div class="flex items-center justify-center h-16 bg-green-800">
+                    <span class="text-xl font-semibold">SIM Card Management</span>
+                </div>
+                <div class="flex flex-col flex-grow p-4">
+                    <div class="flex flex-col mt-4 space-y-1">
+                        <a href="#" class="flex items-center p-2 hover:bg-green-600 rounded-md">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <div class="flex items-center p-2 bg-green-800 rounded-md">
+                            <i class="fas fa-sim-card mr-3"></i>
+                            <span>SIM Registration</span>
+                        </div>
+                        <a href="#" class="flex items-center p-2 hover:bg-green-600 rounded-md">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            <span>My Performance</span>
+                        </a>
+                        <a href="#" class="flex items-center p-2 hover:bg-green-600 rounded-md">
+                            <i class="fas fa-list-alt mr-3"></i>
+                            <span>My SIMs History</span>
+                        </a>
+                        <a href="#" class="flex items-center p-2 hover:bg-green-600 rounded-md">
+                            <i class="fas fa-tasks mr-3"></i>
+                            <span>Assigned Tasks</span>
+                        </a>
+                    </div>
+                    <div class="mt-auto">
+                        <a href="#" class="flex items-center p-2 hover:bg-green-600 rounded-md">
+                            <i class="fas fa-user-circle mr-3"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a href="#" class="flex items-center p-2 hover:bg-green-600 rounded-md">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+            <!-- Top Navigation -->
+            <div class="flex items-center justify-between h-16 bg-white border-b border-gray-200 px-4">
+                <div class="flex items-center">
+                    <button class="md:hidden mr-2 text-gray-600">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span class="text-xl font-semibold md:hidden">SIM Management</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                            <i class="fas fa-bell text-gray-400"></i>
+                        </span>
+                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-red-500"></span>
+                    </div>
+                    <div class="ml-6 flex items-center">
+                        <img class="h-8 w-8 rounded-full" src="/api/placeholder/32/32" alt="User profile">
+                        <span class="ml-2 text-gray-700">John Doe</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Content -->
+            <div class="flex-1 overflow-auto p-4">
+                <div class="flex items-center justify-between mb-6">
+                    <h1 class="text-2xl font-semibold text-gray-800">SIM Registration</h1>
+                    <div class="flex items-center">
+                        <span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-sm font-medium mr-2">Van Staff</span>
+                        <span class="text-sm font-medium text-gray-500">Today: May 11, 2025</span>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="p-6">
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-medium text-gray-900">Register New SIM</h2>
+                                <div>
+                                    <button class="bg-green-100 text-green-800 py-1 px-3 rounded-md text-sm font-medium mr-2 flex items-center">
+                                        <i class="fas fa-upload mr-2"></i> Bulk Upload
+                                    </button>
+                                </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bulk Upload Instructions Card -->
+                <div class="mt-6 bg-white shadow rounded-lg overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900">Bulk SIM Registration</h3>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-500 mb-4">You can also upload multiple SIM cards at once using our bulk upload feature. Please ensure your file follows the required format:</p>
+
+                        <div class="bg-gray-50 p-4 rounded-md text-xs font-mono overflow-x-auto mb-4">
+                            TM Date,ID Date,ID Month,Dealer Shortcode,Dealer Name,Sim Serial Number,Top Up Date,Top Up Amount,Agent MSISDN,BA MSISDN,Region,Territory,Cluster,Cumulative Usage,Cumulative Commission,Fraud Flagged,Fraud Suspension Date,Fraud Reason,Role,Quality
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <a href="#" class="text-green-600 hover:text-green-500 text-sm font-medium">Download template</a>
+                                <span class="mx-2 text-gray-300">|</span>
+                                <a href="#" class="text-green-600 hover:text-green-500 text-sm font-medium">View sample data</a>
+                            </div>
+
+                            <div class="flex items-center">
+                                <label for="fileUpload" class="bg-green-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer">
+                                    <span>Choose File</span>
+                                    <input id="fileUpload" name="fileUpload" type="file" class="sr-only" accept=".csv,.xlsx">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="mt-6 text-center text-sm text-gray-500">
+                    <p>© 2025 SIM Card Management System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide fraud reason field based on checkbox
+        document.getElementById('fraudFlagged').addEventListener('change', function() {
+            const fraudReasonField = document.querySelector('.fraud-reason');
+            if (this.checked) {
+                fraudReasonField.classList.remove('hidden');
+            } else {
+                fraudReasonField.classList.add('hidden');
+            }
+        });
+
+        // Mobile menu toggle
+        document.querySelector('button').addEventListener('click', function() {
+            const sidebar = document.querySelector('.md\\:flex-shrink-0');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('md:flex');
+        });
+    </script>
+
+
+
+
+
+</div>
+                            <p class="text-sm text-gray-500 mt-1">Enter SIM card details to register a new SIM in the system.</p>
+                        </div>
+
+                        <!-- Registration Tabs -->
+                        <div class="mb-6 border-b border-gray-200">
+                            <nav class="flex -mb-px">
+                                <button class="bg-white inline-block py-2 px-4 border-b-2 border-green-500 font-medium text-sm text-green-600">
+                                    Manual Entry
+                                </button>
+                                <button class="bg-white inline-block py-2 px-4 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                    QR Code Scanner
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Registration Form -->
+                        <form>
+                            <!-- Basic SIM Info -->
+                            <div class="mb-6">
+                                <h3 class="text-md font-medium text-gray-700 mb-4">SIM Card Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="simSerialNumber" class="block text-sm font-medium text-gray-700 mb-1">SIM Serial Number *</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-sim-card text-gray-400"></i>
+                                            </div>
+                                            <input type="text" name="simSerialNumber" id="simSerialNumber" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. 89254021374259301001" required>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="soldDate" class="block text-sm font-medium text-gray-700 mb-1">Sale Date *</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-calendar text-gray-400"></i>
+                                            </div>
+                                            <input type="date" name="soldDate" id="soldDate" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" required value="2025-05-11">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                                    <div>
+                                        <label for="dealerShortcode" class="block text-sm font-medium text-gray-700 mb-1">Dealer Shortcode *</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-tag text-gray-400"></i>
+                                            </div>
+                                            <input type="text" name="dealerShortcode" id="dealerShortcode" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. D-J009" required>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="dealerName" class="block text-sm font-medium text-gray-700 mb-1">Dealer Name *</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-store text-gray-400"></i>
+                                            </div>
+                                            <input type="text" name="dealerName" id="dealerName" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. JEY JEY AND COMPANY LTD" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Information -->
+                            <div class="mb-6">
+                                <h3 class="text-md font-medium text-gray-700 mb-4">Customer Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="agentMSISDN" class="block text-sm font-medium text-gray-700 mb-1">Agent MSISDN</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-phone text-gray-400"></i>
+                                            </div>
+                                            <input type="text" name="agentMSISDN" id="agentMSISDN" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. 112XXX827">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="baMSISDN" class="block text-sm font-medium text-gray-700 mb-1">BA MSISDN</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-phone-alt text-gray-400"></i>
+                                            </div>
+                                            <input type="text" name="baMSISDN" id="baMSISDN" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. 722XXX702">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Top-Up Information -->
+                            <div class="mb-6">
+                                <h3 class="text-md font-medium text-gray-700 mb-4">Top-Up Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="topUpDate" class="block text-sm font-medium text-gray-700 mb-1">Top-Up Date</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-calendar-alt text-gray-400"></i>
+                                            </div>
+                                            <input type="date" name="topUpDate" id="topUpDate" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="topUpAmount" class="block text-sm font-medium text-gray-700 mb-1">Top-Up Amount (KES)</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-money-bill text-gray-400"></i>
+                                            </div>
+                                            <input type="number" name="topUpAmount" id="topUpAmount" min="0" step="0.01" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. 51.00">
+                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <span class="text-gray-500 sm:text-sm">KES</span>
+                                            </div>
+                                        </div>
+                                        <p class="mt-1 text-xs text-gray-500">Minimum 50 KES required for quality SIM</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bundle Information -->
+                            <div class="mb-6">
+                                <h3 class="text-md font-medium text-gray-700 mb-4">Bundle Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="bundlePurchaseDate" class="block text-sm font-medium text-gray-700 mb-1">Bundle Purchase Date</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-calendar-check text-gray-400"></i>
+                                            </div>
+                                            <input type="date" name="bundlePurchaseDate" id="bundlePurchaseDate" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="bundleAmount" class="block text-sm font-medium text-gray-700 mb-1">Bundle Amount (KES)</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i class="fas fa-gift text-gray-400"></i>
+                                            </div>
+                                            <input type="number" name="bundleAmount" id="bundleAmount" min="0" step="0.01" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="e.g. 100.00">
+                                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <span class="text-gray-500 sm:text-sm">KES</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Location Information -->
+                            <div class="mb-6">
+                                <h3 class="text-md font-medium text-gray-700 mb-4">Location Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label for="region" class="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                                        <select id="region" name="region" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                            <option value="">Select region</option>
+                                            <option value="Central">Central</option>
+                                            <option value="Coast">Coast</option>
+                                            <option value="Eastern">Eastern</option>
+                                            <option value="Nairobi">Nairobi</option>
+                                            <option value="North Eastern">North Eastern</option>
+                                            <option value="Nyanza">Nyanza</option>
+                                            <option value="Rift Valley">Rift Valley</option>
+                                            <option value="Western">Western</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="territory" class="block text-sm font-medium text-gray-700 mb-1">Territory</label>
+                                        <select id="territory" name="territory" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                            <option value="">Select territory</option>
+                                            <option value="Territory 1">Territory 1</option>
+                                            <option value="Territory 2">Territory 2</option>
+                                            <option value="Territory 3">Territory 3</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="cluster" class="block text-sm font-medium text-gray-700 mb-1">Cluster</label>
+                                        <select id="cluster" name="cluster" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                            <option value="">Select cluster</option>
+                                            <option value="Cluster A">Cluster A</option>
+                                            <option value="Cluster B">Cluster B</option>
+                                            <option value="Cluster C">Cluster C</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="mb-6">
+                                <h3 class="text-md font-medium text-gray-700 mb-4">Additional Information</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                        <select id="role" name="role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                                            <option value="">Select role</option>
+                                            <option value="Agent">Agent</option>
+                                            <option value="Customer">Customer</option>
+                                            <option value="Business">Business</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex items-start pt-6">
+                                        <div class="flex items-center h-5">
+                                            <input id="fraudFlagged" name="fraudFlagged" type="checkbox" class="focus:ring-green-500 h-4 w-4 text-green-600 border-gray-300 rounded">
+                                        </div>
+                                        <div class="ml-3 text-sm">
+                                            <label for="fraudFlagged" class="font-medium text-gray-700">Flag for potential fraud</label>
+                                            <p class="text-gray-500">Check if you suspect any fraudulent activity</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 fraud-reason hidden">
+                                    <label for="fraudReason" class="block text-sm font-medium text-gray-700 mb-1">Fraud Reason</label>
+                                    <div class="mt-1">
+                                        <textarea id="fraudReason" name="fraudReason" rows="3" class="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md" placeholder="Describe the reason for flagging this SIM card"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="flex justify-end space-x-3 mt-8">
+                                <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Clear Form
+                                </button>
+                                <button type="button" class="bg-gray-100 py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Save Draft
+                                </button>
+                                <button type="submit" class="bg-green-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    Register SIM
+                                </button>
+                            </div>
+
+</body>
+</html>
+                            <

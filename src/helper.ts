@@ -1,3 +1,4 @@
+
 type JsonResponse = {
     ok?: boolean;
     error?: string;
@@ -169,3 +170,14 @@ export function suggestRejection(error: any): string {
     // Generic fallback
     return "Registration failed. Please check your information and try again.";
 }
+
+export function escapeHtml(str: string) {
+    return str.replace(/[&<>"']/g, match => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[match] || match));
+}
+

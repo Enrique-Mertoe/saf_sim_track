@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to SIM Card Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333333;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background-color: #00a86b;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header img {
+            max-height: 60px;
+        }
+
+        .header h1 {
+            color: white;
+            margin: 10px 0 0;
+            font-weight: 600;
+            font-size: 24px;
+        }
+
+        .content {
+            padding: 24px;
+            line-height: 1.6;
+        }
+
+        .welcome-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333333;
+        }
+
+        .role-badge {
+            display: inline-block;
+            background-color: #e0f7ea;
+            color: #00a86b;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #00a86b;
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .details {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .details h3 {
+            margin-top: 0;
+            color: #00a86b;
+            font-size: 18px;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 10px;
+        }
+
+        .details p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .details strong {
+            display: inline-block;
+            width: 120px;
+            color: #555555;
+        }
+
+        .footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #777777;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        .features {
+            margin: 25px 0;
+        }
+
+        .feature {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .feature-icon {
+            background-color: #e0f7ea;
+            color: #00a86b;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-text h4 {
+            margin: 0 0 5px;
+            color: #00a86b;
+            font-size: 16px;
+        }
+
+        .feature-text p {
+            margin: 0;
+            font-size: 14px;
+            color: #666666;
+        }
+
+        .expiry {
+            font-size: 13px;
+            color: #999999;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        @media only screen and (max-width: 480px) {
+            .header {
+                padding: 15px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .button {
+                padding: 12px 20px;
+                font-size: 15px;
+                display: block;
+                width: 80%;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="header">
+        <img src="https://via.placeholder.com/240x60?text=SCMS+Logo" alt="SCMS Logo">
+        <h1>SIM Card Management System</h1>
+    </div>
+
+    <div class="content">
+        <p class="welcome-text">Hello {{user.fullName}},</p>
+
+        <p>You've been invited to join the Safaricom SIM Card Management System as a:</p>
+        <div class="role-badge">{{user.role}}</div>
+
+        <p>Our system helps track and manage SIM card sales, activations, and performance metrics across different sales
+            teams. You'll be able to access features specific to your role to help maximize efficiency and performance
+            tracking.</p>
+
+        <div class="details">
+            <h3>Account Details</h3>
+            <p><strong>Team:</strong> {{user.team.teamName}}</p>
+            <p><strong>ID Number:</strong> {{user.idNumber}}</p>
+            <p><strong>Phone:</strong> {{user.phoneNumber}}</p>
+            <p><strong>Invited By:</strong> {{invitedBy.fullName}}</p>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">
+                    <h4>Track SIM Card Sales</h4>
+                    <p>Monitor SIM activations, top-ups, and usage data in real-time.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-text">
+                    <h4>Performance Analytics</h4>
+                    <p>Access detailed performance reports for your team and individuals.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔐</div>
+                <div class="feature-text">
+                    <h4>Secure System</h4>
+                    <p>Role-based access ensures you see only what's relevant to you.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <a href="{{signUpUrl}}" class="button">Accept Invitation</a>
+        </div>
+
+        <p class="expiry">This invitation link expires in 24 hours.</p>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Safaricom SIM Card Management System. All rights reserved.</p>
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>For support, contact your team leader or system administrator.</p>
+    </div>
+</div>
+</body>
+</html>

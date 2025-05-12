@@ -218,6 +218,7 @@ export default function Sidebar() {
             );
         } else if (user?.role === UserRole.STAFF) {
             navItems.push(
+                {href: '/dashboard/sim', icon: Phone, label: 'Sim Registration'},
                 {href: '/contacts', icon: Phone, label: 'Contacts'},
                 {href: '/achievements', icon: Award, label: 'Achievements'}
             );

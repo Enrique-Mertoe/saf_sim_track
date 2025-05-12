@@ -1,6 +1,4 @@
-// components/auth/InputField.tsx
 import React from 'react';
-import { IconType } from 'react-icons';
 
 interface InputFieldProps {
   id: string;

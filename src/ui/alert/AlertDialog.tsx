@@ -2,7 +2,7 @@
 import React, {useState, useEffect, createContext, useContext, useCallback, useRef} from 'react';
 import {AlertCircle, CheckCircle, Info, X, AlertTriangle} from 'lucide-react';
 import Signal from "@/lib/Signal";
-
+import DOMPurify from 'dompurify';
 // Types
 type AlertType = 'success' | 'error' | 'info' | 'warning';
 
@@ -598,9 +598,7 @@ const ConfirmDialog = ({
                         isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-4'
                     }`}
                 >
-                    <p className={`text-sm text-gray-500 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-                        {message}
-                    </p>
+                    <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message) }} className={`text-sm text-gray-500 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100' : 'opacity-0'}`}/>
                     {
                         taskRunning ?
                             <div className="flex justify-center items-center h-34">

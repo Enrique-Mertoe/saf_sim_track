@@ -107,7 +107,7 @@ const ResetPassword = () => {
 
             // Redirect to login page after animation sequence
             setTimeout(() => {
-                location.href = '/login';
+                location.href = '/accounts/login';
             }, 3500);
 
         } catch (error) {

@@ -32,7 +32,7 @@ export const teamService = {
     async getTeamHierarchy(teamId: string) {
         const supabase = createSupabaseClient();
         return supabase
-            .rpc('get_team_hierarchy', {team_id: teamId});
+            .rpc('get_team_hierarchy', {in_team_id: teamId});
     },
 
     // Create a new team

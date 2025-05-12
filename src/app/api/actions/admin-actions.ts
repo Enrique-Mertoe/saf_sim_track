@@ -1,7 +1,10 @@
 import {NextResponse} from "next/server";
 import {UserCreate} from "@/models";
 import {createSuperClient} from "@/lib/supabase/server";
-
+import {SendEmailOptions, SendEmailResult} from "@/types/mail.sendgrid";
+import sgMail from '@sendgrid/mail';
+import {join} from "path";
+import {readFileSync} from "node:fs";
 
 export async function createUser(userData: UserCreate) {
     const serverSupabase = await createSuperClient();
@@ -54,6 +57,84 @@ export async function createUser(userData: UserCreate) {
     }
 }
 
+const getEmailTemplate = (templateName: string): string => {
+    const filePath = join(process.cwd(), 'emails', `${templateName}.html`);
+    return readFileSync(filePath, 'utf-8');
+};
+
+const generateWelcomeEmailTemplate = (templateData: any
+) => {
+    const welcomeEmailTemplate = getEmailTemplate('invite');
+    return welcomeEmailTemplate
+        .replace('{{user.fullName}}', templateData.fullName)
+        .replace('{{user.role}}', templateData.role)
+        .replace('{{user.team.teamName}}', templateData.team)
+        .replace('{{user.phoneNumber}}', templateData.phoneNumber)
+        .replace('{{user.idNumber}}', templateData.idNumber)
+        .replace('{{invitedBy.fullName}}', templateData.invitedBy)
+        .replace('{{signUpUrl}}', templateData.resetPasswordUrl);
+};
+export const sendEmail = async ({
+                                    to,
+                                    subject,
+                                    html,
+                                }: SendEmailOptions): Promise<SendEmailResult> => {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
+
+    const msg = {
+        to,
+        from: 'info@lomtechnology.com',
+        subject,
+        html,
+    };
+
+    try {
+        await sgMail.send(msg);
+        return {success: true};
+    } catch (error) {
+        console.error('Email sending error:', error);
+        return {error};
+    }
+};
+
+async function sendInvite(options: any) {
+    const supabase = await createSuperClient();
+    console.log(`${process.env.NEXT_PUBLIC_APP_URL}/accounts/welcome`)
+    try {
+        const {data, error} = await supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: options.email,
+            options: {
+                redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/accounts/welcome`,
+            },
+        });
+
+        if (error) {
+            return {error, data: null};
+        }
+        const resetPasswordUrl = data.properties.action_link;
+        // const {data: userData} = await supabase.auth.admin.getUserById(options.id);
+
+        await sendEmail({
+            to: options.email,
+            subject: "Welcome to SIM Card Management System",
+            html: generateWelcomeEmailTemplate({
+                fullName: options.full_name,
+                role: options.role || 'staff',
+                team: options.teams?.name,
+                phoneNumber: options.phone_number,
+                idNumber: options.id_number,
+                invitedBy: options.requestedBy?.full_name,
+                resetPasswordUrl: resetPasswordUrl,
+            }),
+        });
+
+        return {success: true, error: null};
+    } catch (error) {
+        return {data: null, error};
+    }
+}
+
 function makeResponse(data: { error?: string; [key: string]: any }) {
     if (data.error) {
         return NextResponse.json({error: data.error}, {status: 400});
@@ -64,6 +145,15 @@ function makeResponse(data: { error?: string; [key: string]: any }) {
 class AdminActions {
     static async create_user(data: any) {
         const {error} = await createUser(data)
+        console.log(error)
+        if (error) {
+            return makeResponse({error: (error as any).message})
+        }
+        return makeResponse({ok: true})
+    }
+
+    static async send_invite(data: any) {
+        const {error} = await sendInvite(data);
         console.log(error)
         if (error) {
             return makeResponse({error: (error as any).message})

@@ -28,3 +28,18 @@ export interface TeamUpdate {
     van_location?: string;
     is_active?: boolean;
 }
+
+export type TeamHierarchy = {
+    id: string; // team UUID
+    name: string;
+    leader_id: string;
+    leader_name: string;
+    active_member_count: number;
+    staff: {
+        user_id: string;
+        full_name: string;
+        role: string;
+        staff_type: string;
+        sim_sales_count: number;
+    }[];
+};

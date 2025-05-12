@@ -4,6 +4,7 @@ import {Activity, Eye, EyeOff, Lock, User, Phone, AlertCircle} from 'lucide-reac
 import {useRouter} from 'next/navigation';
 import toast from "react-hot-toast";
 import {$} from "@/lib/request";
+import {authService} from "@/services";
 
 // Define a utility for animations
 const fadeIn = (delay = 0) => {
@@ -112,7 +113,7 @@ export default function AdminSetupPage() {
         return isValid;
     };
 
-    const handleSubmit = async (e:any) => {
+    const handleSubmit = async (e: any) => {
         if (e && e.preventDefault) {
             e.preventDefault();
         }
@@ -135,8 +136,15 @@ export default function AdminSetupPage() {
             }).catch(err => {
                 toast.error(`Registration failed. ${err.message}`);
                 setErrors(prev => ({...prev, general: err.message || 'Failed to create admin account'}));
-            }).then(res => {
+            }).then(async res => {
                 toast.success('Login successful ' + res.message);
+                const {error: signInError} = await authService.signIn(
+                    formValues.email, formValues.password);
+                if (signInError) {
+                    toast.error(`Unable to signin, redirecting to login page. ${signInError.message}`);
+                    return
+                }
+                location.href = "/dashboard"
             }).done(() => {
                 setIsLoading(false);
             });
