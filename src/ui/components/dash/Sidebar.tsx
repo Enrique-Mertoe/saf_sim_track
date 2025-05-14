@@ -88,7 +88,8 @@ const NavItem = ({href, icon: Icon, label, onClick}: NavItemProps) => {
                         : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                 }`}
             >
-                <div className={`${isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                <div
+                    className={`${isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     <Icon size={20}/>
                 </div>
                 <span>{label}</span>
@@ -200,7 +201,6 @@ export default function Sidebar() {
         const navItems = [];
         navItems.push(
             {href: '/dashboard', icon: Grid, label: 'Dashboard'},
-            {href: '/analytics', icon: PieChart, label: 'Analytics'}
         );
         // Role-specific items
         if (user?.role === UserRole.ADMIN) {
@@ -208,13 +208,15 @@ export default function Sidebar() {
                 {href: '/dashboard/users', icon: Users, label: 'Users'},
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
                 {href: '/map', icon: Map, label: 'Location'},
-                {href: '/settings', icon: Settings, label: 'Settings'}
+                {href: '/settings', icon: Settings, label: 'Settings'},
+                {href: '/reports', icon: PieChart, label: 'Reports'}
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
                 {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
                 {href: '/map', icon: Map, label: 'Location'},
-                {href: '/settings', icon: Settings, label: 'Settings'}
+                {href: '/settings', icon: Settings, label: 'Settings'},
+                {href: '/report', icon: PieChart, label: 'Reports'}
             );
         } else if (user?.role === UserRole.STAFF) {
             navItems.push(

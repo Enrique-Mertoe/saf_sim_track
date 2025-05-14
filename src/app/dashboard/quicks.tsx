@@ -11,60 +11,60 @@ export default function DashQuickActions() {
     const {user} = useApp();
     return (
         <div className="">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-lg font-medium text-gray-900 mb-6">Quick Actions</h2>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">Quick Actions</h2>
                 <div className="space-y-4 grid grid-cols-2 gap-2">
                     <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
+                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
-                            <div className="p-2 bg-indigo-100 rounded-full mr-4">
-                                <Smartphone className="h-5 w-5 text-indigo-600"/>
+                            <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-full mr-4">
+                                <Smartphone className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">Register New SIM</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Register New SIM</span>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-indigo-600"/>
+                        <ArrowUpRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400"/>
                     </button>
                     <button
                         onClick={() => CreateUser(dialog, user!, {})
                         }
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
-                            <div className="p-2 bg-green-100 rounded-full mr-4">
-                                <Users className="h-5 w-5 text-green-600"/>
+                            <div className="p-2 bg-green-100 dark:bg-green-800 rounded-full mr-4">
+                                <Users className="h-5 w-5 text-green-600 dark:text-green-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">Onboard New User</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Onboard New User</span>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-green-600"/>
+                        <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400"/>
                     </button>
                     <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
-                            <div className="p-2 bg-blue-100 rounded-full mr-4">
-                                <BarChart4 className="h-5 w-5 text-blue-600"/>
+                            <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-full mr-4">
+                                <BarChart4 className="h-5 w-5 text-blue-600 dark:text-blue-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">Generate Report</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Generate Report</span>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-blue-600"/>
+                        <ArrowUpRight className="h-4 w-4 text-blue-600 dark:text-blue-400"/>
                     </button>
                     <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
-                            <div className="p-2 bg-purple-100 rounded-full mr-4">
-                                <Activity className="h-5 w-5 text-purple-600"/>
+                            <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-full mr-4">
+                                <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">View Team Performance</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">View Team Performance</span>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-purple-600"/>
+                        <ArrowUpRight className="h-4 w-4 text-purple-600 dark:text-purple-400"/>
                     </button>
                     <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
-                            <div className="p-2 bg-red-100 rounded-full mr-4">
-                                <XCircle className="h-5 w-5 text-red-600"/>
+                            <div className="p-2 bg-red-100 dark:bg-red-800 rounded-full mr-4">
+                                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900">Review Flagged SIMs</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Review Flagged SIMs</span>
                         </div>
-                        <ArrowUpRight className="h-4 w-4 text-red-600"/>
+                        <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400"/>
                     </button>
                 </div>
             </div>
@@ -195,9 +195,9 @@ export const UserStatistics: FC = () => {
 
     if (loading) {
         return (
-            <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400"></div>
                 </div>
             </div>
         );
@@ -222,7 +222,7 @@ export const UserStatistics: FC = () => {
         const cardClasses = `
       transform transition-all duration-500 ease-out
       ${cardVisible[index] ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
-      flex flex-col p-4 bg-gray-50 rounded-lg hover:shadow-lg border border-gray-100 hover:border-gray-200
+      flex flex-col p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-lg border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500
     `;
 
         return (
@@ -230,21 +230,21 @@ export const UserStatistics: FC = () => {
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center">
                         <div
-                            className={`p-2 ${iconBg} rounded-full mr-4 transform transition-transform duration-300 hover:scale-110`}>
+                            className={`p-2 ${iconBg.replace('bg-', 'bg-')} dark:${iconBg.replace('bg-', 'bg-').replace('100', '800')} rounded-full mr-4 transform transition-transform duration-300 hover:scale-110`}>
                             {icon}
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-900">{title}</p>
-                            <p className="text-xs text-gray-500">{subtitle}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-white">{title}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
                         </div>
                     </div>
-                    <div className="text-lg font-semibold text-gray-900">
+                    <div className="text-lg font-semibold text-gray-900 dark:text-white">
                         <Counter end={value}/>
                     </div>
                 </div>
 
                 <div className="mt-2">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                         <div
                             className={`h-2 rounded-full ${iconColor.replace('text', 'bg')}`}
                             style={{
@@ -254,7 +254,7 @@ export const UserStatistics: FC = () => {
                         ></div>
                     </div>
                     <div className="flex justify-end mt-1">
-                        <span className="text-xs text-gray-500">{Math.round(progress)}% of total</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{Math.round(progress)}% of total</span>
                     </div>
                 </div>
             </div>
@@ -263,20 +263,20 @@ export const UserStatistics: FC = () => {
 
     return (
         <div
-            className={`bg-white p-2 rounded-lg shadow-md transform transition-all duration-700 ${animate ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+            className={`bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md transform transition-all duration-700 ${animate ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-gray-900">User Statistics</h2>
-                <div className="p-1.5 bg-indigo-50 rounded-md">
-                    <TrendingUp className="h-4 w-4 text-indigo-600"/>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">User Statistics</h2>
+                <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/40 rounded-md">
+                    <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400"/>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <StatCard
                     index={0}
-                    icon={<Users className="h-5 w-5 text-indigo-600"/>}
+                    icon={<Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/>}
                     iconBg="bg-indigo-100"
-                    iconColor="text-indigo-600"
+                    iconColor="text-indigo-600 dark:text-indigo-400"
                     title="Total Users"
                     subtitle="All system users"
                     value={userStats.total}
@@ -285,9 +285,9 @@ export const UserStatistics: FC = () => {
 
                 <StatCard
                     index={1}
-                    icon={<Users className="h-5 w-5 text-blue-600"/>}
+                    icon={<Users className="h-5 w-5 text-blue-600 dark:text-blue-400"/>}
                     iconBg="bg-blue-100"
-                    iconColor="text-blue-600"
+                    iconColor="text-blue-600 dark:text-blue-400"
                     title="Team Leaders"
                     subtitle="Management users"
                     value={userStats.teamLeaders}
@@ -296,9 +296,9 @@ export const UserStatistics: FC = () => {
 
                 <StatCard
                     index={2}
-                    icon={<Users className="h-5 w-5 text-green-600"/>}
+                    icon={<Users className="h-5 w-5 text-green-600 dark:text-green-400"/>}
                     iconBg="bg-green-100"
-                    iconColor="text-green-600"
+                    iconColor="text-green-600 dark:text-green-400"
                     title="Staff Users"
                     subtitle="Field agents"
                     value={userStats.staff}
@@ -307,9 +307,9 @@ export const UserStatistics: FC = () => {
 
                 <StatCard
                     index={3}
-                    icon={<Activity className="h-5 w-5 text-purple-600"/>}
+                    icon={<Activity className="h-5 w-5 text-purple-600 dark:text-purple-400"/>}
                     iconBg="bg-purple-100"
-                    iconColor="text-purple-600"
+                    iconColor="text-purple-600 dark:text-purple-400"
                     title="Active Users"
                     subtitle="Last 30 days"
                     value={userStats.active}

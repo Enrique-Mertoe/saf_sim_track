@@ -196,22 +196,22 @@ export default function SafaricomDashboard() {
             initial={{opacity: 0, y: 20}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.5}}
-            className="bg-white rounded-lg shadow-md p-6 flex flex-col"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col"
         >
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
+                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">{title}</h3>
                 <div className={`p-2 rounded-full ${color}`}>
                     {icon}
                 </div>
             </div>
             <div className="flex items-baseline">
-                <p className="text-2xl font-semibold">{loading ? '-' : value}</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{loading ? '-' : value}</p>
                 {change && (
                     <span
-                        className={`ml-2 flex items-center text-sm ${change > 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {change > 0 ? <ArrowUp size={16}/> : <ArrowDown size={16}/>}
+                        className={`ml-2 flex items-center text-sm ${change > 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                {change > 0 ? <ArrowUp size={16}/> : <ArrowDown size={16}/>}
                         {Math.abs(change)}%
-          </span>
+            </span>
                 )}
             </div>
         </motion.div>
@@ -225,7 +225,7 @@ export default function SafaricomDashboard() {
 
     return (
         <Dashboard>
-            <div className="bg-gray-50 p-6 w-full min-h-screen">
+            <div className="p-6 w-full min-h-screen">
                 <div className="max-w-7xl mx-auto">
                     {/* Dashboard Header */}
                     <div className="flex justify-between items-center mb-6">
@@ -234,7 +234,7 @@ export default function SafaricomDashboard() {
                             animate={{opacity: 1, x: 0}}
                             transition={{duration: 0.5}}
                         >
-                            <h1 className="text-2xl font-bold text-gray-800">
+                            <h1 className="text-2xl font-bold dark:text-gray-50 text-gray-800">
                                 {role === 'admin' ? 'Admin Dashboard' : 'Team Leader Dashboard'}
                             </h1>
                             <p className="text-gray-500">Overview of SIM card sales and activations</p>
@@ -256,7 +256,7 @@ export default function SafaricomDashboard() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2  gap-1">
                             <StatCard

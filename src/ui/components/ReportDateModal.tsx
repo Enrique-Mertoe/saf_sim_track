@@ -262,7 +262,9 @@ export default function ReportDateRangeTemplate({
               className="mx-auto"
               modifiers={{
                 range: (date) => isDateInRange(date),
+                //@ts-ignore
                 rangeStart: (date) => isStartDate(date),
+                //@ts-ignore
                 rangeEnd: (date) => isEndDate(date),
               }}
               modifiersClassNames={{
@@ -297,7 +299,9 @@ export default function ReportDateRangeTemplate({
                 className="mx-auto"
                 modifiers={{
                   range: (date) => isDateInRange(date),
+                  //@ts-ignore
                   rangeStart: (date) => isStartDate(date),
+                  //@ts-ignore
                   rangeEnd: (date) => isEndDate(date),
                 }}
                 modifiersClassNames={{

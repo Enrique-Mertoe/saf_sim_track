@@ -568,7 +568,7 @@ const ReportGenerator = () => {
                             <button
                                 onClick={() => {
                                     const d = dialog.create({
-                                        content: <ReportDateRangeModal onClose={() => d.dismiss()}/>,
+                                        content: <ReportDateRangeModal onConfirm={()=>{}} onClose={() => d.dismiss()}/>,
                                         size:"lg"
                                     })
                                 }}
