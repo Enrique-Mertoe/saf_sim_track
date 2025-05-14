@@ -35,7 +35,6 @@ export const authService = {
             .select('*')
             .eq('id', data.user.id)
             .single();
-
         return {
             user: profile,
             error: profileError
