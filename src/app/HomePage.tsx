@@ -3,8 +3,6 @@
 
 import {useEffect, useState, useRef} from "react";
 import {motion, useScroll, useTransform} from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
 
 export default function Home() {
     const [activeFeature, setActiveFeature] = useState(0);
@@ -46,6 +44,19 @@ export default function Home() {
         }, 3000);
         return () => clearInterval(interval);
     }, [features.length]);
+    const [blobs, setBlobs] = useState<any[]>([])
+    useEffect(() => {
+        const newBlobs = Array.from({length: 20}).map(() => ({
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            width: `${Math.random() * 300 + 50}px`,
+            height: `${Math.random() * 300 + 50}px`,
+            opacity: Math.random() * 0.4,
+            animation: `float ${Math.random() * 10 + 10}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * 5}s`,
+        }))
+        setBlobs(newBlobs)
+    }, [])
 
     return (
         <main className="overflow-x-hidden">
@@ -54,19 +65,13 @@ export default function Home() {
                 className="relative h-screen flex items-center justify-center bg-gradient-to-br from-green-900 via-green-800 to-indigo-900 overflow-hidden">
                 <div className="absolute inset-0 w-full h-full">
                     <div className="absolute top-0 left-0 w-full h-full">
-                        {Array.from({length: 20}).map((_, i) => (
+                        {blobs.map((style, i) => (
                             <div
                                 key={i}
                                 className="absolute rounded-full bg-white/10"
                                 style={{
-                                    top: `${Math.random() * 100}%`,
-                                    left: `${Math.random() * 100}%`,
-                                    width: `${Math.random() * 300 + 50}px`,
-                                    height: `${Math.random() * 300 + 50}px`,
-                                    opacity: Math.random() * 0.4,
-                                    filter: "blur(50px)",
-                                    animation: `float ${Math.random() * 10 + 10}s ease-in-out infinite`,
-                                    animationDelay: `${Math.random() * 5}s`,
+                                    ...style,
+                                    filter: 'blur(50px)',
                                 }}
                             />
                         ))}

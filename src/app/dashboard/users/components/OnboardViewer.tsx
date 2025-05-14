@@ -223,13 +223,14 @@ export default function RequestDetailViewer({request, user, onClose}: {
                         animate={isOpen ? {opacity: 1, scale: 1} : {opacity: 0, scale: 0.9}}
                         exit={{opacity: 0, scale: 0.9}}
                         transition={{duration: 0.5, type: 'spring', bounce: 0.3}}
-                        className="bg-white rounded  w-full overflow-hidden"
+                        className="bg-white dark:bg-gray-800 rounded w-full overflow-hidden"
                     >
                         {/* Header */}
-                        <div className="relative bg-gradient-to-r from-green-500 to-green-700 p-6 text-white">
+                        <div
+                            className="relative bg-gradient-to-r from-green-500 to-green-700 dark:from-green-600 dark:to-green-900 p-6 text-white">
                             <motion.button
                                 onClick={handleClose}
-                                className="absolute cursor-pointer top-6 left-6 flex items-center text-white hover:bg-green-300 hover:bg-opacity-20 rounded-full p-1 transition-all"
+                                className="absolute cursor-pointer top-6 left-6 flex items-center text-white hover:bg-green-300 hover:bg-opacity-20 dark:hover:bg-green-400 dark:hover:bg-opacity-20 rounded-full p-1 transition-all"
                                 whileHover={{x: -5}}
                             >
                                 <ArrowLeft size={20}/>
@@ -262,23 +263,23 @@ export default function RequestDetailViewer({request, user, onClose}: {
                         </div>
 
                         {/* Tabs */}
-                        <div className="flex border-b">
+                        <div className="flex border-b dark:border-gray-700">
                             <button
                                 onClick={() => setActiveTab('details')}
-                                className={`flex-1 py-4 font-medium ${activeTab === 'details' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500'}`}
+                                className={`flex-1 py-4 font-medium ${activeTab === 'details' ? 'text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400' : 'text-gray-500 dark:text-gray-400'}`}
                             >
                                 Request Details
                             </button>
                             <button
                                 onClick={() => setActiveTab('timeline')}
-                                className={`flex-1 py-4 font-medium ${activeTab === 'timeline' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500'}`}
+                                className={`flex-1 py-4 font-medium ${activeTab === 'timeline' ? 'text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400' : 'text-gray-500 dark:text-gray-400'}`}
                             >
                                 Timeline
                             </button>
                             {request.request_type === 'ONBOARDING' && (
                                 <button
                                     onClick={() => setActiveTab('documents')}
-                                    className={`flex-1 py-4 font-medium ${activeTab === 'documents' ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500'}`}
+                                    className={`flex-1 py-4 font-medium ${activeTab === 'documents' ? 'text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400' : 'text-gray-500 dark:text-gray-400'}`}
                                 >
                                     Documents
                                 </button>
@@ -297,37 +298,43 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                         transition={{duration: 0.2}}
                                     >
                                         <div className="grid md:grid-cols-2 gap-6">
-                                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                                <div className="flex items-center mb-3 text-green-600">
+                                            <div
+                                                className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                <div
+                                                    className="flex items-center mb-3 text-green-600 dark:text-green-400">
                                                     <User size={20}/>
                                                     <h3 className="font-semibold ml-2">Request Information</h3>
                                                 </div>
                                                 <ul className="space-y-3">
                                                     <li className="flex justify-between">
-                                                        <span className="text-gray-500">ID:</span>
+                                                        <span className="text-gray-500 dark:text-gray-300">ID:</span>
                                                         <span
-                                                            className="font-medium">{request.id.substring(0, 8)}...</span>
+                                                            className="font-medium dark:text-gray-200">{request.id.substring(0, 8)}...</span>
                                                     </li>
                                                     <li className="flex justify-between">
-                                                        <span className="text-gray-500">Created:</span>
                                                         <span
-                                                            className="font-medium">{formatDate(request.created_at)}</span>
+                                                            className="text-gray-500 dark:text-gray-300">Created:</span>
+                                                        <span
+                                                            className="font-medium dark:text-gray-200">{formatDate(request.created_at)}</span>
                                                     </li>
                                                     <li className="flex justify-between">
-                                                        <span className="text-gray-500">Requested By:</span>
                                                         <span
-                                                            className="font-medium">{request.requestedBy?.full_name || 'N/A'}</span>
+                                                            className="text-gray-500 dark:text-gray-300">Requested By:</span>
+                                                        <span
+                                                            className="font-medium dark:text-gray-200">{request.requestedBy?.full_name || 'N/A'}</span>
                                                     </li>
                                                     <li className="flex justify-between">
-                                                        <span className="text-gray-500">Role:</span>
+                                                        <span className="text-gray-500 dark:text-gray-300">Role:</span>
                                                         <span
-                                                            className="font-medium">{request.requestedBy?.role || 'N/A'}</span>
+                                                            className="font-medium dark:text-gray-200">{request.requestedBy?.role || 'N/A'}</span>
                                                     </li>
                                                 </ul>
                                             </div>
 
-                                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                                <div className="flex items-center mb-3 text-green-600">
+                                            <div
+                                                className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                <div
+                                                    className="flex items-center mb-3 text-green-600 dark:text-green-400">
                                                     <Briefcase size={20}/>
                                                     <h3 className="font-semibold ml-2">Subject Details</h3>
                                                 </div>
@@ -335,44 +342,49 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                     {request.request_type === 'ONBOARDING' ? (
                                                         <>
                                                             <li className="flex justify-between">
-                                                                <span className="text-gray-500">Full Name:</span>
-                                                                <span className="font-medium">{request.full_name}</span>
-                                                            </li>
-                                                            <li className="flex justify-between">
-                                                                <span className="text-gray-500">ID Number:</span>
-                                                                <span className="font-medium">{request.id_number}</span>
-                                                            </li>
-                                                            <li className="flex justify-between">
-                                                                <span className="text-gray-500">Phone:</span>
+                                                                <span className="text-gray-500 dark:text-gray-300">Full Name:</span>
                                                                 <span
-                                                                    className="font-medium">{request.phone_number}</span>
+                                                                    className="font-medium dark:text-gray-200">{request.full_name}</span>
                                                             </li>
                                                             <li className="flex justify-between">
-                                                                <span className="text-gray-500">Team:</span>
+                                                                <span className="text-gray-500 dark:text-gray-300">ID Number:</span>
                                                                 <span
-                                                                    className="font-medium">{request.teams?.name || 'N/A'}</span>
+                                                                    className="font-medium dark:text-gray-200">{request.id_number}</span>
+                                                            </li>
+                                                            <li className="flex justify-between">
+                                                                <span
+                                                                    className="text-gray-500 dark:text-gray-300">Phone:</span>
+                                                                <span
+                                                                    className="font-medium dark:text-gray-200">{request.phone_number}</span>
+                                                            </li>
+                                                            <li className="flex justify-between">
+                                                                <span
+                                                                    className="text-gray-500 dark:text-gray-300">Team:</span>
+                                                                <span
+                                                                    className="font-medium dark:text-gray-200">{request.teams?.name || 'N/A'}</span>
                                                             </li>
                                                         </>
                                                     ) : (
                                                         <>
                                                             <li className="flex justify-between">
-                                                                <span className="text-gray-500">Target User:</span>
+                                                                <span className="text-gray-500 dark:text-gray-300">Target User:</span>
                                                                 <span
-                                                                    className="font-medium">{
+                                                                    className="font-medium dark:text-gray-200">{
                                                                     //@ts-ignore
                                                                     request.targetUser?.fullName || 'N/A'}</span>
                                                             </li>
                                                             <li className="flex justify-between">
-                                                                <span className="text-gray-500">ID Number:</span>
+                                                                <span className="text-gray-500 dark:text-gray-300">ID Number:</span>
                                                                 <span
-                                                                    className="font-medium">{
+                                                                    className="font-medium dark:text-gray-200">{
                                                                     //@ts-ignore
                                                                     request.targetUser?.idNumber || 'N/A'}</span>
                                                             </li>
                                                             <li className="flex justify-between">
-                                                                <span className="text-gray-500">Reason:</span>
                                                                 <span
-                                                                    className="font-medium">{request.review_notes || 'Not specified'}</span>
+                                                                    className="text-gray-500 dark:text-gray-300">Reason:</span>
+                                                                <span
+                                                                    className="font-medium dark:text-gray-200">{request.review_notes || 'Not specified'}</span>
                                                             </li>
                                                         </>
                                                     )}
@@ -381,28 +393,30 @@ export default function RequestDetailViewer({request, user, onClose}: {
 
                                             {request.status !== 'pending' && (
                                                 <div
-                                                    className="md:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                                    <div className="flex items-center mb-3 text-green-600">
+                                                    className="md:col-span-2 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                    <div
+                                                        className="flex items-center mb-3 text-green-600 dark:text-green-400">
                                                         <CheckCircle size={20}/>
                                                         <h3 className="font-semibold ml-2">Review Information</h3>
                                                     </div>
                                                     <ul className="space-y-3">
                                                         <li className="flex justify-between">
-                                                            <span className="text-gray-500">Reviewed By:</span>
+                                                            <span className="text-gray-500 dark:text-gray-300">Reviewed By:</span>
                                                             <span
-                                                                className="font-medium">{
+                                                                className="font-medium dark:text-gray-200">{
                                                                 //@ts-ignore
                                                                 request.reviewedBy?.full_name || 'N/A'}</span>
                                                         </li>
                                                         <li className="flex justify-between">
-                                                            <span className="text-gray-500">Review Date:</span>
+                                                            <span className="text-gray-500 dark:text-gray-300">Review Date:</span>
                                                             <span
-                                                                className="font-medium">{request.review_date ? formatDate(request.review_date) : 'N/A'}</span>
+                                                                className="font-medium dark:text-gray-200">{request.review_date ? formatDate(request.review_date) : 'N/A'}</span>
                                                         </li>
                                                         <li className="flex flex-col">
-                                                            <span className="text-gray-500">Notes:</span>
                                                             <span
-                                                                className="font-medium mt-1">{request.review_notes || 'No notes provided'}</span>
+                                                                className="text-gray-500 dark:text-gray-300">Notes:</span>
+                                                            <span
+                                                                className="font-medium mt-1 dark:text-gray-200">{request.review_notes || 'No notes provided'}</span>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -419,7 +433,8 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                         exit={{opacity: 0, y: -20}}
                                         transition={{duration: 0.2}}
                                     >
-                                        <div className="relative border-l-2 border-green-200 ml-6 pl-6 py-2">
+                                        <div
+                                            className="relative border-l-2 border-green-200 dark:border-green-700 ml-6 pl-6 py-2">
                                             <div className="mb-10">
                                                 <motion.div
                                                     initial={{scale: 0}}
@@ -432,9 +447,10 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                     animate={{x: 0, opacity: 1}}
                                                     transition={{delay: 0.2, duration: 0.5}}
                                                 >
-                                                    <p className="text-sm text-gray-500">{formatDate(request.created_at)}</p>
-                                                    <h3 className="font-medium text-lg mt-1">Request Created</h3>
-                                                    <p className="text-gray-600 mt-1">
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(request.created_at)}</p>
+                                                    <h3 className="font-medium text-lg mt-1 dark:text-gray-200">Request
+                                                        Created</h3>
+                                                    <p className="text-gray-600 dark:text-gray-300 mt-1">
                                                         {request.requestedBy?.full_name} created a
                                                         new {request.request_type.toLowerCase()} request
                                                     </p>
@@ -454,9 +470,9 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                         animate={{x: 0, opacity: 1}}
                                                         transition={{delay: 0.4, duration: 0.5}}
                                                     >
-                                                        <p className="text-sm text-gray-500">{formatDate(request.review_date || request.created_at)}</p>
-                                                        <h3 className="font-medium text-lg mt-1">Request {request.status.charAt(0).toUpperCase() + request.status.slice(1)}</h3>
-                                                        <p className="text-gray-600 mt-1">
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(request.review_date || request.created_at)}</p>
+                                                        <h3 className="font-medium text-lg mt-1 dark:text-gray-200">Request {request.status.charAt(0).toUpperCase() + request.status.slice(1)}</h3>
+                                                        <p className="text-gray-600 dark:text-gray-300 mt-1">
                                                             {
                                                                 //@ts-ignore
                                                                 request.reviewedBy?.full_name || 'Administrator'} {request.status} the
@@ -480,9 +496,11 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                         animate={{x: 0, opacity: 1}}
                                                         transition={{delay: 0.4, duration: 0.5}}
                                                     >
-                                                        <p className="text-sm text-gray-500">Current Status</p>
-                                                        <h3 className="font-medium text-lg mt-1">Awaiting Review</h3>
-                                                        <p className="text-gray-600 mt-1">
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">Current
+                                                            Status</p>
+                                                        <h3 className="font-medium text-lg mt-1 dark:text-gray-200">Awaiting
+                                                            Review</h3>
+                                                        <p className="text-gray-600 dark:text-gray-300 mt-1">
                                                             This request is currently pending review by an administrator
                                                         </p>
                                                     </motion.div>
@@ -505,15 +523,17 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                             <motion.div
                                                 whileHover={{y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'}}
                                                 transition={{duration: 0.2}}
-                                                className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                                                className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600"
                                             >
-                                                <div className="flex items-center mb-3 text-green-600">
+                                                <div
+                                                    className="flex items-center mb-3 text-green-600 dark:text-green-400">
                                                     <CreditCard size={20}/>
                                                     <h3 className="font-semibold ml-2">ID Front</h3>
                                                 </div>
-                                                <div className="bg-white rounded border border-gray-200 p-1 shadow-sm">
+                                                <div
+                                                    className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 p-1 shadow-sm">
                                                     <div
-                                                        className="aspect-[3/2] bg-gray-100 rounded flex items-center justify-center">
+                                                        className="aspect-[3/2] bg-gray-100 dark:bg-gray-900 rounded flex items-center justify-center">
                                                         {front_url ? (
                                                             <img
                                                                 src={front_url || "/api/placeholder/300/200"}
@@ -531,7 +551,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                             <div
                                                                 className="flex items-center justify-center w-full h-full">
                                                                 <div
-                                                                    className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600"></div>
+                                                                    className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600 dark:border-green-400"></div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -543,15 +563,17 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                             <motion.div
                                                 whileHover={{y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)'}}
                                                 transition={{duration: 0.2}}
-                                                className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                                                className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600"
                                             >
-                                                <div className="flex items-center mb-3 text-green-600">
+                                                <div
+                                                    className="flex items-center mb-3 text-green-600 dark:text-green-400">
                                                     <CreditCard size={20}/>
                                                     <h3 className="font-semibold ml-2">ID Back</h3>
                                                 </div>
-                                                <div className="bg-white rounded border border-gray-200 p-1 shadow-sm">
+                                                <div
+                                                    className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 p-1 shadow-sm">
                                                     <div
-                                                        className="aspect-[3/2] bg-gray-100 rounded flex items-center justify-center">
+                                                        className="aspect-[3/2] bg-gray-100 dark:bg-gray-900 rounded flex items-center justify-center">
                                                         {back_url ? (
                                                             <img
                                                                 src={back_url || "/api/placeholder/300/200"}
@@ -569,7 +591,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                             <div
                                                                 className="flex items-center justify-center w-full h-full">
                                                                 <div
-                                                                    className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600"></div>
+                                                                    className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-green-600 dark:border-green-400"></div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -582,12 +604,12 @@ export default function RequestDetailViewer({request, user, onClose}: {
                         </div>
 
                         {/* Footer with actions */}
-                        <div className="border-t p-4 flex justify-end space-x-3">
+                        <div className="border-t dark:border-gray-700 p-4 flex justify-end space-x-3">
                             <motion.button
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 disabled={approving}
-                                className="px-4 py-1 cursor-pointer bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                className="px-4 py-1 cursor-pointer bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                                 onClick={handleClose}
                             >
                                 Close
@@ -604,7 +626,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                     reject()
                                                 }}
                                                 disabled={approving}
-                                                className="px-4 py-1 cursor-pointer bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                                className="px-4 py-1 cursor-pointer bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition-colors"
                                             >
                                                 Reject
                                             </motion.button>
@@ -617,7 +639,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                                 whileHover={{scale: 1.05}}
                                                 whileTap={{scale: 0.95}}
                                                 disabled={approving}
-                                                className="px-4 py-1 cursor-pointer flex place-items-center bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                                className="px-4 py-1 cursor-pointer flex place-items-center bg-green-500 dark:bg-green-600 text-white rounded-lg hover:bg-green-600 dark:hover:bg-green-700 transition-colors"
                                             >
                                                 {approving ? (
                                                     <>
@@ -644,7 +666,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                             whileHover={{scale: 1.05}}
                                             whileTap={{scale: 0.95}}
                                             disabled={approving}
-                                            className="px-4 py-1 cursor-pointer bg-green-500 text-white rounded-lg hover:bg-green-400 transition-colors"
+                                            className="px-4 py-1 cursor-pointer bg-green-500 dark:bg-green-600 text-white rounded-lg hover:bg-green-400 dark:hover:bg-green-500 transition-colors"
                                             onClick={() => {
                                                 alert.confirm({
                                                     title: "Onboarding request",
@@ -679,7 +701,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                                         whileHover={{scale: 1.05}}
                                         whileTap={{scale: 0.95}}
                                         disabled={approving}
-                                        className="px-4 py-1 cursor-pointer bg-red-500 text-white rounded-lg hover:bg-red-400 transition-colors"
+                                        className="px-4 py-1 cursor-pointer bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-400 dark:hover:bg-red-500 transition-colors"
                                         onClick={() => {
                                             alert.confirm({
                                                 title: "Onboarding request",
@@ -770,9 +792,9 @@ const RejectRequest = ({request, onClose, user, options}) => {
                         animate={{opacity: 1, y: 0}}
                         exit={{opacity: 0, y: 20}}
                         transition={{duration: 0.3}}
-                        className="bg-white rounded-sm shadow-xl w-full overflow-hidden"
+                        className="bg-white dark:bg-gray-800 rounded-sm shadow-xl w-full overflow-hidden"
                     >
-                        <div className="bg-red-500 p-4 text-white flex items-center justify-between">
+                        <div className="bg-red-500 dark:bg-red-600 p-4 text-white flex items-center justify-between">
                             <div className="flex items-center">
                                 <AlertTriangle className="mr-2" size={20}/>
                                 <h3 className="font-bold text-lg">Reject Request</h3>
@@ -785,25 +807,25 @@ const RejectRequest = ({request, onClose, user, options}) => {
                             </button>
                         </div>
 
-                        <div className="p-6">
+                        <div className="p-6 dark:text-gray-100">
                             <p className="mb-4">
                                 You are about to reject the {request.request_type.toLowerCase()} request for{' '}
                                 <span className="font-semibold">
-                    {request.request_type === 'ONBOARDING'
-                        ? request.full_name
-                        : request.targetUser?.fullName || 'this user'}
-                  </span>.
+            {request.request_type === 'ONBOARDING'
+                ? request.full_name
+                : request.targetUser?.fullName || 'this user'}
+          </span>.
                                 Please provide a reason for the rejection:
                             </p>
 
                             {error && (
-                                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-4">
                                     <div className="flex">
                                         <div className="flex-shrink-0">
-                                            <AlertTriangle className="h-5 w-5 text-red-500"/>
+                                            <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-400"/>
                                         </div>
                                         <div className="ml-3">
-                                            <p className="text-sm text-red-700">{error}</p>
+                                            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -812,8 +834,8 @@ const RejectRequest = ({request, onClose, user, options}) => {
                                 <div className="mb-4">
                                     <div className="flex flex-col space-y-3">
                                         <div
-                                            className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-start space-x-3">
-                                            <div className="flex-shrink-0 text-red-500">
+                                            className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg flex items-start space-x-3">
+                                            <div className="flex-shrink-0 text-red-500 dark:text-red-400">
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5"
                                                      viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd"
@@ -822,12 +844,13 @@ const RejectRequest = ({request, onClose, user, options}) => {
                                                 </svg>
                                             </div>
                                             <div className="flex-1">
-                                                <h4 className="font-medium text-red-800">System Detected Issue</h4>
-                                                <p className="text-sm text-red-700 mt-1">{options.reason}</p>
+                                                <h4 className="font-medium text-red-800 dark:text-red-300">System
+                                                    Detected Issue</h4>
+                                                <p className="text-sm text-red-700 dark:text-red-400 mt-1">{options.reason}</p>
                                             </div>
                                         </div>
 
-                                        <div className="text-sm text-gray-600 px-1">
+                                        <div className="text-sm text-gray-600 dark:text-gray-400 px-1">
                                             You can add additional notes below (optional):
                                         </div>
 
@@ -835,7 +858,7 @@ const RejectRequest = ({request, onClose, user, options}) => {
                                             value={rejectNotes}
                                             onChange={(e) => setRejectNotes(e.target.value)}
                                             placeholder="Add any additional rejection notes..."
-                                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-20 text-sm"
+                                            className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-20 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                             disabled={isSubmitting}
                                         ></textarea>
                                     </div>
@@ -843,7 +866,8 @@ const RejectRequest = ({request, onClose, user, options}) => {
                             ) : (
                                 <div className="mb-4">
                                     <div className="mb-3">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label
+                                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Select a reason or enter custom notes:
                                         </label>
 
@@ -862,67 +886,67 @@ const RejectRequest = ({request, onClose, user, options}) => {
                                                     )}
                                                     className={`flex items-center p-3 border rounded-lg transition-all ${
                                                         rejectNotes === reason.text
-                                                            ? "bg-red-50 border-red-200 text-red-700"
-                                                            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                                                            ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+                                                            : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-650"
                                                     }`}
                                                 >
-            <span className={`flex-shrink-0 mr-2 ${
-                rejectNotes === reason.text ? "text-red-500" : "text-gray-400"
-            }`}>
-              {reason.icon === "user-x" && (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="8.5" cy="7" r="4"></circle>
-                      <line x1="18" y1="8" x2="23" y2="13"></line>
-                      <line x1="23" y1="8" x2="18" y2="13"></line>
-                  </svg>
-              )}
-                {reason.icon === "file-x" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <path d="M14 2v6h6"></path>
-                        <line x1="9" y1="15" x2="15" y2="9"></line>
-                        <line x1="15" y1="15" x2="9" y2="9"></line>
-                    </svg>
-                )}
-                {reason.icon === "shield-off" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"></path>
-                        <path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                )}
-                {reason.icon === "alert-circle" && (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                )}
-            </span>
+    <span className={`flex-shrink-0 mr-2 ${
+        rejectNotes === reason.text ? "text-red-500 dark:text-red-400" : "text-gray-400 dark:text-gray-500"
+    }`}>
+      {reason.icon === "user-x" && (
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="18" y1="8" x2="23" y2="13"></line>
+              <line x1="23" y1="8" x2="18" y2="13"></line>
+          </svg>
+      )}
+        {reason.icon === "file-x" && (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <path d="M14 2v6h6"></path>
+                <line x1="9" y1="15" x2="15" y2="9"></line>
+                <line x1="15" y1="15" x2="9" y2="9"></line>
+            </svg>
+        )}
+        {reason.icon === "shield-off" && (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18"></path>
+                <path d="M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+        )}
+        {reason.icon === "alert-circle" && (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        )}
+    </span>
                                                     <span className="text-sm">{reason.text}</span>
                                                 </button>
                                             ))}
                                         </div>
 
                                         <div className="relative">
-        <textarea
-            ref={textareaRef}
-            value={rejectNotes}
-            onChange={(e) => setRejectNotes(e.target.value)}
-            placeholder="Enter custom rejection reason..."
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-24 pr-10"
-            disabled={isSubmitting}
-        ></textarea>
+<textarea
+    ref={textareaRef}
+    value={rejectNotes}
+    onChange={(e) => setRejectNotes(e.target.value)}
+    placeholder="Enter custom rejection reason..."
+    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-24 pr-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+    disabled={isSubmitting}
+></textarea>
                                             {rejectNotes && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setRejectNotes("")}
-                                                    className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                                                    className="absolute top-3 right-3 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                                                     aria-label="Clear text"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4"
@@ -942,7 +966,7 @@ const RejectRequest = ({request, onClose, user, options}) => {
                                     whileHover={{scale: 1.05}}
                                     whileTap={{scale: 0.95}}
                                     onClick={() => onClose(false)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                     disabled={isSubmitting}
                                 >
                                     Cancel
@@ -951,7 +975,7 @@ const RejectRequest = ({request, onClose, user, options}) => {
                                     whileHover={{scale: 1.05}}
                                     whileTap={{scale: 0.95}}
                                     onClick={handleReject}
-                                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center"
+                                    className="px-4 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition-colors flex items-center"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (

@@ -12,6 +12,9 @@ import {Tabs, TabsContent, TabsList, TabsTrigger} from '@/ui/components/Tabs';
 import {FileUpload} from './FileUpload';
 import {Stepper} from "@/ui/components/Stepper";
 import simService from "@/services/simService";
+import {string} from "yup";
+import {storageService} from "@/services";
+import {CustomerInfo, CustomerInfoActions} from "@/app/dashboard/sim/components/CustomerInfo";
 // import {Stepper, Step} from './Stepper';
 
 // Component for basic SIM information
@@ -30,11 +33,12 @@ const SimBasicInfo = ({control, errors}) => (
                             id="serial_number"
                             placeholder="Enter SIM serial number"
                             {...field}
-                            className={errors.serial_number ? 'border-red-500' : ''}
+                            className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.serial_number ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                         />
                     )}
                 />
-                {errors.serial_number && <p className="text-red-500 text-sm">{errors.serial_number.message}</p>}
+                {errors.serial_number &&
+                    <p className="text-red-500 dark:text-red-400 text-sm">{errors.serial_number.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -49,6 +53,7 @@ const SimBasicInfo = ({control, errors}) => (
                             value={field.value}
                             //@ts-ignore
                             onValueChange={field.onChange}
+                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                         >
                             <option value="">Select status</option>
                             <option value={SIMStatus.INACTIVE}>New</option>
@@ -59,7 +64,7 @@ const SimBasicInfo = ({control, errors}) => (
                         </Select>
                     )}
                 />
-                {errors.status && <p className="text-red-500 text-sm">{errors.status.message}</p>}
+                {errors.status && <p className="text-red-500 dark:text-red-400 text-sm">{errors.status.message}</p>}
             </div>
         </div>
 
@@ -75,11 +80,12 @@ const SimBasicInfo = ({control, errors}) => (
                             id="sale_date"
                             type="date"
                             {...field}
-                            className={errors.sale_date ? 'border-red-500' : ''}
+                            className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.sale_date ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                         />
                     )}
                 />
-                {errors.sale_date && <p className="text-red-500 text-sm">{errors.sale_date.message}</p>}
+                {errors.sale_date &&
+                    <p className="text-red-500 dark:text-red-400 text-sm">{errors.sale_date.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -93,102 +99,113 @@ const SimBasicInfo = ({control, errors}) => (
                             id="sale_location"
                             placeholder="Enter sale location"
                             {...field}
-                            className={errors.sale_location ? 'border-red-500' : ''}
+                            className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.sale_location ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                         />
                     )}
                 />
-                {errors.sale_location && <p className="text-red-500 text-sm">{errors.sale_location.message}</p>}
+                {errors.sale_location &&
+                    <p className="text-red-500 dark:text-red-400 text-sm">{errors.sale_location.message}</p>}
             </div>
         </div>
     </div>
 );
 
-// Component for customer information
-// @ts-ignore
-const CustomerInfo = ({control, errors}) => (
-    <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="customer_msisdn">Customer MSISDN*</Label>
-                <Controller
-                    name="customer_msisdn"
-                    control={control}
-                    rules={{
-                        required: 'Customer phone number is required',
-                        pattern: {
-                            value: /^[0-9]{10,12}$/,
-                            message: 'Please enter a valid phone number'
-                        }
-                    }}
-                    render={({field}) => (
-                        <Input
-                            id="customer_msisdn"
-                            placeholder="e.g., 254722XXXXXX"
-                            {...field}
-                            className={errors.customer_msisdn ? 'border-red-500' : ''}
-                        />
-                    )}
-                />
-                {errors.customer_msisdn && <p className="text-red-500 text-sm">{errors.customer_msisdn.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="customer_id_number">Customer ID Number*</Label>
-                <Controller
-                    name="customer_id_number"
-                    control={control}
-                    rules={{required: 'Customer ID number is required'}}
-                    render={({field}) => (
-                        <Input
-                            id="customer_id_number"
-                            placeholder="Enter customer ID number"
-                            {...field}
-                            className={errors.customer_id_number ? 'border-red-500' : ''}
-                        />
-                    )}
-                />
-                {errors.customer_id_number &&
-                    <p className="text-red-500 text-sm">{errors.customer_id_number.message}</p>}
-            </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="customer_id_front">ID Front</Label>
-                <Controller
-                    name="customer_id_front_url"
-                    control={control}
-                    render={({field}) => (
-                        <FileUpload
-                            onChange={(url) => field.onChange(url)}
-                            value={field.value}
-                            acceptedFileTypes=".jpg,.jpeg,.png"
-                            maxFileSizeMB={5}
-                            label="Upload front ID photo"
-                        />
-                    )}
-                />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="customer_id_back">ID Back</Label>
-                <Controller
-                    name="customer_id_back_url"
-                    control={control}
-                    render={({field}) => (
-                        <FileUpload
-                            onChange={(url) => field.onChange(url)}
-                            value={field.value}
-                            acceptedFileTypes=".jpg,.jpeg,.png"
-                            maxFileSizeMB={5}
-                            label="Upload back ID photo"
-                        />
-                    )}
-                />
-            </div>
-        </div>
-    </div>
-);
+// interface CustomerInfoActions {
+//     uploadBack: (file: File) => Promise<string | null>;
+//     uploadFront: (file: File) => Promise<string | null>;
+// }
+//
+// const CustomerInfo = ({control, errors, actions}: {
+//     control: any, errors: any, actions: CustomerInfoActions
+// }) => (
+//     <div className="space-y-4">
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//             <div className="space-y-2">
+//                 <Label htmlFor="customer_msisdn">Customer MSISDN*</Label>
+//                 <Controller
+//                     name="customer_msisdn"
+//                     control={control}
+//                     rules={{
+//                         required: 'Customer phone number is required',
+//                         pattern: {
+//                             value: /^[0-9]{10,12}$/,
+//                             message: 'Please enter a valid phone number'
+//                         }
+//                     }}
+//                     render={({field}) => (
+//                         <Input
+//                             id="customer_msisdn"
+//                             placeholder="e.g., 254722XXXXXX"
+//                             {...field}
+//                             className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.customer_msisdn ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+//                         />
+//                     )}
+//                 />
+//                 {errors.customer_msisdn &&
+//                     <p className="text-red-500 dark:text-red-400 text-sm">{errors.customer_msisdn.message}</p>}
+//             </div>
+//
+//             <div className="space-y-2">
+//                 <Label htmlFor="customer_id_number">Customer ID Number*</Label>
+//                 <Controller
+//                     name="customer_id_number"
+//                     control={control}
+//                     rules={{required: 'Customer ID number is required'}}
+//                     render={({field}) => (
+//                         <Input
+//                             id="customer_id_number"
+//                             placeholder="Enter customer ID number"
+//                             {...field}
+//                             className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.customer_id_number ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+//                         />
+//                     )}
+//                 />
+//                 {errors.customer_id_number &&
+//                     <p className="text-red-500 dark:text-red-400 text-sm">{errors.customer_id_number.message}</p>}
+//             </div>
+//         </div>
+//
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//             <div className="space-y-2">
+//                 <Label htmlFor="customer_id_front">ID Front</Label>
+//                 <Controller
+//                     name="customer_id_front_url"
+//                     control={control}
+//                     render={({field}) => (
+//                         <FileUpload
+//                             onChange={(url) => field.onChange(url)}
+//                             value={field.value}
+//                             acceptedFileTypes=".jpg,.jpeg,.png"
+//                             maxFileSizeMB={5}
+//                             uploadFunction={actions.uploadFront}
+//                             label="Upload front ID photo"
+//                             className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+//                         />
+//                     )}
+//                 />
+//             </div>
+//
+//             <div className="space-y-2">
+//                 <Label htmlFor="customer_id_back">ID Back</Label>
+//                 <Controller
+//                     name="customer_id_back_url"
+//                     control={control}
+//                     render={({field}) => (
+//                         <FileUpload
+//                             onChange={(url) => field.onChange(url)}
+//                             value={field.value}
+//                             uploadFunction={actions.uploadBack}
+//                             acceptedFileTypes=".jpg,.jpeg,.png"
+//                             maxFileSizeMB={5}
+//                             label="Upload back ID photo"
+//                             className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+//                         />
+//                     )}
+//                 />
+//             </div>
+//         </div>
+//     </div>
+// );
 
 // Component for agent and team information
 // @ts-ignore
@@ -212,11 +229,12 @@ const AgentInfo = ({control, errors, teams}) => (
                             id="agent_msisdn"
                             placeholder="e.g., 254722XXXXXX"
                             {...field}
-                            className={errors.agent_msisdn ? 'border-red-500' : ''}
+                            className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.agent_msisdn ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                         />
                     )}
                 />
-                {errors.agent_msisdn && <p className="text-red-500 text-sm">{errors.agent_msisdn.message}</p>}
+                {errors.agent_msisdn &&
+                    <p className="text-red-500 dark:text-red-400 text-sm">{errors.agent_msisdn.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -231,6 +249,7 @@ const AgentInfo = ({control, errors, teams}) => (
                             value={field.value}
                             //@ts-ignore
                             onValueChange={field.onChange}
+                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                         >
                             <option value="">Select team</option>
 
@@ -242,7 +261,7 @@ const AgentInfo = ({control, errors, teams}) => (
                         </Select>
                     )}
                 />
-                {errors.team_id && <p className="text-red-500 text-sm">{errors.team_id.message}</p>}
+                {errors.team_id && <p className="text-red-500 dark:text-red-400 text-sm">{errors.team_id.message}</p>}
             </div>
         </div>
 
@@ -258,11 +277,11 @@ const AgentInfo = ({control, errors, teams}) => (
                             id="region"
                             placeholder="Enter region"
                             {...field}
-                            className={errors.region ? 'border-red-500' : ''}
+                            className={`bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${errors.region ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                         />
                     )}
                 />
-                {errors.region && <p className="text-red-500 text-sm">{errors.region.message}</p>}
+                {errors.region && <p className="text-red-500 dark:text-red-400 text-sm">{errors.region.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -276,6 +295,7 @@ const AgentInfo = ({control, errors, teams}) => (
                             type="number"
                             placeholder="Enter top-up amount"
                             {...field}
+                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                             onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                         />
                     )}
@@ -290,6 +310,8 @@ const AgentInfo = ({control, errors, teams}) => (
 export const SIMCardForm = ({teams, currentUser}) => {
     const [activeStep, setActiveStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [frontIdFile, setFrontIdFile] = useState(null);
+    const [backIdFile, setBackIdFile] = useState(null);
 
     const methods = useForm<SIMCardCreate>({
         defaultValues: {
@@ -306,17 +328,54 @@ export const SIMCardForm = ({teams, currentUser}) => {
         }
     });
 
-    const {control, handleSubmit, formState: {errors}} = methods;
+    // Create customer info actions that handle the ID images
+    const actions: CustomerInfoActions = {
+        async uploadFront(file: File): Promise<string | null> {
+            // Store file for later upload during form submission
+            setFrontIdFile(file);
+            return Promise.resolve(null);
+        },
+        async uploadBack(file: File): Promise<string | null> {
+            // Store file for later upload during form submission
+            setBackIdFile(file);
+            return Promise.resolve(null);
+        }
+    }
+
+    const {control, handleSubmit, formState: {errors}, watch} = methods;
+    const serialNumber = watch('serial_number');
 
     const steps = [
         {title: 'SIM Details', component: <SimBasicInfo control={control} errors={errors}/>},
-        {title: 'Customer Info', component: <CustomerInfo control={control} errors={errors}/>},
+        {title: 'Customer Info', component: <CustomerInfo actions={actions} control={control} errors={errors}/>},
         {title: 'Agent & Team', component: <AgentInfo control={control} errors={errors} teams={teams}/>},
     ];
 
     const onSubmit = async (data: SIMCardCreate) => {
         setIsSubmitting(true);
         try {
+            // First upload ID images if both files exist
+            if (frontIdFile && backIdFile && data.serial_number) {
+                try {
+                    // Upload ID images
+                    await storageService.uploadCustomerIdImages(
+                        data.serial_number,
+                        frontIdFile,
+                        backIdFile
+                    );
+                } catch (uploadError) {
+                    console.error('Error uploading ID images:', uploadError);
+                    toast({
+                        title: "Error",
+                        description: "Failed to upload customer ID images",
+                        variant: "destructive",
+                    });
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
+            // Then create the SIM card
             const result = await simService.createSIMCard(data);
             if (result) {
                 toast({
@@ -324,7 +383,10 @@ export const SIMCardForm = ({teams, currentUser}) => {
                     description: "SIM card registered successfully",
                     variant: "success",
                 });
+                // Reset form and files
                 methods.reset();
+                setFrontIdFile(null);
+                setBackIdFile(null);
                 setActiveStep(0);
             } else {
                 toast({
@@ -351,14 +413,13 @@ export const SIMCardForm = ({teams, currentUser}) => {
             1: ['customer_msisdn', 'customer_id_number'],
             2: ['agent_msisdn', 'team_id', 'region']
         }[activeStep];
-//@ts-ignore
-        const isValid = await methods.trigger(fieldsToValidate);
+        const isValid = await methods.trigger(fieldsToValidate! as any);
 
         if (isValid) {
             if (activeStep < steps.length - 1) {
                 setActiveStep(activeStep + 1);
             } else {
-                handleSubmit(onSubmit)();
+                handleSubmit(onSubmit)().then();
             }
         }
     };
@@ -400,7 +461,6 @@ export const SIMCardForm = ({teams, currentUser}) => {
         </FormProvider>
     );
 };
-
 // Additional components needed for the form (would be separately implemented)
 export const BulkSIMCardUpload = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -479,7 +539,7 @@ export const BulkSIMCardUpload = () => {
                 <CardTitle>Bulk SIM Card Upload</CardTitle>
                 <CardDescription>
                     Upload a CSV file with SIM card data for bulk registration.
-                    <a href="/templates/sim_upload_template.csv" className="text-blue-500 hover:underline ml-1">
+                    <a href="/templates/sim_upload_template.csv" className="text-green-500 hover:underline ml-1">
                         Download template
                     </a>
                 </CardDescription>
@@ -545,7 +605,7 @@ export const BulkSIMCardUpload = () => {
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div
-                                    className="bg-blue-600 h-2 rounded-full"
+                                    className="bg-green-600 h-2 rounded-full"
                                     style={{width: `${uploadProgress}%`}}
                                 ></div>
                             </div>

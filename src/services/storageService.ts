@@ -123,7 +123,14 @@ export const storageService = {
             .from(bucket)
             .remove(paths);
     }
-    , async getDataImage(
+    ,
+    /**
+     * Get temporary download URL for a file (with expiry)
+     * @param {string} fileUrl - Path to the file in storage
+     * @param {number} expirySeconds - Seconds until the URL expires (default: 60)
+     * @returns {Promise<string>} - Temporary URL for the file
+     */
+    async getDataImage(
         fileUrl: string,
         expirySeconds: number = 3600
     ): Promise<string | null> {
@@ -166,6 +173,192 @@ export const storageService = {
         } catch (err) {
             console.error('❌ Error during fetch or conversion:', err)
             return null
+        }
+    },
+    /**
+     * Upload ID document to storage
+     * @param {File} file - The file to upload
+     * @param {string} userId - User ID to use in the path
+     * @param {string} documentType - Either 'front' or 'back'
+     * @returns {Promise<string>} - URL of the uploaded file
+     */
+    async uploadIdDocument(file: File, userId: string, documentType: any) {
+        try {
+            const supabase = createSupabaseClient();
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}_${documentType}_id.${fileExt}`;
+            const filePath = `id_documents/${userId}/${fileName}`;
+
+            const {data, error} = await supabase
+                .storage
+                .from('sim-management')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true // Overwrite if exists
+                });
+
+            if (error) {
+                console.error("Error uploading ID document:", error);
+                throw new Error(`Failed to upload ID document: ${error.message}`);
+            }
+
+            // Get public URL for the file
+            const {data: urlData} = supabase
+                .storage
+                .from('sim-management')
+                .getPublicUrl(filePath);
+
+            return urlData.publicUrl;
+        } catch (error) {
+            console.error("Error in uploadIdDocument:", error);
+            throw error;
+        }
+    },
+    /**
+     * Upload CSV/Excel file for bulk SIM import
+     * @param {File} file - The file to upload
+     * @param {string} uploaderId - ID of the user uploading the file
+     * @returns {Promise<{ filePath: string, publicUrl: string }>} - Path and URL of the uploaded file
+     */
+    async uploadBulkSimFile(file: File, uploaderId: string) {
+        try {
+            const supabase = createSupabaseClient();
+            const timestamp = new Date().getTime();
+            const fileName = `bulk_import_${uploaderId}_${timestamp}.${file.name.split('.').pop()}`;
+            const filePath = `sim_imports/${fileName}`;
+
+            const {data, error} = await supabase
+                .storage
+                .from('sim-management')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: false // Don't overwrite existing files
+                });
+
+            if (error) {
+                console.error("Error uploading bulk SIM file:", error);
+                throw new Error(`Failed to upload bulk SIM file: ${error.message}`);
+            }
+
+            // Get public URL for the file
+            const {data: urlData} = supabase
+                .storage
+                .from('sim-management')
+                .getPublicUrl(filePath);
+
+            return {
+                filePath,
+                publicUrl: urlData.publicUrl
+            };
+        } catch (error) {
+            console.error("Error in uploadBulkSimFile:", error);
+            throw error;
+        }
+    },
+
+
+    /**
+     * Upload a report file (PDF/Excel)
+     * @param {File} file - The report file to upload
+     * @param {string} reportType - Type of report
+     * @param {string} period - Time period for the report (e.g., '2025-03')
+     * @returns {Promise<string>} - URL of the uploaded report
+     */
+    async uploadReportFile(file: File, reportType: any, period: any) {
+        try {
+            const supabase = createSupabaseClient();
+            const fileExt = file.name.split('.').pop();
+            const timestamp = new Date().toISOString().split('T')[0];
+            const fileName = `${reportType}_${period}_${timestamp}.${fileExt}`;
+            const filePath = `reports/${reportType}/${fileName}`;
+
+            const {data, error} = await supabase
+                .storage
+                .from('sim-management')
+                .upload(filePath, file, {
+                    cacheControl: '3600',
+                    upsert: true
+                });
+
+            if (error) {
+                console.error("Error uploading report file:", error);
+                throw new Error(`Failed to upload report file: ${error.message}`);
+            }
+
+            // Get public URL for the file
+            const {data: urlData} = supabase
+                .storage
+                .from('sim-management')
+                .getPublicUrl(filePath);
+
+            return urlData.publicUrl;
+        } catch (error) {
+            console.error("Error in uploadReportFile:", error);
+            throw error;
+        }
+    },
+    /**
+     * List all reports of a specific type
+     * @param {string} reportType - Type of reports to list
+     * @returns {Promise<Array>} - List of report files
+     */
+    async listReports(reportType: any) {
+        try {
+            const supabase = createSupabaseClient();
+
+            const {data, error} = await supabase
+                .storage
+                .from('sim-management')
+                .list(`reports/${reportType}`);
+
+            if (error) {
+                console.error("Error listing reports:", error);
+                throw new Error(`Failed to list reports: ${error.message}`);
+            }
+
+            return data || [];
+        } catch (error) {
+            console.error("Error in listReports:", error);
+            throw error;
+        }
+    },
+    /**
+     * Initialize storage buckets and policies (typically called during app setup)
+     * @returns {Promise<void>}
+     */
+    async initializeStorage() {
+        try {
+            const supabase = createSupabaseClient();
+
+            // Create buckets if they don't exist
+            // Note: This would typically be done during initial setup
+            // and might require admin credentials
+
+            // Check if bucket exists
+            const {data: buckets, error: listError} = await supabase
+                .storage
+                .listBuckets();
+
+            if (listError) {
+                console.error("Error listing buckets:", listError);
+                return;
+            }
+
+            // Create bucket if it doesn't exist
+            if (!buckets.find(b => b.name === 'sim-management')) {
+                const {error: createError} = await supabase
+                    .storage
+                    .createBucket('sim-management', {
+                        public: false,
+                        fileSizeLimit: 10485760, // 10MB limit
+                    });
+
+                if (createError) {
+                    console.error("Error creating bucket:", createError);
+                }
+            }
+        } catch (error) {
+            console.error("Error in initializeStorage:", error);
         }
     }
 

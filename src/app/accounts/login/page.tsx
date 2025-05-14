@@ -147,9 +147,9 @@ export default function LoginPage() {
     return (
         <>
             {/* Right side - Login Form */}
-            <div className="w-full md:w-1/2 flex justify-center items-center p-6">
+            <div className="w-full md:w-1/2 flex justify-center items-center p-6 dark:bg-gray-900">
                 <div
-                    className="bg-white w-full max-w-md p-8 rounded-xl shadow-lg"
+                    className="md:bg-white dark:bg-gray-800 w-full md:max-w-md p-8 md:rounded-xl md:shadow-lg"
                     style={{
                         ...fadeIn(0.3),
                         transform: animationComplete ? 'none' : 'translateY(20px)',
@@ -158,27 +158,28 @@ export default function LoginPage() {
                 >
                     {/* Mobile logo */}
                     <div className="md:hidden flex items-center justify-center mb-8">
-                        <Activity className="h-8 w-8 mr-2 text-green-600"/>
-                        <h1 className="text-2xl font-bold text-green-600">Safaricom</h1>
+                        <Activity className="h-8 w-8 mr-2 text-green-600 dark:text-green-500"/>
+                        <h1 className="text-2xl font-bold text-green-600 dark:text-green-500">Safaricom</h1>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-center mb-8 text-gray-800">Sign In to Your Account</h2>
+                    <h2 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">Sign In to Your
+                        Account</h2>
 
                     <div className="flex justify-center mb-6">
-                        <div className="bg-gray-100 p-1 rounded-lg flex">
+                        <div className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg flex">
                             <button
                                 onClick={() => setLoginMethod('phone')}
                                 className={`px-4 py-2 rounded ${loginMethod === 'phone'
-                                    ? 'bg-green-600 text-white'
-                                    : 'text-gray-600'}`}
+                                    ? 'bg-green-600 dark:bg-green-500 text-white'
+                                    : 'text-gray-600 dark:text-gray-300'}`}
                             >
                                 Phone
                             </button>
                             <button
                                 onClick={() => setLoginMethod('email')}
                                 className={`px-4 py-2 rounded ${loginMethod === 'email'
-                                    ? 'bg-green-600 text-white'
-                                    : 'text-gray-600'}`}
+                                    ? 'bg-green-600 dark:bg-green-500 text-white'
+                                    : 'text-gray-600 dark:text-gray-300'}`}
                             >
                                 Email
                             </button>
@@ -188,12 +189,13 @@ export default function LoginPage() {
                     <div className="space-y-6">
                         {loginMethod === 'phone' ? (
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone
+                                <label htmlFor="phone"
+                                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone
                                     Number</label>
                                 <div className="relative">
                                     <div
                                         className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Phone className="h-5 w-5 text-gray-400"/>
+                                        <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                                     </div>
                                     <input
                                         type="tel"
@@ -201,8 +203,8 @@ export default function LoginPage() {
                                         name="phone"
                                         value={formValues.phone}
                                         onChange={handleInputChange}
-                                        className={`pl-10 block w-full rounded-md py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} 
-                    focus:ring-2 focus:ring-green-500 focus:border-green-500`}
+                                        className={`pl-10 block w-full rounded-md py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} 
+            focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white`}
                                         placeholder="Enter your phone number"
                                     />
                                 </div>
@@ -215,12 +217,13 @@ export default function LoginPage() {
                             </div>
                         ) : (
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email
+                                <label htmlFor="email"
+                                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email
                                     Address</label>
                                 <div className="relative">
                                     <div
                                         className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <User className="h-5 w-5 text-gray-400"/>
+                                        <User className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                                     </div>
                                     <input
                                         type="email"
@@ -228,8 +231,8 @@ export default function LoginPage() {
                                         name="email"
                                         value={formValues.email}
                                         onChange={handleInputChange}
-                                        className={`pl-10 block w-full rounded-md py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} 
-                    focus:ring-2 focus:ring-green-500 focus:border-green-500`}
+                                        className={`pl-10 block w-full rounded-md py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} 
+            focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white`}
                                         placeholder="Enter your email address"
                                     />
                                 </div>
@@ -244,10 +247,10 @@ export default function LoginPage() {
 
                         <div>
                             <label htmlFor="password"
-                                   className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400"/>
+                                    <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
@@ -255,15 +258,15 @@ export default function LoginPage() {
                                     name="password"
                                     value={formValues.password}
                                     onChange={handleInputChange}
-                                    className={`pl-10 block w-full rounded-md py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} 
-                  focus:ring-2 focus:ring-green-500 focus:border-green-500`}
+                                    className={`pl-10 block w-full rounded-md py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} 
+                        focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white`}
                                     placeholder="Enter your password"
                                 />
                                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                                        className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                                     >
                                         {showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
                                     </button>
@@ -283,15 +286,16 @@ export default function LoginPage() {
                                     id="remember-me"
                                     name="remember-me"
                                     type="checkbox"
-                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                    className="h-4 w-4 text-green-600 dark:text-green-500 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded"
                                 />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                                <label htmlFor="remember-me"
+                                       className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                                     Remember me
                                 </label>
                             </div>
                             <div className="text-sm">
                                 <a href="/accounts/password-reset"
-                                   className="font-medium text-green-600 hover:text-green-500">
+                                   className="font-medium text-green-600 dark:text-green-500 hover:text-green-500 dark:hover:text-green-400">
                                     Forgot password?
                                 </a>
                             </div>
@@ -307,9 +311,9 @@ export default function LoginPage() {
                             <button
                                 onClick={handleSubmit}
                                 disabled={isLoading}
-                                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 
-                hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 
-                ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 dark:bg-green-500 
+                    hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-green-400 
+                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isLoading ? (
                                     <div className="flex items-center">
@@ -327,17 +331,17 @@ export default function LoginPage() {
                     <div className="mt-6">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300"></div>
+                                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">Don`t have an account?</span>
+                                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Don`t have an account?</span>
                             </div>
                         </div>
 
                         <div className="mt-6">
                             <button
                                 type="button"
-                                className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-green-400"
                             >
                                 Contact administrator
                             </button>

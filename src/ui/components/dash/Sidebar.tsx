@@ -84,18 +84,18 @@ const NavItem = ({href, icon: Icon, label, onClick}: NavItemProps) => {
                 whileTap={{scale: 0.95}}
                 className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                     isActive
-                        ? 'bg-green-100 text-green-700 font-medium shadow-sm'
-                        : 'hover:bg-gray-100 text-gray-700'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium shadow-sm'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                 }`}
             >
-                <div className={`${isActive ? 'text-green-600' : 'text-gray-500'}`}>
+                <div className={`${isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     <Icon size={20}/>
                 </div>
                 <span>{label}</span>
                 {isActive && (
                     <motion.div
                         layoutId="active-indicator"
-                        className="absolute right-0 w-1 h-8 bg-green-600 rounded-l-md"
+                        className="absolute right-0 w-1 h-8 bg-green-600 dark:bg-green-500 rounded-l-md"
                         initial={{opacity: 0}}
                         animate={{opacity: 1}}
                         transition={{duration: 0.2}}
@@ -237,13 +237,13 @@ export default function Sidebar() {
                 >
                     <div className="relative">
                         <motion.div
-                            className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
+                            className="w-12 h-12 bg-green-600 dark:bg-green-700 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md"
                             whileHover={{scale: 1.05, rotate: 5}}
                         >
                             {getInitials(user?.full_name ?? 'N/A')}
                         </motion.div>
                         <motion.div
-                            className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
+                            className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 dark:bg-green-400 rounded-full border-2 border-white dark:border-gray-900"
                             animate={{
                                 scale: [1, 1.2, 1],
                             }}
@@ -261,8 +261,8 @@ export default function Sidebar() {
                             animate={{opacity: 1, x: 0}}
                             className="flex flex-col"
                         >
-                            <span className="font-medium text-gray-800">{user?.full_name}</span>
-                            <span className="text-sm text-gray-500 capitalize">{user?.role}</span>
+                            <span className="font-medium text-gray-800 dark:text-gray-200">{user?.full_name}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 capitalize">{user?.role}</span>
                         </motion.div>
                     )}
                 </motion.div>
@@ -293,7 +293,7 @@ export default function Sidebar() {
                     whileHover={{scale: 1.05}}
                     whileTap={{scale: 0.95}}
                     onClick={handleSignOut}
-                    className={`flex items-center space-x-3 p-3 rounded-lg w-full text-red-600 hover:bg-red-50 transition-all duration-200`}
+                    className={`flex items-center space-x-3 p-3 rounded-lg w-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200`}
                 >
                     <LogOut size={20}/>
                     {!isCollapsed && <span>Logout</span>}
@@ -306,7 +306,7 @@ export default function Sidebar() {
     const mobileMenuButton = (
         <button
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden fixed top-4 right-4 z-50 bg-green-600 text-white p-2 rounded-full shadow-lg"
+            className="md:hidden fixed top-4 right-4 z-50 bg-green-600 dark:bg-green-700 text-white p-2 rounded-full shadow-lg"
         >
             <motion.div
                 animate={{rotate: showMobileMenu ? 180 : 0}}
@@ -321,13 +321,13 @@ export default function Sidebar() {
     const collapseButton = (
         <button
             onClick={toggleSidebar}
-            className="hidden md:flex absolute -right-3 top-20 bg-white border border-gray-200 rounded-full p-1 shadow-md"
+            className="hidden md:flex absolute -right-3 top-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-md"
         >
             <motion.div
                 animate={{rotate: isCollapsed ? 180 : 0}}
                 transition={{duration: 0.3}}
             >
-                <RefreshCw size={16} className="text-gray-500"/>
+                <RefreshCw size={16} className="text-gray-500 dark:text-gray-400"/>
             </motion.div>
         </button>
     );
@@ -354,7 +354,7 @@ export default function Sidebar() {
                                 animate={{x: 0}}
                                 exit={{x: '-100%'}}
                                 transition={{type: 'spring', damping: 20}}
-                                className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl z-40 flex flex-col"
+                                className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-xl z-40 flex flex-col"
                             >
                                 {renderSidebarContent()}
                             </motion.div>
@@ -371,7 +371,7 @@ export default function Sidebar() {
                     initial={false} // Disable initial animation after first render
                     animate={isCollapsed ? 'collapsed' : 'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className="sticky top-0 h-screen bg-white border-r border-gray-200 shadow-sm flex flex-col"
+                    className="sticky top-0 h-screen bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-800 shadow-sm flex flex-col"
                 >
                     {collapseButton}
                     {renderSidebarContent()}

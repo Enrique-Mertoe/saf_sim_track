@@ -9,11 +9,11 @@ const StepperComponent = ({steps, activeStep}) => (
                 steps.map((step, index) => (
                 <div
                     key={index}
-                    className={`flex items-center flex-col ${index <= activeStep ? 'text-blue-600' : 'text-gray-400'}`}
+                    className={`flex items-center flex-col ${index <= activeStep ? 'text-green-600' : 'text-gray-400'}`}
                 >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
-                        index < activeStep ? 'bg-blue-600 text-white' :
-                            index === activeStep ? 'border-2 border-blue-600 text-blue-600' :
+                        index < activeStep ? 'bg-green-600 text-white' :
+                            index === activeStep ? 'border-2 border-green-600 text-green-600' :
                                 'border-2 border-gray-300 text-gray-400'
                     }`}>
                         {index < activeStep ? (
@@ -34,7 +34,7 @@ const StepperComponent = ({steps, activeStep}) => (
         <div className="relative mt-2">
             <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-200"></div>
             <div
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-blue-600 transition-all"
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-green-600 transition-all"
                 style={{width: `${(activeStep / (steps.length - 1)) * 100}%`}}
             ></div>
         </div>
