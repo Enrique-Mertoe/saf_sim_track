@@ -63,7 +63,7 @@ export default function Header() {
             setIsMobileMenuOpen(v);
         });
         return () => {
-            Signal.off("mobile-open");
+            // Signal.off("mobile-open");
         };
     }, []);
 
@@ -328,6 +328,7 @@ export default function Header() {
                                 {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
                             </button>
                         </motion.div>
+
                     </div>
                 </div>
 
@@ -398,28 +399,40 @@ export default function Header() {
             </header>
 
             {/* Mobile Sidebar Menu */}
-            <AnimatePresence>
+            {/*<AnimatePresence>*/}
                 {isMobileMenuOpen && (
                     <>
-                        {/*<motion.div*/}
-                        {/*    initial={{opacity: 0}}*/}
-                        {/*    animate={{opacity: 0.5}}*/}
-                        {/*    exit={{opacity: 0}}*/}
-                        {/*    className="fixed inset-0 bg-black z-40 md:hidden"*/}
-                        {/*    onClick={() => Signal.trigger("mobile-open", false)}*/}
-                        {/*/>*/}
-                        {/*<motion.div*/}
-                        {/*    initial={{x: "-100%"}}*/}
-                        {/*    animate={{x: 0}}*/}
-                        {/*    exit={{x: "-100%"}}*/}
-                        {/*    transition={{type: "tween", duration: 0.3}}*/}
-                        {/*    className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"*/}
-                        {/*>*/}
-                        <Sidebar/>
-                        {/*</motion.div>*/}
+                        <motion.div
+                            initial={{opacity: 0}}
+                            animate={{opacity: 0.5}}
+                            exit={{opacity: 0}}
+                            className="fixed inset-0 bg-black z-40 md:hidden"
+                            onClick={() => {
+                                Signal.trigger("mobile-open", !isMobileMenuOpen)
+
+                            }}
+                        >
+
+
+                        </motion.div>
+                        <motion.div
+                            initial={{x: "-100%"}}
+                            animate={{x: 0}}
+                            exit={{x: "-100%"}}
+                            transition={{type: "tween", duration: 0.3}}
+                            className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"
+                        >
+                            <Sidebar/>
+                            <button
+                                className="md:hidden p-2 fixed top-5 right-5 z-[10406757] rounded-full text-light bg-gray-500 hover:bg-green-500 transition-colors duration-200"
+                                onClick={() => Signal.trigger("mobile-open", false)}
+                            >
+                                {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                            </button>
+                        </motion.div>
                     </>
                 )}
-            </AnimatePresence>
+            {/*</AnimatePresence>*/}
         </>
     );
 }

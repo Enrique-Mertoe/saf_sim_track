@@ -43,7 +43,7 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                     initial={false}
                     animate={collapsed ? 'collapsed' : 'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`hidden  md:block bg-white shadow-md z-30 h-screen fixed`}>
+                    className={`hidden bg-red-500 md:block bg-white shadow-md z-30 h-screen fixed`}>
                     <Sidebar/>
                 </motion.div>
                 {/* Main Content */}

@@ -138,7 +138,7 @@ export default function Sidebar() {
 
 
         Signal.on("mobile-open", open => {
-            setIsMobile(open)
+            setShowMobileMenu(open)
         })
         return () => {
             window.removeEventListener('resize', handleResize);
@@ -236,7 +236,7 @@ export default function Sidebar() {
     };
     const renderSidebarContent = () => (
         <>
-            <div className="px-4 py-6">
+            <div className="px-4  py-6">
                 <motion.div
                     className="flex items-center space-x-3"
                     initial={isFirstLoad ? {opacity: 0, y: -10} : {opacity: 1, y: 0}}
@@ -310,21 +310,6 @@ export default function Sidebar() {
         </>
     );
 
-    // Mobile menu button
-    // const mobileMenuButton = (
-    //     <button
-    //         onClick={() => setShowMobileMenu(!showMobileMenu)}
-    //         className="md:hidden fixed top-4 right-4 z-50 bg-green-600 dark:bg-green-700 text-white p-2 rounded-full shadow-lg"
-    //     >
-    //         <motion.div
-    //             animate={{rotate: showMobileMenu ? 180 : 0}}
-    //             transition={{duration: 0.3}}
-    //         >
-    //             {showMobileMenu ? <LogOut size={24}/> : <Users size={24}/>}
-    //         </motion.div>
-    //     </button>
-    // );
-
     // Desktop sidebar collapse toggle
     const collapseButton = (
         <button
@@ -342,44 +327,15 @@ export default function Sidebar() {
 
     return (
         <div className={""}>
-            {/*{isMobile && mobileMenuButton}*/}
-
-            {/* Mobile Sidebar (Slide-in drawer) */}
-            {isMobile && (
-                <AnimatePresence>
-                    {showMobileMenu && (
-                        <>
-                            <motion.div
-                                initial={{opacity: 0}}
-                                animate={{opacity: 0.5}}
-                                exit={{opacity: 0}}
-                                className="fixed inset-0 bg-black z-30"
-                                onClick={() => setShowMobileMenu(false)}
-                            />
-                            <motion.div
-                                id="sidebar"
-                                initial={{x: '-100%'}}
-                                animate={{x: 0}}
-                                exit={{x: '-100%'}}
-                                transition={{type: 'spring', damping: 20}}
-                                className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-xl z-40 flex flex-col"
-                            >
-                                {renderSidebarContent()}
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-            )}
-
             {/* Desktop Sidebar */}
-            {!isMobile && (
+            {(
                 <motion.div
                     id="sidebar"
                     variants={sidebarVariants}
                     initial={false} // Disable initial animation after first render
                     animate={isCollapsed ? 'collapsed' : 'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className="sticky top-0 h-screen bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-800 shadow-sm flex flex-col"
+                    className="sticky w-full top-0 h-screen bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-800 shadow-sm flex flex-col"
                 >
                     {collapseButton}
                     {renderSidebarContent()}
