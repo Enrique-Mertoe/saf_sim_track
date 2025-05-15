@@ -45,6 +45,14 @@ interface PreviewData {
     isLoading: boolean;
 }
 
+type Team1 = Team & {
+    leader_id: User
+}
+type SimCard = SIMCard & {
+    sold_by_user_id: User;
+    team_id: Team1;
+};
+
 const ReportGenerator = () => {
     // States
     const [loading, setLoading] = useState(false);
@@ -104,7 +112,7 @@ const ReportGenerator = () => {
         return team?.leader_id || 'Unknown';
     };
 
-    const fetchSimData = async (startDate: string, endDate: string): Promise<SIMCard[]> => {
+    const fetchSimData = async (startDate: string, endDate: string): Promise<SimCard[]> => {
         try {
             // Convert to the format expected by the API
             const start = new Date(startDate);
@@ -116,7 +124,6 @@ const ReportGenerator = () => {
                 start.toISOString(),
                 end.toISOString()
             );
-            console.log(data)
 
             if (error) {
                 console.error('Error fetching SIM data:', error);
@@ -139,85 +146,69 @@ const ReportGenerator = () => {
             setPreviewData(prev => ({...prev, isLoading: true}))
 
             // Fetch real data from APIs
-            const simData: SIMCard[] = await fetchSimData(startDate, endDate);
+            const simData: SimCard[] = await fetchSimData(startDate, endDate);
             console.log("simdata", simData)
             const teams: Team[] = await fetchTeams();
             const users: User[] = await fetchUsers();
 
             // Create adapter objects to maintain compatibility with existing processing logic
-            type SimCard = {
-                sim_id: string;
-                sim_serial_number: string;
-                sold_by: string;
-                sold_by_team: string;
-                activation_date: string | null;
-                top_up_date: string | null;
-                top_up_amount: number | null;
-                bundle_purchase_date: string | null;
-                bundle_amount: number | null;
-                usage: number;
-                agent_msisdn: string;
-                ba_msisdn: string;
-                quality: string;
-                team_name?: string;
-                leader_name?: string;
-            };
+
 
             // Convert SIMCard data to the format expected by the existing code
-            const adaptedSimData: SIMCard[] = simData.map(sim => ({
-                sim_id: sim.id,
-                sim_serial_number: sim.serial_number,
-                sold_by: sim.sold_by_user_id,
-                sold_by_team: sim.team_id,
-                activation_date: sim.activation_date || null,
-                top_up_date: sim.top_up_date || null,
-                top_up_amount: sim.top_up_amount || null,
-                bundle_purchase_date: sim.first_usage_date || null,
-                bundle_amount: sim.first_usage_amount || null,
-                usage: sim.first_usage_amount || 0,
-                agent_msisdn: sim.agent_msisdn || '',
-                ba_msisdn: sim.customer_msisdn || '',
-                quality: (sim.quality_score && sim.quality_score >= 90) ? 'Y' : 'N',
-            }));
-
-            // Create adapter for teams
-            type TeamAdapter = {
-                team_id: string;
-                team_name: string;
-                team_leader_id: string;
-                team_leader_name?: string;
-            };
-
-            const adaptedTeams: TeamAdapter[] = teams.map(team => ({
-                team_id: team.id,
-                team_name: team.name,
-                team_leader_id: team.leader_id,
-            }));
-
-            // Enrich teams with leader names
-            adaptedTeams.forEach(team => {
-                const leader = users.find(user => user.id === team.team_leader_id);
-                team.team_leader_name = leader?.full_name || 'Unknown Leader';
-            });
-
-            // Enrich sim data with team and leader information
-            adaptedSimData.forEach(sim => {
-                const team = adaptedTeams.find(t => t.team_id === sim.sold_by_team);
-                sim.team_name = team?.team_name || 'Unknown Team';
-                sim.leader_name = team?.team_leader_name || 'Unknown Leader';
-            });
-
+            // const adaptedSimData: SimCard[] = simData.map(sim => ({
+            //     sim_id: sim.id,
+            //     sim_serial_number: sim.serial_number,
+            //     sold_by: sim.sold_by_user_id,
+            //     sold_by_team: sim.team_id,
+            //     activation_date: sim.activation_date || null,
+            //     top_up_date: sim.top_up_date || null,
+            //     top_up_amount: sim.top_up_amount || null,
+            //     bundle_purchase_date: sim.first_usage_date || null,
+            //     bundle_amount: sim.first_usage_amount || null,
+            //     usage: sim.first_usage_amount || 0,
+            //     agent_msisdn: sim.agent_msisdn || '',
+            //     ba_msisdn: sim.customer_msisdn || '',
+            //     quality: (sim.quality_score && sim.quality_score >= 90) ? 'Y' : 'N',
+            // }));
+            //
+            // // Create adapter for teams
+            // type TeamAdapter = {
+            //     team_id: string;
+            //     team_name: string;
+            //     team_leader_id: string;
+            //     team_leader_name?: string;
+            // };
+            //
+            // const adaptedTeams: TeamAdapter[] = teams.map(team => ({
+            //     team_id: team.id,
+            //     team_name: team.name,
+            //     team_leader_id: team.leader_id,
+            // }));
+            //
+            // // Enrich teams with leader names
+            // adaptedTeams.forEach(team => {
+            //     const leader = users.find(user => user.id === team.team_leader_id);
+            //     team.team_leader_name = leader?.full_name || 'Unknown Leader';
+            // });
+            //
+            // // Enrich sim data with team and leader information
+            // adaptedSimData.forEach(sim => {
+            //     const team = adaptedTeams.find(t => t.team_id === sim.sold_by_team);
+            //     sim.team_name = team?.team_name || 'Unknown Team';
+            //     sim.leader_name = team?.team_leader_name || 'Unknown Leader';
+            // });
+            //
             // Group sim cards by team and quality status
             const groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } } = {};
             const unknownSource: SimCard[] = [];
 
-            adaptedSimData.forEach(sim => {
-                if (!sim.sold_by || !sim.sold_by_team) {
+            simData.forEach(sim => {
+                if (!sim.sold_by_user_id || !sim.team_id) {
                     unknownSource.push(sim);
                     return;
                 }
 
-                const leaderName = sim.leader_name || 'Unknown';
+                const leaderName = sim.team_id.leader_id.full_name || 'Unknown';
 
                 if (!groupedByTeam[leaderName]) {
                     groupedByTeam[leaderName] = {quality: [], nonQuality: []};
@@ -257,7 +248,7 @@ const ReportGenerator = () => {
             // For each team, calculate performance metrics for each period
             Object.entries(groupedByTeam).forEach(([leader, data]) => {
                 const allSims = [...data.quality, ...data.nonQuality];
-                const teamName = allSims[0]?.team_name || 'Unknown Team';
+                const teamName = allSims[0]?.team_id.name || 'Unknown Team';
 
                 const performance: TeamPerformance = {
                     teamName,
@@ -318,6 +309,7 @@ const ReportGenerator = () => {
 
                 teamPerformance.push(performance);
             });
+            console.log("grouped", groupedByTeam)
 
             // Generate Excel file
             // await generateExcel(
@@ -332,8 +324,8 @@ const ReportGenerator = () => {
             setPreviewData({
                 teamPerformance,
                 periodsLabels,
-                adaptedSimData,
-                isLoading: true
+                simData,
+                isLoading: false
             });
 
             // setSuccess(true);
@@ -573,17 +565,18 @@ const ReportGenerator = () => {
     return (
         <Dashboard>
             {/*<ReportDateRangeModal />*/}
-            <div className="flex flex-col items-center min-h-screen bg-gray-50 px-4 py-12">
+            <div className="flex flex-col items-center overflow-x-hidden px-4 pt-6 pb-12">
                 <div
-                    className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden transition-all transform">
-                    <div className="bg-gradient-to-r from-green-600 to-green-800 py-8 px-6">
+                    className="w-full   overflow-hidden transition-all transform">
+                    <div className=" px-6">
                         <h1 className="text-3xl font-bold text-white">Van Quality Report Generator</h1>
                         <p className="text-green-100 mt-2">Generate detailed SIM card performance reports with quality
                             metrics</p>
                     </div>
 
-                    <div className="p-6">
-                        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-md">
+                    <div className="p-6 ">
+                        <div
+                            className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mb-6 rounded-md">
                             <div className="flex">
                                 <div className="flex-shrink-0">
                                     <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg"
@@ -595,7 +588,7 @@ const ReportGenerator = () => {
                                     </svg>
                                 </div>
                                 <div className="ml-3">
-                                    <p className="text-sm text-green-800">
+                                    <p className="text-sm text-green-800 dark:text-green-200">
                                         This report will generate Excel sheets with SIM card performance metrics grouped
                                         by team and
                                         quality status. The report includes period breakdowns and overall performance
@@ -642,7 +635,7 @@ const ReportGenerator = () => {
                                     onClick={handleGenerateReport}
                                     disabled={!showDatePicker || generating}
                                     className={`py-2 px-4 rounded-md text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                                        generating ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+                                        generating ? 'bg-green-400 dark:bg-green-500/50 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 dark:hover:bg-green-600'
                                     }`}
                                 >
                                     {generating ? 'Generating...' : 'Generate Report'}
@@ -654,22 +647,26 @@ const ReportGenerator = () => {
                         {generating && (
                             <div className="flex flex-col items-center justify-center mt-8 animate-fadeIn">
                                 <div
-                                    className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
-                                <p className="mt-4 text-gray-600">Generating your report, please wait...</p>
+                                    className="w-16 h-16 border-4 border-green-200 dark:border-green-700 border-t-green-600 rounded-full animate-spin"></div>
+                                <p className="mt-4 text-gray-600 dark:text-gray-300">Generating your report, please
+                                    wait...</p>
                             </div>
                         )}
                         {showDatePicker ?
-                            <ReportPreview
-                                simData={previewData.simData}
-                                startDate={startDate}
-                                endDate={endDate}
-                                isLoading={previewData.isLoading}
-                                teamPerformance={previewData.teamPerformance}
-                                periodsLabels={previewData.periodsLabels}/>
+                            <div className={"mt-5"}>
+                                <ReportPreview
+                                    simData={previewData.simData}
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    isLoading={previewData.isLoading}
+                                    teamPerformance={previewData.teamPerformance}
+                                    periodsLabels={previewData.periodsLabels}/>
+                            </div>
                             : ''}
 
                         {success && (
-                            <div className="mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md animate-fadeIn">
+                            <div
+                                className="mt-6 bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 rounded-md animate-fadeIn">
                                 <div className="flex">
                                     <div className="flex-shrink-0">
                                         <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg"
@@ -681,7 +678,7 @@ const ReportGenerator = () => {
                                         </svg>
                                     </div>
                                     <div className="ml-3">
-                                        <p className="text-sm text-green-800">
+                                        <p className="text-sm text-green-800 dark:text-green-200">
                                             Report generated successfully! Check your downloads folder for the Excel
                                             file.
                                         </p>
@@ -691,11 +688,13 @@ const ReportGenerator = () => {
                         )}
                     </div>
 
-                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                    <div
+                        className="bg-gray-50 dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <h3 className="font-medium text-gray-700 mb-2">Sheet Structure</h3>
-                                <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                            <div
+                                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                                <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Sheet Structure</h3>
+                                <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-disc pl-5">
                                     <li><span className="font-medium">Raw Data:</span> All records for selected period
                                     </li>
                                     <li><span className="font-medium">Team Sheets:</span> Separate quality/non-quality
@@ -708,9 +707,10 @@ const ReportGenerator = () => {
                                 </ul>
                             </div>
 
-                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <h3 className="font-medium text-gray-700 mb-2">Quality Metrics</h3>
-                                <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                            <div
+                                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                                <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Quality Metrics</h3>
+                                <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-disc pl-5">
                                     <li>SIM activation status must be present</li>
                                     <li>Top-up amount must be ≥ 50 KES</li>
                                     <li>Quality flag must be "Y"</li>

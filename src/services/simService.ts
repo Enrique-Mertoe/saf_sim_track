@@ -380,7 +380,7 @@ export const simCardService = {
 
         return supabase
             .from('sim_cards')
-            .select('*')
+            .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
             .gte('sale_date', startDate)
             .lte('sale_date', endDate)
             .order('sale_date', {ascending: false});

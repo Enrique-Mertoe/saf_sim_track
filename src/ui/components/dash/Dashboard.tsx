@@ -56,7 +56,7 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                     initial={false}
                     animate={collapsed ? 'collapsed' : 'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`flex-1 w-full  relative`}>
+                    className={`flex-1 w-full overflow-x-hidden  relative`}>
                     <PageTransition>
                         {children}
                     </PageTransition>
