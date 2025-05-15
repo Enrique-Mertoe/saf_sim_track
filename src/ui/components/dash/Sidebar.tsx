@@ -209,7 +209,7 @@ export default function Sidebar() {
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
                 {href: '/map', icon: Map, label: 'Location'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
-                {href: '/reports', icon: PieChart, label: 'Reports'}
+                {href: '/report', icon: PieChart, label: 'Reports'}
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
