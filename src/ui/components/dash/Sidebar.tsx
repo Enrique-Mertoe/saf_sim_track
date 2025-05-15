@@ -207,16 +207,15 @@ export default function Sidebar() {
             navItems.push(
                 {href: '/dashboard/users', icon: Users, label: 'Users'},
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
-                {href: '/map', icon: Map, label: 'Location'},
+                {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
-                {href: '/report', icon: PieChart, label: 'Reports'}
+
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
                 {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
-                {href: '/map', icon: Map, label: 'Location'},
+                {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
-                {href: '/report', icon: PieChart, label: 'Reports'}
             );
         } else if (user?.role === UserRole.STAFF) {
             navItems.push(

@@ -173,7 +173,7 @@ export default function ReportDateRangeTemplate({
   ];
 
   return (
-    <div className={`w-full max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div className={`w-full mx-auto bg-white dark:bg-gray-900 rounded-md shadow-lg overflow-auto border border-gray-200 dark:border-gray-700 ${className}`}>
       {/* Header with title and close button */}
       <div className="px-6 py-4 bg-gradient-to-r from-green-500 to-indigo-600 dark:from-green-800 dark:to-indigo-900">
         <div className="flex justify-between items-center">

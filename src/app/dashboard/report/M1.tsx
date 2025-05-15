@@ -1,4 +1,5 @@
 'use client';
+
 import {useState, useEffect} from 'react';
 import * as XLSX from 'xlsx';
 import Dashboard from "@/ui/components/dash/Dashboard";
@@ -7,9 +8,38 @@ import {useDialog} from "@/app/_providers/dialog";
 import alert from "@/ui/alert";
 import simService from "@/services/simService";
 import {teamService, userService} from "@/services";
-import {SIMCard, Team, User} from '@/models';
-import {ReportPreview} from "@/app/dashboard/report/Preview";
 
+// Types
+interface SimCard {
+    sim_id: string;
+    sim_serial_number: string;
+    sold_by: string;
+    sold_by_team: string;
+    activation_date: string | null;
+    top_up_date: string | null;
+    top_up_amount: number | null;
+    bundle_purchase_date: string | null;
+    bundle_amount: number | null;
+    usage: number;
+    agent_msisdn: string;
+    ba_msisdn: string;
+    quality: 'Y' | 'N';
+    team_name?: string;
+    leader_name?: string;
+}
+
+interface User {
+    user_id: string;
+    full_name: string;
+    team_id: string;
+}
+
+interface Team {
+    team_id: string;
+    team_name: string;
+    team_leader_id: string;
+    team_leader_name?: string;
+}
 
 interface TeamPerformance {
     teamName: string;
@@ -22,6 +52,13 @@ interface TeamPerformance {
             comment: string;
         };
     };
+}
+
+interface PreviewData {
+    teamPerformance: TeamPerformance[];
+    periodsLabels: string[];
+    rawData: any[][];
+    isLoading: boolean;
 }
 
 // Static colors for team tabs
@@ -38,13 +75,6 @@ const TEAM_COLORS = [
     '#2C3E50', // Navy
 ];
 
-interface PreviewData {
-    teamPerformance: TeamPerformance[];
-    periodsLabels: string[];
-    simData: SIMCard[];
-    isLoading: boolean;
-}
-
 const ReportGenerator = () => {
     // States
     const [loading, setLoading] = useState(false);
@@ -53,12 +83,8 @@ const ReportGenerator = () => {
     const [endDate, setEndDate] = useState<string>('');
     const [generating, setGenerating] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [previewData, setPreviewData] = useState<PreviewData>({
-        teamPerformance: [],
-        periodsLabels: [],
-        simData: [],
-        isLoading: true
-    })
+    const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+    const [activePreviewTab, setActivePreviewTab] = useState<string>('performance');
 
     useEffect(() => {
         // Set default date to current month's 1st day and today
@@ -68,6 +94,13 @@ const ReportGenerator = () => {
         setStartDate(formatDateForInput(firstDay));
         setEndDate(formatDateForInput(today));
     }, []);
+
+    // Load preview data when dates change
+    useEffect(() => {
+        if (startDate && endDate && showDatePicker) {
+            loadPreviewData(startDate, endDate);
+        }
+    }, [startDate, endDate, showDatePicker]);
 
     // Helper function to format date for input field
     const formatDateForInput = (date: Date): string => {
@@ -85,26 +118,22 @@ const ReportGenerator = () => {
     };
 
     // Function to check if a SIM card is "Quality"
-    const isQualitySim = (sim: SIMCard): boolean => {
+    const isQualitySim = (sim: SimCard): boolean => {
         return (
             sim.top_up_amount !== null &&
-            sim.top_up_amount !== undefined &&
             sim.top_up_amount >= 50 &&
             sim.activation_date !== null &&
-            sim.activation_date !== undefined &&
-            sim.quality_score !== null &&
-            sim.quality_score !== undefined &&
-            sim.quality_score >= 90
+            sim.quality === 'Y'
         );
     };
 
     // Function to get team leader name
     const getTeamLeaderName = (teams: Team[], teamId: string): string => {
-        const team = teams.find(t => t.id === teamId);
-        return team?.leader_id || 'Unknown';
+        const team = teams.find(t => t.team_id === teamId);
+        return team?.team_leader_name || 'Unknown';
     };
 
-    const fetchSimData = async (startDate: string, endDate: string): Promise<SIMCard[]> => {
+    const fetchSimData = async (startDate: string, endDate: string): Promise<SimCard[]> => {
         try {
             // Convert to the format expected by the API
             const start = new Date(startDate);
@@ -116,15 +145,28 @@ const ReportGenerator = () => {
                 start.toISOString(),
                 end.toISOString()
             );
-            console.log(data)
 
             if (error) {
                 console.error('Error fetching SIM data:', error);
                 throw new Error('Failed to fetch SIM data');
             }
 
-            // Return raw data as it already matches the SIMCard interface
-            return data || [];
+            // Map the data to the expected format
+            return data.map(sim => ({
+                sim_id: sim.id || '',
+                sim_serial_number: sim.serial_number || '',
+                sold_by: sim.sold_by || '',
+                sold_by_team: sim.team_id || '',
+                activation_date: sim.activation_date,
+                top_up_date: sim.top_up_date,
+                top_up_amount: sim.top_up_amount,
+                bundle_purchase_date: sim.bundle_purchase_date,
+                bundle_amount: sim.bundle_amount,
+                usage: sim.usage || 0,
+                agent_msisdn: sim.agent_msisdn || '',
+                ba_msisdn: sim.ba_msisdn || '',
+                quality: sim.quality === true ? 'Y' : 'N',
+            }));
         } catch (error) {
             console.error('Error in fetchSimData:', error);
             alert.error('Failed to fetch SIM data. Please try again.');
@@ -132,77 +174,30 @@ const ReportGenerator = () => {
         }
     };
 
-    // Function to process data into the required format
-    const processData = async (startDate: string, endDate: string) => {
+    // Function to load preview data
+    const loadPreviewData = async (startDate: string, endDate: string) => {
         try {
-            // setGenerating(true);
-            setPreviewData(prev => ({...prev, isLoading: true}))
+            setPreviewData({
+                teamPerformance: [],
+                periodsLabels: [],
+                rawData: [],
+                isLoading: true
+            });
 
-            // Fetch real data from APIs
-            const simData: SIMCard[] = await fetchSimData(startDate, endDate);
-            console.log("simdata", simData)
+            // Fetch data from API
+            const simData: SimCard[] = await fetchSimData(startDate, endDate);
             const teams: Team[] = await fetchTeams();
             const users: User[] = await fetchUsers();
 
-            // Create adapter objects to maintain compatibility with existing processing logic
-            type SimCard = {
-                sim_id: string;
-                sim_serial_number: string;
-                sold_by: string;
-                sold_by_team: string;
-                activation_date: string | null;
-                top_up_date: string | null;
-                top_up_amount: number | null;
-                bundle_purchase_date: string | null;
-                bundle_amount: number | null;
-                usage: number;
-                agent_msisdn: string;
-                ba_msisdn: string;
-                quality: string;
-                team_name?: string;
-                leader_name?: string;
-            };
-
-            // Convert SIMCard data to the format expected by the existing code
-            const adaptedSimData: SIMCard[] = simData.map(sim => ({
-                sim_id: sim.id,
-                sim_serial_number: sim.serial_number,
-                sold_by: sim.sold_by_user_id,
-                sold_by_team: sim.team_id,
-                activation_date: sim.activation_date || null,
-                top_up_date: sim.top_up_date || null,
-                top_up_amount: sim.top_up_amount || null,
-                bundle_purchase_date: sim.first_usage_date || null,
-                bundle_amount: sim.first_usage_amount || null,
-                usage: sim.first_usage_amount || 0,
-                agent_msisdn: sim.agent_msisdn || '',
-                ba_msisdn: sim.customer_msisdn || '',
-                quality: (sim.quality_score && sim.quality_score >= 90) ? 'Y' : 'N',
-            }));
-
-            // Create adapter for teams
-            type TeamAdapter = {
-                team_id: string;
-                team_name: string;
-                team_leader_id: string;
-                team_leader_name?: string;
-            };
-
-            const adaptedTeams: TeamAdapter[] = teams.map(team => ({
-                team_id: team.id,
-                team_name: team.name,
-                team_leader_id: team.leader_id,
-            }));
-
             // Enrich teams with leader names
-            adaptedTeams.forEach(team => {
-                const leader = users.find(user => user.id === team.team_leader_id);
+            teams.forEach(team => {
+                const leader = users.find(user => user.user_id === team.team_leader_id);
                 team.team_leader_name = leader?.full_name || 'Unknown Leader';
             });
 
             // Enrich sim data with team and leader information
-            adaptedSimData.forEach(sim => {
-                const team = adaptedTeams.find(t => t.team_id === sim.sold_by_team);
+            simData.forEach(sim => {
+                const team = teams.find(t => t.team_id === sim.sold_by_team);
                 sim.team_name = team?.team_name || 'Unknown Team';
                 sim.leader_name = team?.team_leader_name || 'Unknown Leader';
             });
@@ -211,7 +206,7 @@ const ReportGenerator = () => {
             const groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } } = {};
             const unknownSource: SimCard[] = [];
 
-            adaptedSimData.forEach(sim => {
+            simData.forEach(sim => {
                 if (!sim.sold_by || !sim.sold_by_team) {
                     unknownSource.push(sim);
                     return;
@@ -223,7 +218,7 @@ const ReportGenerator = () => {
                     groupedByTeam[leaderName] = {quality: [], nonQuality: []};
                 }
 
-                if (isQualitySim(sim as any)) {
+                if (isQualitySim(sim)) {
                     groupedByTeam[leaderName].quality.push(sim);
                 } else {
                     groupedByTeam[leaderName].nonQuality.push(sim);
@@ -270,7 +265,7 @@ const ReportGenerator = () => {
                     const activationDate = new Date(sim.activation_date || '');
                     return activationDate >= period1Start && activationDate <= period1End;
                 });
-                const period1Quality = period1Sims.filter(sim => sim.quality === 'Y');
+                const period1Quality = period1Sims.filter(isQualitySim);
                 const period1Percentage = period1Sims.length ? (period1Quality.length / period1Sims.length) * 100 : 0;
                 performance.periods[periodsLabels[0]] = {
                     totalActivation: period1Sims.length,
@@ -284,7 +279,7 @@ const ReportGenerator = () => {
                     const activationDate = new Date(sim.activation_date || '');
                     return activationDate >= period2Start && activationDate <= period2End;
                 });
-                const period2Quality = period2Sims.filter(sim => sim.quality === 'Y');
+                const period2Quality = period2Sims.filter(isQualitySim);
                 const period2Percentage = period2Sims.length ? (period2Quality.length / period2Sims.length) * 100 : 0;
                 performance.periods[periodsLabels[1]] = {
                     totalActivation: period2Sims.length,
@@ -298,7 +293,181 @@ const ReportGenerator = () => {
                     const activationDate = new Date(sim.activation_date || '');
                     return activationDate >= period3Start && activationDate <= period3End;
                 });
-                const period3Quality = period3Sims.filter(sim => sim.quality === 'Y');
+                const period3Quality = period3Sims.filter(isQualitySim);
+                const period3Percentage = period3Sims.length ? (period3Quality.length / period3Sims.length) * 100 : 0;
+                performance.periods[periodsLabels[2]] = {
+                    totalActivation: period3Sims.length,
+                    qualityCount: period3Quality.length,
+                    percentagePerformance: parseFloat(period3Percentage.toFixed(2)),
+                    comment: period3Percentage >= 90 ? 'Well done' : 'Improve'
+                };
+
+                // Calculate overall monthly summary
+                const overallPercentage = allSims.length ? (data.quality.length / allSims.length) * 100 : 0;
+                performance.periods[periodsLabels[3]] = {
+                    totalActivation: allSims.length,
+                    qualityCount: data.quality.length,
+                    percentagePerformance: parseFloat(overallPercentage.toFixed(2)),
+                    comment: overallPercentage >= 90 ? 'Well done' : 'Improve'
+                };
+
+                teamPerformance.push(performance);
+            });
+
+            // Create preview raw data (limited to 10 rows)
+            const headers = [
+                'Serial', 'Team', 'Activation Date', 'Top Up Date', 'Top Up Amount',
+                'Bundle Purchase Date', 'Bundle Amount', 'Usage', 'Till/Mobigo MSISDN', 'BA MSISDN', 'Quality'
+            ];
+
+            const rawData = simData.slice(0, 10).map(sim => [
+                sim.sim_serial_number,
+                sim.team_name || 'Unknown',
+                sim.activation_date || '',
+                sim.top_up_date || '',
+                sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
+                sim.bundle_purchase_date || '',
+                sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
+                sim.usage.toString(),
+                sim.agent_msisdn,
+                sim.ba_msisdn,
+                isQualitySim(sim) ? 'Yes' : 'No'
+            ]);
+
+            // Add headers to raw data
+            rawData.unshift(headers);
+
+            setPreviewData({
+                teamPerformance,
+                periodsLabels,
+                rawData,
+                isLoading: false
+            });
+        } catch (error) {
+            console.error('Error loading preview data:', error);
+            alert.error('Error loading preview data. Please try again.');
+            setPreviewData(null);
+        }
+    };
+
+    // Function to process data into the required format
+    const processData = async (startDate: string, endDate: string) => {
+        try {
+            setGenerating(true);
+
+            // In a real application, this data would come from API calls
+            // For this demonstration, we'll simulate the data
+
+            // Simulate fetching data from API
+            const simData: SimCard[] = await fetchSimData(startDate, endDate);
+            const teams: Team[] = await fetchTeams();
+            const users: User[] = await fetchUsers();
+
+            // Enrich teams with leader names
+            teams.forEach(team => {
+                const leader = users.find(user => user.user_id === team.team_leader_id);
+                team.team_leader_name = leader?.full_name || 'Unknown Leader';
+            });
+
+            // Enrich sim data with team and leader information
+            simData.forEach(sim => {
+                const team = teams.find(t => t.team_id === sim.sold_by_team);
+                sim.team_name = team?.team_name || 'Unknown Team';
+                sim.leader_name = team?.team_leader_name || 'Unknown Leader';
+            });
+
+            // Group sim cards by team and quality status
+            const groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } } = {};
+            const unknownSource: SimCard[] = [];
+
+            simData.forEach(sim => {
+                if (!sim.sold_by || !sim.sold_by_team) {
+                    unknownSource.push(sim);
+                    return;
+                }
+
+                const leaderName = sim.leader_name || 'Unknown';
+
+                if (!groupedByTeam[leaderName]) {
+                    groupedByTeam[leaderName] = {quality: [], nonQuality: []};
+                }
+
+                if (isQualitySim(sim)) {
+                    groupedByTeam[leaderName].quality.push(sim);
+                } else {
+                    groupedByTeam[leaderName].nonQuality.push(sim);
+                }
+            });
+
+            // Calculate performance metrics
+            // Define periods
+            const period1Start = new Date(startDate);
+            const period1End = new Date(startDate);
+            period1End.setDate(period1End.getDate() + 8); // 1-9
+
+            const period2Start = new Date(period1End);
+            period2Start.setDate(period2Start.getDate() + 1); // 10
+            const period2End = new Date(period2Start);
+            period2End.setDate(period2End.getDate() + 6); // 10-16
+
+            const period3Start = new Date(period2End);
+            period3Start.setDate(period3Start.getDate() + 1); // 17
+            const period3End = new Date(endDate); // up to end date
+
+            const periodsLabels = [
+                `${period1Start.toLocaleDateString('en-US', {month: 'short'})} ${period1Start.getDate()}-${period1End.getDate()}`,
+                `${period2Start.toLocaleDateString('en-US', {month: 'short'})} ${period2Start.getDate()}-${period2End.getDate()}`,
+                `${period3Start.toLocaleDateString('en-US', {month: 'short'})} ${period3Start.getDate()}-${period3End.getDate()}`,
+                `${period1Start.toLocaleDateString('en-US', {month: 'short'})} ${period1Start.getDate()}-${period3End.getDate()}`
+            ];
+
+            const teamPerformance: TeamPerformance[] = [];
+
+            // For each team, calculate performance metrics for each period
+            Object.entries(groupedByTeam).forEach(([leader, data]) => {
+                const allSims = [...data.quality, ...data.nonQuality];
+                const teamName = allSims[0]?.team_name || 'Unknown Team';
+
+                const performance: TeamPerformance = {
+                    teamName,
+                    leader,
+                    periods: {}
+                };
+
+                // Calculate for period 1
+                const period1Sims = allSims.filter(sim => {
+                    const activationDate = new Date(sim.activation_date || '');
+                    return activationDate >= period1Start && activationDate <= period1End;
+                });
+                const period1Quality = period1Sims.filter(isQualitySim);
+                const period1Percentage = period1Sims.length ? (period1Quality.length / period1Sims.length) * 100 : 0;
+                performance.periods[periodsLabels[0]] = {
+                    totalActivation: period1Sims.length,
+                    qualityCount: period1Quality.length,
+                    percentagePerformance: parseFloat(period1Percentage.toFixed(2)),
+                    comment: period1Percentage >= 90 ? 'Well done' : 'Improve'
+                };
+
+                // Calculate for period 2
+                const period2Sims = allSims.filter(sim => {
+                    const activationDate = new Date(sim.activation_date || '');
+                    return activationDate >= period2Start && activationDate <= period2End;
+                });
+                const period2Quality = period2Sims.filter(isQualitySim);
+                const period2Percentage = period2Sims.length ? (period2Quality.length / period2Sims.length) * 100 : 0;
+                performance.periods[periodsLabels[1]] = {
+                    totalActivation: period2Sims.length,
+                    qualityCount: period2Quality.length,
+                    percentagePerformance: parseFloat(period2Percentage.toFixed(2)),
+                    comment: period2Percentage >= 90 ? 'Well done' : 'Improve'
+                };
+
+                // Calculate for period 3
+                const period3Sims = allSims.filter(sim => {
+                    const activationDate = new Date(sim.activation_date || '');
+                    return activationDate >= period3Start && activationDate <= period3End;
+                });
+                const period3Quality = period3Sims.filter(isQualitySim);
                 const period3Percentage = period3Sims.length ? (period3Quality.length / period3Sims.length) * 100 : 0;
                 performance.periods[periodsLabels[2]] = {
                     totalActivation: period3Sims.length,
@@ -320,32 +489,25 @@ const ReportGenerator = () => {
             });
 
             // Generate Excel file
-            // await generateExcel(
-            //     adaptedSimData,
-            //     groupedByTeam,
-            //     unknownSource,
-            //     teamPerformance,
-            //     periodsLabels,
-            //     startDate,
-            //     endDate
-            // );
-            setPreviewData({
+            await generateExcel(
+                simData,
+                groupedByTeam,
+                unknownSource,
                 teamPerformance,
                 periodsLabels,
-                adaptedSimData,
-                isLoading: true
-            });
+                startDate,
+                endDate
+            );
 
-            // setSuccess(true);
-            // setTimeout(() => setSuccess(false), 3000);
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
             console.error('Error generating report:', error);
             alert.error('Error generating report. Please try again.');
         } finally {
-            // setGenerating(false);
+            setGenerating(false);
         }
     };
-
     const fetchTeams = async (): Promise<Team[]> => {
         try {
             const {data, error} = await teamService.getAllTeams();
@@ -355,7 +517,11 @@ const ReportGenerator = () => {
                 throw new Error('Failed to fetch teams');
             }
 
-            return data || [];
+            return data.map(team => ({
+                team_id: team.id || '',
+                team_name: team.name || '',
+                team_leader_id: team.leader_id || '',
+            }));
         } catch (error) {
             console.error('Error in fetchTeams:', error);
             alert.error('Failed to fetch team data. Please try again.');
@@ -374,7 +540,11 @@ const ReportGenerator = () => {
                 throw new Error('Failed to fetch users');
             }
 
-            return data || [];
+            return data.map(user => ({
+                user_id: user.id || '',
+                full_name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+                team_id: user.team_id || '',
+            }));
         } catch (error) {
             console.error('Error in fetchUsers:', error);
             alert.error('Failed to fetch user data. Please try again.');
@@ -384,9 +554,9 @@ const ReportGenerator = () => {
 
     // Function to generate Excel file
     const generateExcel = async (
-        simData: SIMCard[],
-        groupedByTeam: { [key: string]: { quality: SIMCard[], nonQuality: SIMCard[] } },
-        unknownSource: SIMCard[],
+        simData: SimCard[],
+        groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } },
+        unknownSource: SimCard[],
         teamPerformance: TeamPerformance[],
         periodsLabels: string[],
         startDate: string,
@@ -404,7 +574,7 @@ const ReportGenerator = () => {
 
         // Create RAW sheet with all data
         const rawData = simData.map(sim => [
-            sim.serial_number,
+            sim.sim_serial_number,
             sim.team_name || 'Unknown',
             sim.activation_date || '',
             sim.top_up_date || '',
@@ -425,7 +595,7 @@ const ReportGenerator = () => {
             // Quality sheet
             if (data.quality.length > 0) {
                 const qualityData = data.quality.map(sim => [
-                    sim.serial_number,
+                    sim.sim_serial_number,
                     sim.team_name || 'Unknown',
                     sim.activation_date || '',
                     sim.top_up_date || '',
@@ -451,7 +621,7 @@ const ReportGenerator = () => {
             // Non-quality sheet
             if (data.nonQuality.length > 0) {
                 const nonQualityData = data.nonQuality.map(sim => [
-                    sim.serial_number,
+                    sim.sim_serial_number,
                     sim.team_name || 'Unknown',
                     sim.activation_date || '',
                     sim.top_up_date || '',
@@ -479,7 +649,7 @@ const ReportGenerator = () => {
         // Create Unknown Source sheet
         if (unknownSource.length > 0) {
             const unknownData = unknownSource.map(sim => [
-                sim.serial_number,
+                sim.sim_serial_number,
                 'Unknown Source',
                 sim.activation_date || '',
                 sim.top_up_date || '',
@@ -536,194 +706,4 @@ const ReportGenerator = () => {
     };
 
     const handleGenerateReport = () => {
-        if (!startDate || !endDate) {
-            alert.error('Please select both start and end dates');
-            return;
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (start > end) {
-            alert.error('Start date cannot be after end date');
-            return;
-        }
-
-        setShowDatePicker(false);
-        processData(startDate, endDate).then();
-    };
-    const loadData = async () => {
-        if (!startDate || !endDate) {
-            alert.error('Please select both start and end dates');
-            return;
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (start > end) {
-            alert.error('Start date cannot be after end date');
-            return;
-        }
-        processData(startDate, endDate).then();
-    };
-
-    const dialog = useDialog();
-
-    return (
-        <Dashboard>
-            {/*<ReportDateRangeModal />*/}
-            <div className="flex flex-col items-center min-h-screen bg-gray-50 px-4 py-12">
-                <div
-                    className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden transition-all transform">
-                    <div className="bg-gradient-to-r from-green-600 to-green-800 py-8 px-6">
-                        <h1 className="text-3xl font-bold text-white">Van Quality Report Generator</h1>
-                        <p className="text-green-100 mt-2">Generate detailed SIM card performance reports with quality
-                            metrics</p>
-                    </div>
-
-                    <div className="p-6">
-                        <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-md">
-                            <div className="flex">
-                                <div className="flex-shrink-0">
-                                    <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg"
-                                         viewBox="0 0 20 20"
-                                         fill="currentColor">
-                                        <path fillRule="evenodd"
-                                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
-                                              clipRule="evenodd"/>
-                                    </svg>
-                                </div>
-                                <div className="ml-3">
-                                    <p className="text-sm text-green-800">
-                                        This report will generate Excel sheets with SIM card performance metrics grouped
-                                        by team and
-                                        quality status. The report includes period breakdowns and overall performance
-                                        metrics.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <button
-                            onClick={() => {
-                                const d = dialog.create({
-                                    content: <ReportDateRangeModal onConfirm={date_range => {
-                                        d.dismiss();
-                                        setStartDate(date_range.startDate?.toString() || "");
-                                        setEndDate(date_range.endDate?.toString() || "");
-                                        setShowDatePicker(true);
-                                        loadData()
-                                    }} onClose={() => {
-                                        d.dismiss();
-                                        setShowDatePicker(false);
-                                        setStartDate('')
-                                        setEndDate('')
-                                    }}/>,
-                                    size: "lg",
-                                    design: ["scrollable"]
-                                })
-                            }}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center"
-                        >
-                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            Select Date Range for Report
-                        </button>
-
-                        <div className="animate-fadeIn">
-                            <div
-                                className="flex mt-5 flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3">
-                                <button
-                                    onClick={handleGenerateReport}
-                                    disabled={!showDatePicker || generating}
-                                    className={`py-2 px-4 rounded-md text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                                        generating ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
-                                    }`}
-                                >
-                                    {generating ? 'Generating...' : 'Generate Report'}
-                                </button>
-                            </div>
-                        </div>
-
-
-                        {generating && (
-                            <div className="flex flex-col items-center justify-center mt-8 animate-fadeIn">
-                                <div
-                                    className="w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
-                                <p className="mt-4 text-gray-600">Generating your report, please wait...</p>
-                            </div>
-                        )}
-                        {showDatePicker ?
-                            <ReportPreview
-                                simData={previewData.simData}
-                                startDate={startDate}
-                                endDate={endDate}
-                                isLoading={previewData.isLoading}
-                                teamPerformance={previewData.teamPerformance}
-                                periodsLabels={previewData.periodsLabels}/>
-                            : ''}
-
-                        {success && (
-                            <div className="mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-md animate-fadeIn">
-                                <div className="flex">
-                                    <div className="flex-shrink-0">
-                                        <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg"
-                                             viewBox="0 0 20 20"
-                                             fill="currentColor">
-                                            <path fillRule="evenodd"
-                                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                                  clipRule="evenodd"/>
-                                        </svg>
-                                    </div>
-                                    <div className="ml-3">
-                                        <p className="text-sm text-green-800">
-                                            Report generated successfully! Check your downloads folder for the Excel
-                                            file.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <h3 className="font-medium text-gray-700 mb-2">Sheet Structure</h3>
-                                <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
-                                    <li><span className="font-medium">Raw Data:</span> All records for selected period
-                                    </li>
-                                    <li><span className="font-medium">Team Sheets:</span> Separate quality/non-quality
-                                        sheets per team
-                                    </li>
-                                    <li><span className="font-medium">Unknown Source:</span> SIMs without assigned teams
-                                    </li>
-                                    <li><span className="font-medium">%Performance:</span> Team metrics across periods
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                <h3 className="font-medium text-gray-700 mb-2">Quality Metrics</h3>
-                                <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
-                                    <li>SIM activation status must be present</li>
-                                    <li>Top-up amount must be ≥ 50 KES</li>
-                                    <li>Quality flag must be "Y"</li>
-                                    <li>Overall percentage = Quality SIMs / Total SIMs × 100</li>
-                                    <li>≥ 90% earns "Well done" rating</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Dashboard>
-    );
-};
-
-export default ReportGenerator;
+        if (!

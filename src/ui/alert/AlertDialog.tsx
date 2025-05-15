@@ -181,14 +181,14 @@ export const AlertDialog = () => {
 const AlertIcon = ({type}: { type: AlertType }) => {
     switch (type) {
         case 'success':
-            return <CheckCircle className="w-6 h-6 text-green-500"/>;
+            return <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400"/>;
         case 'error':
-            return <AlertCircle className="w-6 h-6 text-red-500"/>;
+            return <AlertCircle className="w-6 h-6 text-red-500 dark:text-red-400"/>;
         case 'warning':
-            return <AlertTriangle className="w-6 h-6 text-yellow-500"/>;
+            return <AlertTriangle className="w-6 h-6 text-yellow-500 dark:text-yellow-400"/>;
         case 'info':
         default:
-            return <Info className="w-6 h-6 text-green-500"/>;
+            return <Info className="w-6 h-6 text-green-500 dark:text-green-400"/>;
     }
 };
 
@@ -211,20 +211,20 @@ const Alert = ({
     const getBgColor = () => {
         switch (alert.type) {
             case 'success':
-                return 'bg-green-50 border-green-200';
+                return 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700';
             case 'error':
-                return 'bg-red-50 border-red-200';
+                return 'bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700';
             case 'warning':
-                return 'bg-yellow-50 border-yellow-200';
+                return 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700';
             case 'info':
             default:
-                return 'bg-green-50 border-green-200';
+                return 'bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700';
         }
     };
 
     return (
         <div
-            className={`fixed transform transition-all duration-500 ease-in-out shadow-lg rounded-lg border p-4 flex items-center gap-3 max-w-xs w-full ${getBgColor()} ${
+            className={`fixed transform transition-all duration-500 ease-in-out shadow-lg rounded-lg border p-4 flex items-center gap-3 max-w-xs w-full ${getBgColor()} dark:text-gray-100 ${
                 isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
             }`}
             style={{
@@ -232,12 +232,12 @@ const Alert = ({
             }}
         >
             <AlertIcon type={alert.type}/>
-            <p className="text-sm font-medium flex-1">{alert.message}</p>
+            <p className="text-sm font-medium flex-1 dark:text-gray-200">{alert.message}</p>
             <button
                 onClick={onClose}
-                className="p-1 rounded-full hover:bg-gray-200 transition-colors duration-200"
+                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
             >
-                <X className="w-4 h-4"/>
+                <X className="w-4 h-4 dark:text-gray-300"/>
             </button>
         </div>
     );
@@ -371,53 +371,53 @@ const ConfirmDialog = ({
         switch (type) {
             case ConfirmType.ERROR:
                 return {
-                    bgColor: 'bg-red-100',
-                    textColor: 'text-red-600',
-                    iconColor: 'text-red-600',
-                    buttonBg: 'bg-red-600',
-                    buttonHoverBg: 'bg-red-500',
-                    buttonRingColor: 'ring-red-500',
-                    buttonHoverEffect: 'bg-red-400'
+                    bgColor: 'bg-red-100 dark:bg-red-900/30',
+                    textColor: 'text-red-600 dark:text-red-400',
+                    iconColor: 'text-red-600 dark:text-red-400',
+                    buttonBg: 'bg-red-600 dark:bg-red-700',
+                    buttonHoverBg: 'bg-red-500 dark:bg-red-600',
+                    buttonRingColor: 'ring-red-500 dark:ring-red-600',
+                    buttonHoverEffect: 'bg-red-400 dark:bg-red-500'
                 };
             case ConfirmType.WARN:
                 return {
-                    bgColor: 'bg-yellow-100',
-                    textColor: 'text-yellow-600',
-                    iconColor: 'text-yellow-600',
-                    buttonBg: 'bg-yellow-600',
-                    buttonHoverBg: 'bg-yellow-500',
-                    buttonRingColor: 'ring-yellow-500',
-                    buttonHoverEffect: 'bg-yellow-400'
+                    bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+                    textColor: 'text-yellow-600 dark:text-yellow-400',
+                    iconColor: 'text-yellow-600 dark:text-yellow-400',
+                    buttonBg: 'bg-yellow-600 dark:bg-yellow-700',
+                    buttonHoverBg: 'bg-yellow-500 dark:bg-yellow-600',
+                    buttonRingColor: 'ring-yellow-500 dark:ring-yellow-600',
+                    buttonHoverEffect: 'bg-yellow-400 dark:bg-yellow-500'
                 };
             case ConfirmType.SUCCESS:
                 return {
-                    bgColor: 'bg-green-100',
-                    textColor: 'text-green-600',
-                    iconColor: 'text-green-600',
-                    buttonBg: 'bg-green-600',
-                    buttonHoverBg: 'bg-green-500',
-                    buttonRingColor: 'ring-green-500',
-                    buttonHoverEffect: 'bg-green-400'
+                    bgColor: 'bg-green-100 dark:bg-green-900/30',
+                    textColor: 'text-green-600 dark:text-green-400',
+                    iconColor: 'text-green-600 dark:text-green-400',
+                    buttonBg: 'bg-green-600 dark:bg-green-700',
+                    buttonHoverBg: 'bg-green-500 dark:bg-green-600',
+                    buttonRingColor: 'ring-green-500 dark:ring-green-600',
+                    buttonHoverEffect: 'bg-green-400 dark:bg-green-500'
                 };
             case ConfirmType.INFO:
                 return {
-                    bgColor: 'bg-blue-100',
-                    textColor: 'text-blue-600',
-                    iconColor: 'text-blue-600',
-                    buttonBg: 'bg-blue-600',
-                    buttonHoverBg: 'bg-blue-500',
-                    buttonRingColor: 'ring-blue-500',
-                    buttonHoverEffect: 'bg-blue-400'
+                    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+                    textColor: 'text-blue-600 dark:text-blue-400',
+                    iconColor: 'text-blue-600 dark:text-blue-400',
+                    buttonBg: 'bg-blue-600 dark:bg-blue-700',
+                    buttonHoverBg: 'bg-blue-500 dark:bg-blue-600',
+                    buttonRingColor: 'ring-blue-500 dark:ring-blue-600',
+                    buttonHoverEffect: 'bg-blue-400 dark:bg-blue-500'
                 };
             default:
                 return {
-                    bgColor: 'bg-gray-100',
-                    textColor: 'text-gray-600',
-                    iconColor: 'text-gray-600',
-                    buttonBg: 'bg-green-600',
-                    buttonHoverBg: 'bg-green-500',
-                    buttonRingColor: 'ring-green-500',
-                    buttonHoverEffect: 'bg-green-400'
+                    bgColor: 'bg-gray-100 dark:bg-gray-800',
+                    textColor: 'text-gray-600 dark:text-gray-300',
+                    iconColor: 'text-gray-600 dark:text-gray-300',
+                    buttonBg: 'bg-green-600 dark:bg-green-700',
+                    buttonHoverBg: 'bg-green-500 dark:bg-green-600',
+                    buttonRingColor: 'ring-green-500 dark:ring-green-600',
+                    buttonHoverEffect: 'bg-green-400 dark:bg-green-500'
                 };
         }
     };
@@ -565,7 +565,7 @@ const ConfirmDialog = ({
 
             {/* Dialog */}
             <div
-                className={`bg-white rounded-lg shadow-xl transform transition-all duration-300 w-full max-w-md mx-4 overflow-hidden ${
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-xl transform transition-all duration-300 w-full max-w-md mx-4 overflow-hidden ${
                     isVisible
                         ? 'opacity-100 scale-100 translate-y-0'
                         : 'opacity-0 scale-105 translate-y-4'
@@ -585,7 +585,7 @@ const ConfirmDialog = ({
                     >
                         {renderIcon()}
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2 flex justify-center">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2 flex justify-center">
           <span
               className={`inline-block transition-all duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 -translate-y-2'}`}>
             {title}
@@ -598,19 +598,19 @@ const ConfirmDialog = ({
                         isVisible ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform -translate-y-4'
                     }`}
                 >
-                    <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message) }} className={`text-sm text-gray-500 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100' : 'opacity-0'}`}/>
+                    <p dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message) }} className={`text-sm text-gray-500 dark:text-gray-300 transition-all duration-700 delay-100 ${isVisible ? 'opacity-100' : 'opacity-0'}`}/>
                     {
                         taskRunning ?
                             <div className="flex justify-center items-center h-34">
                                 <div
-                                    className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500"></div>
+                                    className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-500 dark:border-gray-300"></div>
                             </div> : ''
                     }
                     {
                         taskError ?
                             <div
-                                className="flex items-center p-3 my-2 bg-red-50 border border-red-200 rounded-md shadow-sm transition-all duration-700 delay-100 animate-pulse">
-                                <div className="mr-3 text-red-500">
+                                className="flex items-center p-3 my-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-md shadow-sm transition-all duration-700 delay-100 animate-pulse">
+                                <div className="mr-3 text-red-500 dark:text-red-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20"
                                          fill="currentColor">
                                         <path fillRule="evenodd"
@@ -618,14 +618,14 @@ const ConfirmDialog = ({
                                               clipRule="evenodd"/>
                                     </svg>
                                 </div>
-                                <p className="text-sm font-medium text-red-800">
+                                <p className="text-sm font-medium text-red-800 dark:text-red-200">
                                     {taskError}
                                 </p>
                             </div> : ''
                     }
                 </div>
 
-                <div className="bg-gray-50 px-6 py-2 flex justify-end space-x-3">
+                <div className="bg-gray-50 dark:bg-gray-700 px-6 py-2 flex justify-end space-x-3">
                     <button
                         disabled={taskRunning}
                         onClick={() => {
@@ -633,12 +633,12 @@ const ConfirmDialog = ({
                             setTimeout(onDismiss, 500);
                             onCancel();
                         }}
-                        className="px-4 cursor-pointer py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-sm group"
+                        className="px-4 cursor-pointer py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-gray-400 rounded-md transition-all duration-300 transform hover:scale-105 hover:shadow-sm group"
                     >
           <span className="flex items-center">
             <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1 group-hover:text-red-500 transition-colors duration-300"
+                className="h-4 w-4 mr-1 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-300"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -670,80 +670,6 @@ const ConfirmDialog = ({
                             className={`absolute inset-0 ${theme.buttonHoverEffect} transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300`}></span>
                     </button>
                 </div>
-            </div>
-        </div>
-    );
-};
-
-// Example Usage Component
-const ExampleUsage = () => {
-    const alert = useAlert();
-
-    const showSuccess = () => {
-        alert.success("Operation completed successfully!");
-    };
-
-    const showError = () => {
-        alert.error("An error occurred while processing your request.");
-    };
-
-    const showInfo = () => {
-        alert.info("This is an informational message.");
-    };
-
-    const showWarning = () => {
-        alert.warning("Warning: This action may have consequences.");
-    };
-
-    const showConfirm = () => {
-        // alert.confirm(
-        //     "Are you sure?",
-        //     "This action cannot be undone. Are you sure you want to continue?",
-        //     () => {
-        //         // Success callback
-        //         alert.success("Action confirmed and executed!");
-        //     },
-        //     () => {
-        //         // Cancel callback
-        //         alert.info("Action canceled");
-        //     }
-        // );
-    };
-
-    return (
-        <div className="p-6 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Alert Dialog Demo</h2>
-            <div className="grid grid-cols-2 gap-4">
-                <button
-                    onClick={showSuccess}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                    Success
-                </button>
-                <button
-                    onClick={showError}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                >
-                    Error
-                </button>
-                <button
-                    onClick={showInfo}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                    Info
-                </button>
-                <button
-                    onClick={showWarning}
-                    className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
-                >
-                    Warning
-                </button>
-                <button
-                    onClick={showConfirm}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-md col-span-2 hover:bg-purple-700 transition-colors"
-                >
-                    Confirm Dialog
-                </button>
             </div>
         </div>
     );

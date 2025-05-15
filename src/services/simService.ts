@@ -374,7 +374,17 @@ export const simCardService = {
         }
 
         return data as SIMCard[];
-    }
+    },
+    getSimCardsByDateRange: async (startDate: string, endDate: string) => {
+        const supabase = createSupabaseClient();
+
+        return supabase
+            .from('sim_cards')
+            .select('*')
+            .gte('sale_date', startDate)
+            .lte('sale_date', endDate)
+            .order('sale_date', {ascending: false});
+    },
 };
 
 export default simCardService;

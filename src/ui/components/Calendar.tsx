@@ -139,11 +139,11 @@ const Calendar: React.FC<CalendarProps> = ({
 
     // Check if the day is in the current month
     if (!isSameMonth(day, currentMonth)) {
-      classes += "text-gray-300 ";
+      classes += "text-gray-300 dark:text-gray-600 ";
     } else if (isDisabled(day)) {
-      classes += "text-gray-300 cursor-not-allowed opacity-50 ";
+      classes += "text-gray-300 dark:text-gray-600 cursor-not-allowed opacity-50 ";
     } else {
-      classes += "hover:bg-gray-100 cursor-pointer ";
+      classes += "hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer ";
     }
 
     // Apply modifiers
@@ -158,7 +158,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
     // Handle selected date
     if (selected && isSameDay(day, selected)) {
-      classes += "bg-blue-500 text-white hover:bg-blue-600 ";
+      classes += "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 ";
     }
 
     return classes.trim();
@@ -173,7 +173,7 @@ const Calendar: React.FC<CalendarProps> = ({
         {weekDays.map(day => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-gray-500 py-2"
+            className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-2"
           >
             {day}
           </div>
@@ -207,7 +207,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
             {/* Today indicator */}
             {isSameDay(cloneDay, new Date()) && (
-              <span className="absolute bottom-1 w-1 h-1 bg-blue-500 rounded-full"></span>
+              <span className="absolute bottom-1 w-1 h-1 bg-blue-500 dark:bg-blue-400 rounded-full"></span>
             )}
           </div>
         );
@@ -225,23 +225,23 @@ const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className={`w-full max-w-md ${className}`}>
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden p-4 transition-all duration-300 transform hover:shadow-xl">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden p-4 transition-all duration-300 transform hover:shadow-xl dark:shadow-gray-900">
         {/* Header */}
         <div className="flex justify-between items-center mb-6 px-2">
           <button
             onClick={prevMonth}
             disabled={isAnimating}
-            className="p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 focus:outline-none"
+            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 focus:outline-none"
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="font-bold text-gray-800 text-lg tracking-wide">
+          <div className="font-bold text-gray-800 dark:text-gray-100 text-lg tracking-wide">
             {format(currentMonth, 'MMMM yyyy')}
           </div>
           <button
             onClick={nextMonth}
             disabled={isAnimating}
-            className="p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 focus:outline-none"
+            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 focus:outline-none"
           >
             <ChevronRight size={20} />
           </button>
