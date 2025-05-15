@@ -37,11 +37,11 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                 {/* Sidebar - Desktop */}
                 <motion.div
                     variants={mobile ? {} : {
-                        expanded: {width: '280px'},
-                        collapsed: {width: '80px'}
+                        // expanded: {width: '280px'},
+                        // collapsed: {width: '80px'}
                     }}
                     initial={false}
-                    animate={collapsed ? 'collapsed' : 'expanded'}
+                    animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
                     className={`hidden bg-red-500 md:block bg-white shadow-md z-30 h-screen fixed`}>
                     <Sidebar/>
@@ -51,10 +51,9 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                 <motion.div
                     variants={mobile ? {} : {
                         expanded: {marginLeft: '280px'},
-                        collapsed: {marginLeft: '80px'}
                     }}
                     initial={false}
-                    animate={collapsed ? 'collapsed' : 'expanded'}
+                    animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
                     className={`flex-1 w-full overflow-x-hidden  relative`}>
                     <PageTransition>

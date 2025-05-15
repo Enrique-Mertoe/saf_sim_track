@@ -56,6 +56,7 @@ const NavItem = ({href, icon: Icon, label, onClick}: NavItemProps) => {
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault();
+        Signal.trigger("mobile-open", false)
         if (onClick) {
             onClick(e);
             return;
@@ -310,53 +311,17 @@ export default function Sidebar() {
         </>
     );
 
-    // Desktop sidebar collapse toggle
-    const collapseButton = (
-        <button
-            onClick={toggleSidebar}
-            className="hidden md:flex absolute -right-3 top-20 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-md"
-        >
-            <motion.div
-                animate={{rotate: isCollapsed ? 180 : 0}}
-                transition={{duration: 0.3}}
-            >
-                <RefreshCw size={16} className="text-gray-500 dark:text-gray-400"/>
-            </motion.div>
-        </button>
-    );
 
     return (
-        <div className={""}>
-            {/* Desktop Sidebar */}
-            {(
-                <motion.div
-                    id="sidebar"
-                    variants={sidebarVariants}
-                    initial={false} // Disable initial animation after first render
-                    animate={isCollapsed ? 'collapsed' : 'expanded'}
-                    transition={{type: 'spring', damping: 20}}
-                    className="sticky w-full top-0 h-screen bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-800 shadow-sm flex flex-col"
-                >
-                    {collapseButton}
-                    {renderSidebarContent()}
-                </motion.div>
-            )}
-
-            {/* Add a wrapper for main content elsewhere in your layout */}
-            <script dangerouslySetInnerHTML={{
-                __html: `
-        // Setup main content wrapper if it doesn't exist
-        document.addEventListener('DOMContentLoaded', () => {
-          if (!document.getElementById('main-content')) {
-            const mainContent = document.querySelector('main');
-            if (mainContent) {
-              mainContent.id = 'main-content';
-              mainContent.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            }
-          }
-        });
-      `
-            }}/>
-        </div>
+        <motion.div
+            id="sidebar"
+            variants={sidebarVariants}
+            initial={false} // Disable initial animation after first render
+            animate={'expanded'}
+            transition={{type: 'spring', damping: 20}}
+            className="sticky w-full top-0 h-screen bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-800 shadow-sm flex flex-col"
+        >
+            {renderSidebarContent()}
+        </motion.div>
     );
 }

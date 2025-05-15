@@ -399,7 +399,7 @@ export default function Header() {
             </header>
 
             {/* Mobile Sidebar Menu */}
-            {/*<AnimatePresence>*/}
+            <AnimatePresence>
                 {isMobileMenuOpen && (
                     <>
                         <motion.div
@@ -411,10 +411,7 @@ export default function Header() {
                                 Signal.trigger("mobile-open", !isMobileMenuOpen)
 
                             }}
-                        >
-
-
-                        </motion.div>
+                        />
                         <motion.div
                             initial={{x: "-100%"}}
                             animate={{x: 0}}
@@ -432,7 +429,7 @@ export default function Header() {
                         </motion.div>
                     </>
                 )}
-            {/*</AnimatePresence>*/}
+            </AnimatePresence>
         </>
     );
 }
