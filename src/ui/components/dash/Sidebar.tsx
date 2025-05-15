@@ -135,7 +135,15 @@ export default function Sidebar() {
 
         handleResize();
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+
+
+        Signal.on("mobile-open", open => {
+            setIsMobile(open)
+        })
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            Signal.off("mobile-open")
+        };
     }, []);
 
     // First load detection
@@ -209,7 +217,6 @@ export default function Sidebar() {
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
-
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
@@ -304,19 +311,19 @@ export default function Sidebar() {
     );
 
     // Mobile menu button
-    const mobileMenuButton = (
-        <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden fixed top-4 right-4 z-50 bg-green-600 dark:bg-green-700 text-white p-2 rounded-full shadow-lg"
-        >
-            <motion.div
-                animate={{rotate: showMobileMenu ? 180 : 0}}
-                transition={{duration: 0.3}}
-            >
-                {showMobileMenu ? <LogOut size={24}/> : <Users size={24}/>}
-            </motion.div>
-        </button>
-    );
+    // const mobileMenuButton = (
+    //     <button
+    //         onClick={() => setShowMobileMenu(!showMobileMenu)}
+    //         className="md:hidden fixed top-4 right-4 z-50 bg-green-600 dark:bg-green-700 text-white p-2 rounded-full shadow-lg"
+    //     >
+    //         <motion.div
+    //             animate={{rotate: showMobileMenu ? 180 : 0}}
+    //             transition={{duration: 0.3}}
+    //         >
+    //             {showMobileMenu ? <LogOut size={24}/> : <Users size={24}/>}
+    //         </motion.div>
+    //     </button>
+    // );
 
     // Desktop sidebar collapse toggle
     const collapseButton = (
@@ -335,7 +342,7 @@ export default function Sidebar() {
 
     return (
         <div className={""}>
-            {isMobile && mobileMenuButton}
+            {/*{isMobile && mobileMenuButton}*/}
 
             {/* Mobile Sidebar (Slide-in drawer) */}
             {isMobile && (

@@ -33,7 +33,7 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             <Header/>
-            <div className="flex w-full  mt-14">
+            <div className="flex w-full mt-24 md:mt-14">
                 {/* Sidebar - Desktop */}
                 <motion.div
                     variants={mobile ? {} : {

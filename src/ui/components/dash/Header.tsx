@@ -317,12 +317,17 @@ export default function Header() {
                         </div>
 
                         {/* Mobile menu toggle */}
-                        <button
-                            className="md:hidden p-2 rounded-full hover:bg-green-500 transition-colors duration-200"
-                            onClick={() => Signal.trigger("mobile-open", !isMobileMenuOpen)}
+                        <motion.div
+                            animate={{rotate: isMobileMenuOpen ? 180 : 0}}
+                            transition={{duration: 0.3}}
                         >
-                            {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-                        </button>
+                            <button
+                                className="md:hidden p-2 rounded-full hover:bg-green-500 transition-colors duration-200"
+                                onClick={() => Signal.trigger("mobile-open", !isMobileMenuOpen)}
+                            >
+                                {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                            </button>
+                        </motion.div>
                     </div>
                 </div>
 
@@ -396,22 +401,22 @@ export default function Header() {
             <AnimatePresence>
                 {isMobileMenuOpen && (
                     <>
-                        <motion.div
-                            initial={{opacity: 0}}
-                            animate={{opacity: 0.5}}
-                            exit={{opacity: 0}}
-                            className="fixed inset-0 bg-black z-40 md:hidden"
-                            onClick={() => Signal.trigger("mobile-open", false)}
-                        />
-                        <motion.div
-                            initial={{x: "-100%"}}
-                            animate={{x: 0}}
-                            exit={{x: "-100%"}}
-                            transition={{type: "tween", duration: 0.3}}
-                            className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"
-                        >
-                            <Sidebar/>
-                        </motion.div>
+                        {/*<motion.div*/}
+                        {/*    initial={{opacity: 0}}*/}
+                        {/*    animate={{opacity: 0.5}}*/}
+                        {/*    exit={{opacity: 0}}*/}
+                        {/*    className="fixed inset-0 bg-black z-40 md:hidden"*/}
+                        {/*    onClick={() => Signal.trigger("mobile-open", false)}*/}
+                        {/*/>*/}
+                        {/*<motion.div*/}
+                        {/*    initial={{x: "-100%"}}*/}
+                        {/*    animate={{x: 0}}*/}
+                        {/*    exit={{x: "-100%"}}*/}
+                        {/*    transition={{type: "tween", duration: 0.3}}*/}
+                        {/*    className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"*/}
+                        {/*>*/}
+                        <Sidebar/>
+                        {/*</motion.div>*/}
                     </>
                 )}
             </AnimatePresence>

@@ -1,14 +1,15 @@
 'use client';
 import {useState, useEffect} from 'react';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import Dashboard from "@/ui/components/dash/Dashboard";
 import ReportDateRangeModal from "@/ui/components/ReportDateModal";
 import {useDialog} from "@/app/_providers/dialog";
 import alert from "@/ui/alert";
 import simService from "@/services/simService";
-import {teamService, userService} from "@/services";
 import {SIMCard, Team, User} from '@/models';
 import {ReportPreview} from "@/app/dashboard/report/Preview";
+import generateExcel from "@/app/dashboard/report/utility";
+import useApp from "@/ui/provider/AppProvider";
 
 
 interface TeamPerformance {
@@ -56,6 +57,7 @@ type SimCard = SIMCard & {
 
 const ReportGenerator = () => {
     // States
+    const {user} = useApp()
     const [loading, setLoading] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [startDate, setStartDate] = useState<string>('');
@@ -256,7 +258,8 @@ const ReportGenerator = () => {
                     teamPerformance,
                     periodsLabels,
                     startDate,
-                    endDate
+                    endDate,
+                    user
                 }
             );
             setPreviewData({
@@ -274,165 +277,7 @@ const ReportGenerator = () => {
         }
     };
     // Function to generate Excel file
-    const generateExcel = async ({
-                                     simData,
-                                     groupedByTeam,
-                                     unknownSource,
-                                     teamPerformance,
-                                     periodsLabels,
-                                     startDate,
-                                     endDate
-                                 }: {
-                                     simData: SimCard[],
-                                     groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } },
-                                     unknownSource: SIMCard[],
-                                     teamPerformance: TeamPerformance[],
-                                     periodsLabels: string[],
-                                     startDate: string,
-                                     endDate: string
-                                 }
-    ) => {
-        const workbook = XLSX.utils.book_new();
-        // const periodStart = formatDateDisplay(startDate);
-        // const periodEnd = formatDateDisplay(endDate);
 
-        // Create header row
-        const headers = [
-            'Serial', 'Team', 'Activation Date', 'Top Up Date', 'Top Up Amount',
-            'Bundle Purchase Date', 'Bundle Amount', 'Usage', 'Till/Mobigo MSISDN', 'BA MSISDN'
-        ];
-
-        // Create RAW sheet with all data
-        const rawData = simData.map(sim => [
-            sim.serial_number,
-            sim.team_id.name || 'Unknown',
-            sim.activation_date || '',
-            sim.top_up_date || '',
-            sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
-            sim.bundle_purchase_date || '',
-            sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-            sim.usage?.toString(),
-            sim.agent_msisdn,
-            sim.ba_msisdn
-        ]);
-
-        const rawSheet = XLSX.utils.aoa_to_sheet([headers, ...rawData]);
-        XLSX.utils.book_append_sheet(workbook, rawSheet, 'Raw Data');
-
-        // Create sheets for each team
-        let colorIndex = 0;
-        Object.entries(groupedByTeam).forEach(([leader, data]) => {
-            // Quality sheet
-            if (data.quality.length > 0) {
-                const qualityData = data.quality.map(sim => [
-                    sim.serial_number,
-                    sim.team_id || 'Unknown',
-                    sim.activation_date || '',
-                    sim.top_up_date || '',
-                    sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
-                    sim.bundle_purchase_date || '',
-                    sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-                    sim.usage?.toString(),
-                    sim.agent_msisdn,
-                    sim.ba_msisdn
-                ]);
-
-                const qualitySheet = XLSX.utils.aoa_to_sheet([headers, ...qualityData]);
-                XLSX.utils.book_append_sheet(workbook, qualitySheet, `${leader} team quality`);
-
-                // Set tab color (in a real implementation, would require more Excel.js specific code)
-                // This is a simplified example
-                if (workbook.Sheets[`${leader} team quality`]) {
-                    // In a real implementation, use Excel.js properties to set the tab color
-                    console.log(`Setting ${TEAM_COLORS[colorIndex]} color for ${leader} team quality`);
-                }
-            }
-
-            // Non-quality sheet
-            if (data.nonQuality.length > 0) {
-                const nonQualityData = data.nonQuality.map(sim => [
-                    sim.serial_number,
-                    sim.team_id.name || 'Unknown',
-                    sim.activation_date || '',
-                    sim.top_up_date || '',
-                    sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
-                    sim.bundle_purchase_date || '',
-                    sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-                    sim.usage?.toString(),
-                    sim.agent_msisdn,
-                    sim.ba_msisdn
-                ]);
-
-                const nonQualitySheet = XLSX.utils.aoa_to_sheet([headers, ...nonQualityData]);
-                XLSX.utils.book_append_sheet(workbook, nonQualitySheet, `${leader} team non quality`);
-
-                // Set tab color (in a real implementation, would require more Excel.js specific code)
-                // This is a simplified example
-                if (workbook.Sheets[`${leader} team non quality`]) {
-                    console.log(`Setting ${TEAM_COLORS[colorIndex]} color for ${leader} team non quality`);
-                }
-            }
-
-            colorIndex = (colorIndex + 1) % TEAM_COLORS.length;
-        });
-
-        // Create Unknown Source sheet
-        if (unknownSource.length > 0) {
-            const unknownData = unknownSource.map(sim => [
-                sim.serial_number,
-                'Unknown Source',
-                sim.activation_date || '',
-                sim.top_up_date || '',
-                sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
-                sim.bundle_purchase_date || '',
-                sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-                sim.usage?.toString(),
-                sim.agent_msisdn,
-                sim.ba_msisdn
-            ]);
-
-            const unknownSheet = XLSX.utils.aoa_to_sheet([headers, ...unknownData]);
-            XLSX.utils.book_append_sheet(workbook, unknownSheet, 'Unknown source');
-        }
-
-        // Create Performance sheet
-        const performanceHeaders = ['Team', 'Total activation', 'Quality', 'Percentage performance', 'Comment'];
-        const performanceData: any[][] = [];
-
-        // Add period headers (using empty cells for spacing)
-        periodsLabels.forEach(period => {
-            performanceData.push([`Period: ${period}`, '', '', '', '']);
-            performanceData.push(performanceHeaders);
-
-            // Add data for each team for this period
-            teamPerformance.forEach(team => {
-                const periodData = team.periods[period];
-                if (periodData) {
-                    performanceData.push([
-                        team.teamName,
-                        periodData.totalActivation,
-                        periodData.qualityCount,
-                        `${periodData.percentagePerformance.toFixed(2)}%`,
-                        periodData.comment
-                    ]);
-                }
-            });
-
-            // Add empty row as separator
-            performanceData.push(['', '', '', '', '']);
-        });
-
-        const performanceSheet = XLSX.utils.aoa_to_sheet(performanceData);
-        XLSX.utils.book_append_sheet(workbook, performanceSheet, '%Performance');
-
-        // Generate Excel file name
-        const startDateStr = startDate.replace(/-/g, '');
-        const endDateStr = endDate.replace(/-/g, '');
-        const fileName = `Van_Quality_Report_${startDateStr}_${endDateStr}.xlsx`;
-
-        // Write file and download
-        XLSX.writeFile(workbook, fileName);
-    };
 
     const handleGenerateReport = async () => {
         try {
@@ -467,16 +312,16 @@ const ReportGenerator = () => {
     return (
         <Dashboard>
             {/*<ReportDateRangeModal />*/}
-            <div className="flex flex-col items-center overflow-x-hidden px-4 pt-6 pb-12">
+            <div className="flex flex-col items-center overflow-x-hidden px-4 pt-6 pb-12 bg-white dark:bg-gray-900">
                 <div
-                    className="w-full   overflow-hidden transition-all transform">
-                    <div className=" px-6">
-                        <h1 className="text-3xl font-bold text-white">Van Quality Report Generator</h1>
+                    className="w-full overflow-hidden transition-all transform">
+                    <div className="px-6 bg-green-600 dark:bg-green-800 rounded-t-lg py-4">
+                        <h1 className="text-3xl font-bold text-white">Van Quality Report</h1>
                         <p className="text-green-100 mt-2">Generate detailed SIM card performance reports with quality
                             metrics</p>
                     </div>
 
-                    <div className="p-6 ">
+                    <div className="p-6 bg-white dark:bg-gray-800">
                         <div
                             className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mb-6 rounded-md">
                             <div className="flex">
@@ -520,7 +365,7 @@ const ReportGenerator = () => {
                                     design: ["scrollable"]
                                 })
                             }}
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center"
+                            className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white font-semibold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center"
                         >
                             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                  xmlns="http://www.w3.org/2000/svg">
@@ -537,7 +382,7 @@ const ReportGenerator = () => {
                                     onClick={handleGenerateReport}
                                     disabled={!showDatePicker || generating}
                                     className={`py-2 px-4 rounded-md text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
-                                        generating ? 'bg-green-400 dark:bg-green-500/50 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 dark:hover:bg-green-600'
+                                        generating ? 'bg-green-400 dark:bg-green-500/50 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600'
                                     }`}
                                 >
                                     {generating ? 'Generating...' : 'Generate Report'}
@@ -549,13 +394,13 @@ const ReportGenerator = () => {
                         {generating && (
                             <div className="flex flex-col items-center justify-center mt-8 animate-fadeIn">
                                 <div
-                                    className="w-16 h-16 border-4 border-green-200 dark:border-green-700 border-t-green-600 rounded-full animate-spin"></div>
+                                    className="w-16 h-16 border-4 border-green-200 dark:border-green-700 border-t-green-600 dark:border-t-green-500 rounded-full animate-spin"></div>
                                 <p className="mt-4 text-gray-600 dark:text-gray-300">Generating your report, please
                                     wait...</p>
                             </div>
                         )}
                         {showDatePicker ?
-                            <div className={"mt-5"}>
+                            <div className={"mt-5 bg-white dark:bg-gray-800 rounded-lg shadow"}>
                                 <ReportPreview
                                     simData={previewData.simData}
                                     startDate={startDate}
@@ -594,23 +439,31 @@ const ReportGenerator = () => {
                         className="bg-gray-50 dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div
-                                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                                className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
                                 <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Sheet Structure</h3>
                                 <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-disc pl-5">
-                                    <li><span className="font-medium">Raw Data:</span> All records for selected period
+                                    <li><span
+                                        className="font-medium text-gray-700 dark:text-gray-200">Raw Data:</span> All
+                                        records for selected period
                                     </li>
-                                    <li><span className="font-medium">Team Sheets:</span> Separate quality/non-quality
+                                    <li><span
+                                        className="font-medium text-gray-700 dark:text-gray-200">Team Sheets:</span> Separate
+                                        quality/non-quality
                                         sheets per team
                                     </li>
-                                    <li><span className="font-medium">Unknown Source:</span> SIMs without assigned teams
+                                    <li><span
+                                        className="font-medium text-gray-700 dark:text-gray-200">Unknown Source:</span> SIMs
+                                        without assigned teams
                                     </li>
-                                    <li><span className="font-medium">%Performance:</span> Team metrics across periods
+                                    <li><span
+                                        className="font-medium text-gray-700 dark:text-gray-200">%Performance:</span> Team
+                                        metrics across periods
                                     </li>
                                 </ul>
                             </div>
 
                             <div
-                                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                                className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
                                 <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2">Quality Metrics</h3>
                                 <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1 list-disc pl-5">
                                     <li>SIM activation status must be present</li>
