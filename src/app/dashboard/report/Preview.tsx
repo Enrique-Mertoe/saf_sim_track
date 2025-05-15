@@ -7,6 +7,7 @@ type Team1 = Team & {
 type SimCard = SIMCard & {
     sold_by_user_id: User;
     team_id: Team1;
+    quality:string;
 };
 export const ReportPreview = ({
                                   simData,
@@ -20,9 +21,11 @@ export const ReportPreview = ({
     const [teamFilter, setTeamFilter] = useState('all');
     const [qualityFilter, setQualityFilter] = useState('all');
 
-    const uniqueTeams = Array.from(new Set(simData.map(sim => sim.team_name || 'Unknown'))).sort();
+    const uniqueTeams = Array.from(new Set(simData.map((sim: {
+        team_name: any;
+    }) => sim.team_name || 'Unknown'))).sort();
 
-    const filteredSimData: SimCard[] = simData.filter(sim => {
+    const filteredSimData: SimCard[] = simData.filter((sim: { team_name: string; quality: string; }) => {
         if (teamFilter !== 'all' && sim.team_name !== teamFilter) return false;
         if (qualityFilter === 'quality' && sim.quality !== 'Y') return false;
         if (qualityFilter === 'non-quality' && sim.quality === 'Y') return false;
@@ -30,7 +33,7 @@ export const ReportPreview = ({
     });
 
     // Helper function to format date for display
-    const formatDateDisplay = (dateStr) => {
+    const formatDateDisplay = (dateStr: string | number | Date | undefined) => {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-US', {
@@ -83,14 +86,14 @@ export const ReportPreview = ({
                             Performance Report ({formatDateDisplay(startDate)} - {formatDateDisplay(endDate)})
                         </h3>
 
-                        {periodsLabels.map((periodLabel, periodIndex) => (
+                        {periodsLabels.map((periodLabel: any, periodIndex: number) => (
                             <div key={periodLabel} className="mb-6">
                                 <h4 className="text-md font-medium text-gray-700 dark:text-gray-200 mb-3 bg-gray-100 dark:bg-gray-700 p-2 rounded">
                                     {periodLabel}
                                 </h4>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {teamPerformance.map((team, index) => {
+                                    {teamPerformance.map((team: any, index: number) => {
                                         const periodData = team.periods[periodLabel];
                                         if (!periodData) return null;
 
@@ -167,8 +170,8 @@ export const ReportPreview = ({
                                     className="rounded-md border border-gray-300 dark:border-gray-600 py-1.5 px-3 text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                 >
                                     <option value="all">All Teams</option>
-                                    {uniqueTeams.map(team => (
-                                        <option key={team} value={team}>{team}</option>
+                                    {uniqueTeams.map((team: any, index: number) => (
+                                        <option key={team + index} value={team}>{team}</option>
                                     ))}
                                 </select>
 

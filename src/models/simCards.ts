@@ -14,6 +14,10 @@ export interface SIMCard {
     sale_location: string;
     activation_date?: string;
     top_up_amount?: number;
+    bundle_purchase_date?: number;
+    bundle_amount?: number;
+    usage?: string;
+    ba_msisdn?: number;
     top_up_date?: string;
     first_usage_date?: string;
     first_usage_amount?: number;

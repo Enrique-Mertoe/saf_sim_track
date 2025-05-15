@@ -15,69 +15,9 @@ import Dashboard from "@/ui/components/dash/Dashboard";
 interface StaffDashboardProps {
     userId: string;
 }
-
-const mockDashboardData = {
-    metrics: {
-        totalSims: 1200,
-        activatedSims: 950,
-        qualitySims: 900,
-        performancePercentage: 79.2,
-    },
-    quality: {
-        percentage: 88.5,
-        trend: 'up',
-        comment: 'Great improvement in quality metrics this week!',
-    },
-    salesChart: {
-        period: 'last 7 days',
-        dailyData: [
-            {date: '2025-05-01', sales: 120},
-            {date: '2025-05-02', sales: 150},
-            {date: '2025-05-03', sales: 100},
-            {date: '2025-05-04', sales: 170},
-            {date: '2025-05-05', sales: 140},
-            {date: '2025-05-06', sales: 160},
-            {date: '2025-05-07', sales: 180},
-        ],
-    },
-    recentActivities: [
-        {
-            id: 1,
-            date: '2025-05-07',
-            action: 'Activated 50 SIMs',
-            status: 'success',
-        },
-        {
-            id: 2,
-            date: '2025-05-06',
-            action: 'Submitted weekly report',
-            status: 'pending',
-        },
-        {
-            id: 3,
-            date: '2025-05-05',
-            action: 'Missed daily target',
-            status: 'warning',
-        },
-    ],
-    upcomingTargets: [
-        {
-            id: 'target-1',
-            title: 'Activate 200 SIMs',
-            dueDate: '2025-05-10',
-        },
-        {
-            id: 'target-2',
-            title: 'Achieve 90% Quality Score',
-            dueDate: '2025-05-12',
-        },
-    ],
-};
-
-
 const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [dashboardData, setDashboardData] = useState<any>(mockDashboardData);
+    const [dashboardData, setDashboardData] = useState<any>({});
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -138,13 +78,13 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
                         userId={userId}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                         <div className="md:col-span-2">
                             <RecentActivitiesTable userId={userId}/>
                         </div>
-                        <div>
-                            <UpcomingTargetsCard userId={userId}/>
-                        </div>
+                        {/*<div>*/}
+                        {/*    <UpcomingTargetsCard userId={userId}/>*/}
+                        {/*</div>*/}
                     </div>
                 </div>
             </div>

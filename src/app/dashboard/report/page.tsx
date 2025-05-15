@@ -51,6 +51,7 @@ type Team1 = Team & {
 type SimCard = SIMCard & {
     sold_by_user_id: User;
     team_id: Team1;
+    quality: string;
 };
 
 const ReportGenerator = () => {
@@ -60,6 +61,7 @@ const ReportGenerator = () => {
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
     const [generating, setGenerating] = useState(false);
+    const [excelData, setExcelData] = useState<any>({});
     const [success, setSuccess] = useState(false);
     const [previewData, setPreviewData] = useState<PreviewData>({
         teamPerformance: [],
@@ -82,16 +84,6 @@ const ReportGenerator = () => {
         return date.toISOString().split('T')[0];
     };
 
-    // Helper to format date for display
-    const formatDateDisplay = (dateStr: string): string => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     // Function to check if a SIM card is "Quality"
     const isQualitySim = (sim: SIMCard): boolean => {
         return (
@@ -104,12 +96,6 @@ const ReportGenerator = () => {
             sim.quality_score !== undefined &&
             sim.quality_score >= 90
         );
-    };
-
-    // Function to get team leader name
-    const getTeamLeaderName = (teams: Team[], teamId: string): string => {
-        const team = teams.find(t => t.id === teamId);
-        return team?.leader_id || 'Unknown';
     };
 
     const fetchSimData = async (startDate: string, endDate: string): Promise<SimCard[]> => {
@@ -142,62 +128,14 @@ const ReportGenerator = () => {
     // Function to process data into the required format
     const processData = async (startDate: string, endDate: string) => {
         try {
-            // setGenerating(true);
             setPreviewData(prev => ({...prev, isLoading: true}))
-
-            // Fetch real data from APIs
-            const simData: SimCard[] = await fetchSimData(startDate, endDate);
-            console.log("simdata", simData)
-            const teams: Team[] = await fetchTeams();
-            const users: User[] = await fetchUsers();
-
-            // Create adapter objects to maintain compatibility with existing processing logic
-
-
-            // Convert SIMCard data to the format expected by the existing code
-            // const adaptedSimData: SimCard[] = simData.map(sim => ({
-            //     sim_id: sim.id,
-            //     sim_serial_number: sim.serial_number,
-            //     sold_by: sim.sold_by_user_id,
-            //     sold_by_team: sim.team_id,
-            //     activation_date: sim.activation_date || null,
-            //     top_up_date: sim.top_up_date || null,
-            //     top_up_amount: sim.top_up_amount || null,
-            //     bundle_purchase_date: sim.first_usage_date || null,
-            //     bundle_amount: sim.first_usage_amount || null,
-            //     usage: sim.first_usage_amount || 0,
-            //     agent_msisdn: sim.agent_msisdn || '',
-            //     ba_msisdn: sim.customer_msisdn || '',
+            let simData: SimCard[] = await fetchSimData(startDate, endDate);
+            simData = simData.map(sim => {
+                sim.quality = isQualitySim(sim) ? "Y" : "N"
+                return sim;
+            })
             //     quality: (sim.quality_score && sim.quality_score >= 90) ? 'Y' : 'N',
             // }));
-            //
-            // // Create adapter for teams
-            // type TeamAdapter = {
-            //     team_id: string;
-            //     team_name: string;
-            //     team_leader_id: string;
-            //     team_leader_name?: string;
-            // };
-            //
-            // const adaptedTeams: TeamAdapter[] = teams.map(team => ({
-            //     team_id: team.id,
-            //     team_name: team.name,
-            //     team_leader_id: team.leader_id,
-            // }));
-            //
-            // // Enrich teams with leader names
-            // adaptedTeams.forEach(team => {
-            //     const leader = users.find(user => user.id === team.team_leader_id);
-            //     team.team_leader_name = leader?.full_name || 'Unknown Leader';
-            // });
-            //
-            // // Enrich sim data with team and leader information
-            // adaptedSimData.forEach(sim => {
-            //     const team = adaptedTeams.find(t => t.team_id === sim.sold_by_team);
-            //     sim.team_name = team?.team_name || 'Unknown Team';
-            //     sim.leader_name = team?.team_leader_name || 'Unknown Leader';
-            // });
-            //
             // Group sim cards by team and quality status
             const groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } } = {};
             const unknownSource: SimCard[] = [];
@@ -207,7 +145,6 @@ const ReportGenerator = () => {
                     unknownSource.push(sim);
                     return;
                 }
-
                 const leaderName = sim.team_id.leader_id.full_name || 'Unknown';
 
                 if (!groupedByTeam[leaderName]) {
@@ -309,18 +246,19 @@ const ReportGenerator = () => {
 
                 teamPerformance.push(performance);
             });
-            console.log("grouped", groupedByTeam)
 
             // Generate Excel file
-            // await generateExcel(
-            //     adaptedSimData,
-            //     groupedByTeam,
-            //     unknownSource,
-            //     teamPerformance,
-            //     periodsLabels,
-            //     startDate,
-            //     endDate
-            // );
+            setExcelData(
+                {
+                    simData,
+                    groupedByTeam,
+                    unknownSource,
+                    teamPerformance,
+                    periodsLabels,
+                    startDate,
+                    endDate
+                }
+            );
             setPreviewData({
                 teamPerformance,
                 periodsLabels,
@@ -331,62 +269,32 @@ const ReportGenerator = () => {
             // setSuccess(true);
             // setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
-            console.error('Error generating report:', error);
-            alert.error('Error generating report. Please try again.');
-        } finally {
-            // setGenerating(false);
+            console.error('Error preloading report:', error);
+            alert.error('Error preloading report. Please try again.');
         }
     };
-
-    const fetchTeams = async (): Promise<Team[]> => {
-        try {
-            const {data, error} = await teamService.getAllTeams();
-
-            if (error) {
-                console.error('Error fetching teams:', error);
-                throw new Error('Failed to fetch teams');
-            }
-
-            return data || [];
-        } catch (error) {
-            console.error('Error in fetchTeams:', error);
-            alert.error('Failed to fetch team data. Please try again.');
-            return [];
-        }
-    };
-
-    // Fetch users from Supabase
-    const fetchUsers = async (): Promise<User[]> => {
-        try {
-            // Assuming there's a userService with a getAllUsers method
-            const {data, error} = await userService.getAllUsers();
-
-            if (error) {
-                console.error('Error fetching users:', error);
-                throw new Error('Failed to fetch users');
-            }
-
-            return data || [];
-        } catch (error) {
-            console.error('Error in fetchUsers:', error);
-            alert.error('Failed to fetch user data. Please try again.');
-            return [];
-        }
-    };
-
     // Function to generate Excel file
-    const generateExcel = async (
-        simData: SIMCard[],
-        groupedByTeam: { [key: string]: { quality: SIMCard[], nonQuality: SIMCard[] } },
-        unknownSource: SIMCard[],
-        teamPerformance: TeamPerformance[],
-        periodsLabels: string[],
-        startDate: string,
-        endDate: string
+    const generateExcel = async ({
+                                     simData,
+                                     groupedByTeam,
+                                     unknownSource,
+                                     teamPerformance,
+                                     periodsLabels,
+                                     startDate,
+                                     endDate
+                                 }: {
+                                     simData: SimCard[],
+                                     groupedByTeam: { [key: string]: { quality: SimCard[], nonQuality: SimCard[] } },
+                                     unknownSource: SIMCard[],
+                                     teamPerformance: TeamPerformance[],
+                                     periodsLabels: string[],
+                                     startDate: string,
+                                     endDate: string
+                                 }
     ) => {
         const workbook = XLSX.utils.book_new();
-        const periodStart = formatDateDisplay(startDate);
-        const periodEnd = formatDateDisplay(endDate);
+        // const periodStart = formatDateDisplay(startDate);
+        // const periodEnd = formatDateDisplay(endDate);
 
         // Create header row
         const headers = [
@@ -397,13 +305,13 @@ const ReportGenerator = () => {
         // Create RAW sheet with all data
         const rawData = simData.map(sim => [
             sim.serial_number,
-            sim.team_name || 'Unknown',
+            sim.team_id.name || 'Unknown',
             sim.activation_date || '',
             sim.top_up_date || '',
             sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
             sim.bundle_purchase_date || '',
             sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-            sim.usage.toString(),
+            sim.usage?.toString(),
             sim.agent_msisdn,
             sim.ba_msisdn
         ]);
@@ -418,13 +326,13 @@ const ReportGenerator = () => {
             if (data.quality.length > 0) {
                 const qualityData = data.quality.map(sim => [
                     sim.serial_number,
-                    sim.team_name || 'Unknown',
+                    sim.team_id || 'Unknown',
                     sim.activation_date || '',
                     sim.top_up_date || '',
                     sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
                     sim.bundle_purchase_date || '',
                     sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-                    sim.usage.toString(),
+                    sim.usage?.toString(),
                     sim.agent_msisdn,
                     sim.ba_msisdn
                 ]);
@@ -444,13 +352,13 @@ const ReportGenerator = () => {
             if (data.nonQuality.length > 0) {
                 const nonQualityData = data.nonQuality.map(sim => [
                     sim.serial_number,
-                    sim.team_name || 'Unknown',
+                    sim.team_id.name || 'Unknown',
                     sim.activation_date || '',
                     sim.top_up_date || '',
                     sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
                     sim.bundle_purchase_date || '',
                     sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-                    sim.usage.toString(),
+                    sim.usage?.toString(),
                     sim.agent_msisdn,
                     sim.ba_msisdn
                 ]);
@@ -478,7 +386,7 @@ const ReportGenerator = () => {
                 sim.top_up_amount ? `Kes ${sim.top_up_amount.toFixed(2)}` : '',
                 sim.bundle_purchase_date || '',
                 sim.bundle_amount ? `Kes ${sim.bundle_amount.toFixed(2)}` : '',
-                sim.usage.toString(),
+                sim.usage?.toString(),
                 sim.agent_msisdn,
                 sim.ba_msisdn
             ]);
@@ -492,7 +400,6 @@ const ReportGenerator = () => {
         const performanceData: any[][] = [];
 
         // Add period headers (using empty cells for spacing)
-        const periodHeaders: any[] = ['', '', '', '', ''];
         periodsLabels.forEach(period => {
             performanceData.push([`Period: ${period}`, '', '', '', '']);
             performanceData.push(performanceHeaders);
@@ -527,23 +434,18 @@ const ReportGenerator = () => {
         XLSX.writeFile(workbook, fileName);
     };
 
-    const handleGenerateReport = () => {
-        if (!startDate || !endDate) {
-            alert.error('Please select both start and end dates');
-            return;
+    const handleGenerateReport = async () => {
+        try {
+            setGenerating(true)
+            await generateExcel(excelData);
+        } catch (e) {
+            console.log(e)
+            alert.error("Something went wrong")
+        } finally {
+            setGenerating(false)
         }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (start > end) {
-            alert.error('Start date cannot be after end date');
-            return;
-        }
-
-        setShowDatePicker(false);
-        processData(startDate, endDate).then();
     };
+
     const loadData = async () => {
         if (!startDate || !endDate) {
             alert.error('Please select both start and end dates');
