@@ -172,7 +172,7 @@ const RegisteredSimCards = () => {
     // Handle export
     const handleExport = () => {
         // This would be implemented to export filtered data to CSV/Excel
-        alert.info('Export functionality would be implemented here');
+        alert.info('Export functionality is coming soon');
     };
 
     // Reset filters
@@ -189,7 +189,7 @@ const RegisteredSimCards = () => {
 
     return (
         <Dashboard>
-            <div className="p-6 max-w-full mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div className="p-6 max-w-full mx-auto rounded-lg shadow-md">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Registered SIM Cards</h1>
 
                 {/* Search and filters row */}

@@ -1,5 +1,5 @@
 "use client"
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import {
     ArrowUp,
     ArrowDown,
@@ -32,6 +32,8 @@ import Dashboard from "@/ui/components/dash/Dashboard";
 import {simCardService} from "@/services/simCardService";
 import {SIMStatus} from "@/models";
 import DashQuickActions, {UserStatistics} from './quicks';
+import SimStarts from "@/app/dashboard/SimStarts";
+import Signal from "@/lib/Signal";
 
 export default function SafaricomDashboard() {
     const [role, setRole] = useState('admin');
@@ -219,9 +221,17 @@ export default function SafaricomDashboard() {
 
     const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
 
-    const handleRefresh = () => {
+    const handleRefresh = useCallback(() => {
         fetchDashboardData();
-    };
+    }, []);
+    useEffect(() => {
+        Signal.on("m-refresh", e => {
+            handleRefresh()
+        })
+        return () => {
+            Signal.off("m-refresh")
+        }
+    }, [handleRefresh]);
 
     return (
         <Dashboard>
@@ -239,55 +249,43 @@ export default function SafaricomDashboard() {
                             </h1>
                             <p className="text-gray-500">Overview of SIM card sales and activations</p>
                         </motion.div>
-
-                        <div className="flex space-x-2">
-                            <motion.div
-                                whileHover={{scale: 1.05}}
-                                whileTap={{scale: 0.95}}
-                            >
-                                <button
-                                    onClick={handleRefresh}
-                                    className="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition-all duration-200"
-                                >
-                                    <RefreshCw size={16}/>
-                                    <span>Refresh Data</span>
-                                </button>
-                            </motion.div>
-                        </div>
                     </div>
+
+
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2  gap-1">
-                            <StatCard
-                                title="Total SIM Sales"
-                                value={stats.totalSales}
-                                icon={<CreditCard size={20} className="text-white"/>}
-                                color="bg-blue-500"
-                                change={5.2} // This would ideally be calculated from historical data
-                            />
-                            <StatCard
-                                title="Activation Rate"
-                                value={`${stats.activationRate}%`}
-                                icon={<CheckCircle size={20} className="text-white"/>}
-                                color="bg-green-500"
-                                change={2.1} // This would ideally be calculated from historical data
-                            />
-                            <StatCard
-                                title="Pending Approvals"
-                                value={stats.pendingApprovals}
-                                icon={<Users size={20} className="text-white"/>}
-                                color="bg-yellow-500"
-                                change={-1.5} // This would ideally be calculated from historical data
-                            />
-                            <StatCard
-                                title="Flagged Transactions"
-                                value={stats.flaggedTransactions}
-                                icon={<AlertCircle size={20} className="text-white"/>}
-                                color="bg-red-500"
-                                change={3.8} // This would ideally be calculated from historical data
-                            />
-                        </div>
+                        <SimStarts refreshing={loading}/>
+                        {/*<div className="grid grid-cols-1 md:grid-cols-2  gap-1">*/}
+                        {/*    <StatCard*/}
+                        {/*        title="Total SIM Sales"*/}
+                        {/*        value={stats.totalSales}*/}
+                        {/*        icon={<CreditCard size={20} className="text-white"/>}*/}
+                        {/*        color="bg-blue-500"*/}
+                        {/*        change={5.2} // This would ideally be calculated from historical data*/}
+                        {/*    />*/}
+                        {/*    <StatCard*/}
+                        {/*        title="Activation Rate"*/}
+                        {/*        value={`${stats.activationRate}%`}*/}
+                        {/*        icon={<CheckCircle size={20} className="text-white"/>}*/}
+                        {/*        color="bg-green-500"*/}
+                        {/*        change={2.1} // This would ideally be calculated from historical data*/}
+                        {/*    />*/}
+                        {/*    <StatCard*/}
+                        {/*        title="Pending Approvals"*/}
+                        {/*        value={stats.pendingApprovals}*/}
+                        {/*        icon={<Users size={20} className="text-white"/>}*/}
+                        {/*        color="bg-yellow-500"*/}
+                        {/*        change={-1.5} // This would ideally be calculated from historical data*/}
+                        {/*    />*/}
+                        {/*    <StatCard*/}
+                        {/*        title="Flagged Transactions"*/}
+                        {/*        value={stats.flaggedTransactions}*/}
+                        {/*        icon={<AlertCircle size={20} className="text-white"/>}*/}
+                        {/*        color="bg-red-500"*/}
+                        {/*        change={3.8} // This would ideally be calculated from historical data*/}
+                        {/*    />*/}
+                        {/*</div>*/}
                         <UserStatistics/>
                     </div>
                     {/* Charts Section */}
