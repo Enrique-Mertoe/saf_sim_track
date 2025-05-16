@@ -6,15 +6,11 @@ import SimSalesChart from "@/app/dashboard/staff-components/SimSalesChart";
 import RecentActivitiesTable from './staff-components/RecentActivitiesTable';
 import UpcomingTargetsCard from "@/app/dashboard/staff-components/UpcomingTargetsCard";
 import Dashboard from "@/ui/components/dash/Dashboard";
-// import PerformanceMetrics from './PerformanceMetrics';
-// import SimSalesChart from './SimSalesChart';
-// import RecentActivitiesTable from './RecentActivitiesTable';
-// import QualityMetricsCard from './QualityMetricsCard';
-// import UpcomingTargetsCard from './UpcomingTargetsCard';
 
 interface StaffDashboardProps {
     userId: string;
 }
+
 const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [dashboardData, setDashboardData] = useState<any>({});
@@ -64,30 +60,24 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
         <Dashboard>
             <div className="mx-auto px-4 py-6">
                 <div className="space-y-6">
-                    <h1 className="text-2xl font-bold text-gray-800">Staff Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Staff Dashboard</h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <PerformanceMetrics/>
 
-                        <QualityMetricsCard
-                            userId={userId}
-                        />
+                        <QualityMetricsCard userId={userId}/>
                     </div>
 
-                    <SimSalesChart
-                        userId={userId}
-                    />
+                    <SimSalesChart userId={userId}/>
 
                     <div className="grid grid-cols-1 gap-6">
                         <div className="md:col-span-2">
                             <RecentActivitiesTable userId={userId}/>
                         </div>
-                        {/*<div>*/}
-                        {/*    <UpcomingTargetsCard userId={userId}/>*/}
-                        {/*</div>*/}
                     </div>
                 </div>
             </div>
+
         </Dashboard>
     );
 };

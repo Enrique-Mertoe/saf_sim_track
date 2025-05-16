@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.3",
     "@opentelemetry/api": "^1.9.0",
     "@sendgrid/mail": "^8.1.5",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -31,6 +32,7 @@
     "lucide-react": "^0.507.0",
     "next": "15.3.1",
     "papaparse": "^5.5.2",
+    "quagga": "^0.12.1",
     "radix-ui": "^1.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

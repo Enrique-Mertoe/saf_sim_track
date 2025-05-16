@@ -94,64 +94,65 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({dateRange, teamI
     }
 
     return (
-        <div className="bg-white rounded-lg shadow p-6 h-full">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 h-full">
+            <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100 mb-4">
                 {teamId ? 'Team Performance Metrics' : 'My Performance Metrics'}
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-500">SIM Cards Sold</p>
-                    <p className="text-2xl font-bold text-blue-700">{metrics.totalSims}</p>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+                    <p className="text-sm text-gray-500 dark:text-gray-300">SIM Cards Sold</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{metrics.totalSims}</p>
                 </div>
 
-                <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Activated SIMs</p>
-                    <p className="text-2xl font-bold text-purple-700">{metrics.activatedSims}</p>
+                <div className="p-3 bg-purple-50 dark:bg-purple-900 rounded-lg">
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Activated SIMs</p>
+                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{metrics.activatedSims}</p>
                 </div>
 
-                <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Quality SIMs</p>
-                    <p className="text-2xl font-bold text-green-700">{metrics.qualitySims}</p>
+                <div className="p-3 bg-green-50 dark:bg-green-900 rounded-lg">
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Quality SIMs</p>
+                    <p className="text-2xl font-bold text-green-700 dark:text-green-300">{metrics.qualitySims}</p>
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-500">Performance</p>
+                <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Performance</p>
                     <div className="flex items-end gap-2">
                         <p className={`text-2xl font-bold ${getPerformanceColor()}`}>
                             {metrics.performancePercentage.toFixed(2)}%
                         </p>
-                        <p className="text-xs mb-1 font-medium text-gray-500">
+                        <p className="text-xs mb-1 font-medium text-gray-500 dark:text-gray-300">
                             {getPerformanceComment()}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Quality Rate</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Quality Rate</span>
                     <div className="flex items-center">
-            <span className="text-sm font-medium text-green-600">
-              {metrics.activatedSims > 0
-                  ? ((metrics.qualitySims / metrics.activatedSims) * 100).toFixed(2)
-                  : '0.00'}%
-            </span>
+                <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                    {metrics.activatedSims > 0
+                        ? ((metrics.qualitySims / metrics.activatedSims) * 100).toFixed(2)
+                        : '0.00'}%
+                </span>
                         {metrics.qualitySims > metrics.activatedSims / 2 ? (
-                            <ArrowUp className="ml-1 h-4 w-4 text-green-600"/>
+                            <ArrowUp className="ml-1 h-4 w-4 text-green-600 dark:text-green-400"/>
                         ) : (
-                            <ArrowDown className="ml-1 h-4 w-4 text-red-600"/>
+                            <ArrowDown className="ml-1 h-4 w-4 text-red-600 dark:text-red-400"/>
                         )}
                     </div>
                 </div>
 
                 {dateRange && (
-                    <div className="mt-2 text-xs text-gray-500">
+                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                         Period: {new Date(dateRange.startDate).toLocaleDateString()} - {new Date(dateRange.endDate).toLocaleDateString()}
                     </div>
                 )}
             </div>
         </div>
+
     );
 };
 

@@ -31,18 +31,9 @@ export interface SIMCard {
 
 export interface SIMCardCreate {
     serial_number: string;
-    customer_msisdn: string;
-    customer_id_number: string;
-    customer_id_front_url?: string;
-    customer_id_back_url?: string;
-    agent_msisdn: string;
     sold_by_user_id: string;
-    sale_date: string;
-    sale_location: string;
-    team_id: string;
-    region: string;
-    status: SIMStatus;
-    top_up_amount?: number;
+    sale_location?: string;
+    team_id?: string;
 }
 
 export interface SIMCardUpdate {

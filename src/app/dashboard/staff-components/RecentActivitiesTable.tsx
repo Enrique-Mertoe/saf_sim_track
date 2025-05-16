@@ -128,92 +128,87 @@ const RecentActivitiesTable: React.FC<RecentActivitiesProps> = ({
     // Show loading state
     if (isLoading) {
         return (
-            <div className="bg-white rounded-lg shadow p-6">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-700">Recent Activities</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">Recent Activities</h2>
                 </div>
                 <div className="flex justify-center items-center p-8">
-                    <div className="text-gray-500">Loading activities...</div>
+                    <div className="text-gray-500 dark:text-gray-400">Loading activities...</div>
                 </div>
             </div>
         );
     }
 
-    // Show error state
+// Show error state
     if (error) {
         return (
-            <div className="bg-white rounded-lg shadow p-6">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-700">Recent Activities</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">Recent Activities</h2>
                 </div>
                 <div className="flex justify-center items-center p-8">
-                    <div className="text-red-500">{error}</div>
+                    <div className="text-red-500 dark:text-red-400">{error}</div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-700">Recent Activities</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-100">Recent Activities</h2>
             </div>
 
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             SIM Serial
                         </th>
-                        <th scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Action
                         </th>
-                        <th scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Time
                         </th>
-                        <th scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Amount
                         </th>
-                        <th scope="col"
-                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Status
                         </th>
                     </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {activities.length > 0 ? (
                         activities.map((activity) => (
-                            <tr key={activity.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <tr key={activity.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {activity.simSerialNumber}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                     {getActionLabel(activity.action)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {formatDate(activity.timestamp)}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                     {activity.amount ? `KES ${activity.amount.toFixed(2)}` : '-'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                         {getStatusIcon(activity.status)}
-                                        <span className="ml-2 text-sm text-gray-600">
-                        {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
-                      </span>
+                                        <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+                                            {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                                        </span>
                                     </div>
                                 </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                            <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                                 No recent activities found
                             </td>
                         </tr>
@@ -223,14 +218,15 @@ const RecentActivitiesTable: React.FC<RecentActivitiesProps> = ({
             </div>
 
             {activities.length > 0 && showViewAll && (
-                <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50">
-                    <div className="text-sm text-gray-500">
+                <div
+                    className="px-6 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                    <div className="text-sm text-gray-500 dark:text-gray-300">
                         Showing <span className="font-medium">{activities.length}</span> activities
                     </div>
                     <div>
                         <button
                             type="button"
-                            className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                            className="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                             onClick={onViewAllClick}
                         >
                             View all activities
@@ -240,6 +236,6 @@ const RecentActivitiesTable: React.FC<RecentActivitiesProps> = ({
             )}
         </div>
     );
-};
+}
 
 export default RecentActivitiesTable;
