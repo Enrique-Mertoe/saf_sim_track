@@ -16,7 +16,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({dateRange, teamI
     const [loading, setLoading] = useState(!user);
     const [metrics, setMetrics] = useState({
         totalSims: 0,
-        activatedSims: 0,
+        matchedSims: 0,
         qualitySims: 0,
         performancePercentage: 0
     });
@@ -106,8 +106,8 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({dateRange, teamI
                 </div>
 
                 <div className="p-3 bg-purple-50 dark:bg-purple-900 rounded-lg">
-                    <p className="text-sm text-gray-500 dark:text-gray-300">Activated SIMs</p>
-                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{metrics.activatedSims}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-300">Matched SIMs</p>
+                    <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{metrics.matchedSims}</p>
                 </div>
 
                 <div className="p-3 bg-green-50 dark:bg-green-900 rounded-lg">
@@ -133,11 +133,11 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({dateRange, teamI
                     <span className="text-sm text-gray-600 dark:text-gray-300">Quality Rate</span>
                     <div className="flex items-center">
                 <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                    {metrics.activatedSims > 0
-                        ? ((metrics.qualitySims / metrics.activatedSims) * 100).toFixed(2)
+                    {metrics.matchedSims > 0
+                        ? ((metrics.qualitySims / metrics.matchedSims) * 100).toFixed(2)
                         : '0.00'}%
                 </span>
-                        {metrics.qualitySims > metrics.activatedSims / 2 ? (
+                        {metrics.qualitySims > metrics.matchedSims / 2 ? (
                             <ArrowUp className="ml-1 h-4 w-4 text-green-600 dark:text-green-400"/>
                         ) : (
                             <ArrowDown className="ml-1 h-4 w-4 text-red-600 dark:text-red-400"/>

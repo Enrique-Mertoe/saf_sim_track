@@ -133,7 +133,7 @@ export const simCardService = {
     // Get performance metrics for a staff member
     getStaffPerformanceMetrics: async (userId: string, startDate?: string, endDate?: string): Promise<{
         totalSims: number;
-        activatedSims: number;
+        matchedSims: number;
         qualitySims: number;
         performancePercentage: number;
     }> => {
@@ -159,7 +159,7 @@ export const simCardService = {
             console.error('Error fetching performance metrics:', error);
             return {
                 totalSims: 0,
-                activatedSims: 0,
+                matchedSims: 0,
                 qualitySims: 0,
                 performancePercentage: 0
             };
@@ -167,14 +167,11 @@ export const simCardService = {
 
         const simCards = data as SIMCard[];
         const totalSims = simCards.length;
-        const activatedSims = simCards.filter(sim => sim.activation_date).length;
+        const activatedSims = simCards.filter(sim => sim.match == SIMStatus.MATCH).length;
 
         // A SIM is considered "Quality" when it's activated, has a top-up of at least 50, and no fraud flags
         const qualitySims = simCards.filter(sim =>
-            sim.activation_date &&
-            sim.top_up_amount !== undefined &&
-            sim.top_up_amount >= 50 &&
-            !sim.fraud_flag
+            sim.quality == SIMStatus.QUALITY
         ).length;
 
         // Calculate performance percentage, handle division by zero
@@ -184,7 +181,7 @@ export const simCardService = {
 
         return {
             totalSims,
-            activatedSims,
+            matchedSims: activatedSims,
             qualitySims,
             performancePercentage
         };
@@ -193,7 +190,7 @@ export const simCardService = {
     // Get performance metrics for a team
     getTeamPerformanceMetrics: async (teamId: string, startDate?: string, endDate?: string): Promise<{
         totalSims: number;
-        activatedSims: number;
+        matchedSims: number;
         qualitySims: number;
         performancePercentage: number;
     }> => {
@@ -219,7 +216,7 @@ export const simCardService = {
             console.error('Error fetching team performance metrics:', error);
             return {
                 totalSims: 0,
-                activatedSims: 0,
+                matchedSims: 0,
                 qualitySims: 0,
                 performancePercentage: 0
             };
@@ -227,14 +224,11 @@ export const simCardService = {
 
         const simCards = data as SIMCard[];
         const totalSims = simCards.length;
-        const activatedSims = simCards.filter(sim => sim.activation_date).length;
+        const activatedSims = simCards.filter(sim => sim.match == SIMStatus.MATCH).length;
 
         // A SIM is considered "Quality" when it's activated, has a top-up of at least 50, and no fraud flags
         const qualitySims = simCards.filter(sim =>
-            sim.activation_date &&
-            sim.top_up_amount !== undefined &&
-            sim.top_up_amount >= 50 &&
-            !sim.fraud_flag
+            sim.quality == SIMStatus.QUALITY
         ).length;
 
         // Calculate performance percentage, handle division by zero
@@ -244,7 +238,7 @@ export const simCardService = {
 
         return {
             totalSims,
-            activatedSims,
+            matchedSims: activatedSims,
             qualitySims,
             performancePercentage
         };
@@ -268,8 +262,8 @@ export const simCardService = {
             .from('sim_cards')
             .select('*')
             .eq('sold_by_user_id', userId)
-            .gte('sale_date', startDateStr)
-            .order('sale_date', {ascending: true});
+            .gte('created_at', startDateStr)
+            .order('created_at', {ascending: true});
 
         if (error) {
             console.error('Error fetching daily performance data:', error);
@@ -291,7 +285,7 @@ export const simCardService = {
 
         // Fill in actual data
         simCards.forEach(sim => {
-            const saleDate = sim.sale_date.split('T')[0];
+            const saleDate = sim.created_at.split('T')[0];
             if (groupedByDate[saleDate]) {
                 groupedByDate[saleDate].push(sim);
             }
@@ -301,12 +295,9 @@ export const simCardService = {
         return Object.keys(groupedByDate).map(date => {
             const simsForDate = groupedByDate[date];
             const sales = simsForDate.length;
-            const activations = simsForDate.filter(sim => sim.activation_date).length;
+            const activations = simsForDate.filter(sim => sim.match == SIMStatus.MATCH).length;
             const quality = simsForDate.filter(sim =>
-                sim.activation_date &&
-                sim.top_up_amount !== undefined &&
-                sim.top_up_amount >= 50 &&
-                !sim.fraud_flag
+                sim.quality == SIMStatus.QUALITY
             ).length;
 
             return {

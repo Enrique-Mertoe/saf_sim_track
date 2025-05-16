@@ -188,36 +188,7 @@ export default function SafaricomDashboard() {
     useEffect(() => {
         fetchDashboardData().then();
     }, [role]);
-    //@ts-ignore
-    const toggleRole = () => {
-        setRole(role === 'admin' ? 'teamLeader' : 'admin');
-    };
-    //@ts-ignore
-    const StatCard = ({title, value, icon, color, change}) => (
-        <motion.div
-            initial={{opacity: 0, y: 20}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.5}}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col"
-        >
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-gray-500 dark:text-gray-400 text-sm font-medium">{title}</h3>
-                <div className={`p-2 rounded-full ${color}`}>
-                    {icon}
-                </div>
-            </div>
-            <div className="flex items-baseline">
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{loading ? '-' : value}</p>
-                {change && (
-                    <span
-                        className={`ml-2 flex items-center text-sm ${change > 0 ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                {change > 0 ? <ArrowUp size={16}/> : <ArrowDown size={16}/>}
-                        {Math.abs(change)}%
-            </span>
-                )}
-            </div>
-        </motion.div>
-    );
+
 
     const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
 

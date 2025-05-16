@@ -119,7 +119,7 @@ const SimSalesChart: React.FC<SimSalesChartProps> = ({userId, duration = 30}) =>
                             type="monotone"
                             dataKey="activations"
                             stroke="#8B5CF6"
-                            name="Activations"
+                            name="Matched"
                         />
                         <Line
                             type="monotone"
@@ -138,7 +138,7 @@ const SimSalesChart: React.FC<SimSalesChartProps> = ({userId, duration = 30}) =>
                 </div>
                 <div className="bg-purple-50 dark:bg-purple-900 py-2 rounded">
                     <div className="font-medium text-purple-700 dark:text-purple-300">{totalActivations}</div>
-                    <div className="text-gray-500 dark:text-gray-300">Total Activations</div>
+                    <div className="text-gray-500 dark:text-gray-300">Total Match</div>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900 py-2 rounded">
                     <div className="font-medium text-green-700 dark:text-green-300">{totalQuality}</div>

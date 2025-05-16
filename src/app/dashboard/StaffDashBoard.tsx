@@ -13,31 +13,9 @@ interface StaffDashboardProps {
 
 const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [dashboardData, setDashboardData] = useState<any>({});
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                setLoading(true);
-                // Replace with your actual API endpoint
-                const response = await fetch(`/api/dashboard/staff/${userId}`);
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch dashboard data');
-                }
-
-                const data = await response.json();
-                setDashboardData(data);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        // fetchDashboardData();
-    }, [userId]);
 
     if (loading) {
         return (
