@@ -100,17 +100,7 @@ export const simCardService = {
       .single();
   },
 
-  // Update SIM card status
-  async updateSimCardStatus(simCardId: string, status: SIMStatus, reason?: string) {
-    const supabase = createSupabaseClient();
-    return supabase
-      .from('sim_cards')
-      .update({
-        status,
-        ...(status === SIMStatus.FLAGGED ? { fraud_flag: true, fraud_reason: reason } : {})
-      })
-      .eq('id', simCardId);
-  },
+
 
   // Bulk import SIM cards (useful for offline sync)
   async bulkImportSimCards(simCards: SIMCardCreate[]) {
