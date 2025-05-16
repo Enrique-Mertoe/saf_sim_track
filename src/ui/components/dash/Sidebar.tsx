@@ -5,7 +5,7 @@ import {usePathname, useRouter} from "next/navigation";
 import Link from 'next/link';
 import {motion, AnimatePresence} from 'framer-motion';
 import {
-    Award, Grid, LogOut, Map, Phone, PieChart,
+    Award, Grid,Cpu, LogOut, Map, Phone, PieChart,
     RefreshCw, Settings, UserPlus, Users,
 } from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
@@ -228,7 +228,7 @@ export default function Sidebar() {
         } else if (user?.role === UserRole.STAFF) {
             navItems.push(
                 {href: '/dashboard/sim', icon: Phone, label: 'Sim Registration'},
-                {href: '/contacts', icon: Phone, label: 'Contacts'},
+                {href: '/dashboard/cards', icon: Cpu, label: 'Registered Cards'},
                 {href: '/achievements', icon: Award, label: 'Achievements'}
             );
         }

@@ -1,7 +1,33 @@
-import {SIMCard, SIMCardCreate, SIMCardUpdate, SIMStatus} from "@/models";
+import {SIMCard, SIMCardCreate, SIMCardUpdate, SIMStatus, User, UserRole} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
 
 export const simCardService = {
+    getAllSimCards: async (user: User) => {
+        const supabase = createSupabaseClient();
+        if (user.role === 'admin') {
+            return supabase
+                .from('sim_cards')
+                .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .order('sale_date', {ascending: false});
+        }
+
+        if (user.role === UserRole.STAFF) {
+            return supabase
+                .from('sim_cards')
+                .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
+                .eq('sold_by_user_id', user.id)
+                .order('sale_date', {ascending: false});
+        }
+        if (user.role === UserRole.TEAM_LEADER) {
+            return supabase
+                .from('sim_cards')
+                .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
+                .order('sale_date', {ascending: false});
+        }
+
+        return {data: null, error: "Invalid user role"}
+    },
     // Create a new SIM card record
     createSIMCard: async (simCardData: SIMCardCreate): Promise<SIMCard | null> => {
         const supabase = createSupabaseClient();
@@ -21,22 +47,15 @@ export const simCardService = {
     },
 
     // Update an existing SIM card
-    updateSIMCard: async (id: string, updateData: SIMCardUpdate): Promise<SIMCard | null> => {
+    updateSIMCard: async (id: string, updateData: SIMCardUpdate) => {
         const supabase = createSupabaseClient();
 
-        const {data, error} = await supabase
+        return supabase
             .from('sim_cards')
             .update(updateData)
             .eq('id', id)
             .select()
             .single();
-
-        if (error) {
-            console.error('Error updating SIM card:', error);
-            return null;
-        }
-
-        return data as SIMCard;
     },
 
     // Get a single SIM card by ID
