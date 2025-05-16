@@ -34,9 +34,12 @@ import {SIMStatus} from "@/models";
 import DashQuickActions, {UserStatistics} from './quicks';
 import SimStarts from "@/app/dashboard/SimStarts";
 import Signal from "@/lib/Signal";
+import simService from "@/services/simService";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function SafaricomDashboard() {
     const [role, setRole] = useState('admin');
+    const {user} = useApp()
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({
         totalSales: 0,
@@ -46,7 +49,14 @@ export default function SafaricomDashboard() {
     });
     const [salesData, setSalesData] = useState([]);
     const [teamPerformance, setTeamPerformance] = useState([]);
-    const [recentSims, setRecentSims] = useState([]);
+    const [recentSims, setRecentSims] = useState<{
+        id: string,
+        serial: string,
+        date: string,
+        staff: string,
+        leader: string,
+        quality: string
+    }[]>([]);
     const [pieData, setPieData] = useState([]);
 
     // Fetch dashboard data
@@ -62,11 +72,7 @@ export default function SafaricomDashboard() {
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             // Fetch SIM card data for last 6 months
-            const {data: simData} = await simCardService.searchSimCards1({
-                fromDate: sixMonthsAgo.toISOString().split('T')[0],
-                toDate: today.toISOString().split('T')[0],
-                pageSize: 1000 // Get enough data for aggregation
-            });
+            const {data: simData} = await simService.getAllSimCards(user!);
 
             if (simData) {
                 // Process monthly sales data
@@ -143,16 +149,16 @@ export default function SafaricomDashboard() {
                 // Get recent SIM cards
                 const recent = simData
                     //@ts-ignore
-                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                    // .sort((a, b) => new Date(a.created_at))
                     .slice(0, 4)
                     //@ts-ignore
                     .map(sim => ({
                         id: sim.id,
                         serial: sim.serial_number,
                         date: new Date(sim.created_at).toISOString().split('T')[0],
-                        agent: sim.sold_by_user_id,
-                        customer: sim.customer_id_number,
-                        status: sim.status
+                        staff: sim.sold_by_user_id.full_name,
+                        leader: sim.team_id.leader_id.full_name,
+                        quality: sim.quality
                     }));
 //@ts-ignore
                 setRecentSims(recent);
@@ -164,9 +170,9 @@ export default function SafaricomDashboard() {
 
                 for (const teamId of teams) {
                     //@ts-ignore
-                    const teamSims = simData.filter(sim => sim.team_id === teamId);
+                    const teamSims = simData.filter(sim => sim.team_id === teamId.id);
                     //@ts-ignore
-                    const teamName = teamSims[0]?.teams?.name || `Team ${teamId.substring(0, 3)}`;
+                    const teamName = teamId.name || `Team ${teamId.id.substring(0, 3)}`;
                     const teamSalesCount = teamSims.length;
 
                     teamStats.push({
@@ -186,8 +192,10 @@ export default function SafaricomDashboard() {
     };
 
     useEffect(() => {
+        if (!user)
+            return
         fetchDashboardData().then();
-    }, [role]);
+    }, [user]);
 
 
     const COLORS = ['#0088FE', '#FFBB28', '#FF8042'];
@@ -287,7 +295,7 @@ export default function SafaricomDashboard() {
                         <DashQuickActions/>
                     </div>
                     {/* Bottom Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 gap-6">
                         {/* Recent SIM Cards */}
                         <motion.div
                             initial={{opacity: 0, y: 20}}
@@ -305,9 +313,9 @@ export default function SafaricomDashboard() {
                                     <tr>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial</th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leader</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quality</th>
                                     </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
@@ -330,34 +338,27 @@ export default function SafaricomDashboard() {
 
                                                     {
                                                         //@ts-ignore
-                                                        sim.serial.length > 10 ? `${sim.serial.substring(0, 5)}...${sim.serial.slice(-4)}` : sim.serial}
+                                                        sim.serial}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{
                                                     //@ts-ignore
                                                     sim.date}</td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-
-                                                    {
-                                                        //@ts-ignore
-                                                        sim.agent.length > 10 ? `${sim.agent.substring(0, 5)}...` : sim.agent}
+                                                    {sim.leader}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
 
-                                                    {
-                                                        //@ts-ignore
-                                                        sim.customer.length > 10 ? `${sim.customer.substring(0, 5)}...` : sim.customer}
+                                                    {sim.staff}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              //@ts-ignore
-                              sim.status === SIMStatus.ACTIVATED ? 'bg-green-100 text-green-800' :
+                              sim.quality === SIMStatus.QUALITY ? 'bg-green-100 text-green-800' :
                                   //@ts-ignore
-                                  sim.status === SIMStatus.PENDING ? 'bg-yellow-100 text-yellow-800' :
+                                  sim.quality === SIMStatus.NONQUALITY ? 'bg-yellow-100 text-yellow-800' :
                                       'bg-red-100 text-red-800'
                           }`}>
                             {
-                                //@ts-ignore
-                                sim.status}
+                                sim.quality}
                           </span>
                                                 </td>
                                             </motion.tr>
@@ -371,71 +372,6 @@ export default function SafaricomDashboard() {
                                     )}
                                     </tbody>
                                 </table>
-                            </div>
-                        </motion.div>
-
-                        {/* Status Distribution */}
-                        <motion.div
-                            initial={{opacity: 0, y: 20}}
-                            animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.6, delay: 0.4}}
-                            className="bg-white p-6 rounded-lg shadow-md"
-                        >
-                            <h2 className="text-lg font-semibold mb-4 flex items-center">
-                                <CheckCircle size={18} className="mr-2 text-indigo-600"/>
-                                SIM Status Distribution
-                            </h2>
-                            <div className="h-64 flex items-center justify-center">
-                                {loading ? (
-                                    <p className="text-gray-500">Loading chart data...</p>
-                                ) : pieData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={pieData}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={false}
-                                                outerRadius={80}
-                                                fill="#8884d8"
-                                                dataKey="value"
-                                                animationDuration={1500}
-                                                animationBegin={300}
-                                            >
-                                                {pieData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
-                                                ))}
-                                            </Pie>
-                                            <Tooltip/>
-                                            <Legend/>
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <p className="text-gray-500">No status data available</p>
-                                )}
-                            </div>
-                            <div className="mt-4">
-                                <div className="flex justify-between items-center text-sm text-gray-600">
-                                    <div className="flex items-center">
-                                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                                        <span>Activated ({
-
-                                            //@ts-ignore
-                                            pieData[0]?.value || 0}%)</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
-                                        <span>Pending ({
-                                            //@ts-ignore
-                                            pieData[1]?.value || 0}%)</span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                                        <span>Flagged ({
-                                            //@ts-ignore
-                                            pieData[2]?.value || 0}%)</span>
-                                    </div>
-                                </div>
                             </div>
                         </motion.div>
                     </div>

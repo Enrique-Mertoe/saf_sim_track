@@ -60,11 +60,13 @@ export default function SimStats({refreshing = false}) {
 
     // Handle refreshing prop changes
     useEffect(() => {
+        if (!user)
+            return
         if (refreshing) {
             setIsRefreshing(true);
             fetchSimCards();
         }
-    }, [refreshing]);
+    }, [refreshing, user]);
 
     // Shimmer loading effect for each card
     const LoadingSkeleton = () => (
