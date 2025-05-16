@@ -27,6 +27,7 @@ export default function StaffUploadPage() {
     const [isScanning, setIsScanning] = useState<boolean>(false);
     const [uploadedSerials, setUploadedSerials] = useState<string[]>([]);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [rError, setError] = useState<string>('');
     const [dealerShortcode, setDealerShortcode] = useState<string>("");
     const [dealerName, setDealerName] = useState<string>("");
     const [showCaptureDialog, setShowCaptureDialog] = useState<boolean>(false);
@@ -126,7 +127,7 @@ export default function StaffUploadPage() {
                 readers: ["ean_reader", "code_128_reader", "code_39_reader", "code_93_reader"]
             },
             locate: true
-        }, function (err:any) {
+        }, function (err: any) {
             if (err) {
                 console.error("Error initializing scanner:", err);
                 setScanningStatus("Failed to access camera. Please ensure camera permissions are granted.");
@@ -151,7 +152,7 @@ export default function StaffUploadPage() {
             Quagga.onDetected(handleScanResult);
 
             // Draw detection areas for visual feedback
-            Quagga.onProcessed(function (result:any) {
+            Quagga.onProcessed(function (result: any) {
                 const drawingCtx = Quagga.canvas.ctx.overlay;
                 const drawingCanvas = Quagga.canvas.dom.overlay;
 
@@ -199,7 +200,7 @@ export default function StaffUploadPage() {
     };
 
     // Handle successful barcode detection
-    const handleScanResult = (result:any) => {
+    const handleScanResult = (result: any) => {
         if (result && result.codeResult) {
             const code = result.codeResult.code;
             console.log("Barcode detected:", code);
@@ -272,7 +273,7 @@ export default function StaffUploadPage() {
                             locate: true,
                             //@ts-ignore
                             src: event.target.result
-                        }, function (result:any) {
+                        }, function (result: any) {
                             if (result && result.codeResult) {
                                 const code = result.codeResult.code;
                                 console.log("Barcode found in image:", code);
@@ -308,11 +309,6 @@ export default function StaffUploadPage() {
         reader.readAsDataURL(file);
     };
 
-    const generateRandomSerial = () => {
-        const fakeScanResult = "89254021" + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
-        setSimSerial(fakeScanResult);
-        toast.success("SIM serial generated (demo)");
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -333,12 +329,11 @@ export default function StaffUploadPage() {
                 sold_by_user_id: user!.id,
                 team_id: user!.team_id,
             };
-
-            // Simulate upload delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
             // Upload to service
             const data = await simService.createSIMCard(simData);
+            if (!data) {
+                throw new Error("Failed to upload SIM card data");
+            }
             // Success state
             setUploadState("success");
             setCurrentStep(3);
@@ -353,9 +348,10 @@ export default function StaffUploadPage() {
             }, 3000);
 
         } catch (error: any) {
+             setCurrentStep(3);
             console.error("Error uploading SIM:", error);
             setUploadState("error");
-            setUploadError(error.message || "Failed to upload SIM card data");
+            setError(error.message || "Failed to upload SIM card data");
             toast.error("Upload failed. Please try again.");
 
             // Reset error state after delay
@@ -625,20 +621,37 @@ export default function StaffUploadPage() {
 
                         {currentStep === 3 && (
                             <>
-                                {/* Success state */}
+                                {/* Success or Error state */}
                                 <div className="p-8 flex flex-col items-center justify-center">
-                                    <motion.div
-                                        initial={{scale: 0, opacity: 0}}
-                                        animate={{scale: 1, opacity: 1}}
-                                        transition={{
-                                            type: "spring",
-                                            stiffness: 200,
-                                            damping: 10
-                                        }}
-                                        className="w-24 h-24 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mb-6"
-                                    >
-                                        <Check className="h-12 w-12 text-green-600 dark:text-green-400"/>
-                                    </motion.div>
+                                    {rError ? (
+                                        // Error state
+                                        <motion.div
+                                            initial={{scale: 0, opacity: 0}}
+                                            animate={{scale: 1, opacity: 1}}
+                                            transition={{
+                                                type: "spring",
+                                                stiffness: 200,
+                                                damping: 10
+                                            }}
+                                            className="w-24 h-24 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mb-6"
+                                        >
+                                            <X className="h-12 w-12 text-red-600 dark:text-red-400"/>
+                                        </motion.div>
+                                    ) : (
+                                        // Success state
+                                        <motion.div
+                                            initial={{scale: 0, opacity: 0}}
+                                            animate={{scale: 1, opacity: 1}}
+                                            transition={{
+                                                type: "spring",
+                                                stiffness: 200,
+                                                damping: 10
+                                            }}
+                                            className="w-24 h-24 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mb-6"
+                                        >
+                                            <Check className="h-12 w-12 text-green-600 dark:text-green-400"/>
+                                        </motion.div>
+                                    )}
 
                                     <motion.h3
                                         initial={{opacity: 0, y: 20}}
@@ -646,7 +659,7 @@ export default function StaffUploadPage() {
                                         transition={{delay: 0.3}}
                                         className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-2"
                                     >
-                                        Registration Successful!
+                                        {rError ? "Registration Failed" : "Registration Successful!"}
                                     </motion.h3>
 
                                     <motion.p
@@ -655,7 +668,7 @@ export default function StaffUploadPage() {
                                         transition={{delay: 0.5}}
                                         className="text-gray-600 dark:text-gray-400 text-center mb-8"
                                     >
-                                        SIM card has been registered successfully
+                                        {rError ? rError : "SIM card has been registered successfully"}
                                     </motion.p>
 
                                     <motion.button
@@ -667,7 +680,7 @@ export default function StaffUploadPage() {
                                         onClick={resetForm}
                                         className="px-6 py-3 bg-green-600 dark:bg-green-700 text-white rounded-lg font-medium hover:bg-green-700 dark:hover:bg-green-600 transition"
                                     >
-                                        Register Another SIM
+                                        {rError ? "Try Again" : "Register Another SIM"}
                                     </motion.button>
                                 </div>
                             </>
