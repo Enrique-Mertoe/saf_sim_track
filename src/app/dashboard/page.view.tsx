@@ -62,7 +62,7 @@ export default function SafaricomDashboard() {
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             // Fetch SIM card data for last 6 months
-            const {data: simData} = await simCardService.searchSimCards({
+            const {data: simData} = await simCardService.searchSimCards1({
                 fromDate: sixMonthsAgo.toISOString().split('T')[0],
                 toDate: today.toISOString().split('T')[0],
                 pageSize: 1000 // Get enough data for aggregation
@@ -143,18 +143,18 @@ export default function SafaricomDashboard() {
                 // Get recent SIM cards
                 const recent = simData
                     //@ts-ignore
-                    .sort((a, b) => new Date(b.sale_date) - new Date(a.sale_date))
+                    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                     .slice(0, 4)
                     //@ts-ignore
                     .map(sim => ({
                         id: sim.id,
                         serial: sim.serial_number,
-                        date: new Date(sim.sale_date).toISOString().split('T')[0],
+                        date: new Date(sim.created_at).toISOString().split('T')[0],
                         agent: sim.sold_by_user_id,
                         customer: sim.customer_id_number,
                         status: sim.status
                     }));
-
+//@ts-ignore
                 setRecentSims(recent);
 
                 // Fetch team performance
@@ -223,40 +223,9 @@ export default function SafaricomDashboard() {
                     </div>
 
 
-
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
                         {/* Stats Grid */}
                         <SimStarts refreshing={loading}/>
-                        {/*<div className="grid grid-cols-1 md:grid-cols-2  gap-1">*/}
-                        {/*    <StatCard*/}
-                        {/*        title="Total SIM Sales"*/}
-                        {/*        value={stats.totalSales}*/}
-                        {/*        icon={<CreditCard size={20} className="text-white"/>}*/}
-                        {/*        color="bg-blue-500"*/}
-                        {/*        change={5.2} // This would ideally be calculated from historical data*/}
-                        {/*    />*/}
-                        {/*    <StatCard*/}
-                        {/*        title="Activation Rate"*/}
-                        {/*        value={`${stats.activationRate}%`}*/}
-                        {/*        icon={<CheckCircle size={20} className="text-white"/>}*/}
-                        {/*        color="bg-green-500"*/}
-                        {/*        change={2.1} // This would ideally be calculated from historical data*/}
-                        {/*    />*/}
-                        {/*    <StatCard*/}
-                        {/*        title="Pending Approvals"*/}
-                        {/*        value={stats.pendingApprovals}*/}
-                        {/*        icon={<Users size={20} className="text-white"/>}*/}
-                        {/*        color="bg-yellow-500"*/}
-                        {/*        change={-1.5} // This would ideally be calculated from historical data*/}
-                        {/*    />*/}
-                        {/*    <StatCard*/}
-                        {/*        title="Flagged Transactions"*/}
-                        {/*        value={stats.flaggedTransactions}*/}
-                        {/*        icon={<AlertCircle size={20} className="text-white"/>}*/}
-                        {/*        color="bg-red-500"*/}
-                        {/*        change={3.8} // This would ideally be calculated from historical data*/}
-                        {/*    />*/}
-                        {/*</div>*/}
                         <UserStatistics/>
                     </div>
                     {/* Charts Section */}
@@ -315,62 +284,8 @@ export default function SafaricomDashboard() {
                                 )}
                             </div>
                         </motion.div>
-
-                        {/* Team Performance Chart */}
-                        <motion.div
-                            initial={{opacity: 0, y: 20}}
-                            animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.6, delay: 0.2}}
-                            className="bg-white p-6 rounded-lg shadow-md"
-                        >
-                            <h2 className="text-lg font-semibold mb-4 flex items-center">
-                                <TrendingUp size={18} className="mr-2 text-indigo-600"/>
-                                Team Performance vs Target
-                            </h2>
-                            <div className="h-72">
-                                {loading ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <p className="text-gray-500">Loading chart data...</p>
-                                    </div>
-                                ) : teamPerformance.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart
-                                            data={teamPerformance}
-                                            margin={{top: 5, right: 30, left: 20, bottom: 5}}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>
-                                            <XAxis dataKey="name" stroke="#888"/>
-                                            <YAxis stroke="#888"/>
-                                            <Tooltip/>
-                                            <Legend/>
-                                            <Bar
-                                                dataKey="sales"
-                                                name="Sales"
-                                                fill="#4F46E5"
-                                                animationDuration={1500}
-                                                radius={[4, 4, 0, 0]}
-                                            />
-                                            <Bar
-                                                dataKey="target"
-                                                name="Target"
-                                                fill="#E5E7EB"
-                                                animationDuration={1500}
-                                                radius={[4, 4, 0, 0]}
-                                            />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="h-full flex items-center justify-center">
-                                        <p className="text-gray-500">No team data available</p>
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    </div>
-                    <div className="grid mb-6 grid-cols-1 lg:grid-cols-2 gap-6">
                         <DashQuickActions/>
                     </div>
-
                     {/* Bottom Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Recent SIM Cards */}
