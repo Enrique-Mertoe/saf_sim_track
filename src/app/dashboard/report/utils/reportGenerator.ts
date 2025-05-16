@@ -9,13 +9,50 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
     // Create a new workbook
     const workbook = new ExcelJS.Workbook();
 
-    // Define tab colors for different sheets (in RGB hex)
-    const tabColors = {
+    // Define base tab colors for different sheets (in RGB hex)
+    const baseTabColors = {
         'Raw Data': 'FFC000', // Yellow
         'Summary': '00B0F0',  // Blue
         'Unknown SIMs': 'FF5B5B', // Red
-        'Team': '92D050' // Green (base color for team sheets)
     };
+
+    // Generate unique colors for each team
+    const teamColors: { [key: string]: string } = {};
+
+    // Create a color palette for teams
+    const teamColorPalette = [
+        '92D050', // Green
+        '7030A0', // Purple
+        '0070C0', // Blue
+        'FF0000', // Red
+        'FFC000', // Yellow
+        '00B050', // Dark Green
+        'C00000', // Dark Red
+        '002060', // Navy Blue
+        'FF6600', // Orange
+        '00CCFF', // Light Blue
+        'FF9999', // Light Red
+        '99CC00', // Lime
+        'FF99CC', // Pink
+        '993366', // Burgundy
+        '663300', // Brown
+        '333399', // Indigo
+        '339966', // Sea Green
+        '996633', // Tan
+        'FF8080', // Coral
+        '808000'  // Olive
+    ];
+
+    // Assign colors to teams from the palette
+    processedReport.teamReports.forEach((teamReport, index) => {
+        if (teamReport.teamName === 'Unknown') {
+            teamColors[teamReport.teamName] = baseTabColors['Unknown SIMs'];
+        } else {
+            // Use modulo to cycle through the colors if there are more teams than colors
+            const colorIndex = index % teamColorPalette.length;
+            teamColors[teamReport.teamName] = teamColorPalette[colorIndex];
+        }
+    });
 
     // Define header style (blue background with white text)
     const headerStyle = {
@@ -43,26 +80,26 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
     // Create Raw Data worksheet
     const rawDataSheet = workbook.addWorksheet('Raw Data', {
         properties: {
-            tabColor: {argb: 'FF' + tabColors['Raw Data']}
+            tabColor: {argb: 'FF' + baseTabColors['Raw Data']}
         }
     });
-    await populateRawDataWorksheet(rawDataSheet, processedReport.rawRecords, headerStyle);
+    await populateRawDataWorksheet(rawDataSheet, processedReport.rawRecords, headerStyle, teamColors);
 
     // Create Summary worksheet
     const summarySheet = workbook.addWorksheet('Summary', {
         properties: {
-            tabColor: {argb: 'FF' + tabColors['Summary']}
+            tabColor: {argb: 'FF' + baseTabColors['Summary']}
         }
     });
-    await populateSummaryWorksheet(summarySheet, processedReport, headerStyle, tabColors);
+    await populateSummaryWorksheet(summarySheet, processedReport, headerStyle, teamColors);
 
     // Create Team worksheets
-    processedReport.teamReports.forEach((teamReport, index) => {
+    processedReport.teamReports.forEach((teamReport) => {
         if (teamReport.teamName !== 'Unknown' && teamReport.records.length > 0) {
             const sheetName = `Team - ${teamReport.teamName}`;
             const teamSheet = workbook.addWorksheet(sheetName, {
                 properties: {
-                    tabColor: {argb: 'FF' + tabColors['Team']}
+                    tabColor: {argb: 'FF' + teamColors[teamReport.teamName]}
                 }
             });
             populateTeamWorksheet(teamSheet, teamReport, headerStyle);
@@ -74,7 +111,7 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
     if (unknownTeamReport && unknownTeamReport.records.length > 0) {
         const unknownSheet = workbook.addWorksheet('Unknown SIMs', {
             properties: {
-                tabColor: {argb: 'FF' + tabColors['Unknown SIMs']}
+                tabColor: {argb: 'FF' + baseTabColors['Unknown SIMs']}
             }
         });
         populateTeamWorksheet(unknownSheet, unknownTeamReport, headerStyle);
@@ -107,13 +144,13 @@ const columns = [
 const populateRawDataWorksheet = async (
     worksheet: ExcelJS.Worksheet,
     records: ProcessedRecord[],
-    headerStyle: any
+    headerStyle: any,
+    teamColors: { [key: string]: string }
 ): Promise<void> => {
     // Sort by team
     const sortedRecords = [...records].sort((a, b) =>
         a.team === b.team ? 0 : (a.team < b.team ? -1 : 1)
     );
-
 
     // Add columns to the worksheet
     worksheet.columns = columns;
@@ -126,19 +163,8 @@ const populateRawDataWorksheet = async (
 
     // Add data rows
     let currentTeam = '';
-    let alternateColorIndex = 0;
-    const alternateColors = [
-        {argb: 'FFEEEEEE'}, // Light gray
-        {argb: 'FFDDDDDD'}  // Slightly darker gray
-    ];
 
-    sortedRecords.forEach((record, index) => {
-        // Track team changes for alternating colors
-        if (record.team !== currentTeam) {
-            currentTeam = record.team;
-            alternateColorIndex = (alternateColorIndex + 1) % 2;
-        }
-
+    sortedRecords.forEach((record) => {
         // Add the row
         const rowData = {
             tmDate: record.tmDate,
@@ -170,15 +196,42 @@ const populateRawDataWorksheet = async (
 
         const row = worksheet.addRow(rowData);
 
-        // Color the row based on the team (alternating colors for same team)
-        const fillColor = alternateColors[alternateColorIndex];
+        // Get team color or use default if not found
+        const teamColor = teamColors[record.team] || '92D050';
+
+        // Create a lighter version of the color (85% white, 15% original) for better readability
+        const r = parseInt(teamColor.substring(0, 2), 16);
+        const g = parseInt(teamColor.substring(2, 4), 16);
+        const b = parseInt(teamColor.substring(4, 6), 16);
+
+        const lightR = Math.round(0.85 * 255 + 0.15 * r).toString(16).padStart(2, '0');
+        const lightG = Math.round(0.85 * 255 + 0.15 * g).toString(16).padStart(2, '0');
+        const lightB = Math.round(0.85 * 255 + 0.15 * b).toString(16).padStart(2, '0');
+
+        const lightColor = lightR + lightG + lightB;
+
+        // Apply team color to the row
         row.eachCell((cell) => {
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: fillColor
+                fgColor: {argb: 'FF' + lightColor}
             };
         });
+
+        // Add border when team changes
+        if (record.team !== currentTeam) {
+            if (currentTeam !== '') {
+                // Add a thicker border to the top of this row to separate teams
+                row.eachCell((cell) => {
+                    cell.border = {
+                        ...cell.border,
+                        top: { style: 'medium' }
+                    };
+                });
+            }
+            currentTeam = record.team;
+        }
     });
 
     // Add autofilter to the header row
@@ -202,33 +255,6 @@ const populateTeamWorksheet = (
     teamReport: TeamReport,
     headerStyle: any
 ): void => {
-    // Define columns
-    const columssns = [
-        {header: 'TM Date', key: 'tmDate', width: 15},
-        {header: 'ID Date', key: 'idDate', width: 15},
-        {header: 'ID', key: 'id', width: 12},
-        {header: 'Month', key: 'month', width: 12},
-        {header: 'Dealer Shortcode', key: 'dealerShortcode', width: 18},
-        {header: 'Dealer Name', key: 'dealerName', width: 20},
-        {header: 'Sim Serial Number', key: 'simSerialNumber', width: 20},
-        {header: 'Top Up Date', key: 'topUpDate', width: 15},
-        {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
-        {header: 'Agent MSISDN', key: 'agentMSISDN', width: 15},
-        {header: 'BA', key: 'ba', width: 10},
-        {header: 'Region', key: 'region', width: 15},
-        {header: 'Territory', key: 'territory', width: 15},
-        {header: 'Cluster', key: 'cluster', width: 15},
-        {header: 'Cumulative Usage', key: 'cumulativeUsage', width: 18},
-        {header: 'Cumulative Commission', key: 'cumulativeCommission', width: 20},
-        {header: 'Fraud Flagged', key: 'fraudFlagged', width: 15},
-        {header: 'Fraud Suspension Date', key: 'fraudSuspensionDate', width: 20},
-        {header: 'Fraud Reason', key: 'fraudReason', width: 20},
-        {header: 'Role', key: 'role', width: 15},
-        {header: 'Quality', key: 'quality', width: 12},
-        {header: 'Uploaded By', key: 'uploadedBy', width: 15},
-        {header: 'Matched', key: 'matched', width: 12},
-        {header: 'Quality SIM', key: 'qualitySim', width: 15}
-    ];
     worksheet.columns = columns;
 
     // Apply header styles
@@ -244,6 +270,7 @@ const populateTeamWorksheet = (
             idDate: record.id,
             id: record.dateId,
             month: record.month,
+            team: record.team,
             dealerShortcode: record.dealerShortcode,
             dealerName: record.dealerName,
             simSerialNumber: record.simSerialNumber,
@@ -289,7 +316,7 @@ const populateSummaryWorksheet = async (
     worksheet: ExcelJS.Worksheet,
     processedReport: ProcessedReport,
     headerStyle: any,
-    tabColors: { [key: string]: string }
+    teamColors: { [key: string]: string }
 ): Promise<void> => {
     // Define summary columns
     const columns = [
@@ -381,13 +408,8 @@ const populateSummaryWorksheet = async (
             regionCount: topRegionCount
         });
 
-        // Determine color based on team name
-        let teamColor;
-        if (teamReport.teamName === 'Unknown') {
-            teamColor = tabColors['Unknown SIMs'];
-        } else {
-            teamColor = tabColors['Team'];
-        }
+        // Get the appropriate team color
+        const teamColor = teamColors[teamReport.teamName];
 
         // Create a lighter version of the color (70% white, 30% original)
         const r = parseInt(teamColor.substring(0, 2), 16);
