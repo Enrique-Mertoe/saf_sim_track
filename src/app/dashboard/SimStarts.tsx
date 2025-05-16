@@ -1,22 +1,13 @@
 import useApp from "@/ui/provider/AppProvider";
 import React, {useEffect, useState} from "react";
 import simService from "@/services/simService";
-import {SIMCard, Team, User} from "@/models";
-import {
-    RefreshCw,
-    Cpu,
-    CheckCircle,
-    XCircle,
-    Award,
-    AlertCircle
-} from "lucide-react";
+import {SIMCard, SIMStatus, Team, User} from "@/models";
+import {AlertCircle, Award, CheckCircle, Cpu, RefreshCw, XCircle} from "lucide-react";
 import Signal from "@/lib/Signal";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
     sold_by_user_id: User;
-    qualityStatus: string;
-    matchStatus: string;
 }
 
 export default function SimStats({refreshing = false}) {
@@ -28,9 +19,9 @@ export default function SimStats({refreshing = false}) {
 
     // Stats calculated from sim cards
     const totalCards = simCards.length;
-    const matchedCards = simCards.filter(card => card.matchStatus === 'MATCHED').length;
-    const unmatchedCards = simCards.filter(card => card.matchStatus === 'UNMATCHED').length;
-    const qualityCards = simCards.filter(card => card.qualityStatus === 'QUALITY').length;
+    const matchedCards = simCards.filter(card => card.match === SIMStatus.MATCH).length;
+    const unmatchedCards = simCards.filter(card => card.match === SIMStatus.UNMATCH).length;
+    const qualityCards = simCards.filter(card => card.quality === SIMStatus.QUALITY).length;
 
     // Calculate percentages safely
     const matchedPercent = totalCards ? Math.round((matchedCards / totalCards) * 100) : 0;

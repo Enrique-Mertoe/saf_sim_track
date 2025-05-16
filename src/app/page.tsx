@@ -1,7 +1,7 @@
-import SubscriptionPage from "@/app/subscription/page";
-export default async function Home() {
+import Home from "@/app/HomePage";
+export default async function Home1() {
 
     return (
-        <SubscriptionPage/>
+        <Home/>
     );
 }

@@ -88,17 +88,17 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
 };
 
 
- const columns = [
-    { header: 'Serial', key: 'simSerialNumber', width: 10 },
-    { header: 'Team', key: 'team', width: 15 },
-    { header: 'Activation Date', key: 'activationDate', width: 18 },
-    { header: 'Top Up Date', key: 'topUpDate', width: 15 },
-    { header: 'Top Up Amount', key: 'topUpAmount', width: 15 },
-    { header: 'Bundle Purchase Date', key: 'bundlePurchaseDate', width: 20 },
-    { header: 'Bundle Amount', key: 'bundleAmount', width: 15 },
-    { header: 'Usage', key: 'usage', width: 15 },
-    { header: 'Till/Mobigo MSISDN', key: 'agentMSISDN', width: 20 },
-    { header: 'BA MSISDN', key: 'ba', width: 15 },
+const columns = [
+    {header: 'Serial', key: 'simSerialNumber', width: 25},
+    {header: 'Team', key: 'team', width: 25},
+    {header: 'Activation Date', key: 'activationDate', width: 18},
+    {header: 'Top Up Date', key: 'topUpDate', width: 15},
+    {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
+    {header: 'Bundle Purchase Date', key: 'bundlePurchaseDate', width: 20},
+    {header: 'Bundle Amount', key: 'bundleAmount', width: 15},
+    {header: 'Usage', key: 'usage', width: 15},
+    {header: 'Till/Mobigo MSISDN', key: 'agentMSISDN', width: 20},
+    {header: 'BA MSISDN', key: 'ba', width: 15},
 ];
 
 /**
@@ -114,38 +114,6 @@ const populateRawDataWorksheet = async (
         a.team === b.team ? 0 : (a.team < b.team ? -1 : 1)
     );
 
-
-
-    // Define columns
-    const colsumns = [
-        {header: 'Serial', key: 'simSerialNumber', width: 20},
-        {header: 'Team', key: 'team', width: 15},
-        {header: 'TM Date', key: 'tmDate', width: 15},
-        {header: 'ID Date', key: 'idDate', width: 15},
-        {header: 'ID', key: 'id', width: 12},
-        {header: 'Month', key: 'month', width: 12},
-        {header: 'Dealer Shortcode', key: 'dealerShortcode', width: 18},
-        {header: 'Dealer Name', key: 'dealerName', width: 20},
-
-        {header: 'Top Up Date', key: 'topUpDate', width: 15},
-        {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
-        {header: 'Agent MSISDN', key: 'agentMSISDN', width: 15},
-        {header: 'BA', key: 'ba', width: 10},
-        {header: 'Region', key: 'region', width: 15},
-        {header: 'Territory', key: 'territory', width: 15},
-        {header: 'Cluster', key: 'cluster', width: 15},
-        {header: 'Cumulative Usage', key: 'cumulativeUsage', width: 18},
-        {header: 'Cumulative Commission', key: 'cumulativeCommission', width: 20},
-        {header: 'Fraud Flagged', key: 'fraudFlagged', width: 15},
-        {header: 'Fraud Suspension Date', key: 'fraudSuspensionDate', width: 20},
-        {header: 'Fraud Reason', key: 'fraudReason', width: 20},
-        {header: 'Role', key: 'role', width: 15},
-        {header: 'Quality', key: 'quality', width: 12},
-
-        {header: 'Uploaded By', key: 'uploadedBy', width: 15},
-        {header: 'Matched', key: 'matched', width: 12},
-        {header: 'Quality SIM', key: 'qualitySim', width: 15}
-    ];
 
     // Add columns to the worksheet
     worksheet.columns = columns;
@@ -261,8 +229,6 @@ const populateTeamWorksheet = (
         {header: 'Matched', key: 'matched', width: 12},
         {header: 'Quality SIM', key: 'qualitySim', width: 15}
     ];
-
-    // Add columns to the worksheet
     worksheet.columns = columns;
 
     // Apply header styles

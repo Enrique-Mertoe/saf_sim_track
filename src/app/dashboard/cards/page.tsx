@@ -4,7 +4,7 @@ import {ChevronLeft, ChevronRight, Download, Edit, Filter, RefreshCw, Save, Sear
 import Dashboard from "@/ui/components/dash/Dashboard";
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
-import {SIMCard, Team, User, UserRole} from "@/models";
+import {SIMCard, SIMStatus, Team, User, UserRole} from "@/models";
 import {formatDate} from "@/helper";
 import {teamService} from "@/services";
 import alert from "@/ui/alert";
@@ -12,8 +12,6 @@ import alert from "@/ui/alert";
 type SimAdapter = SIMCard & {
     team_id: Team;
     sold_by_user_id: User;
-    qualityStatus: string;
-    matchStatus: string;
 }
 const RegisteredSimCards = () => {
     // State for sim cards data
@@ -129,11 +127,11 @@ const RegisteredSimCards = () => {
 
         // Apply filters
         if (filters.matchStatus !== 'all') {
-            result = result.filter(card => card.matchStatus === filters.matchStatus.toUpperCase());
+            result = result.filter(card => card.match === filters.matchStatus.toUpperCase());
         }
 
         if (filters.qualityStatus !== 'all') {
-            result = result.filter(card => card.qualityStatus === filters.qualityStatus.toUpperCase());
+            result = result.filter(card => card.quality === filters.qualityStatus.toUpperCase());
         }
 
         if (filters.team !== 'all') {
@@ -328,9 +326,9 @@ const RegisteredSimCards = () => {
                     <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-md">
                         <p className="text-sm text-green-600 dark:text-green-400 mb-1">Matched</p>
                         <p className="text-2xl font-bold text-green-800 dark:text-green-300">
-                            {filteredSimCards.filter(card => card.matchStatus === 'MATCHED').length}
+                            {filteredSimCards.filter(card => card.match === SIMStatus.MATCH).length}
                             <span className="text-sm font-normal ml-2 text-green-700 dark:text-green-400">
-          ({Math.round(filteredSimCards.filter(card => card.matchStatus === 'MATCHED').length / filteredSimCards.length * 100) || 0}%)
+          ({Math.round(filteredSimCards.filter(card => card.match === SIMStatus.MATCH).length / filteredSimCards.length * 100) || 0}%)
         </span>
                         </p>
                     </div>
@@ -338,9 +336,9 @@ const RegisteredSimCards = () => {
                     <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-md">
                         <p className="text-sm text-red-600 dark:text-red-400 mb-1">Unmatched</p>
                         <p className="text-2xl font-bold text-red-800 dark:text-red-300">
-                            {filteredSimCards.filter(card => card.matchStatus === 'UNMATCHED').length}
+                            {filteredSimCards.filter(card => card.match === SIMStatus.UNMATCH).length}
                             <span className="text-sm font-normal ml-2 text-red-700 dark:text-red-400">
-          ({Math.round(filteredSimCards.filter(card => card.matchStatus === 'UNMATCHED').length / filteredSimCards.length * 100) || 0}%)
+          ({Math.round(filteredSimCards.filter(card => card.match === SIMStatus.UNMATCH).length / filteredSimCards.length * 100) || 0}%)
         </span>
                         </p>
                     </div>
@@ -348,9 +346,9 @@ const RegisteredSimCards = () => {
                     <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-md">
                         <p className="text-sm text-purple-600 dark:text-purple-400 mb-1">Quality</p>
                         <p className="text-2xl font-bold text-purple-800 dark:text-purple-300">
-                            {filteredSimCards.filter(card => card.qualityStatus === 'QUALITY').length}
+                            {filteredSimCards.filter(card => card.quality === SIMStatus.QUALITY).length}
                             <span className="text-sm font-normal ml-2 text-purple-700 dark:text-purple-400">
-          ({Math.round(filteredSimCards.filter(card => card.qualityStatus === 'QUALITY').length / filteredSimCards.filter(card => card.matchStatus === 'MATCHED').length * 100) || 0}%)
+          ({Math.round(filteredSimCards.filter(card => card.quality === SIMStatus.QUALITY).length / filteredSimCards.filter(card => card.match === SIMStatus.MATCH).length * 100) || 0}%)
         </span>
                         </p>
                     </div>
@@ -437,20 +435,20 @@ const RegisteredSimCards = () => {
                                     <td className="py-3 px-4 text-gray-800 dark:text-gray-200">{card.team_id.name}</td>
                                     <td className="py-3 px-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    card.matchStatus === 'MATCHED'
+                    card.match === SIMStatus.MATCH
                         ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300'
                         : 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
                 }`}>
-                  {card.matchStatus === 'MATCHED' ? 'Matched' : 'Unmatched'}
+                  {card.match === SIMStatus.MATCH ? 'Matched' : 'Unmatched'}
                 </span>
                                     </td>
                                     <td className="py-3 px-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    card.qualityStatus === 'QUALITY'
+                    card.quality === SIMStatus.QUALITY
                         ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
                 }`}>
-                  {card.qualityStatus === 'QUALITY' ? 'Quality' : 'Not Quality'}
+                  {card.quality === SIMStatus.QUALITY ? 'Quality' : 'Not Quality'}
                 </span>
                                     </td>
                                     <td className="py-3 px-4 text-gray-800 dark:text-gray-200">

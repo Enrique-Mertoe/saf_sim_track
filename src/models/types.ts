@@ -23,9 +23,8 @@ export enum OnboardingRequestStatus {
 }
 
 export enum SIMStatus {
-    SOLD = 'sold',
-    ACTIVATED = 'activated',
-    INACTIVE = 'inactive',
-    PENDING = 'pending',
-    FLAGGED = 'flagged'
+    MATCH = 'Y',
+    UNMATCH = 'N',
+    QUALITY = 'QUALITY',
+    NONQUALITY = 'NONQUALITY',
 }

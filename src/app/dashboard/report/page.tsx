@@ -120,6 +120,7 @@ const Reports: React.FC = () => {
         }
     };
 
+
     const handleGenerateReports = async () => {
         if (!processedReport) return;
 

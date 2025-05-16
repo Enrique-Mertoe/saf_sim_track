@@ -1,10 +1,10 @@
 "use client";
 "use client";
 
-import {useState, useEffect, useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useRouter} from "next/navigation";
-import {Camera, Upload, Check, X, Loader2, Image, Scan, ChevronRight} from "lucide-react";
-import {motion, AnimatePresence} from "framer-motion";
+import {Check, ChevronRight, Image, Loader2, Scan, Upload, X} from "lucide-react";
+import {AnimatePresence, motion} from "framer-motion";
 import toast from "react-hot-toast";
 import useApp from "@/ui/provider/AppProvider";
 import simService from "@/services/simService";
@@ -13,7 +13,7 @@ import simService from "@/services/simService";
 // @ts-ignore
 import Quagga from "quagga";
 import Dashboard from "@/ui/components/dash/Dashboard";
-import {SIMCard, SIMCardCreate} from "@/models";
+import {SIMCardCreate, SIMStatus} from "@/models";
 
 type UploadState = "idle" | "scanning" | "uploading" | "success" | "error";
 type CaptureMethod = "camera" | "file" | null;
@@ -328,6 +328,8 @@ export default function StaffUploadPage() {
                 sale_location: location,
                 sold_by_user_id: user!.id,
                 team_id: user!.team_id,
+                match:SIMStatus.UNMATCH,
+                quality:SIMStatus.NONQUALITY
             };
             // Upload to service
             const data = await simService.createSIMCard(simData);

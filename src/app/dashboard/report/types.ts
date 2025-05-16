@@ -26,6 +26,7 @@ export interface SafaricomRecord {
 
 export interface DatabaseRecord {
   simSerialNumber: string;
+  simId: string;
   team: string;
   uploadedBy: string;
   createdAt: string;

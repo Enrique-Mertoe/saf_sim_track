@@ -27,6 +27,8 @@ export interface SIMCard {
     fraud_flag?: boolean;
     fraud_reason?: string;
     quality_score?: number;
+    match: SIMStatus;
+    quality: SIMStatus;
 }
 
 export interface SIMCardCreate {
@@ -34,6 +36,8 @@ export interface SIMCardCreate {
     sold_by_user_id: string;
     sale_location?: string;
     team_id?: string;
+    match: SIMStatus;
+    quality: SIMStatus;
 }
 
 export interface SIMCardUpdate {
@@ -49,5 +53,7 @@ export interface SIMCardUpdate {
     status?: SIMStatus;
     fraud_flag?: boolean;
     fraud_reason?: string;
+    match?: SIMStatus;
+    quality?: SIMStatus;
     quality_score?: number;
 }
