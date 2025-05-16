@@ -1,6 +1,6 @@
 "use client"
 import { useState } from 'react';
-import { CheckCircle, ChevronRight, Shield, CreditCard, Tag, Clock, Users, AlertCircle } from 'lucide-react';
+import { CheckCircle, ChevronRight, Shield, CreditCard, Tag, Clock, Users } from 'lucide-react';
 
 export default function SubscriptionPage() {
   const [selectedPlan, setSelectedPlan] = useState('professional');

@@ -355,7 +355,6 @@ const processCsvData = async (data: any[], userId: string): Promise<{
             // Format the record for insertion
             const simRecord: SIMCardCreate = {
                 serial_number: record.serial_number?.trim(),
-                customer_msisdn: record.customer_msisdn?.trim(),
                 customer_id_number: record.customer_id_number?.trim(),
                 agent_msisdn: record.agent_msisdn?.trim(),
                 sale_date: record.sale_date,
@@ -367,7 +366,7 @@ const processCsvData = async (data: any[], userId: string): Promise<{
                 top_up_amount: record.top_up_amount ? Number(record.top_up_amount) : undefined,
                 customer_id_front_url: record.customer_id_front_url,
                 customer_id_back_url: record.customer_id_back_url
-            };
+            } as SIMCardCreate;
 
             validRecords.push(simRecord);
         } else {
