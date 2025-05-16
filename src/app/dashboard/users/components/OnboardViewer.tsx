@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {AlertTriangle, ArrowLeft, Briefcase, CheckCircle, CreditCard, User, X} from 'lucide-react';
 import {AnimatePresence, motion} from 'framer-motion';
-import {authService, logService, onboardingService, storageService} from "@/services";
+import {logService, onboardingService, storageService} from "@/services";
 import {ActivityLogCreate, OnboardingRequest, OnboardingRequestStatus, User as User1, UserRole} from "@/models";
 import {useDialog} from "@/app/_providers/dialog";
 import {toast} from "react-hot-toast";

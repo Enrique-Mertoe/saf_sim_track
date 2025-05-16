@@ -1,14 +1,13 @@
-import { createSupabaseClient } from "@/lib/supabase/client";
+import {createSupabaseClient} from "@/lib/supabase/client";
 import {TeamCreate, TeamUpdate} from "@/models";
 
 export const teamService = {
     // Get all teams
     async getAllTeams() {
         const supabase = createSupabaseClient();
-        console.log("f_teams")
         return supabase
             .from('teams')
-            .select('*, leader_id(*)')
+            .select('*, users!leader_id(*)')
             .order('name');
     },
     async count() {

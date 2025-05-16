@@ -1,27 +1,20 @@
 "use client"
-import {useState, useEffect, useCallback} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {teamService} from "@/services/teamService";
-import {TeamUpdate} from "@/models";
+import {Team as Team1, TeamUpdate, User, UserRole} from "@/models";
 import Link from "next/link";
 import {useDialog} from "@/app/_providers/dialog";
 import Create from "@/app/dashboard/team/create";
 import useApp from "@/ui/provider/AppProvider";
+import {userService} from "@/services";
+import alert from "@/ui/alert";
 
-interface Team {
-    id: string;
-    name: string;
-    description?: string;
-    leader_id: string;
-    region: string;
-    created_at: string;
-    users: {
-        full_name: string;
-    };
+type Team = Team1 & {
+    users: User
 }
 
 interface TeamFormData {
     name: string;
-    description: string;
     leader_id: string;
     region: string;
 }
@@ -38,7 +31,6 @@ export default function TeamsManagement() {
 
     const [formData, setFormData] = useState<TeamFormData>({
         name: "",
-        description: "",
         leader_id: "",
         region: "",
     });
@@ -59,13 +51,27 @@ export default function TeamsManagement() {
                 setIsLoading(false);
             }
         };
+        const fetchLeaders = async () => {
+            setIsLoading(true);
 
-        fetchTeams()
+            try {
+                const {data, error} = await userService.getUsersByRole(UserRole.TEAM_LEADER);
+                if (error) throw new Error(error.message);
+                setLeaders(data || []);
+            } catch (err: any) {
+                setError(err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchTeams().then()
+        fetchLeaders().then()
     }, [user]);
 
 
-    const handleUpdateTeam = async () => {
+    const handleUpdateTeam = async (fd: any) => {
         if (!currentTeam) return;
+        setFormData(fd)
 
         try {
             const teamData: TeamUpdate = {
@@ -84,32 +90,34 @@ export default function TeamsManagement() {
             setError(err.message);
         }
     };
-
+    // const dialog = useDialog()
     const openEditModal = (team: Team) => {
+
         setCurrentTeam(team);
-        setFormData({
+        const data={
             name: team.name,
-            description: team.description || "",
             leader_id: team.leader_id,
             region: team.region,
+        };
+        const d = dialog.create({
+
+            content: <EditTeam data={data} onClose={() => d.dismiss()}
+                // @ts-ignore
+                               handleUpdateTeam={(...args: any[]) => handleUpdateTeam(...args)} leaders={leaders}/>
+
         });
-        setShowEditModal(true);
     };
 
     const resetForm = () => {
         setFormData({
             name: "",
-            description: "",
             leader_id: "",
             region: "",
         });
         setCurrentTeam(null);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const {name, value} = e.target;
-        setFormData(prev => ({...prev, [name]: value}));
-    };
+
     const cr = useCallback(() => {
         const d = dialog.create({
             content: <Create onDismiss={() => d.dismiss()}/>,
@@ -160,7 +168,6 @@ export default function TeamsManagement() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team
                             Name
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leader</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Region</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -172,12 +179,10 @@ export default function TeamsManagement() {
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-medium text-gray-900">{team.name}</div>
                             </td>
-                            <td className="px-6 py-4">
-                                <div
-                                    className="text-sm text-gray-500 line-clamp-2">{team.description || "No description"}</div>
-                            </td>
+
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{team.users?.full_name || "Not assigned"}</div>
+                                <div
+                                    className="text-sm text-gray-900">{team.users?.full_name || "Not assigned"}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm text-gray-900">{team.region}</div>
@@ -189,9 +194,10 @@ export default function TeamsManagement() {
                                 >
                                     Edit
                                 </button>
-                                <Link href={`/admin/teams/${team.id}`} className="text-green-600 hover:text-green-900">
-                                    View Details
-                                </Link>
+                                {/*<Link href={`/admin/teams/${team.id}`}*/}
+                                {/*      className="text-green-600 hover:text-green-900">*/}
+                                {/*    View Details*/}
+                                {/*</Link>*/}
                             </td>
                         </tr>
                     ))}
@@ -207,80 +213,140 @@ export default function TeamsManagement() {
             </div>
 
 
-            {/* Edit Team Modal */}
-            {showEditModal && currentTeam && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold mb-4">Edit Team</h2>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Team Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Description</label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    rows={3}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Team Leader</label>
-                                <select
-                                    name="leader_id"
-                                    value={formData.leader_id}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                    required
-                                >
-                                    <option value="">Select a leader</option>
-                                    {leaders.map(leader => (
-                                        <option key={leader.id} value={leader.id}>
-                                            {leader.full_name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">Region</label>
-                                <input
-                                    type="text"
-                                    name="region"
-                                    value={formData.region}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-6 flex justify-end space-x-3">
-                            <button
-                                onClick={() => setShowEditModal(false)}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleUpdateTeam}
-                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                                disabled={!formData.name || !formData.leader_id || !formData.region}
-                            >
-                                Update Team
-                            </button>
+        </div>
+    );
+}
+
+const EditTeam = function ({data,leaders, onClose, handleUpdateTeam}: any) {
+    const [formData, setFormData] = useState<TeamFormData>(data);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const {name, value} = e.target;
+        setFormData(prev => ({...prev, [name]: value}));
+    };
+    return (
+        <div
+            className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full shadow-lg border border-gray-100 dark:border-slate-700 transition-all duration-200">
+            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500 dark:text-green-400"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Edit Team
+            </h2>
+            <div className="space-y-6">
+                <div className="group">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team Name</label>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full p-3 outline-0 rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400 dark:focus:ring-green-400"
+                            placeholder="Enter team name"
+                            required
+                        />
+                        <div
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 className="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20"
+                                 fill="currentColor">
+                                <path fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
-            )}
+
+                <div className="group">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team
+                        Leader</label>
+                    <div className="relative">
+                        <select
+                            name="leader_id"
+                            value={formData.leader_id}
+                            onChange={handleInputChange}
+                            onSelect={()=>{}}
+                            className="mt-1 block w-full  p-3 outline-0 rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-slate-700 dark:text-white appearance-none"
+                            required
+                        >
+                            <option value="">Select a leader</option>
+                            {leaders.map((leader: User) => (
+                                <option key={leader.id} value={leader.id}>
+                                    {leader.full_name}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                 viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd"
+                                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                      clipRule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="group">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Region</label>
+                    <div className="relative">
+                        <input
+                            type="text"
+                            name="region"
+                            value={formData.region}
+                            onChange={handleInputChange}
+                            className="mt-1 block w-full rounded-md border-gray-300  p-3 outline-0 dark:border-slate-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-slate-700 dark:text-white dark:placeholder-gray-400 dark:focus:ring-green-400"
+                            placeholder="Enter region"
+                            required
+                        />
+                        <div
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 className="h-5 w-5 text-green-500 dark:text-green-400" viewBox="0 0 20 20"
+                                 fill="currentColor">
+                                <path fillRule="evenodd"
+                                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                      clipRule="evenodd"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-8 flex justify-end space-x-4">
+                <button
+                    onClick={() => onClose()}
+                    className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors duration-200 flex items-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancel
+                </button>
+                <button
+                    onClick={() => {
+                        alert.confirm({
+                            title: "Update Team Leader",
+                            message: 'Confirm this action',
+                            task: async () => {
+                                return await handleUpdateTeam(formData)
+                            }
+                        })
+                    }}
+                    className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white rounded-md hover:from-green-600 hover:to-emerald-700 dark:hover:from-green-500 dark:hover:to-emerald-600 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!formData.name || !formData.leader_id || !formData.region}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                         stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Update Team
+                </button>
+            </div>
         </div>
-    );
+    )
 }
