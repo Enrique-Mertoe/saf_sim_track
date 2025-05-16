@@ -94,7 +94,7 @@ export default function SafaricomDashboard() {
                     if (saleDate >= sixMonthsAgo) {
                         // @ts-ignore
                         monthlySales[monthKey] = (monthlySales[monthKey] || 0) + 1;
-                        if (sim.status === SIMStatus.ACTIVATED) {
+                        if (sim.quality === SIMStatus.QUALITY) {
                             // @ts-ignore
                             monthlyActivations[monthKey] = (monthlyActivations[monthKey] || 0) + 1;
                         }
