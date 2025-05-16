@@ -5,9 +5,10 @@ export const teamService = {
     // Get all teams
     async getAllTeams() {
         const supabase = createSupabaseClient();
+        console.log("f_teams")
         return supabase
             .from('teams')
-            .select('*, users!leader_id(full_name)')
+            .select('*, leader_id(*)')
             .order('name');
     },
     async count() {

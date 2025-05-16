@@ -28,8 +28,8 @@ export const simCardService = {
       .ilike('serial_number', searchTerm ? `%${searchTerm}%` : '%')
       .eq(status ? 'status' : 'id', status || '')
       .eq(teamId ? 'team_id' : 'id', teamId || '')
-      .gte(fromDate ? 'sale_date' : 'id', fromDate || '')
-      .lte(toDate ? 'sale_date' : 'id', toDate || '');
+      .gte(fromDate ? 'created_at' : 'id', fromDate || '')
+      .lte(toDate ? 'created_at' : 'id', toDate || '');
 
     // Then get paginated data
     const { data, error } = await supabase

@@ -48,6 +48,7 @@ export default function TeamsManagement() {
         if (!user) return;
         const fetchTeams = async () => {
             setIsLoading(true);
+
             try {
                 const {data, error} = await teamService.getAllTeams();
                 if (error) throw new Error(error.message);
@@ -59,20 +60,8 @@ export default function TeamsManagement() {
             }
         };
 
-        // Fetch leaders data - in a real app, you'd have a userService
-        const fetchLeaders = async () => {
-            // This is a placeholder. You would need to create a userService with a getTeamLeaders method
-            // For now, we'll use some dummy data
-            setLeaders([
-                {id: "1", full_name: "John Doe"},
-                {id: "2", full_name: "Jane Smith"},
-                {id: "3", full_name: "Michael Johnson"},
-            ]);
-        };
-
-        fetchTeams();
-        // fetchLeaders();
-    }, []);
+        fetchTeams()
+    }, [user]);
 
 
     const handleUpdateTeam = async () => {
