@@ -1,18 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 
 // This endpoint will be called by Intersend when payment completes
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ status: 'error', message: 'Method not allowed' });
-  }
-
+export async function POST(request: NextRequest) {
   try {
+    // Parse the request body
+    const body = await request.json();
+
     // Validate the webhook payload
-    const { reference, status, transaction_id } = req.body;
+    const { reference, status, transaction_id } = body;
 
     if (!reference || !status) {
-      return res.status(400).json({ status: 'error', message: 'Invalid webhook payload' });
+      return NextResponse.json(
+        { status: 'error', message: 'Invalid webhook payload' },
+        { status: 400 }
+      );
     }
 
     // Process the payment
@@ -27,10 +29,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     // Always return success to Intersend
-    return res.status(200).json({ status: 'success' });
+    return NextResponse.json({ status: 'success' });
   } catch (error) {
     console.error('Webhook processing error:', error);
     // Still return 200 to prevent Intersend from retrying
-    return res.status(200).json({ status: 'success' });
+    return NextResponse.json({ status: 'success' });
   }
+}
+
+// Optional: Define which HTTP methods are allowed
+export async function GET() {
+  return NextResponse.json(
+    { status: 'error', message: 'Method not allowed' },
+    { status: 405 }
+  );
 }
