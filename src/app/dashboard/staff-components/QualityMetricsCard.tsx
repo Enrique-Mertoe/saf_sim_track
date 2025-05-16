@@ -17,13 +17,13 @@ const QualityMetricsCard: React.FC<QualityMetricsCardProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [currentMetrics, setCurrentMetrics] = useState<{
         totalSims: number;
-        activatedSims: number;
+        matchedSims: number;
         qualitySims: number;
         performancePercentage: number;
     } | null>(null);
     const [previousMetrics, setPreviousMetrics] = useState<{
         totalSims: number;
-        activatedSims: number;
+        matchedSims: number;
         qualitySims: number;
         performancePercentage: number;
     } | null>(null);
@@ -190,7 +190,7 @@ const QualityMetricsCard: React.FC<QualityMetricsCardProps> = ({
                         <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded">
                             <div className="text-sm text-gray-500 dark:text-gray-300">Activated SIMs</div>
                             <div
-                                className="text-lg font-semibold text-gray-800 dark:text-white">{currentMetrics.activatedSims}</div>
+                                className="text-lg font-semibold text-gray-800 dark:text-white">{currentMetrics.matchedSims}</div>
                         </div>
                     </div>
 
