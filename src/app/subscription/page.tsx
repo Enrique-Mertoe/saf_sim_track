@@ -21,7 +21,7 @@ export default function SubscriptionPage() {
   const plans = {
     basic: {
       name: 'Basic',
-      price: 2999,
+      price: 500,
       description: 'For small distribution teams',
       features: [
         'Up to 5 team members',
@@ -33,7 +33,7 @@ export default function SubscriptionPage() {
     },
     professional: {
       name: 'Professional',
-      price: 4999,
+      price: 1000,
       description: 'For growing distribution networks',
       features: [
         'Up to 20 team members',
@@ -48,7 +48,7 @@ export default function SubscriptionPage() {
     },
     enterprise: {
       name: 'Enterprise',
-      price: 9999,
+      price: 1500,
       description: 'For large scale operations',
       features: [
         'Unlimited team members',
@@ -173,7 +173,7 @@ export default function SubscriptionPage() {
                 <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                   <div className="rounded-md shadow">
                     <a
-                      href="#pricing"
+                      href="/dashboard"
                       className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg md:px-10"
                     >
                       Get started
