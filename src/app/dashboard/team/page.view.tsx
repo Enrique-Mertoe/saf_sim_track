@@ -70,7 +70,7 @@ export default function TeamsManagement() {
             ]);
         };
 
-        // fetchTeams();
+        fetchTeams();
         // fetchLeaders();
     }, []);
 
