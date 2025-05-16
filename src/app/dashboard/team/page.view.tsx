@@ -94,7 +94,7 @@ export default function TeamsManagement() {
     const openEditModal = (team: Team) => {
 
         setCurrentTeam(team);
-        const data={
+        const data = {
             name: team.name,
             leader_id: team.leader_id,
             region: team.region,
@@ -149,9 +149,9 @@ export default function TeamsManagement() {
 
 
     return (
-        <div className="px-4  py-6">
+        <div className="px-4 py-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Team Management</h1>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Team Management</h1>
                 <button
                     onClick={cr}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -161,49 +161,49 @@ export default function TeamsManagement() {
             </div>
 
             {/* Teams Table */}
-            <div className="bg-white shadow overflow-hidden rounded-lg">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+            <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Team
                             Name
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leader</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Region</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Leader</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Region</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {teams.map((team) => (
-                        <tr key={team.id} className="hover:bg-gray-50">
+                        <tr key={team.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">{team.name}</div>
+                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{team.name}</div>
                             </td>
-
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <div
-                                    className="text-sm text-gray-900">{team.users?.full_name || "Not assigned"}</div>
+                                    className="text-sm text-gray-900 dark:text-gray-100">{team.users?.full_name || "Not assigned"}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{team.region}</div>
+                                <div className="text-sm text-gray-900 dark:text-gray-100">{team.region}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <button
                                     onClick={() => openEditModal(team)}
-                                    className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 mr-3"
                                 >
                                     Edit
                                 </button>
-                                {/*<Link href={`/admin/teams/${team.id}`}*/}
-                                {/*      className="text-green-600 hover:text-green-900">*/}
-                                {/*    View Details*/}
-                                {/*</Link>*/}
+                                {/*
+                            <Link href={`/admin/teams/${team.id}`} className="text-green-600 hover:text-green-900">
+                                View Details
+                            </Link>
+                            */}
                             </td>
                         </tr>
                     ))}
                     {teams.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                            <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                                 No teams found. Create your first team to get started.
                             </td>
                         </tr>
@@ -211,13 +211,12 @@ export default function TeamsManagement() {
                     </tbody>
                 </table>
             </div>
-
-
         </div>
+
     );
 }
 
-const EditTeam = function ({data,leaders, onClose, handleUpdateTeam}: any) {
+const EditTeam = function ({data, leaders, onClose, handleUpdateTeam}: any) {
     const [formData, setFormData] = useState<TeamFormData>(data);
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const {name, value} = e.target;
@@ -268,7 +267,8 @@ const EditTeam = function ({data,leaders, onClose, handleUpdateTeam}: any) {
                             name="leader_id"
                             value={formData.leader_id}
                             onChange={handleInputChange}
-                            onSelect={()=>{}}
+                            onSelect={() => {
+                            }}
                             className="mt-1 block w-full  p-3 outline-0 rounded-md border-gray-300 dark:border-slate-600 shadow-sm focus:border-green-500 focus:ring-green-500 dark:bg-slate-700 dark:text-white appearance-none"
                             required
                         >

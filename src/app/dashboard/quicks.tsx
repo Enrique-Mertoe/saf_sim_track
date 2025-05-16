@@ -5,25 +5,17 @@ import {FC, useEffect, useState} from "react";
 import {userService} from "@/services";
 import {UserRole} from "@/models";
 import useApp from "@/ui/provider/AppProvider";
+import {useRouter} from "next/navigation";
 
 export default function DashQuickActions() {
     const dialog = useDialog()
     const {user} = useApp();
+     const router = useRouter();
     return (
         <div className="">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">Quick Actions</h2>
                 <div className="space-y-4 grid grid-cols-2 gap-2">
-                    <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 rounded-lg transition-colors">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-full mr-4">
-                                <Smartphone className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Register New SIM</span>
-                        </div>
-                        <ArrowUpRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400"/>
-                    </button>
                     <button
                         onClick={() => CreateUser(dialog, user!, {})
                         }
@@ -37,6 +29,7 @@ export default function DashQuickActions() {
                         <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400"/>
                     </button>
                     <button
+                        onClick={()=>router.push("/dashboard/report")}
                         className="w-full cursor-pointer flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
                             <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-full mr-4">
@@ -47,24 +40,15 @@ export default function DashQuickActions() {
                         <ArrowUpRight className="h-4 w-4 text-blue-600 dark:text-blue-400"/>
                     </button>
                     <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-800/40 rounded-lg transition-colors">
+                          onClick={()=>router.push("/dashboard/team")}
+                        className="w-full col-span-2 cursor-pointer flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
                             <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-full mr-4">
                                 <Activity className="h-5 w-5 text-purple-600 dark:text-purple-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">View Team Performance</span>
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">View Teams</span>
                         </div>
                         <ArrowUpRight className="h-4 w-4 text-purple-600 dark:text-purple-400"/>
-                    </button>
-                    <button
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 rounded-lg transition-colors">
-                        <div className="flex items-center">
-                            <div className="p-2 bg-red-100 dark:bg-red-800 rounded-full mr-4">
-                                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400"/>
-                            </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Review Flagged SIMs</span>
-                        </div>
-                        <ArrowUpRight className="h-4 w-4 text-red-600 dark:text-red-400"/>
                     </button>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 // import {createSupabaseClient} from "@/lib/supabase";
 import {UserCreate, UserRole, UserUpdate} from "@/models";
 import {createServerSupabaseClient} from "@/lib/server-supabase";
-import { createSupabaseClient } from "@/lib/supabase/client";
+import {createSupabaseClient} from "@/lib/supabase/client";
 
 export const userService = {
     // Get all users (admins only)
@@ -121,5 +121,8 @@ export const userService = {
             .from('users')
             .update({is_active: isActive})
             .eq('id', userId);
+    },
+    async deleteUser(id: string) {
+        return {data: {}, error: {}}
     }
 };

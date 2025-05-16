@@ -243,16 +243,16 @@ export default function SafaricomDashboard() {
                             initial={{opacity: 0, y: 20}}
                             animate={{opacity: 1, y: 0}}
                             transition={{duration: 0.6, delay: 0.1}}
-                            className="bg-white p-6 rounded-lg shadow-md"
+                            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
                         >
-                            <h2 className="text-lg font-semibold mb-4 flex items-center">
-                                <Activity size={18} className="mr-2 text-indigo-600"/>
+                            <h2 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
+                                <Activity size={18} className="mr-2 text-indigo-600 dark:text-indigo-400"/>
                                 SIM Sales & Activations
                             </h2>
                             <div className="h-72">
                                 {loading ? (
                                     <div className="h-full flex items-center justify-center">
-                                        <p className="text-gray-500">Loading chart data...</p>
+                                        <p className="text-gray-500 dark:text-gray-400">Loading chart data...</p>
                                     </div>
                                 ) : salesData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
@@ -260,10 +260,29 @@ export default function SafaricomDashboard() {
                                             data={salesData}
                                             margin={{top: 5, right: 30, left: 20, bottom: 5}}
                                         >
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>
-                                            <XAxis dataKey="name" stroke="#888"/>
-                                            <YAxis stroke="#888"/>
-                                            <Tooltip/>
+                                            <CartesianGrid
+                                                strokeDasharray="3 3"
+                                                stroke="#f0f0f0"
+                                            />
+                                            <XAxis
+                                                dataKey="name"
+                                                stroke="#888"
+                                            />
+                                            <YAxis
+                                                stroke="#888"
+                                            />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: '#ffffff',
+                                                    color: '#000000'
+                                                }}
+                                                wrapperStyle={{
+                                                    backgroundColor: 'transparent'
+                                                }}
+                                                labelStyle={{
+                                                    color: '#000000'
+                                                }}
+                                            />
                                             <Legend/>
                                             <Line
                                                 type="monotone"
@@ -287,11 +306,12 @@ export default function SafaricomDashboard() {
                                     </ResponsiveContainer>
                                 ) : (
                                     <div className="h-full flex items-center justify-center">
-                                        <p className="text-gray-500">No data available</p>
+                                        <p className="text-gray-500 dark:text-gray-400">No data available</p>
                                     </div>
                                 )}
                             </div>
                         </motion.div>
+
                         <DashQuickActions/>
                     </div>
                     {/* Bottom Section */}
@@ -301,27 +321,29 @@ export default function SafaricomDashboard() {
                             initial={{opacity: 0, y: 20}}
                             animate={{opacity: 1, y: 0}}
                             transition={{duration: 0.6, delay: 0.3}}
-                            className="bg-white p-6 rounded-lg shadow-md lg:col-span-2"
+                            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md lg:col-span-2"
                         >
-                            <h2 className="text-lg font-semibold mb-4 flex items-center">
-                                <Calendar size={18} className="mr-2 text-indigo-600"/>
+                            <h2 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
+                                <Calendar size={18} className="mr-2 text-indigo-600 dark:text-indigo-400"/>
                                 Recent SIM Cards
                             </h2>
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead>
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leader</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quality</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Serial</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Leader</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Staff</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quality</th>
                                     </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody
+                                        className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-4 text-center text-gray-500">Loading...
+                                            <td colSpan={5}
+                                                className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">Loading...
                                             </td>
                                         </tr>
                                     ) : recentSims.length > 0 ? (
@@ -334,39 +356,38 @@ export default function SafaricomDashboard() {
                                                 transition={{duration: 0.3, delay: 0.1 * index}}
                                                 whileHover={{backgroundColor: '#f9fafb'}}
                                             >
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     {
                                                         //@ts-ignore
                                                         sim.serial}
                                                 </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{
                                                     //@ts-ignore
                                                     sim.date}</td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {sim.leader}
                                                 </td>
-                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {sim.staff}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              sim.quality === SIMStatus.QUALITY ? 'bg-green-100 text-green-800' :
-                                  //@ts-ignore
-                                  sim.quality === SIMStatus.NONQUALITY ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-red-100 text-red-800'
-                          }`}>
-                            {
-                                sim.quality}
-                          </span>
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    sim.quality === SIMStatus.QUALITY
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-200 dark:text-green-900'
+                                        : sim.quality === SIMStatus.NONQUALITY
+                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-200 dark:text-yellow-900'
+                                            : 'bg-red-100 text-red-800 dark:bg-red-200 dark:text-red-900'
+                                }`}>
+                                    {sim.quality}
+                                </span>
                                                 </td>
                                             </motion.tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={5} className="px-4 py-4 text-center text-gray-500">No recent
-                                                SIM cards found
+                                            <td colSpan={5}
+                                                className="px-4 py-4 text-center text-gray-500 dark:text-gray-400">No
+                                                recent SIM cards found
                                             </td>
                                         </tr>
                                     )}
@@ -374,6 +395,7 @@ export default function SafaricomDashboard() {
                                 </table>
                             </div>
                         </motion.div>
+
                     </div>
                 </div>
             </div>
