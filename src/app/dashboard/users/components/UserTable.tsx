@@ -101,6 +101,34 @@ export default function UserTable({
     };
 
     const handleDeleteClick = (user: User) => {
+        const d = dialog.create({
+            content: (
+
+                <div className="p-6 bg-white rounded-md dark:bg-gray-800">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Deletion</h3>
+                    <p className="mb-6 text-gray-700 dark:text-gray-300">
+                        Are you sure you want to delete {user.full_name}?
+                    </p>
+                    <div className="flex justify-end space-x-3">
+                        <button
+                            onClick={() => d.dismiss()}
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                d.dismiss();
+                                confirmDeleteUser();
+                            }}
+                            className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            ),
+        });
         setConfirmDelete(user.id);
     };
 
@@ -204,9 +232,6 @@ export default function UserTable({
         finalizeDelete();
     };
 
-    const cancelDelete = () => {
-        setConfirmDelete(null);
-    };
     const dialog = useDialog()
     const handleViewUser = (user: User) => {
         setViewUser(user);
@@ -300,13 +325,147 @@ export default function UserTable({
 
     const handleEditUser = (user: User) => {
         setEditUser(user);
-        setEditFormData({
+        const formData = {
             full_name: user.full_name,
             email: user.email,
             phone_number: user.phone_number,
             id_number: user.id_number,
             role: user.role,
             status: user.status
+        };
+        setEditFormData(formData);
+
+        const d = dialog.create({
+            content: (
+
+                <div className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                            Edit User
+                        </h3>
+                        <button
+                            onClick={() => d.dismiss()}
+                            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xl font-bold transition-colors"
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <form className="space-y-6" onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmitEdit(e).then(() => d.dismiss());
+                    }}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="full_name"
+                                    value={formData.full_name}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Phone Number
+                                </label>
+                                <input
+                                    type="text"
+                                    name="phone_number"
+                                    value={formData.phone_number}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    ID Number
+                                </label>
+                                <input
+                                    type="text"
+                                    name="id_number"
+                                    value={formData.id_number}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Role
+                                </label>
+                                <select
+                                    name="role"
+                                    value={formData.role}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                                >
+                                    <option value="admin">Admin</option>
+                                    <option value="TEAM_LEADER">Team Leader</option>
+                                    <option value="staff">Staff</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Status
+                                </label>
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleInputChange}
+                                    className="block w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                                >
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="SUSPENDED">Suspended</option>
+                                    <option value="PENDING_APPROVAL">Pending Approval</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                onClick={() => d.dismiss()}
+                                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                disabled={isSubmitting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 size={16} className="mr-2 animate-spin"/>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    "Save Changes"
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            ),
+            size: "lg"
         });
     };
 
@@ -354,20 +513,22 @@ export default function UserTable({
     };
 
     return (
+
         <div
-            className="w-full bg-white dark:bg-gray-900 shadow-md rounded-lg relative"
+            className="w-full bg-white dark:bg-gray-800  rounded-lg relative"
             ref={tableRef}
         >
             {/* Search Bar */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="relative max-w-md mx-auto sm:max-w-full">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div
+                className="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-20">
+                <div className="relative max-w-md mx-auto sm:max-w-full transition-all duration-200">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                     </div>
                     <input
                         type="text"
                         placeholder="Search users by anything..."
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 sm:text-sm shadow-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -378,8 +539,9 @@ export default function UserTable({
                 <div className="py-2 align-middle px-4">
                     <div className="shadow-sm border-b border-gray-200 dark:border-gray-700 rounded-lg">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
+                            <table
+                                className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed md:table-auto">
+                            <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
                                 <tr>
                                     <th
                                         scope="col"
@@ -403,17 +565,11 @@ export default function UserTable({
                                         scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                                     >
-                                        Contact
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >
                                         Last Login
                                     </th>
                                     <th
                                         scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider bg-gray-50 dark:bg-gray-800 transition-colors duration-200"
                                     >
                                         Actions
                                     </th>
@@ -470,19 +626,16 @@ export default function UserTable({
                             {user.role}
                           </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {user.phone_number}
-                                            </td>
                                             <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                 {user.last_login_at
                                                     ? formatDate(user.last_login_at)
                                                     : "Never"}
                                             </td>
                                             <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex flex-wrap items-center gap-2 md:gap-3">
                                                     <button
                                                         onClick={() => handleViewUser(user)}
-                                                        className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center"
+                                                        className="inline-flex items-center px-2 py-1 text-sm rounded-md text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200"
                                                     >
                                                         <Eye size={16} className="mr-1"/>
                                                         View
@@ -513,190 +666,6 @@ export default function UserTable({
                 </div>
             </div>
 
-            {/* Edit User Modal */}
-            <AnimatePresence>
-                {editUser && editFormData && (
-                    <div className="fixed inset-0 z-50">
-                        <motion.div
-                            initial={{opacity: 0, y: -50}}
-                            animate={{opacity: 1, y: 0}}
-                            exit={{opacity: 0, y: -50}}
-                            transition={{duration: 0.2}}
-                            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl mx-auto mt-20"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Edit User
-                                </h3>
-                                <button
-                                    onClick={closeModals}
-                                    className="text-gray-500 hover:text-gray-700 text-xl font-bold"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                            <form className="space-y-4" onSubmit={handleSubmitEdit}>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Full Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="full_name"
-                                            value={editFormData.full_name}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={editFormData.email}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Phone Number
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="phone_number"
-                                            value={editFormData.phone_number}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            ID Number
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="id_number"
-                                            value={editFormData.id_number}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Role
-                                        </label>
-                                        <select
-                                            name="role"
-                                            value={editFormData.role}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                        >
-                                            <option value="admin">Admin</option>
-                                            <option value="TEAM_LEADER">Team Leader</option>
-                                            <option value="staff">Staff</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Status
-                                        </label>
-                                        <select
-                                            name="status"
-                                            value={editFormData.status}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                                        >
-                                            <option value="ACTIVE">Active</option>
-                                            <option value="SUSPENDED">Suspended</option>
-                                            <option value="PENDING_APPROVAL">Pending Approval</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="mt-6 flex justify-end space-x-3">
-                                    <button
-                                        type="button"
-                                        onClick={closeModals}
-                                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                        disabled={isSubmitting}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 size={16} className="mr-2 animate-spin"/>
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            "Save Changes"
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* Delete Confirmation Modal */}
-            <AnimatePresence>
-                {confirmDelete && (
-                    <div className="fixed inset-0 z-50">
-                        <motion.div
-                            initial={{opacity: 0, y: -50}}
-                            animate={{opacity: 1, y: 0}}
-                            exit={{opacity: 0, y: -50}}
-                            transition={{duration: 0.2}}
-                            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md mx-auto mt-20"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                                Confirm Deletion
-                            </h3>
-                            <p className="mb-6 dark:text-white text-gray-700">
-                                Are you sure you want to delete{" "}
-                                {localUsers.find((u) => u.id === confirmDelete)?.full_name}?
-                            </p>
-                            <div className="flex justify-end space-x-3">
-                                <button
-                                    onClick={cancelDelete}
-                                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                    disabled={isDeleting}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDeleteUser}
-                                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
-                                    disabled={isDeleting}
-                                >
-                                    {isDeleting ? (
-                                        <>
-                                            <Loader2 size={16} className="mr-2 animate-spin"/>
-                                            Deleting...
-                                        </>
-                                    ) : (
-                                        "Delete"
-                                    )}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* Success Modal */}
             <AnimatePresence>

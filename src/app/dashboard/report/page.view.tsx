@@ -164,60 +164,64 @@ const Reports: React.FC = () => {
 
     return (
         <Dashboard>
+            
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="container mx-auto px-4 py-8 max-w-6xl"
+                className="container mx-auto px-4 py-8 max-w-6xl dark:bg-gray-900"
             >
                 <motion.div
                     variants={itemVariants}
-                    className="bg-white rounded-lg shadow-lg p-6"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
                 >
-                    <h1 className="text-3xl font-bold text-gray-800 mb-6">SIM Card Reports</h1>
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">SIM Card Reports</h1>
 
                     <div className="mb-8">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-gray-700">Process Safaricom Reports</h2>
+                            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">Process Safaricom
+                                Reports</h2>
                         </div>
 
                         <div className="flex justify-between mb-8">
                             <motion.div
-                                className={`step-indicator flex items-center ${activeStep >= 1 ? 'text-green-600' : 'text-gray-400'}`}
+                                className={`step-indicator flex items-center ${activeStep >= 1 ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}
                                 animate={{scale: activeStep === 1 ? 1.05 : 1}}
                                 whileHover={{scale: 1.05}}
                             >
                                 <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${activeStep >= 1 ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                    <FiUploadCloud className="w-5 h-5"/>
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${activeStep >= 1 ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                <FiUploadCloud className="w-5 h-5"/>
                                 </div>
                                 <span className="ml-2 font-medium">Upload</span>
                             </motion.div>
 
-                            <div className={`h-0.5 w-16 ${activeStep >= 2 ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+                            <div
+                                className={`h-0.5 w-16 ${activeStep >= 2 ? 'bg-green-600 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
 
                             <motion.div
-                                className={`step-indicator flex items-center ${activeStep >= 2 ? 'text-green-600' : 'text-gray-400'}`}
+                                className={`step-indicator flex items-center ${activeStep >= 2 ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}
                                 animate={{scale: activeStep === 2 ? 1.05 : 1}}
                                 whileHover={{scale: 1.05}}
                             >
                                 <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${activeStep >= 2 ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                    <FiCheck className="w-5 h-5"/>
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${activeStep >= 2 ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                <FiCheck className="w-5 h-5"/>
                                 </div>
                                 <span className="ml-2 font-medium">Process</span>
                             </motion.div>
 
-                            <div className={`h-0.5 w-16 ${activeStep >= 3 ? 'bg-green-600' : 'bg-gray-300'}`}></div>
+                            <div
+                                className={`h-0.5 w-16 ${activeStep >= 3 ? 'bg-green-600 dark:bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
 
                             <motion.div
-                                className={`step-indicator flex items-center ${activeStep >= 3 ? 'text-green-600' : 'text-gray-400'}`}
+                                className={`step-indicator flex items-center ${activeStep >= 3 ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}
                                 animate={{scale: activeStep === 3 ? 1.05 : 1}}
                                 whileHover={{scale: 1.05}}
                             >
                                 <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${activeStep >= 3 ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                    <FiFileText className="w-5 h-5"/>
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center ${activeStep >= 3 ? 'bg-green-100 dark:bg-green-900' : 'bg-gray-100 dark:bg-gray-700'}`}>
+                                <FiFileText className="w-5 h-5"/>
                                 </div>
                                 <span className="ml-2 font-medium">Results</span>
                             </motion.div>
@@ -257,7 +261,8 @@ const Reports: React.FC = () => {
                                 />
 
                                 <div className="mt-8">
-                                    <h3 className="text-lg font-medium text-gray-700 mb-4">Team Reports</h3>
+                                    <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-4">Team
+                                        Reports</h3>
                                     <TeamReportsList teamReports={processedReport.teamReports}/>
                                 </div>
                             </>

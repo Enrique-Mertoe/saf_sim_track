@@ -20,6 +20,7 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({ teamReports }) => {
   };
 
   return (
+      
     <div className="space-y-4">
       {teamReports.map((team, index) => (
         <motion.div
@@ -27,25 +28,25 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({ teamReports }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
         >
           <div
-            className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50"
-            onClick={() => toggleTeam(team.teamName)}
+              className="flex items-center justify-between px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+              onClick={() => toggleTeam(team.teamName)}
           >
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
                 <FiUsers className="text-green-600 w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">{team.teamName}</h3>
-                <p className="text-sm text-gray-500">
-                  {team.records.length} SIMs, {team.matchedCount} matched, {team.qualityCount} quality
+                <h3 className="font-medium text-gray-900 dark:text-white">{team.teamName}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                {team.records.length} SIMs, {team.matchedCount} matched, {team.qualityCount} quality
                 </p>
               </div>
             </div>
             <div className="flex items-center">
-              <span className="mr-2 text-sm font-medium text-gray-900">
+              <span className="mr-2 text-sm font-medium text-gray-900 dark:text-white">
                 {Math.round((team.matchedCount / team.records.length) * 100)}% Match Rate
               </span>
               {expandedTeam === team.teamName ? (
@@ -68,18 +69,19 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({ teamReports }) => {
                 <div className="px-6 py-4">
                   <div className="flex items-center mb-4">
                     <FiDatabase className="text-gray-500 mr-2" />
-                    <h4 className="font-medium text-gray-800">Records Sample</h4>
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200">Records Sample</h4>
                   </div>
 
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
+                      <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
                           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Serial Number
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Top Up
+                        <th scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Top Up
                           </th>
                           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Dealer
@@ -92,26 +94,27 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({ teamReports }) => {
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {team.records.slice(0, 5).map((record, idx) => (
-                          <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {record.simSerialNumber}
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {team.records.slice(0, 5).map((record, idx) => (
+                          <tr key={idx}
+                              className={idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {record.simSerialNumber}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {record.topUpAmount}
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {record.topUpAmount}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {record.dealerName}
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {record.dealerName}
                             </td>
-                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                              {record.uploadedBy}
+                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                            {record.uploadedBy}
                             </td>
                             <td className="px-4 py-2 whitespace-nowrap">
                               <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                record.qualitySim ? 'bg-green-100 text-green-800' : 
-                                record.matched ? 'bg-green-100 text-green-800' : 
-                                'bg-gray-100 text-gray-800'
+                                  record.qualitySim ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' :
+                                      record.matched ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300' :
+                                          'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
                               }`}>
                                 {record.qualitySim ? 'Quality' : record.matched ? 'Matched' : 'Unmatched'}
                               </span>
@@ -121,7 +124,7 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({ teamReports }) => {
                       </tbody>
                     </table>
                     {team.records.length > 5 && (
-                      <div className="text-center py-2 text-sm text-gray-500">
+                        <div className="text-center py-2 text-sm text-gray-500 dark:text-gray-400">
                         + {team.records.length - 5} more records
                       </div>
                     )}

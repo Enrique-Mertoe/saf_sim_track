@@ -61,7 +61,7 @@ export interface ProcessedReport {
   qualityCount: number;
   unmatchedCount: number;
   totalCount: number;
-  rawData: any; // Excel data
+  // rawData: any; // Excel data
 }
 
 export interface ValidationError {

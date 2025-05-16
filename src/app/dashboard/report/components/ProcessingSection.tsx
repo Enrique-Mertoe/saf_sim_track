@@ -20,31 +20,32 @@ const ProcessingSection: React.FC<ProcessingSectionProps> = ({
   onBack,
 }) => {
   return (
+      
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="border rounded-lg p-6"
+      className="border rounded-lg p-6 dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-medium text-gray-700">Report Details</h3>
+        <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">Report Details</h3>
         <button
-          onClick={onBack}
-          className="flex items-center text-green-600 hover:text-green-800"
-          disabled={isProcessing}
+            onClick={onBack}
+            className="flex items-center text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+            disabled={isProcessing}
         >
           <FiArrowLeft className="mr-1" /> Back
         </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-500">Total Records</p>
-          <p className="text-xl font-semibold">{reportData.records.length}</p>
+        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Records</p>
+          <p className="text-xl font-semibold dark:text-white">{reportData.records.length}</p>
         </div>
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-500">Date Range</p>
-          <p className="text-xl font-semibold">
-            {/*{reportData.dateRange.start} - {reportData.dateRange.end}*/}
+        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Date Range</p>
+          <p className="text-xl font-semibold dark:text-white">
+          {/*{reportData.dateRange.start} - {reportData.dateRange.end}*/}
           </p>
         </div>
       </div>
@@ -52,9 +53,9 @@ const ProcessingSection: React.FC<ProcessingSectionProps> = ({
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-600 mb-2">Sample Data</h4>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SIM Serial</th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dealer</th>
@@ -105,7 +106,7 @@ const ProcessingSection: React.FC<ProcessingSectionProps> = ({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleProcessReport}
-          className="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
+          className="w-full px-6 py-3 bg-green-600 text-white font-medium rounded-lg shadow-md hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
         >
           Process Report
         </motion.button>

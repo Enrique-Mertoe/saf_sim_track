@@ -1,4 +1,4 @@
-// src/pages/Reports/utils/reportProcessor.ts
+
 import {DatabaseRecord, ProcessedRecord, ProcessedReport, Report, SafaricomRecord, TeamReport} from '../types';
 import simService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
@@ -125,8 +125,8 @@ export const processReport = async (
     // Update progress
     progressCallback(90);
 
-    // Create mock Excel data (in a real app, this would be the actual raw data)
-    const rawData = new Uint8Array([1, 2, 3, 4, 5]); // Placeholder
+    // // Create mock Excel data (in a real app, this would be the actual raw data)
+    // const rawData = new Uint8Array([1, 2, 3, 4, 5]); // Placeholder
 
     // Update progress
     progressCallback(100);
@@ -138,6 +138,5 @@ export const processReport = async (
         qualityCount,
         unmatchedCount,
         totalCount: processedRecords.length,
-        rawData,
     };
 };
