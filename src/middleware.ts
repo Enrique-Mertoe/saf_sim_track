@@ -7,6 +7,8 @@ const freePaths = [
     '/accounts',
     "/api/auth",
     "/tt1",
+    "/help",
+    "/contact-us",
 ];
 
 export async function middleware(req: NextRequest) {
