@@ -1,5 +1,6 @@
 import {SIMCardCreate, SIMCardUpdate, SIMStatus} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
+import SignalEvent from "@/lib/supabase/signal";
 
 export const simCardService = {
     // Search SIM cards with various filters

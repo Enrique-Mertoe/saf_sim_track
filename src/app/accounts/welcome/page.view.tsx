@@ -2,8 +2,9 @@
 // WelcomePage.tsx
 import React, {useState, useEffect} from 'react';
 import Image from 'next/image';
-import {AnimatePresence, motion} from 'framer-motion';
+import {motion} from 'framer-motion';
 import {authService} from "@/services";
+import welcomIcon from "@/app/welcome-illustration.svg"
 
 // Type definitions
 interface FormState {
@@ -142,7 +143,7 @@ const WelcomePage: React.FC = () => {
 
     return (
         <div
-            className="w-full md:w-1/2 light:bg-gradient-to-b from-green-50 to-white dark:!bg-gray-600  text-center flex flex-col justify-center items-center p-4 relative overflow-hidden">
+            className="w-full light:bg-gradient-to-b from-green-50 to-white dark:!bg-gray-600  text-center flex flex-col justify-center items-center p-4 relative overflow-hidden">
             {/* Background animated elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div
@@ -192,7 +193,7 @@ const WelcomePage: React.FC = () => {
                         >
                             <div className="w-32 h-32 relative mb-6 animate-float">
                                 <Image
-                                    src="/welcome-illustration.svg"
+                                    src={welcomIcon}
                                     alt="Welcome"
                                     layout="fill"
                                     className="object-contain"

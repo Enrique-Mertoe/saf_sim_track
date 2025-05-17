@@ -118,9 +118,10 @@ const ResetPassword = () => {
     };
 
     return (
+        
         <div
-            className="flex w-full md:w-1/2 flex-col items-center justify-center  bg-gradient-to-br from-green-50 to-indigo-50 min-h-screen p-4">
-            <motion.div
+            className="flex w-full flex-col items-center justify-center bg-gradient-to-br from-green-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 min-h-screen p-4">
+        <motion.div
                 initial={{opacity: 0, y: -20}}
                 animate={{opacity: 1, y: 0}}
                 transition={{duration: 0.5}}
@@ -138,7 +139,7 @@ const ResetPassword = () => {
                         initial={{opacity: 0, x: -20}}
                         animate={{opacity: 1, x: 0}}
                         transition={{delay: 0.3}}
-                        className="text-2xl font-bold text-gray-800"
+                        className="text-2xl font-bold text-gray-800 dark:text-gray-100"
                     >
                         Reset Your Password
                     </motion.h2>
@@ -150,7 +151,7 @@ const ResetPassword = () => {
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: "auto"}}
                             exit={{opacity: 0, height: 0}}
-                            className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded mb-4 flex items-start"
+                            className="bg-red-100 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-400 p-4 rounded mb-4 flex items-start"
                         >
                             <AlertCircle className="mr-2 mt-1 flex-shrink-0" size={18}/>
                             <span>{error}</span>
@@ -162,7 +163,7 @@ const ResetPassword = () => {
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: "auto"}}
                             exit={{opacity: 0, height: 0}}
-                            className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-4 flex items-start"
+                            className="bg-green-100 dark:bg-green-900/30 border-l-4 border-green-500 text-green-700 dark:text-green-400 p-4 rounded mb-4 flex items-start"
                         >
                             <CheckCircle className="mr-2 mt-1 flex-shrink-0" size={18}/>
                             <span>{message}</span>
@@ -181,7 +182,7 @@ const ResetPassword = () => {
                                 type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 pr-10 transition-all duration-200"
+                                className="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 pr-10 transition-all duration-200"
                                 required
                             />
                             <button
@@ -200,16 +201,17 @@ const ResetPassword = () => {
                                 animate={{opacity: 1}}
                                 className="mt-2"
                             >
-                                <div className="h-2 w-full bg-gray-200 rounded-full mt-2 overflow-hidden">
-                                    <motion.div
+                                <div
+                                    className="h-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full mt-2 overflow-hidden">
+                                <motion.div
                                         initial={{width: 0}}
                                         animate={{width: `${passwordStrength * 100}%`}}
                                         transition={{duration: 0.5}}
                                         className={`h-full ${getStrengthColor()}`}
                                     />
                                 </div>
-                                <div className="text-xs mt-1 text-gray-600">
-                                    Password strength: {
+                                <div className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+                                Password strength: {
                                     passwordStrength <= 0.2 ? "Very weak" :
                                         passwordStrength <= 0.4 ? "Weak" :
                                             passwordStrength <= 0.6 ? "Medium" :
@@ -259,12 +261,12 @@ const ResetPassword = () => {
                                 type={showPassword ? "text" : "password"}
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 pr-10 transition-all duration-200 ${
+                                className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 pr-10 transition-all duration-200 dark:bg-gray-700 dark:text-gray-100 ${
                                     confirmPassword && password !== confirmPassword
-                                        ? "border-red-300 bg-red-50"
+                                        ? "border-red-300 bg-red-50 dark:border-red-500 dark:bg-red-900/30"
                                         : confirmPassword
-                                            ? "border-green-300 bg-green-50"
-                                            : "border-gray-300"
+                                            ? "border-green-300 bg-green-50 dark:border-green-500 dark:bg-green-900/30"
+                                            : "border-gray-300 dark:border-gray-600"
                                 }`}
                                 required
                             />

@@ -1,0 +1,44 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background  -->
+  <ellipse cx="200" cy="260" rx="180" ry="20" fill="#f3f4f6" />
+
+  <!-- Device -->
+  <rect x="150" y="60" width="100" height="180" rx="10" fill="#4F46E5" />
+  <rect x="155" y="70" width="90" height="155" rx="5" fill="#F9FAFB" />
+
+  <!-- SIM Card -->
+  <g transform="translate(175, 100) rotate(-10)">
+    <rect x="0" y="0" width="50" height="70" rx="5" fill="#FBBF24" />
+    <rect x="5" y="5" width="40" height="50" rx="2" fill="#F9FAFB" />
+    <rect x="15" y="20" width="20" height="25" rx="1" fill="#4F46E5" />
+  </g>
+
+  <!-- Phone Screen elements -->
+  <rect x="165" y="85" width="70" height="10" rx="2" fill="#E5E7EB" />
+  <rect x="165" y="105" width="40" height="5" rx="2" fill="#E5E7EB" />
+  <circle cx="180" cy="195" r="15" fill="#10B981" />
+  <path d="M175 195 L178 198 L185 191" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+
+  <!-- Decorative elements -->
+  <circle cx="120" cy="120" r="15" fill="#BFDBFE" opacity="0.7" />
+  <circle cx="280" cy="150" r="20" fill="#BFDBFE" opacity="0.7" />
+  <circle cx="100" cy="200" r="10" fill="#BFDBFE" opacity="0.7" />
+  <circle cx="300" cy="100" r="12" fill="#BFDBFE" opacity="0.7" />
+
+  <!-- Small SIM cards floating -->
+  <g transform="translate(130, 180) rotate(-20)">
+    <rect x="0" y="0" width="25" height="35" rx="3" fill="#FCD34D" />
+    <rect x="3" y="3" width="19" height="25" rx="1" fill="#F9FAFB" />
+    <rect x="7" y="10" width="11" height="13" rx="1" fill="#4F46E5" />
+  </g>
+
+  <g transform="translate(270, 130) rotate(15)">
+    <rect x="0" y="0" width="25" height="35" rx="3" fill="#FCD34D" />
+    <rect x="3" y="3" width="19" height="25" rx="1" fill="#F9FAFB" />
+    <rect x="7" y="10" width="11" height="13" rx="1" fill="#4F46E5" />
+  </g>
+
+  <!-- Waves -->
+  <path d="M100,230 Q150,210 200,230 Q250,250 300,230" fill="none" stroke="#BFDBFE" stroke-width="2" />
+  <path d="M120,245 Q170,225 220,245 Q270,265 320,245" fill="none" stroke="#BFDBFE" stroke-width="2" />
+</svg>
