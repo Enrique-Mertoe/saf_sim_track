@@ -11,9 +11,13 @@ import {
 import {teamService} from '@/services/teamService';
 import {motion} from 'framer-motion';
 import useApp from "@/ui/provider/AppProvider";
-import {TeamHierarchy} from "@/models";
+import {Team, TeamHierarchy, User} from "@/models";
+import {formatDate} from "@/helper";
 
-export const TeamStats = () => {
+type TeamAdapter = Team & {
+    users: User[]
+}
+export const TeamStats = ({teamInfo, members}: { teamInfo: TeamAdapter; members: TeamHierarchy }) => {
     const [teamStats, setTeamStats] = useState({
         totalMembers: 0,
         activeSIM: 0,
@@ -37,10 +41,6 @@ export const TeamStats = () => {
                 const teamId = user.team_id
                 if (!teamId)
                     return
-                // const {data: teams} = await teamService.getTeamById(teamId!);
-
-                // selectedTeamId || (teams && teams[0]?.id);
-
                 if (teamId) {
                     setSelectedTeamId(teamId);
 
@@ -48,12 +48,12 @@ export const TeamStats = () => {
                     const {data: performanceData} = await teamService.getTeamPerformance(teamId);
 
 
-                    // Get team members count
-                    const {data: teamMembers} = await teamService.getTeamHierarchy(teamId);
-                    // if (Array.isArray(teamMembers))
-                    const members = teamMembers[0] as TeamHierarchy
+                    // // Get team members count
+                    // const {data: teamMembers} = await teamService.getTeamHierarchy(teamId);
+                    // // if (Array.isArray(teamMembers))
+                    // const members = teamMembers[0] as TeamHierarchy
 
-                    if (performanceData && performanceData.length > 0 && teamMembers) {
+                    if (performanceData && performanceData.length > 0 && members) {
                         const currentPerformance = performanceData[0];
 
                         setTeamStats({
@@ -102,8 +102,46 @@ export const TeamStats = () => {
             >
                 <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
                 <div className="relative z-10">
-                    <h2 className="text-2xl font-bold text-white">Team Performance Dashboard</h2>
-                    <p className="text-indigo-100 dark:text-indigo-200 mt-1">Real-time metrics and analytics</p>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">Team Performance Dashboard</h2>
+                            <p className="text-indigo-100 dark:text-indigo-200 mt-1">Real-time metrics and analytics</p>
+                        </div>
+
+                        {/* Team Info Card */}
+                        <div className="bg-white/15 backdrop-blur-sm rounded-lg p-3 text-white">
+                            <h3 className="font-bold text-lg mb-1">{teamInfo?.name || 'Team'}</h3>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                <div className="flex items-center">
+                                    <span className="text-indigo-100">Region:</span>
+                                    <span className="ml-1 font-medium">{teamInfo?.region || 'N/A'}</span>
+                                </div>
+                                {teamInfo?.territory && (
+                                    <div className="flex items-center">
+                                        <span className="text-indigo-100">Territory:</span>
+                                        <span className="ml-1 font-medium">{teamInfo.territory}</span>
+                                    </div>
+                                )}
+                                {teamInfo?.van_number_plate && (
+                                    <div className="flex items-center">
+                                        <span className="text-indigo-100">Van:</span>
+                                        <span className="ml-1 font-medium">{teamInfo.van_number_plate}</span>
+                                    </div>
+                                )}
+                                <div className="flex items-center">
+                                    <span className="text-indigo-100">Status:</span>
+                                    <span
+                                        className={`ml-1 font-medium ${teamInfo?.is_active ? 'text-green-300' : 'text-rose-300'}`}>
+                                        {teamInfo?.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center col-span-2">
+                                    <span className="text-indigo-100">Created:</span>
+                                    <span className="ml-1 font-medium">{formatDate(teamInfo?.created_at)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div className="mt-4 flex items-center">
                         <div
@@ -115,8 +153,8 @@ export const TeamStats = () => {
                             <div
                                 className={`h-2 w-2 rounded-full ${teamStats.targetCompletion >= 70 ? 'bg-green-400' : teamStats.targetCompletion >= 40 ? 'bg-amber-400' : 'bg-rose-400'} mr-2`}></div>
                             <span className="text-xs text-white font-medium">
-                {teamStats.targetCompletion >= 70 ? 'On Track' : teamStats.targetCompletion >= 40 ? 'Needs Attention' : 'At Risk'}
-              </span>
+                                {teamStats.targetCompletion >= 70 ? 'On Track' : teamStats.targetCompletion >= 40 ? 'Needs Attention' : 'At Risk'}
+                            </span>
                         </div>
                     </div>
                 </div>

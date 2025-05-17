@@ -1,5 +1,5 @@
 "use client"
-import {useState, useEffect, SetStateAction} from 'react';
+import {useState, useEffect, SetStateAction, useCallback} from 'react';
 import {
     UserPlus,
     Award,
@@ -38,6 +38,8 @@ import {useRouter} from "next/navigation";
 import {CreateUser} from "@/ui/shortcuts";
 import {useDialog} from "@/app/_providers/dialog";
 import useApp from "@/ui/provider/AppProvider";
+import {teamService} from "@/services";
+import {Team, TeamHierarchy, User} from "@/models";
 
 
 // Sample data for team members
@@ -149,14 +151,19 @@ const qualityDistributionData = [
     {name: 'Non-Quality SIMs', value: 41}
 ];
 
+
+type TeamAdapter = Team & {
+    users:User[]
+}
 const COLORS = ['#4ade80', '#f87171'];
 
 export default function TeamLeader() {
     const dialog = useDialog()
     const {user} = useApp()
     const [mounted, setMounted] = useState(false);
-    const [_isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
     const [_selectedStaff, _setSelectedStaff] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [teamStats, setTeamStats] = useState({
         totalMembers: 0,
         activeSIM: 0,
@@ -164,26 +171,38 @@ export default function TeamLeader() {
         monthlyTarget: 0,
         targetCompletion: 0
     });
+    const [teamData, setTeamData] = useState<TeamAdapter | null>(null);
+    const [teamHierachy, setTeamHierarchy] = useState<TeamHierarchy | null>(null);
     const [expandedStaff, setExpandedStaff] = useState<number | null>(null);
+    const fetchTeamData = useCallback(async () => {
+        if (!user || !user.team_id) return;
+        try {
+            setIsLoading(true);
+            // Get team info
+            const {data: teamInfo, error: teamError} = await teamService.getTeamById(user.team_id!)
+
+            if (teamError) throw teamError;
+
+            // Get team members count
+            const {data: hierachy, error: countError} = await teamService.getTeamHierarchy(user.team_id)
+
+            if (countError) throw countError;
+            setTeamHierarchy(hierachy)
+            setTeamData(teamInfo);
+
+        } catch (error) {
+            console.error('Error fetching team data:', error);
+            setError('Failed to load team data. Please try again later.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [user]);
 
     useEffect(() => {
-        setMounted(true);
-
-        // Simulate data loading from Supabase
-        const timer = setTimeout(() => {
-            setTeamStats({
-                totalMembers: 5,
-                activeSIM: 562,
-                qualityPercentage: 92.7,
-                monthlyTarget: 600,
-                targetCompletion: 93.7
-            });
-
-            setIsLoading(false);
-        },);
-
-        return () => clearTimeout(timer);
-    }, []);
+        if (!user)
+            return
+        fetchTeamData().then()
+    }, [fetchTeamData, user]);
 
     const toggleStaffDetails = (id: number) => {
         if (expandedStaff === id) {
@@ -193,7 +212,15 @@ export default function TeamLeader() {
         }
     };
 
-    if (!mounted) return null;
+    if (isLoading) {
+        return (
+            <Dashboard>
+                <div className="flex justify-center items-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+                </div>
+            </Dashboard>
+        );
+    }
 
     return (
         <Dashboard>
@@ -228,7 +255,7 @@ export default function TeamLeader() {
                     </div>
 
                     {/* Team Overview Stats */}
-                    <TeamStats/>
+                    <TeamStats members={teamHierachy!} teamInfo={teamData!}/>
 
                     {/* Team Performance Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
