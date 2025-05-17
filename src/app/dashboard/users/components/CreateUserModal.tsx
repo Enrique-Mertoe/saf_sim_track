@@ -296,7 +296,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
     const progressPercent = (currentStep / totalSteps) * 100;
 
     // Step content based on current step
-    const renderStepContent = () => {
+const renderStepContent = () => {
         switch (currentStep) {
             case 1:
                 return (
@@ -307,11 +307,11 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                         transition={{duration: 0.3}}
                         className="space-y-4"
                     >
-                        <h3 className="text-lg font-medium text-gray-800 mb-4">Personal Information</h3>
+                        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-4">Personal Information</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Full Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -320,14 +320,14 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     name="fullName"
                                     ref={firstInputRef}
                                     required
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.fullName}
                                     onChange={handleChange}
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Email <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -335,17 +335,17 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     id="email"
                                     name="email"
                                     required
-                                    className={`w-full border ${!validations.emailValid ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all`}
+                                    className={`w-full border ${!validations.emailValid ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all`}
                                     value={formData.email}
                                     onChange={handleChange}
                                 />
                                 {formTouched.email && !validations.emailValid && (
-                                    <p className="mt-1 text-sm text-red-500">Please enter a valid email address</p>
+                                    <p className="mt-1 text-sm text-red-500 dark:text-red-400">Please enter a valid email address</p>
                                 )}
                             </div>
 
                             <div>
-                                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     ID Number <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -353,7 +353,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     id="idNumber"
                                     name="idNumber"
                                     required
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.idNumber}
                                     onChange={handleChange}
                                 />
@@ -361,7 +361,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
 
                             <div>
                                 <label htmlFor="phoneNumber"
-                                       className="block text-sm font-medium text-gray-700 mb-1">
+                                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Phone Number <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -369,25 +369,25 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     id="phoneNumber"
                                     name="phoneNumber"
                                     required
-                                    className={`w-full border ${!validations.phoneValid ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all`}
+                                    className={`w-full border ${!validations.phoneValid ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all`}
                                     value={formData.phoneNumber}
                                     onChange={handleChange}
                                 />
                                 {formTouched.phoneNumber && !validations.phoneValid && (
-                                    <p className="mt-1 text-sm text-red-500">Please enter a valid phone number</p>
+                                    <p className="mt-1 text-sm text-red-500 dark:text-red-400">Please enter a valid phone number</p>
                                 )}
                             </div>
 
                             <div>
                                 <label htmlFor="mobigoNumber"
-                                       className="block text-sm font-medium text-gray-700 mb-1">
+                                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Mobigo Number
                                 </label>
                                 <input
                                     type="tel"
                                     id="mobigoNumber"
                                     name="mobigoNumber"
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.mobigoNumber}
                                     onChange={handleChange}
                                 />
@@ -405,11 +405,11 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                         transition={{duration: 0.3}}
                         className="space-y-4"
                     >
-                        <h3 className="text-lg font-medium text-gray-800 mb-4">Security Information</h3>
+                        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-4">Security Information</h3>
 
                         <div className="grid grid-cols-1 gap-4">
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Password <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -417,14 +417,14 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     id="password"
                                     name="password"
                                     required
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.password}
                                     onChange={handleChange}
                                 />
                                 {formTouched.password && formData.password && (
                                     <div className="mt-1 text-sm">
                                         <div
-                                            className={`flex items-center ${validations.passwordStrength.valid ? 'text-green-600' : 'text-amber-600'}`}>
+                                            className={`flex items-center ${validations.passwordStrength.valid ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                                             {validations.passwordStrength.valid ? (
                                                 <CheckCircle className="w-4 h-4 mr-1"/>
                                             ) : (
@@ -438,7 +438,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
 
                             <div>
                                 <label htmlFor="confirmPassword"
-                                       className="block text-sm font-medium text-gray-700 mb-1">
+                                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Confirm Password <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -446,18 +446,18 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     id="confirmPassword"
                                     name="confirmPassword"
                                     required
-                                    className={`w-full border ${!validations.passwordMatch ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all`}
+                                    className={`w-full border ${!validations.passwordMatch ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all`}
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                 />
                                 {formTouched.confirmPassword && !validations.passwordMatch && (
-                                    <p className="mt-1 text-sm text-red-500">Passwords do not match</p>
+                                    <p className="mt-1 text-sm text-red-500 dark:text-red-400">Passwords do not match</p>
                                 )}
                             </div>
                         </div>
 
-                        <div className="mt-4 p-3 bg-green-50 rounded-md border border-green-200">
-                            <p className="text-sm text-green-800">
+                        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-md border border-green-200 dark:border-green-800">
+                            <p className="text-sm text-green-800 dark:text-green-300">
                                 <strong>Password requirements:</strong> At least 8 characters, include uppercase and
                                 lowercase letters, numbers, and special characters.
                             </p>
@@ -474,18 +474,18 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                         transition={{duration: 0.3}}
                         className="space-y-6"
                     >
-                        <h3 className="text-lg font-medium text-gray-800 mb-4">Role & Documents</h3>
+                        <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-4">Role & Documents</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Role <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     id="role"
                                     name="role"
                                     required
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.role}
                                     onChange={handleChange}
                                 >
@@ -498,13 +498,13 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                             </div>
 
                             <div>
-                                <label htmlFor="teamId" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="teamId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Team
                                 </label>
                                 <select
                                     id="teamId"
                                     name="teamId"
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.teamId}
                                     onChange={handleChange}
                                 >
@@ -518,13 +518,13 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                             </div>
 
                             <div>
-                                <label htmlFor="staffType" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="staffType" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Staff Type
                                 </label>
                                 <select
                                     id="staffType"
                                     name="staffType"
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.staffType}
                                     onChange={handleChange}
                                 >
@@ -536,14 +536,14 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                             </div>
 
                             <div>
-                                <label htmlFor="vanNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="vanNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Van Number
                                 </label>
                                 <input
                                     type="text"
                                     id="vanNumber"
                                     name="vanNumber"
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.vanNumber}
                                     onChange={handleChange}
                                 />
@@ -551,14 +551,14 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
 
                             <div>
                                 <label htmlFor="vanLocation"
-                                       className="block text-sm font-medium text-gray-700 mb-1">
+                                       className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Van Location
                                 </label>
                                 <input
                                     type="text"
                                     id="vanLocation"
                                     name="vanLocation"
-                                    className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                                    className="w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-all"
                                     value={formData.vanLocation}
                                     onChange={handleChange}
                                 />
@@ -566,15 +566,15 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                         </div>
 
                         <div className="mt-6">
-                            <h4 className="text-md font-medium text-gray-800 mb-3">ID Documents</h4>
+                            <h4 className="text-md font-medium text-gray-800 dark:text-gray-100 mb-3">ID Documents</h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         ID Front Image <span className="text-red-500">*</span>
                                     </label>
 
                                     <div
-                                        className={`border-2 border-dashed rounded-lg p-4 ${idFrontFile ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-green-400'} transition-all`}>
+                                        className={`border-2 border-dashed rounded-lg p-4 ${idFrontFile ? 'border-green-400 bg-green-50 dark:bg-green-900/20 dark:border-green-600' : 'border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500'} transition-all`}>
                                         {idFrontPreview ? (
                                             <div className="relative">
                                                 <img
@@ -596,9 +596,9 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                         ) : (
                                             <label
                                                 className="flex flex-col items-center justify-center cursor-pointer py-3">
-                                                <Upload className="h-10 w-10 text-gray-400 mb-2"/>
+                                                <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2"/>
                                                 <span
-                                                    className="text-sm text-gray-500">Click to upload front of ID</span>
+                                                    className="text-sm text-gray-500 dark:text-gray-400">Click to upload front of ID</span>
                                                 <input
                                                     type="file"
                                                     id="idFront"
@@ -614,12 +614,12 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         ID Back Image <span className="text-red-500">*</span>
                                     </label>
 
                                     <div
-                                        className={`border-2 border-dashed rounded-lg p-4 ${idBackFile ? 'border-green-400 bg-green-50' : 'border-gray-300 hover:border-green-400'} transition-all`}>
+                                        className={`border-2 border-dashed rounded-lg p-4 ${idBackFile ? 'border-green-400 bg-green-50 dark:bg-green-900/20 dark:border-green-600' : 'border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500'} transition-all`}>
                                         {idBackPreview ? (
                                             <div className="relative">
                                                 <img
@@ -641,9 +641,9 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                         ) : (
                                             <label
                                                 className="flex flex-col items-center justify-center cursor-pointer py-3">
-                                                <Upload className="h-10 w-10 text-gray-400 mb-2"/>
+                                                <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2"/>
                                                 <span
-                                                    className="text-sm text-gray-500">Click to upload back of ID</span>
+                                                    className="text-sm text-gray-500 dark:text-gray-400">Click to upload back of ID</span>
                                                 <input
                                                     type="file"
                                                     id="idBack"
@@ -668,7 +668,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
     };
 
     return (
-        <>
+       <>
             <AnimatePresence>
                 <div
                 >
@@ -678,36 +678,36 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                         animate={{scale: 1, y: 0}}
                         exit={{scale: 0.9, y: 20}}
                         transition={{type: "spring", stiffness: 300, damping: 30}}
-                        className="bg-white rounded-xl w-full  overflow-hidden relative"
+                        className="bg-white dark:bg-gray-800 rounded-md w-full overflow-hidden relative"
                     >
                         {/* Success overlay */}
                         {success && (
                             <motion.div
                                 initial={{opacity: 0}}
                                 animate={{opacity: 1}}
-                                className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center"
+                                className="absolute inset-0 bg-white dark:bg-gray-800 z-10 flex flex-col items-center justify-center"
                             >
                                 <motion.div
                                     initial={{scale: 0}}
                                     animate={{scale: 1}}
                                     transition={{type: "spring", stiffness: 300, damping: 20}}
                                 >
-                                    <div className="bg-green-100 p-3 rounded-full">
-                                        <CheckCircle className="h-16 w-16 text-green-600"/>
+                                    <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
+                                        <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400"/>
                                     </div>
                                 </motion.div>
-                                <h2 className="text-2xl font-bold text-gray-800 mt-6">User Created
+                                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-6">User Created
                                     Successfully!</h2>
-                                <p className="text-gray-600 mt-2">The new user has been added to the system.</p>
+                                <p className="text-gray-600 dark:text-gray-300 mt-2">The new user has been added to the system.</p>
                             </motion.div>
                         )}
 
                         {/* Header */}
-                        <div className="flex justify-between items-center border-b px-6 py-4">
-                            <h2 className="text-xl font-semibold text-gray-800">Create New User</h2>
+                        <div className="flex justify-between items-center border-b dark:border-gray-700 px-6 py-4">
+                            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Create New User</h2>
                             <button
                                 onClick={onClose}
-                                className="text-gray-500 hover:text-gray-700 transition-colors"
+                                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                                 aria-label="Close"
                             >
                                 <X className="h-6 w-6"/>
@@ -716,14 +716,14 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
 
                         {/* Progress bar */}
                         <div className="px-6 pt-4">
-                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
                                 <motion.div
                                     initial={{width: 0}}
                                     animate={{width: `${progressPercent}%`}}
-                                    className="h-2 rounded-full bg-green-600"
+                                    className="h-2 rounded-full bg-green-600 dark:bg-green-500"
                                 ></motion.div>
                             </div>
-                            <div className="flex justify-between text-xs text-gray-500">
+                            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                 <span>Basic Info</span>
                                 <span>Security</span>
                                 <span>Role & Documents</span>
@@ -738,7 +738,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                     animate={{opacity: 1, y: 0}}
                                     exit={{opacity: 0}}
                                     transition={{duration: 0.2}}
-                                    className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md flex items-start"
+                                    className="mx-6 mt-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-md flex items-start"
                                 >
                                     <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5"/>
                                     <span>{error}</span>
@@ -757,12 +757,12 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
 
 
                             {/* Footer with action buttons */}
-                            <div className="border-t px-6 py-4 bg-gray-50 flex justify-between">
+                            <div className="border-t dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-900 flex justify-between">
                                 {currentStep > 1 ? (
                                     <button
                                         type="button"
                                         onClick={goToPrevStep}
-                                        className="flex items-center px-4 py-2 text-gray-700 font-medium hover:bg-gray-100 rounded-md transition-colors"
+                                        className="flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
                                     >
                                         <svg className="h-5 w-5 mr-1 rotate-180" fill="none" viewBox="0 0 24 24"
                                              stroke="currentColor">
@@ -780,7 +780,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                         type="button"
                                         onClick={goToNextStep}
                                         disabled={!isCurrentStepValid()}
-                                        className={`flex items-center px-5 py-2 text-white font-medium rounded-md ${isCurrentStepValid() ? 'bg-green-600 hover:bg-green-700' : 'bg-green-300 cursor-not-allowed'} transition-colors`}
+                                        className={`flex items-center px-5 py-2 text-white font-medium rounded-md ${isCurrentStepValid() ? 'bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500' : 'bg-green-300 dark:bg-green-800 cursor-not-allowed'} transition-colors`}
                                     >
                                         Next
                                         <ArrowRight className="h-5 w-5 ml-1"/>
@@ -790,7 +790,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                                         type="button"
                                         disabled={loading}
                                         onClick={() => handleSubmit()}
-                                        className={`flex items-center px-5 py-2 text-white font-medium rounded-md ${loading ? 'bg-green-400 cursor-wait' : 'bg-green-600 hover:bg-green-700'} transition-colors`}
+                                        className={`flex items-center px-5 py-2 text-white font-medium rounded-md ${loading ? 'bg-green-400 dark:bg-green-700 cursor-wait' : 'bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500'} transition-colors`}
                                     >
                                         {loading ? (
                                             <>

@@ -31,6 +31,7 @@ export const ViewRequest = (dialog: any, user: User, request: OnboardingRequest,
         content: <RequestDetailViewer user={user} request={request} onClose={onclose}/>,
         cancelable: !1,
         size: "lg",
+        design:["scrollable"]
 
     });
 }

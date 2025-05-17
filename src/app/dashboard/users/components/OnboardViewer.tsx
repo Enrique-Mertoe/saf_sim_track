@@ -217,13 +217,13 @@ export default function RequestDetailViewer({request, user, onClose}: {
     return (
         <AnimatePresence>
             {request && (
-                <div className="">
+                <div className="h-full overflow-y-auto">
                     <motion.div
                         initial={{opacity: 0, scale: 0.9}}
                         animate={isOpen ? {opacity: 1, scale: 1} : {opacity: 0, scale: 0.9}}
                         exit={{opacity: 0, scale: 0.9}}
                         transition={{duration: 0.5, type: 'spring', bounce: 0.3}}
-                        className="bg-white dark:bg-gray-800 rounded w-full overflow-hidden"
+                        className="bg-white dark:bg-gray-800 rounded w-full "
                     >
                         {/* Header */}
                         <div
@@ -287,7 +287,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 max-h-96 overflow-y-auto">
+                        <div className="p-6 max-h96">
                             <AnimatePresence mode="wait">
                                 {activeTab === 'details' && (
                                     <motion.div
