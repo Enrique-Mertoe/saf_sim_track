@@ -51,7 +51,7 @@ export default function ResetPasswordForm() {
 
     return (
         <div
-            className="flex min-h-screen items-center justify-center p-4 dark:bg-gray-900">
+            className="flex min-h-full items-center justify-center p-4 dark:bg-gray-900">
             <AnimatePresence mode="wait">
                 {sent ? (
                     <motion.div

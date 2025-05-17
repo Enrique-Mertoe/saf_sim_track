@@ -143,7 +143,7 @@ const WelcomePage: React.FC = () => {
 
     return (
         <div
-            className="w-full light:bg-gradient-to-b from-green-50 to-white dark:!bg-gray-600  text-center flex flex-col justify-center items-center p-4 relative overflow-hidden">
+            className="w-full min-h-full light:bg-gradient-to-b from-green-50 to-white dark:!bg-gray-600  text-center flex flex-col justify-center items-center p-4 relative overflow-hidden">
             {/* Background animated elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div

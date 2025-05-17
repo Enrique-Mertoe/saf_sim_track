@@ -120,7 +120,7 @@ const ResetPassword = () => {
     return (
         
         <div
-            className="flex w-full flex-col items-center justify-center bg-gradient-to-br from-green-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 min-h-screen p-4">
+            className="flex w-full  min-h-fullflex-col items-center justify-center bg-gradient-to-br from-green-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 min-h-screen p-4">
         <motion.div
                 initial={{opacity: 0, y: -20}}
                 animate={{opacity: 1, y: 0}}
