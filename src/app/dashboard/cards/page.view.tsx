@@ -37,7 +37,6 @@ const RegisteredSimCards = () => {
         endDate: ''
     });
 
-    // State for showing filter panel
     const [showFilters, setShowFilters] = useState(false);
 
 
