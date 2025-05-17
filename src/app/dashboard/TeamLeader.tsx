@@ -40,6 +40,7 @@ import {useDialog} from "@/app/_providers/dialog";
 import useApp from "@/ui/provider/AppProvider";
 import {teamService} from "@/services";
 import {Team, TeamHierarchy, User} from "@/models";
+import TeamMembersPanel from "@/ui/components/dash/TeamMemberList";
 
 
 // Sample data for team members
@@ -153,7 +154,7 @@ const qualityDistributionData = [
 
 
 type TeamAdapter = Team & {
-    users:User[]
+    users: User[]
 }
 const COLORS = ['#4ade80', '#f87171'];
 
@@ -187,7 +188,8 @@ export default function TeamLeader() {
             const {data: hierachy, error: countError} = await teamService.getTeamHierarchy(user.team_id)
 
             if (countError) throw countError;
-            setTeamHierarchy(hierachy)
+            if (hierachy.length)
+                setTeamHierarchy(hierachy[0])
             setTeamData(teamInfo);
 
         } catch (error) {
@@ -327,163 +329,7 @@ export default function TeamLeader() {
 
                     {/* Team Members and Quality Distribution */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        {/* Team Members List */}
-                        <div className="lg:col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
-                            <div
-                                className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                                <h2 className="text-lg font-medium text-gray-900">Team Members</h2>
-                            </div>
-                            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {teamMembers.map((member) => (
-                                    <div key={member.id} className="bg-white">
-                                        <div
-                                            className={`px-6 py-4 cursor-pointer hover:bg-gray-50 ${expandedStaff === member.id ? 'bg-gray-50' : ''}`}
-                                            onClick={() => toggleStaffDetails(member.id)}
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center">
-                                                    <img
-                                                        src={member.avatar}
-                                                        alt={member.name}
-                                                        className="h-10 w-10 rounded-full object-cover mr-4"
-                                                    />
-                                                    <div>
-                                                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">{member.name}</h3>
-                                                        <div className="flex items-center mt-1">
-                            <span className={`inline-flex px-2 text-xs font-medium rounded-full ${
-                                member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {member.status}
-                            </span>
-                                                            <span className="mx-2 text-gray-500 text-xs">•</span>
-                                                            <span
-                                                                className="text-gray-500 text-xs">{member.role.replace(/_/g, ' ')}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center space-x-4">
-                                                    <div className="text-right hidden sm:block">
-                                                        <div
-                                                            className="text-sm font-medium text-gray-900">{member.salesThisMonth} Sales
-                                                        </div>
-                                                        <div
-                                                            className="text-xs text-gray-500">{member.qualitySales} Quality
-                                                            ({member.percentQuality}%)
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center">
-                                                        <span
-                                                            className="text-xs text-gray-500 dark:text-gray-400 mr-2 hidden sm:inline">Last active: {member.lastActive}</span>
-                                                        {expandedStaff === member.id ?
-                                                            <ChevronUp className="h-5 w-5 text-gray-400"/> :
-                                                            <ChevronDown className="h-5 w-5 text-gray-400"/>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Expanded staff details */}
-                                        {expandedStaff === member.id && (
-                                            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <h4 className="text-sm font-medium text-gray-900 mb-3">Contact
-                                                            Information</h4>
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center">
-                                                                <Phone className="h-4 w-4 text-gray-400 mr-2"/>
-                                                                <span
-                                                                    className="text-sm text-gray-600">{member.phoneNumber}</span>
-                                                            </div>
-                                                            <div className="flex items-center">
-                                                                <Smartphone className="h-4 w-4 text-gray-400 mr-2"/>
-                                                                <span
-                                                                    className="text-sm text-gray-600">{member.mobigoNumber}</span>
-                                                            </div>
-                                                            {member.vanLocation && (
-                                                                <div className="flex items-center">
-                                                                    <Info className="h-4 w-4 text-gray-400 mr-2"/>
-                                                                    <span
-                                                                        className="text-sm text-gray-600">Van Location: {member.vanLocation}</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-sm font-medium text-gray-900 mb-3">Performance
-                                                            Metrics</h4>
-                                                        <div className="space-y-3">
-                                                            <div>
-                                                                <div className="flex items-center justify-between mb-1">
-                                                                    <span className="text-xs font-medium text-gray-700">Sales Progress</span>
-                                                                    <span
-                                                                        className="text-xs text-gray-700">{Math.round((member.salesThisMonth / 150) * 100)}%</span>
-                                                                </div>
-                                                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                                                    <div
-                                                                        className="bg-green-600 h-2 rounded-full"
-                                                                        style={{width: `${Math.min(100, Math.round((member.salesThisMonth / 150) * 100))}%`}}
-                                                                    ></div>
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <div className="flex items-center justify-between mb-1">
-                                                                    <span className="text-xs font-medium text-gray-700">Quality Rate</span>
-                                                                    <span
-                                                                        className="text-xs text-gray-700">{member.percentQuality}%</span>
-                                                                </div>
-                                                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                                                    <div
-                                                                        className={`h-2 rounded-full ${
-                                                                            member.percentQuality >= 95 ? 'bg-green-500' :
-                                                                                member.percentQuality >= 90 ? 'bg-yellow-500' : 'bg-red-500'
-                                                                        }`}
-                                                                        style={{width: `${member.percentQuality}%`}}
-                                                                    ></div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="mt-4 flex justify-end space-x-3">
-                                                    <button
-                                                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded">
-                                                        View Full Profile
-                                                    </button>
-                                                    <button
-                                                        className="px-3 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-medium rounded">
-                                                        Send Message
-                                                    </button>
-                                                    <button
-                                                        className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded flex items-center">
-                                                        <Settings className="h-3 w-3 mr-1"/>
-                                                        Manage
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <div
-                                className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center">
-              <span className="text-sm text-gray-700">
-                Showing <span className="font-medium">5</span> of <span className="font-medium">5</span> team members
-              </span>
-                                <div className="flex space-x-1">
-                                    <button
-                                        className="px-2 py-1 border border-gray-300 rounded-md text-sm bg-white text-gray-700">
-                                        Previous
-                                    </button>
-                                    <button
-                                        className="px-2 py-1 border border-gray-300 rounded-md text-sm bg-white text-gray-700">
-                                        Next
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
+                          <TeamMembersPanel teamId={user!.team_id!}/>
                         {/* Quality Distribution */}
                         <div className="bg-white p-6 rounded-lg shadow-md">
                             <h2 className="text-lg font-medium text-gray-900 mb-4">Quality Distribution</h2>

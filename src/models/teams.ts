@@ -43,3 +43,12 @@ export type TeamHierarchy = {
         sim_sales_count: number;
     }[];
 };
+
+export type TeamStatsPerf = {
+  totalMembers: number;
+  matchRate: number;
+  qualityPercentage: number;     // as percentage (0–100)
+  monthlyTarget: number;
+  targetCompletion: number;      // as percentage (0–100)
+  performanceTrend: number;      // as percentage (0–100)
+};

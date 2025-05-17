@@ -11,16 +11,16 @@ import {
 import {teamService} from '@/services/teamService';
 import {motion} from 'framer-motion';
 import useApp from "@/ui/provider/AppProvider";
-import {Team, TeamHierarchy, User} from "@/models";
+import {Team, TeamHierarchy, TeamStatsPerf, User} from "@/models";
 import {formatDate} from "@/helper";
 
 type TeamAdapter = Team & {
     users: User[]
 }
 export const TeamStats = ({teamInfo, members}: { teamInfo: TeamAdapter; members: TeamHierarchy }) => {
-    const [teamStats, setTeamStats] = useState({
+    const [teamStats, setTeamStats] = useState<TeamStatsPerf>({
         totalMembers: 0,
-        activeSIM: 0,
+        matchRate: 0,
         qualityPercentage: 0,
         monthlyTarget: 0,
         targetCompletion: 0,
@@ -46,6 +46,7 @@ export const TeamStats = ({teamInfo, members}: { teamInfo: TeamAdapter; members:
 
                     // Get team performance data
                     const {data: performanceData} = await teamService.getTeamPerformance(teamId);
+                    console.log("perf", performanceData)
 
 
                     // // Get team members count
@@ -56,15 +57,22 @@ export const TeamStats = ({teamInfo, members}: { teamInfo: TeamAdapter; members:
                     if (performanceData && performanceData.length > 0 && members) {
                         const currentPerformance = performanceData[0];
 
+                        const activeSIM = currentPerformance.active_sim_count || 0;
+                        const matchRate = currentPerformance.match_rate || 0;
+                        const qualityRate = currentPerformance.quality_rate || 0; // already a ratio (0 to 1)
+                        const targetCompletion = currentPerformance.target_completion || 0; // already a ratio
+                        const trend = currentPerformance.performance_trend || 0;
+
                         setTeamStats({
                             totalMembers: members.staff.length,
-                            activeSIM: currentPerformance.active_sim_count || 0,
-                            qualityPercentage: currentPerformance.quality_score || 0,
+                            qualityPercentage: Math.round(qualityRate * 100),
+                            matchRate: Math.round(matchRate * 100),
                             monthlyTarget: currentPerformance.monthly_target || 0,
-                            targetCompletion: currentPerformance.target_completion || 0,
-                            performanceTrend: currentPerformance.performance_trend || 0
+                            targetCompletion: Math.round(targetCompletion * 100),
+                            performanceTrend: Math.round(trend * 100)
                         });
                     }
+
                 }
 
             } catch (error) {
@@ -251,7 +259,7 @@ export const TeamStats = ({teamInfo, members}: { teamInfo: TeamAdapter; members:
                             <span
                                 className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">Connectivity</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Active SIMs</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Match Score</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
@@ -263,10 +271,10 @@ export const TeamStats = ({teamInfo, members}: { teamInfo: TeamAdapter; members:
                                         transition={{duration: 0.5}}
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.activeSIM.toLocaleString()}</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.matchRate.toLocaleString()}%</span>
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total connections</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Performance match</p>
                             </div>
                             <div
                                 className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-300">

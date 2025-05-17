@@ -124,21 +124,60 @@ CREATE INDEX idx_logs_action ON activity_logs(action_type);
 CREATE INDEX idx_logs_created ON activity_logs(created_at);
 
 -- Create views for common queries
+-- DROP VIEW IF EXISTS team_performance;
+DROP VIEW IF exists team_performance;
 CREATE OR REPLACE VIEW team_performance AS
 SELECT
   t.id as team_id,
   t.name as team_name,
+  t.region as team_region,
+  t.territory as team_territory,
+  u.id as leader_id,
   u.full_name as leader_name,
   COUNT(s.id) as sim_cards_sold,
-  COALESCE(SUM(CASE WHEN s.status = 'activated' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(s.id), 0), 0) as activation_rate,
+
+  -- Quality breakdown
+  SUM(CASE WHEN s.quality = 'QUALITY' THEN 1 ELSE 0 END) as quality_count,
+  SUM(CASE WHEN s.quality != 'QUALITY' OR s.quality IS NULL THEN 1 ELSE 0 END) as non_quality_count,
+  COALESCE(SUM(CASE WHEN s.quality = 'QUALITY' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(s.id), 0), 0) as quality_rate,
+
+  -- Match breakdown
+  SUM(CASE WHEN s.match = 'Y' THEN 1 ELSE 0 END) as matched_count,
+  SUM(CASE WHEN s.match != 'Y' OR s.match IS NULL THEN 1 ELSE 0 END) as unmatched_count,
+  COALESCE(SUM(CASE WHEN s.match = 'Y' THEN 1 ELSE 0 END)::float / NULLIF(COUNT(s.id), 0), 0) as match_rate,
+
   COALESCE(AVG(s.top_up_amount), 0) as avg_top_up,
   COUNT(CASE WHEN s.fraud_flag = TRUE THEN 1 END) as fraud_flags,
-  s.region,
+
+  -- Individual-level data as arrays (grouped by team)
+  array_agg(
+    CASE WHEN s.id IS NOT NULL THEN
+      json_build_object(
+        'id', s.id,
+        'user_id', s.sold_by_user_id,
+        'user_name', su.full_name,
+        'quality', s.quality,
+        'match', s.match,
+        'sale_date', s.sale_date,
+        'top_up_amount', s.top_up_amount,
+        'staff_type', su.staff_type
+      )
+    ELSE NULL END
+  ) FILTER (WHERE s.id IS NOT NULL) as individual_records,
+
   to_char(date_trunc('month', s.sale_date), 'YYYY-MM') as period
-FROM teams t
-LEFT JOIN users u ON t.leader_id = u.id
-LEFT JOIN sim_cards s ON t.id = s.team_id
-GROUP BY t.id, t.name, u.full_name, s.region, period;
+FROM
+  teams t
+LEFT JOIN
+  users u ON t.leader_id = u.id
+LEFT JOIN
+  sim_cards s ON t.id = s.team_id
+LEFT JOIN
+  users su ON s.sold_by_user_id = su.id  -- Join to get the name of the individual who made the sale
+WHERE
+  t.is_active = TRUE
+GROUP BY
+  t.id, t.name, t.region, t.territory, u.id, u.full_name, period;
 
 CREATE OR REPLACE VIEW staff_performance AS
 SELECT

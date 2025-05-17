@@ -5,7 +5,7 @@ import {notFound} from "next/navigation";
 
 export default async function Page() {
     const user = await Accounts.user();
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (!user || ![UserRole.ADMIN,UserRole.TEAM_LEADER].includes(user.role)) {
         return notFound();
     }
     return (
