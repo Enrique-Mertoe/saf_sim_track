@@ -192,7 +192,7 @@ export default function AdminSetupPage() {
     return (
    <>
             {/* Right side - Signup Form */}
-            <div className="w-full md:w-1/2 flex justify-center items-center p-6">
+            <div className="flex justify-center items-center p-6">
                 <div
                     className="bg-white dark:bg-gray-800 w-full max-w-md p-8 rounded-xl shadow-lg"
                     style={{

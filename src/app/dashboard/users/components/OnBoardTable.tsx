@@ -12,11 +12,12 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
     const dialog = useDialog()
     const {user} = useApp()
     return (
-        <div className="bg-white rounded-md shadow overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                    <tr>
+
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow overflow-hidden">
+        <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request
                             Type
                         </th>
@@ -31,11 +32,11 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                    {requests.length > 0 ? (
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {requests.length > 0 ? (
                         requests.map((request) => (
-                            <tr key={request.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
+                            <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                           ${request.request_type === "ONBOARDING" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
                         `}>
@@ -43,8 +44,10 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                         </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="font-medium text-gray-900">{request.requestedBy?.full_name}</div>
-                                    <div className="text-sm text-gray-500">{request.requestedBy?.role}</div>
+                                    <div
+                                        className="font-medium text-gray-900 dark:text-gray-100">{request.requestedBy?.full_name}</div>
+                                    <div
+                                        className="text-sm text-gray-500 dark:text-gray-400">{request.requestedBy?.role}</div>
                                 </td>
                                 <td className="px-6 py-4">
                                     {request.request_type === "ONBOARDING" ? (
@@ -89,7 +92,7 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <button
                                         type={"button"}
-                                        className="text-blue-600 hover:text-blue-900"
+                                        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300"
                                         onClick={() => ViewRequest(dialog, user!, request, {
                                             onClose: (reload: boolean) => {
                                                 if (reload)
@@ -105,14 +108,14 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                         request.status === "PENDING" && (
                                             <>
                                                 <button
-                                                    className="text-green-600 hover:text-green-900"
+                                                    className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300"
                                                     //@ts-ignore
                                                     onClick={() => handleApproveRequest(request.id)}
                                                 >
                                                     Approve
                                                 </button>
                                                 <button
-                                                    className="text-red-600 hover:text-red-900"
+                                                    className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                                                     //@ts-ignore
                                                     onClick={() => handleRejectRequest(request.id)}
                                                 >
@@ -122,7 +125,7 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                                         )}
                                     {request.request_type === "ONBOARDING" && request.id_front_url && (
                                         <button
-                                            className="text-purple-600 hover:text-purple-900"
+                                            className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300"
                                             onClick={() => {
                                                 //@ts-ignore
                                                 ViewRequest(dialog, request, {})
@@ -141,8 +144,8 @@ export default function OnBoardTable({requests, onStatusChange, onDeleteUser}: O
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                                No pending requests
+                            <td colSpan={6} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            No pending requests
                             </td>
                         </tr>
                     )}

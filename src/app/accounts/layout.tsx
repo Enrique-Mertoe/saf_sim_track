@@ -10,10 +10,10 @@ const fadeIn = (delay = 0) => {
 };
 export default function AccountsPage({children}: { children: React.ReactNode }) {
     return (
-        <div className="flex auth flex-col md:flex-row h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex auth flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Left side - Branding */}
             <div
-                className="hidden md:flex md:w-1/2 text-center bg-green-600 dark:bg-green-800 text-white flex-col justify-center items-center p-8">
+                className="hidden md:flex sticky top-0 max-h-screen md:w-1/2 text-center bg-green-600 dark:bg-green-800 text-white flex-col justify-center items-center p-8">
                 <div style={fadeIn(0)} className="max-w-md">
                     <div className="flex items-center justify-center mb-8">
                         <svg xmlns="http://www.w3.org/2000/svg" width="249" height="64"
@@ -50,7 +50,9 @@ export default function AccountsPage({children}: { children: React.ReactNode }) 
                     </div>
                 </div>
             </div>
-            {children}
+           <div className="w-full md:w-1/2">
+                {children}
+           </div>
         </div>
     )
 }

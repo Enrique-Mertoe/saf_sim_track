@@ -51,7 +51,7 @@ export default function ResetPasswordForm() {
 
     return (
         <div
-            className="flex w-full md:w-1/2 min-h-screen items-center justify-center p-4 dark:bg-gray-900">
+            className="flex min-h-screen items-center justify-center p-4 dark:bg-gray-900">
             <AnimatePresence mode="wait">
                 {sent ? (
                     <motion.div
@@ -60,7 +60,7 @@ export default function ResetPasswordForm() {
                         animate={{opacity: 1, y: 0}}
                         exit={{opacity: 0, y: -20}}
                         transition={{duration: 0.3}}
-                        className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mx-auto border border-green-900 dark:border-green-700"
+                        className="w-full md:bg-white md:dark:bg-gray-800 md:rounded-xl md:shadow-lg p-8 mx-auto md:border border-green-900 dark:border-green-700"
                     >
                         <div className="flex flex-col items-center justify-center mb-6">
                             <motion.div
@@ -108,7 +108,7 @@ export default function ResetPasswordForm() {
                         animate={{opacity: 1, y: 0}}
                         exit={{opacity: 0, y: -20}}
                         transition={{duration: 0.3}}
-                        className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mx-auto border border-green-100 dark:border-green-800"
+                        className="md:max-w-md w-full md:bg-white dark:md:bg-gray-800 md:rounded-xl md:shadow-lg p-8 mx-auto md:border md:border-green-100 md:dark:border-green-800"
                     >
                         <div className="flex flex-col items-center justify-center mb-6">
                             <motion.div
@@ -165,7 +165,7 @@ export default function ResetPasswordForm() {
                             >
                                 <button
                                     type="submit"
-                                    className="w-full flex items-center justify-center bg-green-600 dark:bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 transition-all duration-300 disabled:opacity-70"
+                                    className="w-full mb-10 flex items-center justify-center bg-green-600 dark:bg-green-700 text-white py-3 px-4 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800 transition-all duration-300 disabled:opacity-70"
                                     disabled={loading}
                                 >
                                     {loading ? (
@@ -177,7 +177,19 @@ export default function ResetPasswordForm() {
                                         'Send Reset Link'
                                     )}
                                 </button>
+
+
                             </motion.div>
+                            <div className="mt-6 text-center">
+                                <motion.a
+                                    href="/accounts/login"
+                                    className="inline-flex items-center text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-200"
+                                    whileHover={{x: -4}}
+                                >
+                                    <ArrowLeft className="h-4 w-4 mr-2"/>
+                                    Go back to login
+                                </motion.a>
+                            </div>
                         </form>
                     </motion.div>
                 )}
