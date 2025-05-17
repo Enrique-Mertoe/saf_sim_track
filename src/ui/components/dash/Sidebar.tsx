@@ -222,7 +222,7 @@ export default function Sidebar() {
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
                 {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
-                {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
+                // {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.STAFF) {
