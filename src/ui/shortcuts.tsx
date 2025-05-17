@@ -15,7 +15,8 @@ export const CreateUser = (dialog: any, user: User, {onClose}: {
         content: user.role === UserRole.ADMIN ? <CreateUserModal onClose={onclose}/> :
             user.role === UserRole.TEAM_LEADER ? <OnboardStaff onClose={onclose} user={user}/> : <></>,
         cancelable: !0,
-        size: "lg"
+        size: "lg",
+         design:["scrollable"]
     });
 }
 

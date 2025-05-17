@@ -23,7 +23,7 @@ export const teamService = {
         const supabase = createSupabaseClient();
         return supabase
             .from('teams')
-            .select('*, users!leader_id(full_name)')
+            .select('*, leader:leader_id(*)')
             .eq('id', teamId)
             .single();
     },

@@ -149,7 +149,7 @@ export default function LoginPage() {
             {/* Right side - Login Form */}
             <div className="w-full flex justify-center items-center p-6 dark:bg-gray-900">
                 <div
-                    className="md:bg-white dark:bg-gray-800 w-full md:max-w-md p-8 md:rounded-xl md:shadow-lg"
+                    className="md:bg-white md:dark:bg-gray-800 w-full md:max-w-md p-8 md:rounded-xl md:shadow-lg"
                     style={{
                         ...fadeIn(0.3),
                         transform: animationComplete ? 'none' : 'translateY(20px)',

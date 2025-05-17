@@ -180,12 +180,12 @@ export default function TeamLeader() {
             });
 
             setIsLoading(false);
-        }, );
+        },);
 
         return () => clearTimeout(timer);
     }, []);
 
-    const toggleStaffDetails = (id: number ) => {
+    const toggleStaffDetails = (id: number) => {
         if (expandedStaff === id) {
             setExpandedStaff(null);
         } else {
@@ -197,14 +197,15 @@ export default function TeamLeader() {
 
     return (
         <Dashboard>
-            <div className="min-h-screen bg-gray-50 pb-12">
+
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12">
                 {/* Main Content */}
                 <main className="px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto">
                     {/* Page Header */}
                     <div className="mb-8 flex flex-wrap justify-between items-center">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Welcome {user?.full_name}</h1>
-                            <p className="mt-1 text-gray-600">
+                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome {user?.full_name}</h1>
+                            <p className="mt-1 text-gray-600 dark:text-gray-400">
                                 Manage your team members and track performance metrics
                             </p>
                         </div>
@@ -212,14 +213,14 @@ export default function TeamLeader() {
                             <button
                                 type={"button"}
                                 onClick={() => {
-                                    CreateUser(dialog,user!,{})
+                                    CreateUser(dialog, user!, {})
                                 }}
-                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium">
+                                className="flex items-center px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 text-sm font-medium">
                                 <UserPlus className="h-4 w-4 mr-2"/>
                                 Add Team Member
                             </button>
                             <button
-                                className="flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 text-sm font-medium">
+                                className="flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 text-sm font-medium">
                                 <Calendar className="h-4 w-4 mr-2"/>
                                 Schedule
                             </button>
@@ -232,18 +233,26 @@ export default function TeamLeader() {
                     {/* Team Performance Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         {/* Daily Performance Chart */}
-                        <div className="bg-white p-6 rounded-lg shadow-md">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4">Daily Performance</h2>
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-gray-900">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Daily
+                                Performance</h2>
                             <div className="h-72">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart
                                         data={dailyPerformanceData}
                                         margin={{top: 5, right: 30, left: 20, bottom: 5}}
                                     >
-                                        <CartesianGrid strokeDasharray="3 3"/>
-                                        <XAxis dataKey="day"/>
-                                        <YAxis/>
-                                        <Tooltip/>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.8}/>
+                                        <XAxis dataKey="day" stroke="#6b7280" fontSize={12} tickLine={false}
+                                               axisLine={false}/>
+                                        <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false}/>
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'var(--tooltip-bg, white)',
+                                                borderColor: 'var(--tooltip-border, #e5e7eb)',
+                                                color: 'var(--tooltip-text, #111827)'
+                                            }}
+                                        />
                                         <Legend/>
                                         <Bar dataKey="sales" name="Total Sales" fill="#6366f1" radius={[4, 4, 0, 0]}/>
                                         <Bar dataKey="quality" name="Quality Sales" fill="#4ade80"
@@ -256,14 +265,15 @@ export default function TeamLeader() {
                         </div>
 
                         {/* Staff Comparison Chart */}
-                        <div className="bg-white p-6 rounded-lg shadow-md">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4">Staff Performance Comparison</h2>
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-gray-900">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff Performance
+                                Comparison</h2>
                             <div className="h-72">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RadarChart outerRadius={90} data={staffPerformanceData}>
-                                        <PolarGrid/>
-                                        <PolarAngleAxis dataKey="subject"/>
-                                        <PolarRadiusAxis angle={30} domain={[0, 150]}/>
+                                        <PolarGrid stroke="#e5e7eb" strokeOpacity={0.8}/>
+                                        <PolarAngleAxis dataKey="subject" stroke="#6b7280" fontSize={12}/>
+                                        <PolarRadiusAxis angle={30} domain={[0, 150]} stroke="#6b7280" fontSize={12}/>
                                         <Radar name="John" dataKey="A" stroke="#8884d8" fill="#8884d8"
                                                fillOpacity={0.5}/>
                                         <Radar name="Jane" dataKey="B" stroke="#82ca9d" fill="#82ca9d"
@@ -275,7 +285,13 @@ export default function TeamLeader() {
                                         <Radar name="Michael" dataKey="E" stroke="#0088fe" fill="#0088fe"
                                                fillOpacity={0.5}/>
                                         <Legend/>
-                                        <Tooltip/>
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'var(--tooltip-bg, white)',
+                                                borderColor: 'var(--tooltip-border, #e5e7eb)',
+                                                color: 'var(--tooltip-text, #111827)'
+                                            }}
+                                        />
                                     </RadarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -286,10 +302,11 @@ export default function TeamLeader() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
                         {/* Team Members List */}
                         <div className="lg:col-span-2 bg-white rounded-lg shadow-md overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                            <div
+                                className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                                 <h2 className="text-lg font-medium text-gray-900">Team Members</h2>
                             </div>
-                            <div className="divide-y divide-gray-200">
+                            <div className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {teamMembers.map((member) => (
                                     <div key={member.id} className="bg-white">
                                         <div
@@ -304,7 +321,7 @@ export default function TeamLeader() {
                                                         className="h-10 w-10 rounded-full object-cover mr-4"
                                                     />
                                                     <div>
-                                                        <h3 className="text-sm font-medium text-gray-900">{member.name}</h3>
+                                                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">{member.name}</h3>
                                                         <div className="flex items-center mt-1">
                             <span className={`inline-flex px-2 text-xs font-medium rounded-full ${
                                 member.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -328,7 +345,8 @@ export default function TeamLeader() {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center">
-                                                        <span className="text-xs text-gray-500 mr-2 hidden sm:inline">Last active: {member.lastActive}</span>
+                                                        <span
+                                                            className="text-xs text-gray-500 dark:text-gray-400 mr-2 hidden sm:inline">Last active: {member.lastActive}</span>
                                                         {expandedStaff === member.id ?
                                                             <ChevronUp className="h-5 w-5 text-gray-400"/> :
                                                             <ChevronDown className="h-5 w-5 text-gray-400"/>

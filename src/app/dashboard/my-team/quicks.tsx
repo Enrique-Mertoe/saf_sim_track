@@ -51,7 +51,7 @@ export const TeamStats = () => {
                     // Get team members count
                     const {data: teamMembers} = await teamService.getTeamHierarchy(teamId);
                     // if (Array.isArray(teamMembers))
-                    const members =teamMembers[0] as TeamHierarchy
+                    const members = teamMembers[0] as TeamHierarchy
 
                     if (performanceData && performanceData.length > 0 && teamMembers) {
                         const currentPerformance = performanceData[0];
@@ -91,12 +91,11 @@ export const TeamStats = () => {
     const handleCardClick = (cardName: any) => {
         setShowDetails(showDetails === cardName ? null : cardName);
     };
-
     return (
-        <div className="mb-12">
+        <div className="mb-12 dark:bg-gray-900">
             {/* Header with animated gradient background */}
             <motion.div
-                className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 rounded-xl p-6 mb-8 shadow-lg"
+                className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-6 mb-8 shadow-lg"
                 initial={{opacity: 0, scale: 0.96}}
                 animate={{opacity: 1, scale: 1}}
                 transition={{duration: 0.5}}
@@ -104,7 +103,7 @@ export const TeamStats = () => {
                 <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
                 <div className="relative z-10">
                     <h2 className="text-2xl font-bold text-white">Team Performance Dashboard</h2>
-                    <p className="text-indigo-100 mt-1">Real-time metrics and analytics</p>
+                    <p className="text-indigo-100 dark:text-indigo-200 mt-1">Real-time metrics and analytics</p>
 
                     <div className="mt-4 flex items-center">
                         <div
@@ -127,7 +126,7 @@ export const TeamStats = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Team Members */}
                 <motion.div
-                    className="group relative cursor-pointer bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
+                    className="group relative cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
@@ -136,17 +135,17 @@ export const TeamStats = () => {
                 >
                     <div className="p-6">
                         <div className="flex justify-between items-center">
-                            <div className="bg-indigo-50 p-3 rounded-lg">
-                                <Users className="h-6 w-6 text-indigo-600"/>
+                            <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-lg">
+                                <Users className="h-6 w-6 text-indigo-600 dark:text-indigo-400"/>
                             </div>
                             <span
-                                className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-50 text-indigo-700">Team</span>
+                                className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">Team</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700">Team Members</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Team Members</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
-                                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                                 ) : (
                                     <motion.div
                                         initial={{opacity: 0}}
@@ -154,13 +153,13 @@ export const TeamStats = () => {
                                         transition={{duration: 0.5}}
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900">{teamStats.totalMembers}</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.totalMembers}</span>
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 mt-1">Active personnel</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Active personnel</p>
                             </div>
                             <div
-                                className="flex items-center text-gray-400 group-hover:text-indigo-600 transition-colors duration-300">
+                                className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">
                                 <span className="text-sm mr-1">Details</span>
                                 <ChevronRight size={16}/>
                             </div>
@@ -170,27 +169,27 @@ export const TeamStats = () => {
                     {/* Expandable section */}
                     {showDetails === 'members' && (
                         <motion.div
-                            className="bg-gray-50 absolute bottom-0 p-4 border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 absolute bottom-0 p-4 border-t border-gray-100 dark:border-gray-600"
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: 'auto'}}
                             transition={{duration: 0.3}}
                         >
-                            <p className="text-sm text-gray-600">Member distribution by role:</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Member distribution by role:</p>
                             <div className="mt-2 space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Team Leaders</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Team Leaders</span>
                                     <span
-                                        className="text-xs font-medium">{Math.ceil(teamStats.totalMembers * 0.1)}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.ceil(teamStats.totalMembers * 0.1)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Field Agents</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Field Agents</span>
                                     <span
-                                        className="text-xs font-medium">{Math.ceil(teamStats.totalMembers * 0.7)}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.ceil(teamStats.totalMembers * 0.7)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Support Staff</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Support Staff</span>
                                     <span
-                                        className="text-xs font-medium">{Math.floor(teamStats.totalMembers * 0.2)}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.floor(teamStats.totalMembers * 0.2)}</span>
                                 </div>
                             </div>
                         </motion.div>
@@ -199,7 +198,7 @@ export const TeamStats = () => {
 
                 {/* Active SIMs */}
                 <motion.div
-                    className="group relative cursor-pointer bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
+                    className="group relative cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
@@ -208,17 +207,17 @@ export const TeamStats = () => {
                 >
                     <div className="p-6">
                         <div className="flex justify-between items-center">
-                            <div className="bg-green-50 p-3 rounded-lg">
-                                <Smartphone className="h-6 w-6 text-green-600"/>
+                            <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
+                                <Smartphone className="h-6 w-6 text-green-600 dark:text-green-400"/>
                             </div>
                             <span
-                                className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 text-green-700">Connectivity</span>
+                                className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300">Connectivity</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700">Active SIMs</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Active SIMs</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
-                                    <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-20 rounded"></div>
                                 ) : (
                                     <motion.div
                                         initial={{opacity: 0}}
@@ -226,13 +225,13 @@ export const TeamStats = () => {
                                         transition={{duration: 0.5}}
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900">{teamStats.activeSIM.toLocaleString()}</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.activeSIM.toLocaleString()}</span>
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 mt-1">Total connections</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Total connections</p>
                             </div>
                             <div
-                                className="flex items-center text-gray-400 group-hover:text-green-600 transition-colors duration-300">
+                                className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-300">
                                 <span className="text-sm mr-1">Details</span>
                                 <ChevronRight size={16}/>
                             </div>
@@ -242,19 +241,20 @@ export const TeamStats = () => {
                     {/* Expandable section */}
                     {showDetails === 'sims' && (
                         <motion.div
-                            className="bg-gray-50 absolute bottom-0 p-4 border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 absolute bottom-0 p-4 border-t border-gray-100 dark:border-gray-600"
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: 'auto'}}
                             transition={{duration: 0.3}}
                         >
-                            <p className="text-sm text-gray-600">SIM activation status:</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">SIM activation status:</p>
                             <div className="mt-3">
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div className="bg-green-500 h-2 rounded-full" style={{width: '88%'}}></div>
+                                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                    <div className="bg-green-500 dark:bg-green-400 h-2 rounded-full"
+                                         style={{width: '88%'}}></div>
                                 </div>
                                 <div className="flex justify-between mt-1">
-                                    <span className="text-xs text-gray-500">88% Active</span>
-                                    <span className="text-xs text-gray-500">12% Pending</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">88% Active</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">12% Pending</span>
                                 </div>
                             </div>
                         </motion.div>
@@ -263,7 +263,7 @@ export const TeamStats = () => {
 
                 {/* Quality Percentage */}
                 <motion.div
-                    className="group relative cursor-pointer bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
+                    className="group relative cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
@@ -272,17 +272,17 @@ export const TeamStats = () => {
                 >
                     <div className="p-6">
                         <div className="flex justify-between items-center">
-                            <div className="bg-blue-50 p-3 rounded-lg">
-                                <CheckCircle className="h-6 w-6 text-blue-600"/>
+                            <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+                                <CheckCircle className="h-6 w-6 text-blue-600 dark:text-blue-400"/>
                             </div>
                             <span
-                                className="text-xs font-medium px-2 py-1 rounded-full bg-blue-50 text-blue-700">Quality</span>
+                                className="text-xs font-medium px-2 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">Quality</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700">Quality Score</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Quality Score</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
-                                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                                 ) : (
                                     <motion.div
                                         initial={{opacity: 0}}
@@ -290,13 +290,13 @@ export const TeamStats = () => {
                                         transition={{duration: 0.5}}
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900">{teamStats.qualityPercentage}%</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.qualityPercentage}%</span>
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 mt-1">Performance quality</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Performance quality</p>
                             </div>
                             <div
-                                className="flex items-center text-gray-400 group-hover:text-blue-600 transition-colors duration-300">
+                                className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                                 <span className="text-sm mr-1">Details</span>
                                 <ChevronRight size={16}/>
                             </div>
@@ -306,41 +306,45 @@ export const TeamStats = () => {
                     {/* Expandable section */}
                     {showDetails === 'quality' && (
                         <motion.div
-                            className="bg-gray-50 absolute bottom-0 p-4 border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 absolute bottom-0 p-4 border-t border-gray-100 dark:border-gray-600"
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: 'auto'}}
                             transition={{duration: 0.3}}
                         >
-                            <p className="text-sm text-gray-600">Quality metrics breakdown:</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Quality metrics breakdown:</p>
                             <div className="mt-2 space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Data Accuracy</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Data Accuracy</span>
                                     <div className="flex items-center">
-                                        <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
-                                            <div className="bg-blue-500 h-1.5 rounded-full"
+                                        <div className="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mr-2">
+                                            <div className="bg-blue-500 dark:bg-blue-400 h-1.5 rounded-full"
                                                  style={{width: `${teamStats.qualityPercentage - 5}%`}}></div>
                                         </div>
-                                        <span className="text-xs font-medium">{teamStats.qualityPercentage - 5}%</span>
+                                        <span
+                                            className="text-xs font-medium dark:text-gray-300">{teamStats.qualityPercentage - 5}%</span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Customer Satisfaction</span>
+                                    <span
+                                        className="text-xs text-gray-500 dark:text-gray-400">Customer Satisfaction</span>
                                     <div className="flex items-center">
-                                        <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
-                                            <div className="bg-blue-500 h-1.5 rounded-full"
+                                        <div className="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mr-2">
+                                            <div className="bg-blue-500 dark:bg-blue-400 h-1.5 rounded-full"
                                                  style={{width: `${teamStats.qualityPercentage + 2}%`}}></div>
                                         </div>
-                                        <span className="text-xs font-medium">{teamStats.qualityPercentage + 2}%</span>
+                                        <span
+                                            className="text-xs font-medium dark:text-gray-300">{teamStats.qualityPercentage + 2}%</span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Process Compliance</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Process Compliance</span>
                                     <div className="flex items-center">
-                                        <div className="w-16 bg-gray-200 rounded-full h-1.5 mr-2">
-                                            <div className="bg-blue-500 h-1.5 rounded-full"
+                                        <div className="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mr-2">
+                                            <div className="bg-blue-500 dark:bg-blue-400 h-1.5 rounded-full"
                                                  style={{width: `${teamStats.qualityPercentage - 2}%`}}></div>
                                         </div>
-                                        <span className="text-xs font-medium">{teamStats.qualityPercentage - 2}%</span>
+                                        <span
+                                            className="text-xs font-medium dark:text-gray-300">{teamStats.qualityPercentage - 2}%</span>
                                     </div>
                                 </div>
                             </div>
@@ -350,7 +354,7 @@ export const TeamStats = () => {
 
                 {/* Monthly Target */}
                 <motion.div
-                    className="group relative cursor-pointer bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
+                    className="group relative cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
@@ -359,17 +363,17 @@ export const TeamStats = () => {
                 >
                     <div className="p-6">
                         <div className="flex justify-between items-center">
-                            <div className="bg-amber-50 p-3 rounded-lg">
-                                <Award className="h-6 w-6 text-amber-600"/>
+                            <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg">
+                                <Award className="h-6 w-6 text-amber-600 dark:text-amber-400"/>
                             </div>
                             <span
-                                className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-700">Goals</span>
+                                className="text-xs font-medium px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">Goals</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700">Monthly Target</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Monthly Target</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
-                                    <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-20 rounded"></div>
                                 ) : (
                                     <motion.div
                                         initial={{opacity: 0}}
@@ -377,13 +381,13 @@ export const TeamStats = () => {
                                         transition={{duration: 0.5}}
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900">{teamStats.monthlyTarget.toLocaleString()}</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.monthlyTarget.toLocaleString()}</span>
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 mt-1">SIM activations goal</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">SIM activations goal</p>
                             </div>
                             <div
-                                className="flex items-center text-gray-400 group-hover:text-amber-600 transition-colors duration-300">
+                                className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-300">
                                 <span className="text-sm mr-1">Details</span>
                                 <ChevronRight size={16}/>
                             </div>
@@ -393,32 +397,32 @@ export const TeamStats = () => {
                     {/* Expandable section */}
                     {showDetails === 'target' && (
                         <motion.div
-                            className="bg-gray-50 absolute bottom-0 p-4 border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 absolute bottom-0 p-4 border-t border-gray-100 dark:border-gray-600"
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: 'auto'}}
                             transition={{duration: 0.3}}
                         >
-                            <p className="text-sm text-gray-600">Target distribution:</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Target distribution:</p>
                             <div className="mt-2 space-y-1">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Week 1</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Week 1</span>
                                     <span
-                                        className="text-xs font-medium">{Math.floor(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.floor(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Week 2</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Week 2</span>
                                     <span
-                                        className="text-xs font-medium">{Math.floor(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.floor(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Week 3</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Week 3</span>
                                     <span
-                                        className="text-xs font-medium">{Math.floor(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.floor(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Week 4</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Week 4</span>
                                     <span
-                                        className="text-xs font-medium">{Math.ceil(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.ceil(teamStats.monthlyTarget * 0.25).toLocaleString()}</span>
                                 </div>
                             </div>
                         </motion.div>
@@ -427,7 +431,7 @@ export const TeamStats = () => {
 
                 {/* Target Completion */}
                 <motion.div
-                    className="group relative cursor-pointer bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
+                    className="group relative cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
@@ -436,17 +440,18 @@ export const TeamStats = () => {
                 >
                     <div className="p-6">
                         <div className="flex justify-between items-center">
-                            <div className="bg-purple-50 p-3 rounded-lg">
-                                <BarChart4 className="h-6 w-6 text-purple-600"/>
+                            <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-lg">
+                                <BarChart4 className="h-6 w-6 text-purple-600 dark:text-purple-400"/>
                             </div>
                             <span
-                                className="text-xs font-medium px-2 py-1 rounded-full bg-purple-50 text-purple-700">Progress</span>
+                                className="text-xs font-medium px-2 py-1 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">Progress</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700">Target Completion</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Target
+                            Completion</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
-                                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                                 ) : (
                                     <motion.div
                                         initial={{opacity: 0}}
@@ -454,13 +459,13 @@ export const TeamStats = () => {
                                         transition={{duration: 0.5}}
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900">{teamStats.targetCompletion}%</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.targetCompletion}%</span>
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 mt-1">Target progress</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Target progress</p>
                             </div>
                             <div
-                                className="flex items-center text-gray-400 group-hover:text-purple-600 transition-colors duration-300">
+                                className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors duration-300">
                                 <span className="text-sm mr-1">Details</span>
                                 <ChevronRight size={16}/>
                             </div>
@@ -469,7 +474,7 @@ export const TeamStats = () => {
 
                     {/* Progress bar */}
                     <div className="px-6 pb-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                             <motion.div
                                 className={`${getStatusColor(teamStats.targetCompletion)} h-2 rounded-full`}
                                 initial={{width: "0%"}}
@@ -482,27 +487,28 @@ export const TeamStats = () => {
                     {/* Expandable section */}
                     {showDetails === 'completion' && (
                         <motion.div
-                            className="bg-gray-50 absolute bottom-0 p-4 border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 absolute bottom-0 p-4 border-t border-gray-100 dark:border-gray-600"
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: 'auto'}}
                             transition={{duration: 0.3}}
                         >
-                            <p className="text-sm text-gray-600">Weekly breakdown:</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Weekly breakdown:</p>
                             <div className="mt-2 space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">This week's goal</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">This week's goal</span>
                                     <span
-                                        className="text-xs font-medium">{Math.floor(teamStats.monthlyTarget / 4).toLocaleString()}</span>
+                                        className="text-xs font-medium dark:text-gray-300">{Math.floor(teamStats.monthlyTarget / 4).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">This week's progress</span>
-                                    <span className="text-xs font-medium">
+                                    <span
+                                        className="text-xs text-gray-500 dark:text-gray-400">This week's progress</span>
+                                    <span className="text-xs font-medium dark:text-gray-300">
                     {Math.floor((teamStats.targetCompletion / 100) * (teamStats.monthlyTarget / 4)).toLocaleString()}
                   </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs text-gray-500">Remaining</span>
-                                    <span className="text-xs font-medium">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Remaining</span>
+                                    <span className="text-xs font-medium dark:text-gray-300">
                     {Math.ceil((1 - teamStats.targetCompletion / 100) * (teamStats.monthlyTarget / 4)).toLocaleString()}
                   </span>
                                 </div>
@@ -513,7 +519,7 @@ export const TeamStats = () => {
 
                 {/* Performance Trend */}
                 <motion.div
-                    className="group cursor-pointer relative bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300"
+                    className="group cursor-pointer relative bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-100 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
                     variants={fadeInUp}
                     initial="hidden"
                     animate="visible"
@@ -522,17 +528,18 @@ export const TeamStats = () => {
                 >
                     <div className="p-6">
                         <div className="flex justify-between items-center">
-                            <div className="bg-teal-50 p-3 rounded-lg">
-                                <TrendingUp className="h-6 w-6 text-teal-600"/>
+                            <div className="bg-teal-50 dark:bg-teal-900/30 p-3 rounded-lg">
+                                <TrendingUp className="h-6 w-6 text-teal-600 dark:text-teal-400"/>
                             </div>
                             <span
-                                className="text-xs font-medium px-2 py-1 rounded-full bg-teal-50 text-teal-700">Trend</span>
+                                className="text-xs font-medium px-2 py-1 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300">Trend</span>
                         </div>
-                        <h3 className="mt-4 text-lg font-semibold text-gray-700">Performance Trend</h3>
+                        <h3 className="mt-4 text-lg font-semibold text-gray-700 dark:text-gray-200">Performance
+                            Trend</h3>
                         <div className="mt-2 flex items-end justify-between">
                             <div>
                                 {isLoading ? (
-                                    <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-8 w-16 rounded"></div>
                                 ) : (
                                     <motion.div
                                         initial={{opacity: 0}}
@@ -541,7 +548,7 @@ export const TeamStats = () => {
                                         className="flex items-center"
                                     >
                                         <span
-                                            className="text-3xl font-bold text-gray-900">{teamStats.performanceTrend > 0 ? '+' : ''}{teamStats.performanceTrend}%</span>
+                                            className="text-3xl font-bold text-gray-900 dark:text-white">{teamStats.performanceTrend > 0 ? '+' : ''}{teamStats.performanceTrend}%</span>
                                         {teamStats.performanceTrend > 0 ? (
                                             <TrendingUp size={20} className="ml-2 text-emerald-500"/>
                                         ) : (
@@ -549,10 +556,10 @@ export const TeamStats = () => {
                                         )}
                                     </motion.div>
                                 )}
-                                <p className="text-sm text-gray-500 mt-1">vs. last month</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">vs. last month</p>
                             </div>
                             <div
-                                className="flex items-center text-gray-400 group-hover:text-teal-600 transition-colors duration-300">
+                                className="flex items-center text-gray-400 dark:text-gray-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors duration-300">
                                 <span className="text-sm mr-1">Details</span>
                                 <ChevronRight size={16}/>
                             </div>
@@ -562,39 +569,39 @@ export const TeamStats = () => {
                     {/* Expandable section */}
                     {showDetails === 'trend' && (
                         <motion.div
-                            className="bg-gray-50 absolute bottom-0 p-4 border-t border-gray-100"
+                            className="bg-gray-50 dark:bg-gray-700 absolute bottom-0 p-4 border-t border-gray-100 dark:border-gray-700"
                             initial={{opacity: 0, height: 0}}
                             animate={{opacity: 1, height: 'auto'}}
                             transition={{duration: 0.3}}
                         >
-                            <p className="text-sm text-gray-600">3-month history:</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">3-month history:</p>
                             <div className="mt-3 flex items-end space-x-2">
                                 <div className="flex flex-col items-center">
-                                    <div className="h-16 w-6 bg-gray-200 rounded-t-sm overflow-hidden">
+                                    <div className="h-16 w-6 bg-gray-200 dark:bg-gray-600 rounded-t-sm overflow-hidden">
                                         <div
-                                            className="bg-teal-500 w-full"
+                                            className="bg-teal-500 dark:bg-teal-400 w-full"
                                             style={{height: `${60}%`, marginTop: 'auto'}}
                                         ></div>
                                     </div>
-                                    <span className="text-xs text-gray-500 mt-1">Mar</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">Mar</span>
                                 </div>
                                 <div className="flex flex-col items-center">
-                                    <div className="h-16 w-6 bg-gray-200 rounded-t-sm overflow-hidden">
+                                    <div className="h-16 w-6 bg-gray-200 dark:bg-gray-600 rounded-t-sm overflow-hidden">
                                         <div
-                                            className="bg-teal-500 w-full"
+                                            className="bg-teal-500 dark:bg-teal-400 w-full"
                                             style={{height: `${80}%`, marginTop: 'auto'}}
                                         ></div>
                                     </div>
-                                    <span className="text-xs text-gray-500 mt-1">Apr</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">Apr</span>
                                 </div>
                                 <div className="flex flex-col items-center">
-                                    <div className="h-16 w-6 bg-gray-200 rounded-t-sm overflow-hidden">
+                                    <div className="h-16 w-6 bg-gray-200 dark:bg-gray-600 rounded-t-sm overflow-hidden">
                                         <div
-                                            className="bg-teal-500 w-full"
+                                            className="bg-teal-500 dark:bg-teal-400 w-full"
                                             style={{height: `${teamStats.targetCompletion}%`, marginTop: 'auto'}}
                                         ></div>
                                     </div>
-                                    <span className="text-xs text-gray-500 mt-1">May</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">May</span>
                                 </div>
                             </div>
                         </motion.div>
@@ -604,4 +611,3 @@ export const TeamStats = () => {
         </div>
     );
 };
-;
