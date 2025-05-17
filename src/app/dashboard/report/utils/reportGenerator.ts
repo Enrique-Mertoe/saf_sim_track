@@ -117,7 +117,14 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
         populateTeamWorksheet(unknownSheet, unknownTeamReport, headerStyle);
     }
 
+    // Inside the generateTeamReports function, add this before the return statement:
 
+    const performanceSheet = workbook.addWorksheet('%Performance', {
+        properties: {
+            tabColor: {argb: 'FF92D050'}
+        }
+    });
+    // populatePerformanceWorksheet(performanceSheet,teamReport, headerStyle);
 
     // Generate the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
@@ -229,7 +236,7 @@ const populateRawDataWorksheet = async (
                 row.eachCell((cell) => {
                     cell.border = {
                         ...cell.border,
-                        top: { style: 'medium' }
+                        top: {style: 'medium'}
                     };
                 });
             }
@@ -450,221 +457,224 @@ const populateSummaryWorksheet = async (
 };
 
 
-// // Add this function to the existing code
-// /**
-//  * Populate Performance worksheet with team performance data
-//  */
-// const populatePerformanceWorksheet = (
-//     worksheet: ExcelJS.Worksheet,
-//     headerStyle: any
-// ): void => {
-//     // Define performance columns
-//     const columns = [
-//         {header: 'Team', key: 'team', width: 20},
-//         {header: 'Total activation', key: 'totalActivation1', width: 15},
-//         {header: 'Quality', key: 'quality1', width: 15},
-//         {header: 'Percentage performance', key: 'percentage1', width: 25},
-//         {header: 'Total activation', key: 'totalActivation2', width: 15},
-//         {header: 'Quality', key: 'quality2', width: 15},
-//         {header: 'Percentage performance', key: 'percentage2', width: 25},
-//         {header: 'Total activation', key: 'totalActivation3', width: 15},
-//         {header: 'Quality', key: 'quality3', width: 15},
-//         {header: 'Percentage performance', key: 'percentage3', width: 25},
-//         {header: 'Comment', key: 'comment', width: 15}
-//     ];
-//
-//     // Add columns to the worksheet
-//     worksheet.columns = columns;
-//
-//     // Add header row
-//     const headerRow = worksheet.addRow([
-//         'Team', 'Total activation', 'Quality', 'Percentage performance',
-//         'Total activation', 'Quality', 'Percentage performance',
-//         'Total activation', 'Quality', 'Percentage performance', 'Comment'
-//     ]);
-//
-//     // Apply header styles
-//     headerRow.eachCell((cell) => {
-//         cell.fill = {
-//             type: 'pattern',
-//             pattern: 'solid',
-//             fgColor: {argb: 'FF00FF00'} // Green color with alpha
-//         };
-//         cell.font = { bold: true };
-//         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-//         cell.border = {
-//             top: {style: 'thin'},
-//             left: {style: 'thin'},
-//             bottom: {style: 'thin'},
-//             right: {style: 'thin'}
-//         };
-//     });
-//
-//     // Create period headers row
-//     const periodRow = worksheet.addRow(['', 'Mar Date 1-9', '', '', 'Mar Date 10-16', '', '', 'Mar Date 17-30', '', '', '']);
-//
-//     // Apply styles to period headers
-//     for (let i = 1; i <= 11; i++) {
-//         const cell = periodRow.getCell(i);
-//         cell.fill = {
-//             type: 'pattern',
-//             pattern: 'solid',
-//             fgColor: {argb: 'FF00FF00'} // Green color
-//         };
-//         cell.font = { bold: true };
-//         cell.alignment = { horizontal: 'center', vertical: 'middle' };
-//         cell.border = {
-//             top: {style: 'thin'},
-//             left: {style: 'thin'},
-//             bottom: {style: 'thin'},
-//             right: {style: 'thin'}
-//         };
-//     }
-//
-//     // Merge cells for period headers
-//     worksheet.mergeCells(2, 2, 2, 4); // Mar Date 1-9
-//     worksheet.mergeCells(2, 5, 2, 7); // Mar Date 10-16
-//     worksheet.mergeCells(2, 8, 2, 10); // Mar Date 17-30
-//
-//     // Define color styles
-//     const blueBackgroundFill = {
-//         type: 'pattern',
-//         pattern: 'solid',
-//         fgColor: {argb: 'FFCCFFFF'} // Light blue
-//     };
-//
-//     const pinkBackgroundFill = {
-//         type: 'pattern',
-//         pattern: 'solid',
-//         fgColor: {argb: 'FFFF99FF'} // Pink
-//     };
-//
-//     // Add team performance data (as in your Python example)
-//     const performanceData = [
-//         ['Amos team', 684, 634, 92.6900584, 542, 503, 92.8044280, 1382, 1228, 88.8567294, 'Improve'],
-//         ['Brian team', 341, 317, 92.9618768, 428, 400, 93.4579439, 1096, 985, 89.8722628, 'Improve'],
-//         ['Calvine team', 717, 685, 95.5369596, 650, 602, 92.6153846, 1307, 1221, 93.4200459, 'Well done'],
-//         ['Emmanuel team', 611, 582, 95.2536825, 479, 415, 86.6388309, 995, 941, 94.5728643, 'Well done'],
-//         ['Kemei team', 718, 697, 97.0752089, 677, 634, 93.6484904, 1684, 1552, 92.1615202, 'Improve']
-//     ];
-//
-//     // Add data rows
-//     performanceData.forEach((rowData) => {
-//         const row = worksheet.addRow(rowData);
-//
-//         // Apply cell styles and colors
-//         row.eachCell((cell, colNumber) => {
-//             cell.border = {
-//                 top: {style: 'thin'},
-//                 left: {style: 'thin'},
-//                 bottom: {style: 'thin'},
-//                 right: {style: 'thin'}
-//             };
-//
-//             // Apply blue background to Mar Date 1-9 columns
-//             if (colNumber >= 2 && colNumber <= 4) {
-//                 cell.fill = blueBackgroundFill;
-//             }
-//             // Apply pink background to Mar Date 10-16 columns
-//             else if (colNumber >= 5 && colNumber <= 7) {
-//                 cell.fill = pinkBackgroundFill;
-//             }
-//
-//             // Format percentage cells
-//             if ([4, 7, 10].includes(colNumber)) {
-//                 cell.numFmt = '0.00000000';
-//                 cell.alignment = { horizontal: 'right' };
-//             }
-//         });
-//     });
-//
-//     // Add empty row for separation
-//     worksheet.addRow([]);
-//
-//     // Add Monthly Performance header
-//     const monthlyHeader = worksheet.addRow(['', 'Monthly Performance', '', '']);
-//     monthlyHeader.getCell(2).fill = {
-//         type: 'pattern',
-//         pattern: 'solid',
-//         fgColor: {argb: 'FF00FF00'} // Green color
-//     };
-//     monthlyHeader.getCell(2).font = { bold: true };
-//     monthlyHeader.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
-//     monthlyHeader.getCell(2).border = {
-//         top: {style: 'thin'},
-//         left: {style: 'thin'},
-//         bottom: {style: 'thin'},
-//         right: {style: 'thin'}
-//     };
-//     worksheet.mergeCells(8, 2, 8, 4);
-//
-//     // Add monthly columns header
-//     const monthlyColumnsHeader = worksheet.addRow(['Team', 'Total activation', 'Quality', 'Percentage performance']);
-//     monthlyColumnsHeader.eachCell((cell, colNumber) => {
-//         if (colNumber <= 4) {
-//             cell.fill = {
-//                 type: 'pattern',
-//                 pattern: 'solid',
-//                 fgColor: {argb: 'FF00FF00'} // Green color
-//             };
-//             cell.font = { bold: true };
-//             cell.alignment = { horizontal: 'center', vertical: 'middle' };
-//             cell.border = {
-//                 top: {style: 'thin'},
-//                 left: {style: 'thin'},
-//                 bottom: {style: 'thin'},
-//                 right: {style: 'thin'}
-//             };
-//         }
-//     });
-//
-//     // Add Mar Date 1-30 header
-//     const marDateHeader = worksheet.addRow(['', 'Mar Date 1-30', '', '']);
-//     marDateHeader.getCell(2).fill = {
-//         type: 'pattern',
-//         pattern: 'solid',
-//         fgColor: {argb: 'FF00FF00'} // Green color
-//     };
-//     marDateHeader.getCell(2).font = { bold: true };
-//     marDateHeader.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' };
-//     marDateHeader.getCell(2).border = {
-//         top: {style: 'thin'},
-//         left: {style: 'thin'},
-//         bottom: {style: 'thin'},
-//         right: {style: 'thin'}
-//     };
-//     worksheet.mergeCells(10, 2, 10, 4);
-//
-//     // Add monthly performance data
-//     const monthlyData = [
-//         ['Amos team', 2608, 2365, 90.6825153],
-//         ['Brian team', 1865, 1702, 91.2600536],
-//         ['Calvine team', 2674, 2508, 93.7920718],
-//         ['Emmanuel team', 2085, 1938, 92.9496403],
-//         ['Kemei team', 3079, 2883, 93.6342969]
-//     ];
-//
-//     // Add monthly data rows
-//     monthlyData.forEach((rowData) => {
-//         const row = worksheet.addRow(rowData);
-//
-//         // Apply cell styles
-//         row.eachCell((cell, colNumber) => {
-//             if (colNumber <= 4) {
-//                 cell.border = {
-//                     top: {style: 'thin'},
-//                     left: {style: 'thin'},
-//                     bottom: {style: 'thin'},
-//                     right: {style: 'thin'}
-//                 };
-//                 cell.fill = blueBackgroundFill;
-//
-//                 // Format percentage cells
-//                 if (colNumber === 4) {
-//                     cell.numFmt = '0.00000000';
-//                     cell.alignment = { horizontal: 'right' };
-//                 }
-//             }
-//         });
-//     });
-// };
+// Add this function to the existing code
+/**
+ * Populate Performance worksheet with team performance data
+ */
+const populatePerformanceWorksheet = (
+    worksheet: ExcelJS.Worksheet,
+    headerStyle: any
+): void => {
+    // Define performance columns
+    const columns = [
+        {header: 'Team', key: 'team', width: 20},
+        {header: 'Total activation', key: 'totalActivation1', width: 15},
+        {header: 'Quality', key: 'quality1', width: 15},
+        {header: 'Percentage performance', key: 'percentage1', width: 25},
+        {header: 'Total activation', key: 'totalActivation2', width: 15},
+        {header: 'Quality', key: 'quality2', width: 15},
+        {header: 'Percentage performance', key: 'percentage2', width: 25},
+        {header: 'Total activation', key: 'totalActivation3', width: 15},
+        {header: 'Quality', key: 'quality3', width: 15},
+        {header: 'Percentage performance', key: 'percentage3', width: 25},
+        {header: 'Comment', key: 'comment', width: 15}
+    ];
+
+    // Add columns to the worksheet
+    worksheet.columns = columns;
+
+    // Add header row
+    const headerRow = worksheet.addRow([
+        'Team', 'Total activation', 'Quality', 'Percentage performance',
+        'Total activation', 'Quality', 'Percentage performance',
+        'Total activation', 'Quality', 'Percentage performance', 'Comment'
+    ]);
+
+    // Apply header styles
+    headerRow.eachCell((cell) => {
+        cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {argb: 'FF00FF00'} // Green color with alpha
+        };
+        cell.font = {bold: true};
+        cell.alignment = {horizontal: 'center', vertical: 'middle'};
+        cell.border = {
+            top: {style: 'thin'},
+            left: {style: 'thin'},
+            bottom: {style: 'thin'},
+            right: {style: 'thin'}
+        };
+    });
+
+    // Create period headers row
+    const periodRow = worksheet.addRow(['', 'Mar Date 1-9', '', '', 'Mar Date 10-16', '', '', 'Mar Date 17-30', '', '', '']);
+
+    // Apply styles to period headers
+    for (let i = 1; i <= 11; i++) {
+        const cell = periodRow.getCell(i);
+        cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: {argb: 'FF00FF00'} // Green color
+        };
+        cell.font = {bold: true};
+        cell.alignment = {horizontal: 'center', vertical: 'middle'};
+        cell.border = {
+            top: {style: 'thin'},
+            left: {style: 'thin'},
+            bottom: {style: 'thin'},
+            right: {style: 'thin'}
+        };
+    }
+
+    // Merge cells for period headers
+    worksheet.mergeCells(2, 2, 2, 4); // Mar Date 1-9
+    worksheet.mergeCells(2, 5, 2, 7); // Mar Date 10-16
+    worksheet.mergeCells(2, 8, 2, 10); // Mar Date 17-30
+
+    // Define color styles
+    const blueBackgroundFill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: {argb: 'FFCCFFFF'} // Light blue
+    };
+
+    const pinkBackgroundFill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: {argb: 'FFFF99FF'} // Pink
+    };
+
+    // Add team performance data (as in your Python example)
+    const performanceData = [
+        ['Amos team', 684, 634, 92.6900584, 542, 503, 92.8044280, 1382, 1228, 88.8567294, 'Improve'],
+        ['Brian team', 341, 317, 92.9618768, 428, 400, 93.4579439, 1096, 985, 89.8722628, 'Improve'],
+        ['Calvine team', 717, 685, 95.5369596, 650, 602, 92.6153846, 1307, 1221, 93.4200459, 'Well done'],
+        ['Emmanuel team', 611, 582, 95.2536825, 479, 415, 86.6388309, 995, 941, 94.5728643, 'Well done'],
+        ['Kemei team', 718, 697, 97.0752089, 677, 634, 93.6484904, 1684, 1552, 92.1615202, 'Improve']
+    ];
+
+    // Add data rows
+    performanceData.forEach((rowData) => {
+        const row = worksheet.addRow(rowData);
+
+        // Apply cell styles and colors
+        row.eachCell((cell, colNumber) => {
+            cell.border = {
+                top: {style: 'thin'},
+                left: {style: 'thin'},
+                bottom: {style: 'thin'},
+                right: {style: 'thin'}
+            };
+
+            // Apply blue background to Mar Date 1-9 columns
+            if (colNumber >= 2 && colNumber <= 4) {
+                // @ts-ignore
+                cell.fill = blueBackgroundFill;
+            }
+            // Apply pink background to Mar Date 10-16 columns
+            else if (colNumber >= 5 && colNumber <= 7) {
+                // @ts-ignore
+                cell.fill = pinkBackgroundFill;
+            }
+
+            // Format percentage cells
+            if ([4, 7, 10].includes(colNumber)) {
+                cell.numFmt = '0.00000000';
+                cell.alignment = {horizontal: 'right'};
+            }
+        });
+    });
+
+    // Add empty row for separation
+    worksheet.addRow([]);
+
+    // Add Monthly Performance header
+    const monthlyHeader = worksheet.addRow(['', 'Monthly Performance', '', '']);
+    monthlyHeader.getCell(2).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: {argb: 'FF00FF00'} // Green color
+    };
+    monthlyHeader.getCell(2).font = {bold: true};
+    monthlyHeader.getCell(2).alignment = {horizontal: 'center', vertical: 'middle'};
+    monthlyHeader.getCell(2).border = {
+        top: {style: 'thin'},
+        left: {style: 'thin'},
+        bottom: {style: 'thin'},
+        right: {style: 'thin'}
+    };
+    worksheet.mergeCells(8, 2, 8, 4);
+
+    // Add monthly columns header
+    const monthlyColumnsHeader = worksheet.addRow(['Team', 'Total activation', 'Quality', 'Percentage performance']);
+    monthlyColumnsHeader.eachCell((cell, colNumber) => {
+        if (colNumber <= 4) {
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: {argb: 'FF00FF00'} // Green color
+            };
+            cell.font = {bold: true};
+            cell.alignment = {horizontal: 'center', vertical: 'middle'};
+            cell.border = {
+                top: {style: 'thin'},
+                left: {style: 'thin'},
+                bottom: {style: 'thin'},
+                right: {style: 'thin'}
+            };
+        }
+    });
+
+    // Add Mar Date 1-30 header
+    const marDateHeader = worksheet.addRow(['', 'Mar Date 1-30', '', '']);
+    marDateHeader.getCell(2).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: {argb: 'FF00FF00'} // Green color
+    };
+    marDateHeader.getCell(2).font = {bold: true};
+    marDateHeader.getCell(2).alignment = {horizontal: 'center', vertical: 'middle'};
+    marDateHeader.getCell(2).border = {
+        top: {style: 'thin'},
+        left: {style: 'thin'},
+        bottom: {style: 'thin'},
+        right: {style: 'thin'}
+    };
+    worksheet.mergeCells(10, 2, 10, 4);
+
+    // Add monthly performance data
+    const monthlyData = [
+        ['Amos team', 2608, 2365, 90.6825153],
+        ['Brian team', 1865, 1702, 91.2600536],
+        ['Calvine team', 2674, 2508, 93.7920718],
+        ['Emmanuel team', 2085, 1938, 92.9496403],
+        ['Kemei team', 3079, 2883, 93.6342969]
+    ];
+
+    // Add monthly data rows
+    monthlyData.forEach((rowData) => {
+        const row = worksheet.addRow(rowData);
+
+        // Apply cell styles
+        row.eachCell((cell, colNumber) => {
+            if (colNumber <= 4) {
+                cell.border = {
+                    top: {style: 'thin'},
+                    left: {style: 'thin'},
+                    bottom: {style: 'thin'},
+                    right: {style: 'thin'}
+                };
+                // @ts-ignore
+                cell.fill = blueBackgroundFill;
+
+                // Format percentage cells
+                if (colNumber === 4) {
+                    cell.numFmt = '0.00000000';
+                    cell.alignment = {horizontal: 'right'};
+                }
+            }
+        });
+    });
+};
