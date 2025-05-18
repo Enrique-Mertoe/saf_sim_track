@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import {authService} from "@/services";
 import {$} from "@/lib/request";
 import {User as User1} from "@/models";
+import Button from "@/app/accounts/components/Button";
+import {motion} from "framer-motion";
 
 // Define a utility for animations
 const fadeIn = (delay = 0) => {
@@ -143,26 +145,26 @@ export default function LoginPage() {
         setLoginMethod(loginMethod === 'phone' ? 'email' : 'phone');
         setErrors({general: "", email: "", password: "", phone: ""});
     };
-
+    const textVariants = {
+        hidden: {opacity: 0},
+        visible: {
+            opacity: 1,
+            transition: {duration: 0.7, ease: "easeOut"}
+        }
+    };
     return (
         <>
             {/* Right side - Login Form */}
-            <div className="w-full min-h-full flex justify-center items-center p-6 dark:bg-gray-900">
+            <div className="w-full min-h-full flex flex-col gap-2 justify-center items-center p-6 dark:bg-gray-900">
                 <div
-                    className="md:bg-white md:dark:bg-gray-800 w-full md:max-w-md p-8 md:rounded-xl md:shadow-lg"
+                    className="md:bg-white md:dark:bg-gray-800 w-full md:max-w-md md:p-8 md:rounded-xl md:shadow-lg"
                     style={{
                         ...fadeIn(0.3),
                         transform: animationComplete ? 'none' : 'translateY(20px)',
                         transition: 'transform 0.8s ease-out',
                     }}
                 >
-                    {/* Mobile logo */}
-                    <div className="md:hidden flex items-center justify-center mb-8">
-                        <Activity className="h-8 w-8 mr-2 text-green-600 dark:text-green-500"/>
-                        <h1 className="text-2xl font-bold text-green-600 dark:text-green-500">Safaricom</h1>
-                    </div>
-
-                    <h2 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">Sign In to Your
+                    <h2 className="text-2xl font-bold text-center text-gray-800 dark:text-gray-100">Sign In to Your
                         Account</h2>
 
                     <div className="flex justify-center mb-6">
@@ -308,47 +310,31 @@ export default function LoginPage() {
                         )}
 
                         <div>
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isLoading}
-                                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 dark:bg-green-500 
-                    hover:bg-green-700 dark:hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-green-400 
-                    ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                            >
-                                {isLoading ? (
-                                    <div className="flex items-center">
-                                        <div
-                                            className="animate-spin mr-2 h-4 w-4 border-2 border-white border-opacity-20 border-t-white rounded-full"></div>
-                                        Signing in...
-                                    </div>
-                                ) : (
-                                    'Sign in'
-                                )}
-                            </button>
+                            <Button text={"Sign in"} isLoading={isLoading} onClick={handleSubmit}/>
+
                         </div>
                     </div>
 
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Don`t have an account?</span>
-                            </div>
-                        </div>
-
-                        <div className="mt-6">
-                            <button
-                                onClick={() => location.href = "/contact-us"}
-                                type="button"
-                                className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-green-400"
-                            >
-                                Contact administrator
-                            </button>
-                        </div>
-                    </div>
                 </div>
+                <motion.div
+                    className="mt-2 text-gray-400 text-xs"
+                    variants={{
+                        hidden: {opacity: 0},
+                        visible: {
+                            opacity: 1,
+                            transition: {duration: 0.7, ease: "easeOut"}
+                        }
+                    }}
+                >
+                    Safaricom SIM Tracker v1.0.0
+                </motion.div>
+                <motion.div
+                    className="mt-6 text-gray-600 text-sm"
+                    variants={textVariants}
+                >
+                    Having trouble logging in? <a href="#" className="text-green-600 hover:text-green-700 font-medium">Contact
+                    Support</a>
+                </motion.div>
             </div>
         </>
     );

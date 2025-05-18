@@ -2,7 +2,17 @@ import useApp from "@/ui/provider/AppProvider";
 import React, {useEffect, useState} from "react";
 import simService from "@/services/simService";
 import {SIMCard, SIMStatus, Team, User} from "@/models";
-import {AlertCircle, Award, CheckCircle, Cpu, RefreshCw, XCircle} from "lucide-react";
+import {
+    AlertCircle,
+    Award,
+    CheckCircle, ChevronDown,
+    ChevronUp,
+    Cpu,
+    RefreshCw,
+    TrendingDown,
+    TrendingUp,
+    XCircle
+} from "lucide-react";
 import Signal from "@/lib/Signal";
 
 type SimAdapter = SIMCard & {
@@ -171,29 +181,38 @@ function StatCard({
                       percentage,
                       color,
                       isRefreshing,
-                      icon
+                      todayValue = 0,
+                      weekValue = 0,
+                      icon, onExpandClick
                   }: {
     title: string;
     value: number;
+    weekValue?: number;
+    todayValue?: number;
     percentage?: number;
     color: "blue" | "green" | "red" | "purple";
     isRefreshing: boolean;
     icon: React.ReactNode;
+    onExpandClick?: Closure;
 }) {
     const [prevValue, setPrevValue] = useState(value);
+    const [prevTodayValue, setPrevTodayValue] = useState(todayValue);
+    const [prevWeekValue, setPrevWeekValue] = useState(weekValue);
     const [isAnimating, setIsAnimating] = useState(false);
-
+    const [isExpanded, setIsExpanded] = useState(false);
     // Handle value changes with animation
     useEffect(() => {
-        if (value !== prevValue && !isRefreshing) {
+        if ((value !== prevValue || todayValue !== prevTodayValue || weekValue !== prevWeekValue) && !isRefreshing) {
             setIsAnimating(true);
             const timer = setTimeout(() => {
                 setIsAnimating(false);
                 setPrevValue(value);
+                setPrevTodayValue(todayValue);
+                setPrevWeekValue(weekValue);
             }, 600);
             return () => clearTimeout(timer);
         }
-    }, [value, prevValue, isRefreshing]);
+    }, [value, prevValue, todayValue, weekValue, prevTodayValue, prevWeekValue, isRefreshing]);
 
     const colorClasses = {
         blue: {
@@ -229,39 +248,116 @@ function StatCard({
             iconColor: "text-purple-600 dark:text-purple-400"
         }
     };
+    const trendPercentage = weekValue > 0
+        ? Math.round(((todayValue - weekValue) / weekValue) * 100)
+        : 0;
+
+    const isTrendPositive = trendPercentage >= 0;
+
+    function calcTPercentage() {
+        return Math.abs(trendPercentage);
+    }
 
     return (
         <div
-            className={`${colorClasses[color].bg} p-5 size-full min-h-34 rounded-lg transition-all duration-200 transform ${
+            className={`${colorClasses[color].bg} p-5 w-full rounded-lg transition-all duration-200 transform ${
                 isAnimating ? 'scale-105' : ''
-            } ${isRefreshing ? 'opacity-70' : 'opacity-100'} shadow-sm hover:shadow-md flex items-start`}
+            } ${isRefreshing ? 'opacity-70' : 'opacity-100'} shadow-sm hover:shadow-md`}
         >
-            <div className={`${colorClasses[color].iconBg} p-2 rounded-lg mr-3`}>
-                <div className={colorClasses[color].iconColor}>
-                    {icon}
+            <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                    <div className={`${colorClasses[color].iconBg} p-2 rounded-lg mr-3`}>
+                        <div className={colorClasses[color].iconColor}>
+                            {icon}
+                        </div>
+                    </div>
+                    <p className={`text-sm font-medium ${colorClasses[color].text}`}>{title}</p>
                 </div>
+
+                {percentage !== undefined && (
+                    <span className={`text-sm font-semibold ${colorClasses[color].percent} flex items-center`}>
+            {percentage}%
+          </span>
+                )}
             </div>
 
-            <div>
-                <p className={`text-sm font-medium ${colorClasses[color].text} mb-1`}>{title}</p>
-                <div className="flex items-baseline">
-                    <p className={`text-2xl font-bold ${colorClasses[color].value} ${
+            {/* General value */}
+            <div className="mb-4">
+                <p className={`text-2xl font-bold ${colorClasses[color].value} ${
+                    isAnimating ? 'animate-pulse' : ''
+                }`}>
+                    {isRefreshing ? (
+                        <span
+                            className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
+                    ) : <div className={"flex items-center"}>
+                        Total: <div className="w-1"></div>
+                        {value.toLocaleString()}
+                    </div>}
+                </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                {/* Today's value */}
+                <div className="border-r border-gray-200 dark:border-gray-700 pr-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Today</p>
+                    <p className={`text-xl font-bold ${colorClasses[color].value} ${
                         isAnimating ? 'animate-pulse' : ''
                     }`}>
                         {isRefreshing ? (
                             <span
-                                className="inline-block w-12 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
-                        ) : (
-                            value.toLocaleString()
-                        )}
+                                className="inline-block w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
+                        ) : todayValue.toLocaleString()}
                     </p>
-
-                    {percentage !== undefined && (
-                        <span className={`text-sm font-normal ml-2 ${colorClasses[color].percent}`}>
-                            ({isRefreshing ? '...' : `${percentage}%`})
-                        </span>
-                    )}
                 </div>
+
+                {/* This week's value */}
+                <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">This Week</p>
+                    <div className="flex items-center">
+                        <p className={`text-xl font-bold ${colorClasses[color].value} ${
+                            isAnimating ? 'animate-pulse' : ''
+                        }`}>
+                            {isRefreshing ? (
+                                <span
+                                    className="inline-block w-12 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
+                            ) : weekValue.toLocaleString()}
+                        </p>
+
+                        {/* Trend indicator */}
+                        {!isRefreshing && trendPercentage !== 0 && (
+                            <div
+                                className={`flex items-center ml-2 ${isTrendPositive ? 'text-green-500' : 'text-red-500'}`}>
+                                {isTrendPositive ?
+                                    <TrendingUp size={16}/> :
+                                    <TrendingDown size={16}/>
+                                }
+                                <span className="text-xs font-medium ml-1">{calcTPercentage()}%</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+            {/* View More / Expand Section */}
+            <div className="pt-2 text-center">
+                <button
+                    onClick={() => {
+                        setIsExpanded(!isExpanded);
+                        if (onExpandClick) onExpandClick(!isExpanded);
+                    }}
+                    className={`inline-flex items-center justify-center text-sm font-medium ${colorClasses[color].text} hover:opacity-80 transition-opacity`}
+                >
+                    {isExpanded ? (
+                        <>
+                            <span>View Less</span>
+                            <ChevronUp size={16} className="ml-1"/>
+                        </>
+                    ) : (
+                        <>
+                            <span>View More</span>
+                            <ChevronDown size={16} className="ml-1"/>
+                        </>
+                    )}
+                </button>
             </div>
         </div>
     );

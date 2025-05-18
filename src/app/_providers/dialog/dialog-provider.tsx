@@ -115,7 +115,7 @@ const DialogProvider: React.FC<{ children: ReactNode }> = ({children}) => {
     const [stack] = useState<DialogStack<DialogInstance>>(new DialogStack());
     const [dialogs, setDialogs] = useState<DialogInstance[]>([]);
     const [prevState, sp] = useState(false)
-
+    const [originalBodyStyles, setOriginalBodyStyles] = useState<Record<string, string>>({});
     const create = useCallback((context: DialogOptions) => {
         const d = Dialog(context)
         setDialogs(prev => [...prev, d])
@@ -125,6 +125,9 @@ const DialogProvider: React.FC<{ children: ReactNode }> = ({children}) => {
             stack.pop()
             setDialogs(prev => prev.filter(dl => dl.id != d.id))
             sp(false)
+            if (!stack.length) {
+                Object.assign(document.body.style, originalBodyStyles)
+            }
         });
         d.handler.onTPrevious(() => {
             sp(true)
@@ -196,34 +199,50 @@ const DialogComponent: React.FC<DialogComponentProps> = ({
                                                          }) => {
     const [visible, setVisible] = useState(false);
     const [showContent, setShowContent] = useState(false);
+    // const [originalBodyStyles, setOriginalBodyStyles] = useState<Record<string, string>>({});
 
     // Handle scroll locking to prevent layout shift
-    useEffect(() => {
-        if (visible) {
-            // Get current scrollbar width before locking scroll
-            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-
-            // Store current scroll position
-            const scrollY = window.scrollY;
-
-            // Apply styles to prevent scrolling while preserving layout
-            document.body.style.position = "fixed";
-            document.body.style.top = `-${scrollY}px`;
-            document.body.style.width = "100%";
-            document.body.style.paddingRight = `${scrollbarWidth}px`;
-
-            return () => {
-                // Restore scrolling when dialog closes
-                document.body.style.position = "";
-                document.body.style.top = "";
-                document.body.style.width = "";
-                document.body.style.paddingRight = "";
-
-                // Restore scroll position
-                window.scrollTo(0, scrollY);
-            };
-        }
-    }, [visible]);
+    // useEffect(() => {
+    //     if (visible) {
+    //         const styleAttr = document.body.getAttribute("style") ?? "";
+    //         const styleObj = styleAttr
+    //             ? Object.fromEntries(
+    //                 styleAttr
+    //                     .split(";")
+    //                     .map(rule => rule.trim())
+    //                     .filter(Boolean)
+    //                     .map(rule => {
+    //                         const [property, value] = rule.split(":").map(str => str.trim());
+    //                         return [property, value];
+    //                     })
+    //             )
+    //             : {};
+    //         setOriginalBodyStyles(styleObj);
+    //
+    //         const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    //         const scrollY = window.scrollY;
+    //         const newStyles = {
+    //             ...originalBodyStyles,
+    //             position: "fixed",
+    //             top: `-${scrollY}px`,
+    //             width: "100%",
+    //             paddingRight: `${scrollbarWidth}px`,
+    //         };
+    //         Object.assign(document.body.style, newStyles);
+    //         const eom = JSON.parse(document.body.getAttribute("eom") ?? "{}")
+    //         console.log(eom)
+    //         document.body.setAttribute("eom", JSON.stringify(originalBodyStyles))
+    //
+    //         console.log(originalBodyStyles)
+    //
+    //         return () => {
+    //             document.body.removeAttribute("style")
+    //             console.log("ort", originalBodyStyles)
+    //             Object.assign(document.body.style, originalBodyStyles)
+    //             window.scrollTo(0, scrollY);
+    //         };
+    //     }
+    // }, [visible]);
 
     const handleOutsideClick = (e: React.MouseEvent) => {
         if (cancelable && e.target === e.currentTarget) {
@@ -235,7 +254,9 @@ const DialogComponent: React.FC<DialogComponentProps> = ({
     const handleClose = useCallback(() => {
         setShowContent(false);
         setTimeout(() => setVisible(false), 350);
-        setTimeout(onClose, 300);
+        setTimeout(() => {
+            onClose()
+        }, 300);
     }, [onClose]);
 
     useEffect(() => {
