@@ -1,12 +1,14 @@
 "use client"
 import React, {ChangeEvent, useEffect, useState} from 'react';
-import {AnimatePresence, motion} from 'framer-motion';
+import {AnimatePresence, motion, percent} from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-import {SIMStatus, Team as Team1, User} from "@/models";
+import {SIMCard, SIMCardCreate, SIMStatus, Team as Team1, User} from "@/models";
 import {teamService} from "@/services";
 import {toast} from "react-hot-toast";
+import Progress from "@/ui/components/MaterialProgress";
+import useApp from "@/ui/provider/AppProvider";
 
 // Define TypeScript interfaces
 interface SerialNumber {
@@ -32,6 +34,7 @@ const generateId = (): string => {
 };
 
 const SerialNumberForm: React.FC = () => {
+    const {user} = useApp()
     const [inputValue, setInputValue] = useState<string>('');
     const [serialNumbers, setSerialNumbers] = useState<SerialNumber[]>([]);
     const [globalError, setGlobalError] = useState<string | null>(null);
@@ -41,6 +44,8 @@ const SerialNumberForm: React.FC = () => {
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [checkingCount, setCheckingCount] = useState<number>(0);
     const [uploadingCount, setUploadingCount] = useState<number>(0);
+    const [currentPercentage, setcurrentPercentage] = useState<number>(0)
+    const [uploadedSofar, setSofar] = useState<number>(0)
     const [teams, setTeams] = useState<Team[]>([])
 
     // Handle input change
@@ -67,12 +72,18 @@ const SerialNumberForm: React.FC = () => {
         // Split by whitespace and filter out empty strings
         const serialsToParse = inputValue.split(/\s+/).filter(Boolean);
 
+
         if (serialsToParse.length === 0) {
             throw new Error('No valid serial numbers found');
         }
 
         // Reset the input field
         setInputValue('');
+        // eslint-disable-next-line prefer-const
+        let {data, error: simError} = await simService.getAllSimCards(user!)
+        if (!data || simError)
+            data = []
+        const simdataMapa = data.map((data: SIMCard) => data.serial_number)
 
         // Add all serials to the grid immediately, then check each individually
         const newSerials: SerialNumber[] = serialsToParse
@@ -82,9 +93,9 @@ const SerialNumberForm: React.FC = () => {
                 id: generateId(),
                 value: serial,
                 isValid: !isNaN(Number(serial)),
-                isChecking: true,
+                isChecking: false,
                 checkError: null,
-                exists: false,
+                exists: simdataMapa.includes(serial),
                 isUploading: false,
                 isUploaded: false,
                 uploadError: null
@@ -186,10 +197,21 @@ const SerialNumberForm: React.FC = () => {
         setIsUploading(true);
         setUploadingCount(serialsToUpload.length);
 
+
         // Mark all serials as uploading
-        serialsToUpload.forEach(serial => {
-            updateSerialStatus(serial.id, {isUploading: true, uploadError: null});
+        await simService.createSIMCardBatch(serialsToUpload.map(ser => {
+            const ser_data: SIMCardCreate = {
+                match: SIMStatus.UNMATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
+                team_id: selectedTeam
+
+            }
+            return ser_data
+        }), 50, (p, v) => {
+            setcurrentPercentage(p)
+            setSofar(v)
         });
+        setIsUploading(false);
+        setTimeout(clearAll, 1000)
     };
 
     const clearAll = () => {
@@ -240,7 +262,7 @@ const SerialNumberForm: React.FC = () => {
     return (
         <div className="w-full mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-8 text-green-700">
-                Pick List Serial Upload
+                Safaricom SIM Serial Upload
             </h1>
 
             {/* Team Selection */}
@@ -292,6 +314,11 @@ const SerialNumberForm: React.FC = () => {
                     </div>
                 </div>
             </div>
+            <Progress
+                progress={currentPercentage}
+                current={uploadedSofar}
+                total={serialNumbers.length}
+            />
 
             {/* Status messages */}
             <AnimatePresence>
@@ -483,7 +510,7 @@ const SerialItem = ({
             }
         };
 
-        checkSerialExistence();
+        // checkSerialExistence();
     }, [serial.id, serial.value, serial.isValid, serial.isChecking]);
 
     // Handle serial upload

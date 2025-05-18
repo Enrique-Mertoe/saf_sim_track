@@ -49,6 +49,49 @@ export const simCardService = {
 
         return data as SIMCard;
     },
+    createSIMCardBatch: async (
+        simCardsData: SIMCardCreate[],
+        chunkSize: number = 10,
+        updateProgress: ((percent: number, sofar: number) => void) = () => {
+        }
+    ): Promise<{
+        success: number,
+        failed: number,
+        errors: any[],
+    }> => {
+        const supabase = createSupabaseClient();
+        let successCount = 0;
+        const errors: any[] = [];
+
+        for (let i = 0; i < simCardsData.length; i += chunkSize) {
+            const chunk = simCardsData.slice(i, i + chunkSize);
+            // Clean up data before sending
+            const cleanedData = chunk.map(card => ({
+                ...card,
+                sold_by_user_id: card.sold_by_user_id === '' ? null : card.sold_by_user_id
+            }));
+
+            const {error} = await supabase.from('sim_cards').insert(cleanedData);
+
+            if (error) {
+                console.error(`Error inserting chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(simCardsData.length / chunkSize)}:`, error);
+                errors.push(error);
+                // Continue with next chunk instead of returning immediately
+            } else {
+                successCount += chunk.length;
+            }
+
+            const percent = Math.min(100, Math.round(((i + chunk.length) / simCardsData.length) * 100));
+            updateProgress(percent, successCount);
+        }
+
+        return {
+            success: successCount,
+            failed: simCardsData.length - successCount,
+            errors: errors
+        };
+    },
+
 
     // Update an existing SIM card
     updateSIMCard: async (id: string, updateData: SIMCardUpdate) => {
