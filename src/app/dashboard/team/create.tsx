@@ -4,6 +4,7 @@ import {teamService, userService} from "@/services";
 import {TeamCreate, User, UserRole} from "@/models";
 import {useDialog} from "@/app/_providers/dialog";
 import CreateUserModal from "@/app/dashboard/users/components/CreateUserModal";
+import {AnimatePresence, motion} from "framer-motion";
 
 export default function Create({onDismiss}: {
     onDismiss: Closure
@@ -121,7 +122,7 @@ export default function Create({onDismiss}: {
     async function loadTeams() {
 
         const {data} = await userService.getUsersByRole(UserRole.TEAM_LEADER)
-        console.log(data)
+        // console.log(data)
         setLeaders(data as User[])
         setTeamLoading(false)
     }
@@ -133,33 +134,43 @@ export default function Create({onDismiss}: {
     }, [dropdownOpen])
 
     return (
-        <div className="bg-white rounded-xl  p-6 w-full relative  animate-fadeIn">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full relative">
             {/* Success overlay */}
-            {isSuccess && (
-                <div className="absolute inset-0 bg-green-50 flex items-center justify-center z-20 animate-fadeIn">
-                    <div className="flex flex-col items-center">
-                        <div className="bg-green-100 p-3 rounded-full">
-                            <Check className="text-green-600 h-8 w-8"/>
+            <AnimatePresence>
+                {isSuccess && (
+                    <motion.div
+                        className="absolute inset-0 bg-green-50 dark:bg-green-900 flex items-center justify-center z-20"
+                        initial={{opacity: 0}}
+                        animate={{opacity: 1}}
+                        exit={{opacity: 0}}
+                    >
+                        <div className="flex flex-col items-center">
+                            <div className="bg-green-100 dark:bg-green-700 p-3 rounded-full">
+                                <Check className="text-green-600 dark:text-green-300 h-8 w-8"/>
+                            </div>
+                            <h3 className="mt-4 text-lg font-medium text-green-800 dark:text-green-200">Team Created
+                                Successfully!</h3>
                         </div>
-                        <h3 className="mt-4 text-lg font-medium text-green-800">Team Created Successfully!</h3>
-                    </div>
-                </div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                    <div className="bg-green-100 p-2 rounded-lg mr-3">
-                        <Users className="h-5 w-5 text-green-600"/>
+                    <div className="bg-green-100 dark:bg-green-700 p-2 rounded-lg mr-3">
+                        <Users className="h-5 w-5 text-green-600 dark:text-green-300"/>
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">Create New Team</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Create New Team</h2>
                 </div>
-                <button
+                <motion.button
                     onClick={onDismiss}
-                    className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    whileHover={{scale: 1.1}}
+                    whileTap={{scale: 0.95}}
                 >
-                    <X className="h-5 w-5 text-gray-500"/>
-                </button>
+                    <X className="h-5 w-5 text-gray-500 dark:text-gray-400"/>
+                </motion.button>
             </div>
 
             {/* Form */}
@@ -167,9 +178,14 @@ export default function Create({onDismiss}: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                     {/* Team Name */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700">Team Name</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Team Name</label>
                         <div
-                            className={`relative border ${focusedField === 'name' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300'} rounded-lg transition-all duration-200`}>
+                            className={`relative border ${
+                                focusedField === 'name'
+                                    ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            } rounded-lg transition-all duration-200`}
+                        >
                             <input
                                 type="text"
                                 name="name"
@@ -177,17 +193,23 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('name')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent"
+                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
                                 placeholder="Enter team name"
                                 required
                             />
                         </div>
                     </div>
-                    {/* Team Name */}
+                    {/* Team Territory */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700">Team Territory</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Team
+                            Territory</label>
                         <div
-                            className={`relative border ${focusedField === 'territory' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300'} rounded-lg transition-all duration-200`}>
+                            className={`relative border ${
+                                focusedField === 'territory'
+                                    ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            } rounded-lg transition-all duration-200`}
+                        >
                             <input
                                 type="text"
                                 name="territory"
@@ -195,19 +217,25 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('territory')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent"
+                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
                                 placeholder="Enter team territory"
                                 required
                             />
                         </div>
                     </div>
                 </div>
-                <div className="grid gril-cols-1 md:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                     {/* Van number */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700">Van number plate</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Van number
+                            plate</label>
                         <div
-                            className={`relative border ${focusedField === 'van_number_plate' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300'} rounded-lg transition-all duration-200`}>
+                            className={`relative border ${
+                                focusedField === 'van_number_plate'
+                                    ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            } rounded-lg transition-all duration-200`}
+                        >
                             <input
                                 type="text"
                                 name="van_number_plate"
@@ -215,7 +243,7 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('van_number_plate')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent"
+                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
                                 placeholder="Enter Van Number Plate"
                                 required
                             />
@@ -223,9 +251,15 @@ export default function Create({onDismiss}: {
                     </div>
                     {/* Van location */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700">Van Location</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Van
+                            Location</label>
                         <div
-                            className={`relative border ${focusedField === 'van_location' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300'} rounded-lg transition-all duration-200`}>
+                            className={`relative border ${
+                                focusedField === 'van_location'
+                                    ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            } rounded-lg transition-all duration-200`}
+                        >
                             <input
                                 type="text"
                                 name="van_location"
@@ -233,7 +267,7 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('van_location')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent"
+                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
                                 placeholder="Enter Van Location"
                                 required
                             />
@@ -242,7 +276,7 @@ export default function Create({onDismiss}: {
                 </div>
                 {/* Team Leader Custom Dropdown */}
                 <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">Team Leader</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Team Leader</label>
                     <div className="relative">
                         <button
                             //@ts-ignore
@@ -260,91 +294,115 @@ export default function Create({onDismiss}: {
                                 }
                                 setDropdownOpen(!dropdownOpen);
                             }}
-                            className={`flex items-center justify-between w-full px-4 py-3 border ${focusedField === 'leader' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300'} rounded-lg bg-white text-left focus:outline-none transition-all duration-200`}
+                            className={`flex items-center justify-between w-full px-4 py-3 border ${
+                                focusedField === 'leader'
+                                    ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            } rounded-lg bg-white dark:bg-gray-800 text-left focus:outline-none transition-all duration-200`}
                             onFocus={() => setFocusedField('leader')}
                             onBlur={() => setTimeout(() => setFocusedField(null), 100)}
                         >
                             <div className="flex items-center">
-                                <UserCircle className="h-5 w-5 text-gray-400 mr-2"/>
-                                <span className={formData.leader_id ? "text-gray-900" : "text-gray-500"}>
-                  {getSelectedLeaderName()}
-                </span>
+                                <UserCircle className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                <span
+                                    className={formData.leader_id ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}>
+                {getSelectedLeaderName()}
+              </span>
                             </div>
                             <ChevronDown
-                                className={`h-5 w-5 text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}/>
+                                className={`h-5 w-5 text-gray-400 dark:text-gray-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
 
-                        {dropdownOpen && (
-                            <div
-                                ref={leaderDropdownRef}
-                                className={`
-      absolute w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-auto
-      ${dropdownPosition === "top"
-                                    ? "bottom-full mb-1 origin-bottom animate-slideUp"
-                                    : "top-full mt-1 origin-top animate-slideDown"}
-    `}
-                                style={{maxHeight: "240px"}}
-                            >
-                                {isTeamLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-8">
-                                        <div
-                                            className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                                        <p className="mt-3 text-gray-500 text-sm font-medium">Loading team
-                                            leaders...</p>
-                                    </div>
-                                ) : leaders.length > 0 ? (
-                                    leaders.map(leader => (
-                                        <div
-                                            key={leader.id}
-                                            onClick={() => selectLeader(leader.id, leader.full_name)}
-                                            className={`
-            flex items-center px-4 py-3 cursor-pointer transition-all
-            ${formData.leader_id === leader.id
-                                                ? "bg-green-50 hover:bg-green-100"
-                                                : "hover:bg-gray-50"}
-          `}
-                                        >
-                                            <div className="flex items-center flex-1">
-                                                <UserCircle className="h-5 w-5 text-gray-400 mr-2"/>
-                                                <span className="block truncate">{leader.full_name}</span>
-                                            </div>
-                                            {formData.leader_id === leader.id && (
-                                                <div className="ml-auto animate-fadeIn">
-                                                    <Check className="h-5 w-5 text-green-600"/>
+                        <AnimatePresence>
+                            {dropdownOpen && (
+                                <motion.div
+                                    ref={leaderDropdownRef}
+                                    className={`
+                  absolute w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
+                  rounded-lg shadow-lg z-10 overflow-auto
+                  ${dropdownPosition === "top" ? "bottom-full mb-1" : "top-full mt-1"}
+                `}
+                                    style={{maxHeight: "240px"}}
+                                    initial={{opacity: 0, y: dropdownPosition === "top" ? 10 : -10}}
+                                    animate={{opacity: 1, y: 0}}
+                                    exit={{opacity: 0, y: dropdownPosition === "top" ? 10 : -10}}
+                                    transition={{duration: 0.2}}
+                                >
+                                    {isTeamLoading ? (
+                                        <div className="flex flex-col items-center justify-center py-8">
+                                            <motion.div
+                                                className="rounded-full h-8 w-8 border-b-2 border-green-500 dark:border-green-400"
+                                                animate={{rotate: 360}}
+                                                transition={{repeat: Infinity, duration: 1, ease: "linear"}}
+                                            ></motion.div>
+                                            <p className="mt-3 text-gray-500 dark:text-gray-400 text-sm font-medium">Loading
+                                                team leaders...</p>
+                                        </div>
+                                    ) : leaders.length > 0 ? (
+                                        leaders.map(leader => (
+                                            <motion.div
+                                                key={leader.id}
+                                                onClick={() => selectLeader(leader.id, leader.full_name)}
+                                                className={`
+                        flex items-center px-4 py-3 cursor-pointer transition-all
+                        ${formData.leader_id === leader.id
+                                                    ? "bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50"
+                                                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"}
+                      `}
+                                                whileHover={{backgroundColor: formData.leader_id === leader.id ? "#dcfce7" : "#f9fafb"}}
+                                                whileTap={{scale: 0.98}}
+                                            >
+                                                <div className="flex items-center flex-1">
+                                                    <UserCircle
+                                                        className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                                    <span
+                                                        className="block truncate text-gray-800 dark:text-gray-200">{leader.full_name}</span>
                                                 </div>
-                                            )}
+                                                {formData.leader_id === leader.id && (
+                                                    <motion.div
+                                                        className="ml-auto"
+                                                        initial={{opacity: 0, scale: 0.8}}
+                                                        animate={{opacity: 1, scale: 1}}
+                                                    >
+                                                        <Check className="h-5 w-5 text-green-600 dark:text-green-400"/>
+                                                    </motion.div>
+                                                )}
+                                            </motion.div>
+                                        ))
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-8">
+                                            <div className="mb-3 p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                                                <UserCircle className="h-6 w-6 text-gray-400 dark:text-gray-500"/>
+                                            </div>
+                                            <p className="mb-4 text-gray-500 dark:text-gray-400 text-sm font-medium">No
+                                                team leaders available</p>
+                                            <motion.button
+                                                onClick={() => {
+                                                    const d = dialog.create({
+                                                        content: <CreateUserModal onClose={() => d.dismiss()}/>,
+                                                        size: "lg",
+                                                        cancelable: false
+                                                    });
+                                                }}
+                                                type="button"
+                                                className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg shadow hover:bg-green-700 dark:hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                                                whileHover={{scale: 1.05}}
+                                                whileTap={{scale: 0.95}}
+                                            >
+                                                Create Team Leader
+                                            </motion.button>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="mb-3 p-2 rounded-full bg-gray-100">
-                                            <UserCircle className="h-6 w-6 text-gray-400"/>
-                                        </div>
-                                        <p className="mb-4 text-gray-500 text-sm font-medium">No team leaders
-                                            available</p>
-                                        <button
-                                            onClick={() => {
-                                                const d = dialog.create({
-                                                    content: <CreateUserModal onClose={() => d.dismiss()}/>,
-                                                    size: "lg",
-                                                    cancelable: false
-                                                });
-                                            }}
-                                            type="button"
-                                            className="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                                        >
-                                            Create Team Leader
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
                 {/* Region Custom Dropdown */}
                 <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">Region</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Region</label>
                     <div className="relative">
                         <button
                             //@ts-ignore
@@ -353,7 +411,6 @@ export default function Create({onDismiss}: {
                             onClick={() => {
                                 // Calculate position before opening
                                 if (regionButtonRef.current) {
-                                    // @ts-ignore
                                     const buttonRect = regionButtonRef.current.getBoundingClientRect();
                                     const spaceBelow = window.innerHeight - buttonRect.bottom;
                                     const spaceAbove = buttonRect.top;
@@ -363,121 +420,104 @@ export default function Create({onDismiss}: {
                                 }
                                 setRegionDropdownOpen(!regionDropdownOpen);
                             }}
-                            className={`flex items-center justify-between w-full px-4 py-3 border ${focusedField === 'region' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-300'} rounded-lg bg-white text-left focus:outline-none transition-all duration-200`}
+                            className={`flex items-center justify-between w-full px-4 py-3 border ${
+                                focusedField === 'region'
+                                    ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
+                                    : 'border-gray-300 dark:border-gray-600'
+                            } rounded-lg bg-white dark:bg-gray-800 text-left focus:outline-none transition-all duration-200`}
                             onFocus={() => setFocusedField('region')}
                             onBlur={() => setTimeout(() => setFocusedField(null), 100)}
                         >
                             <div className="flex items-center">
-                                <Globe className="h-5 w-5 text-gray-400 mr-2"/>
-                                <span className={formData.region ? "text-gray-900" : "text-gray-500"}>
-                  {formData.region || "Select a region"}
-                </span>
+                                <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                <span
+                                    className={formData.region ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}>
+                {formData.region || "Select a region"}
+              </span>
                             </div>
                             <ChevronDown
-                                className={`h-5 w-5 text-gray-400 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}/>
+                                className={`h-5 w-5 text-gray-400 dark:text-gray-500 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
 
-                        {regionDropdownOpen && (
-                            <div
-                                //@ts-ignore
-                                ref={regionDropdownRef}
-                                className={`${
-                                    regionDropdownPosition === "top"
-                                        ? "bottom-full mb-1 origin-bottom"
-                                        : "top-full mt-1 origin-top"
-                                } absolute w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-auto ${
-                                    regionDropdownPosition === "top" ? "animate-slideUp" : "animate-slideDown"
-                                }`}
-                                style={{maxHeight: "240px"}}
-                            >
-                                {regions.map(region => (
-                                    <div
-                                        key={region}
-                                        onClick={() => selectRegion(region)}
-                                        className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                                    >
-                                        <Globe className="h-5 w-5 text-gray-400 mr-2"/>
-                                        <span className="block truncate">{region}</span>
-                                        {formData.region === region && (
-                                            <Check className="h-5 w-5 text-green-600 ml-auto"/>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <AnimatePresence>
+                            {regionDropdownOpen && (
+                                <motion.div
+                                    //@ts-ignore
+                                    ref={regionDropdownRef}
+                                    className={`
+                  absolute w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
+                  rounded-lg shadow-lg z-10 overflow-auto
+                  ${regionDropdownPosition === "top" ? "bottom-full mb-1" : "top-full mt-1"}
+                `}
+                                    style={{maxHeight: "240px"}}
+                                    initial={{opacity: 0, y: regionDropdownPosition === "top" ? 10 : -10}}
+                                    animate={{opacity: 1, y: 0}}
+                                    exit={{opacity: 0, y: regionDropdownPosition === "top" ? 10 : -10}}
+                                    transition={{duration: 0.2}}
+                                >
+                                    {regions.map(region => (
+                                        <motion.div
+                                            key={region}
+                                            onClick={() => selectRegion(region)}
+                                            className="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                                            whileHover={{backgroundColor: formData.region === region ? "#dcfce7" : "#f9fafb"}}
+                                            whileTap={{scale: 0.98}}
+                                        >
+                                            <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                            <span
+                                                className="block truncate text-gray-800 dark:text-gray-200">{region}</span>
+                                            {formData.region === region && (
+                                                <motion.div
+                                                    initial={{opacity: 0, scale: 0.8}}
+                                                    animate={{opacity: 1, scale: 1}}
+                                                >
+                                                    <Check
+                                                        className="h-5 w-5 text-green-600 dark:text-green-400 ml-auto"/>
+                                                </motion.div>
+                                            )}
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>
 
             {/* Action Buttons */}
             <div className="mt-8 flex justify-end space-x-3">
-                <button
+                <motion.button
                     onClick={onDismiss}
-                    className="px-5 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    whileHover={{scale: 1.02}}
+                    whileTap={{scale: 0.98}}
                 >
                     Cancel
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                     onClick={handleCreateTeam}
                     disabled={!isFormValid || isLoading}
                     className={`px-5 py-2 rounded-lg text-sm font-medium flex items-center justify-center min-w-24 transition-all duration-300 ${
                         isFormValid
-                            ? 'bg-green-600 text-white hover:bg-green-700'
-                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            ? 'bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-600'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     }`}
+                    whileHover={isFormValid ? {scale: 1.02} : {}}
+                    whileTap={isFormValid ? {scale: 0.98} : {}}
                 >
                     {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1"/>
+                        <motion.div
+                            animate={{rotate: 360}}
+                            transition={{repeat: Infinity, duration: 1, ease: "linear"}}
+                        >
+                            <Loader2 className="h-4 w-4 mr-1"/>
+                        </motion.div>
                     ) : (
                         <>Create Team</>
                     )}
-                </button>
+                </motion.button>
             </div>
-
-            <style jsx global>{`
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes slideDown {
-                    from {
-                        transform: translateY(-10px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes slideUp {
-                    from {
-                        transform: translateY(10px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-
-                .animate-fadeIn {
-                    animation: fadeIn 0.3s ease-out forwards;
-                }
-
-                .animate-slideDown {
-                    animation: slideDown 0.2s ease-out forwards;
-                }
-
-                .animate-slideUp {
-                    animation: slideUp 0.2s ease-out forwards;
-                }
-            `}</style>
         </div>
     );
 }

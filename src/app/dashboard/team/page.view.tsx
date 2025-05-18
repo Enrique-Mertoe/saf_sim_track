@@ -122,7 +122,8 @@ export default function TeamsManagement() {
         const d = dialog.create({
             content: <Create onDismiss={() => d.dismiss()}/>,
             size: "lg",
-            design: ["md-down"]
+            design: ["md-down"],
+            radius:'xl'
         });
     }, [dialog])
     if (isLoading) {
