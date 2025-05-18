@@ -238,9 +238,9 @@ const SerialNumberForm: React.FC = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="w-full mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-8 text-green-700">
-                Safaricom SIM Serial Upload
+                Pick List Serial Upload
             </h1>
 
             {/* Team Selection */}

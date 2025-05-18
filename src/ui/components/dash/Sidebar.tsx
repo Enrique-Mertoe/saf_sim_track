@@ -216,6 +216,7 @@ export default function Sidebar() {
             navItems.push(
                 {href: '/dashboard/users', icon: Users, label: 'Users'},
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
+                {href: '/dashboard/pick', icon: PieChart, label: 'PickList'},
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
