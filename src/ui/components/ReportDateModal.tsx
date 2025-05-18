@@ -7,15 +7,19 @@ import Calendar from "@/ui/components/Calendar";
 import {Button} from "@/ui/components/Button";
 import {ChevronLeft, ChevronRight, CalendarIcon} from "lucide-react";
 
-type DateRange = {
-    startDate: Date | null;
-    endDate: Date | null;
+type DateSelection = {
+    type: 'range' | 'single';
+    single: Date | null;
+    range: {
+        startDate: Date | null;
+        endDate: Date | null;
+    };
 };
 
 type Props = {
     onClose: () => void;
-    onConfirm: (range: DateRange) => void;
-    defaultRange?: DateRange;
+    onConfirm: (selection: DateSelection) => void;
+    defaultSelection?: DateSelection;
     maxDate?: Date;
     minDate?: Date;
     className?: string;
@@ -24,16 +28,28 @@ type Props = {
 export default function ReportDateRangeTemplate({
                                                     onClose,
                                                     onConfirm,
-                                                    defaultRange,
+                                                    defaultSelection,
                                                     maxDate = new Date(),
                                                     minDate,
                                                     className = "",
                                                 }: Props) {
-    const [dateRange, setDateRange] = useState<DateRange>({
-        startDate: defaultRange?.startDate || null,
-        endDate: defaultRange?.endDate || null,
-    });
-    const [calendarMonth, setCalendarMonth] = useState<Date>(defaultRange?.startDate || new Date());
+    const [dateSelection, setDateSelection] = useState<DateSelection>(
+        defaultSelection || {
+            type: 'range',
+            single: null,
+            range: {
+                startDate: null,
+                endDate: null,
+            },
+        }
+    );
+    const [calendarMonth, setCalendarMonth] = useState<Date>(
+        defaultSelection?.type === 'single' && defaultSelection.single ?
+            defaultSelection.single :
+            defaultSelection?.type === 'range' && defaultSelection.range.startDate ?
+                defaultSelection.range.startDate :
+                new Date()
+    );
     const [quickSelection, setQuickSelection] = useState<string | null>(null);
     const [calendarView, setCalendarView] = useState<'single' | 'dual'>('single');
     const [animating, setAnimating] = useState(false);
@@ -50,40 +66,66 @@ export default function ReportDateRangeTemplate({
     }, []);
 
     useEffect(() => {
-        if (defaultRange) {
-            setDateRange({
-                startDate: defaultRange.startDate,
-                endDate: defaultRange.endDate,
-            });
-            if (defaultRange.startDate) {
-                setCalendarMonth(defaultRange.startDate);
+        if (defaultSelection) {
+            setDateSelection(defaultSelection);
+
+            if (defaultSelection.type === 'single' && defaultSelection.single) {
+                setCalendarMonth(defaultSelection.single);
+            } else if (defaultSelection.type === 'range' && defaultSelection.range.startDate) {
+                setCalendarMonth(defaultSelection.range.startDate);
             }
         }
-    }, [defaultRange]);
+    }, [defaultSelection]);
 
     const handleSelectDate = (date: Date | undefined) => {
         if (!date) return;
 
         setQuickSelection(null);
 
-        if (!dateRange.startDate || (dateRange.startDate && dateRange.endDate)) {
-            // Start new selection
-            setDateRange({
-                startDate: date,
-                endDate: null,
+        if (dateSelection.type === 'single') {
+            // Single date selection mode
+            setDateSelection({
+                ...dateSelection,
+                single: date
             });
+
+            // Animate confirmation button
+            setAnimating(true);
+            setTimeout(() => setAnimating(false), 800);
         } else {
-            // Complete the selection
-            if (isBefore(date, dateRange.startDate)) {
-                setDateRange({
-                    startDate: date,
-                    endDate: dateRange.startDate,
+            // Range selection mode
+            if (!dateSelection.range.startDate || (dateSelection.range.startDate && dateSelection.range.endDate)) {
+                // Start new selection
+                setDateSelection({
+                    ...dateSelection,
+                    range: {
+                        startDate: date,
+                        endDate: null,
+                    }
                 });
             } else {
-                setDateRange({
-                    startDate: dateRange.startDate,
-                    endDate: date,
-                });
+                // Complete the selection
+                if (isBefore(date, dateSelection.range.startDate)) {
+                    setDateSelection({
+                        ...dateSelection,
+                        range: {
+                            startDate: date,
+                            endDate: dateSelection.range.startDate,
+                        }
+                    });
+                } else {
+                    setDateSelection({
+                        ...dateSelection,
+                        range: {
+                            startDate: dateSelection.range.startDate,
+                            endDate: date,
+                        }
+                    });
+                }
+
+                // Animate confirmation button
+                setAnimating(true);
+                setTimeout(() => setAnimating(false), 800);
             }
         }
     };
@@ -92,62 +134,134 @@ export default function ReportDateRangeTemplate({
         const now = new Date();
         let start: Date | null = null;
         let end: Date | null = null;
+        let singleDate: Date | null = null;
 
         switch (selection) {
+            case "today":
+                singleDate = now;
+                setDateSelection({
+                    type: 'single',
+                    single: singleDate,
+                    range: {startDate: null, endDate: null}
+                });
+                setCalendarMonth(singleDate);
+                break;
+            case "yesterday":
+                singleDate = new Date(now);
+                singleDate.setDate(singleDate.getDate() - 1);
+                setDateSelection({
+                    type: 'single',
+                    single: singleDate,
+                    range: {startDate: null, endDate: null}
+                });
+                setCalendarMonth(singleDate);
+                break;
             case "current-month":
                 start = startOfMonth(now);
                 end = endOfMonth(now);
+                setDateSelection({
+                    type: 'range',
+                    single: null,
+                    range: {startDate: start, endDate: end}
+                });
+                setCalendarMonth(start);
                 break;
             case "previous-month":
                 const lastMonth = addMonths(now, -1);
                 start = startOfMonth(lastMonth);
                 end = endOfMonth(lastMonth);
+                setDateSelection({
+                    type: 'range',
+                    single: null,
+                    range: {startDate: start, endDate: end}
+                });
+                setCalendarMonth(start);
                 break;
             case "last-30-days":
                 end = now;
                 start = new Date(now);
                 start.setDate(start.getDate() - 30);
+                setDateSelection({
+                    type: 'range',
+                    single: null,
+                    range: {startDate: start, endDate: end}
+                });
+                setCalendarMonth(start);
                 break;
             case "last-90-days":
                 end = now;
                 start = new Date(now);
                 start.setDate(start.getDate() - 90);
+                setDateSelection({
+                    type: 'range',
+                    single: null,
+                    range: {startDate: start, endDate: end}
+                });
+                setCalendarMonth(start);
                 break;
             case "mar-1-30":
                 // Specifically for March 1-30 of current year
                 const currentYear = now.getFullYear();
                 start = new Date(currentYear, 2, 1); // March 1
                 end = new Date(currentYear, 2, 30); // March 30
+                setDateSelection({
+                    type: 'range',
+                    single: null,
+                    range: {startDate: start, endDate: end}
+                });
+                setCalendarMonth(start);
                 break;
             default:
                 break;
         }
 
-        if (start && end) {
-            setDateRange({startDate: start, endDate: end});
-            setQuickSelection(selection);
-            setCalendarMonth(start);
+        setQuickSelection(selection);
 
-            // Animate confirmation button
-            setAnimating(true);
-            setTimeout(() => setAnimating(false), 800);
+        // Animate confirmation button
+        setAnimating(true);
+        setTimeout(() => setAnimating(false), 800);
+    };
+
+    const toggleSelectionType = () => {
+        if (dateSelection.type === 'range') {
+            // When switching to single, set the single date to start date if available
+            setDateSelection({
+                type: 'single',
+                single: dateSelection.range.startDate,
+                range: dateSelection.range
+            });
+        } else {
+            // When switching to range, use the single date as start date if available
+            setDateSelection({
+                type: 'range',
+                single: dateSelection.single,
+                range: {
+                    startDate: dateSelection.single,
+                    endDate: null
+                }
+            });
         }
+
+        setQuickSelection(null);
     };
 
     const isDateInRange = (date: Date) => {
-        if (!dateRange.startDate || !dateRange.endDate) return false;
+        if (!dateSelection.range.startDate || !dateSelection.range.endDate) return false;
         return (
-            (isAfter(date, dateRange.startDate) && isBefore(date, dateRange.endDate)) ||
-            isSameDay(date, dateRange.startDate) ||
-            isSameDay(date, dateRange.endDate)
+            (isAfter(date, dateSelection.range.startDate) && isBefore(date, dateSelection.range.endDate)) ||
+            isSameDay(date, dateSelection.range.startDate) ||
+            isSameDay(date, dateSelection.range.endDate)
         );
     };
 
     const isStartDate = (date: Date) =>
-        dateRange.startDate && isSameDay(date, dateRange.startDate);
+        dateSelection.range.startDate && isSameDay(date, dateSelection.range.startDate);
 
     const isEndDate = (date: Date) =>
-        dateRange.endDate && isSameDay(date, dateRange.endDate);
+        dateSelection.range.endDate && isSameDay(date, dateSelection.range.endDate);
+
+    const isSingleSelectedDate = (date: Date) =>
+        dateSelection.type === 'single' && dateSelection.single && isSameDay(date, dateSelection.single);
 
     const nextMonth = () => {
         setCalendarMonth(addMonths(calendarMonth, 1));
@@ -157,30 +271,45 @@ export default function ReportDateRangeTemplate({
         setCalendarMonth(addMonths(calendarMonth, -1));
     };
 
-    const dateRangeText = () => {
-        if (!dateRange.startDate) return "Select start date";
-        if (!dateRange.endDate) return "Select end date";
-
-        return `${format(dateRange.startDate, "MMM d, yyyy")} - ${format(dateRange.endDate, "MMM d, yyyy")}`;
+    const dateSelectionText = () => {
+        if (dateSelection.type === 'single') {
+            return dateSelection.single
+                ? format(dateSelection.single, "MMM d, yyyy")
+                : "Select a date";
+        } else {
+            if (!dateSelection.range.startDate) return "Select start date";
+            if (!dateSelection.range.endDate) return "Select end date";
+            return `${format(dateSelection.range.startDate, "MMM d, yyyy")} - ${format(dateSelection.range.endDate, "MMM d, yyyy")}`;
+        }
     };
 
     const quickSelections = [
-        {id: "current-month", label: "Current Month", icon: "📅"},
-        {id: "previous-month", label: "Previous Month", icon: "⏮️"},
-        {id: "last-30-days", label: "Last 30 Days", icon: "🔄"},
-        {id: "last-90-days", label: "Last 90 Days", icon: "📊"},
-        {id: "mar-1-30", label: "March 1-30", icon: "🗓️"},
+        {id: "today", label: "Today", icon: "📅", type: "single"},
+        {id: "yesterday", label: "Yesterday", icon: "⬅️", type: "single"},
+        {id: "current-month", label: "Current Month", icon: "📅", type: "range"},
+        {id: "previous-month", label: "Previous Month", icon: "⏮️", type: "range"},
+        {id: "last-30-days", label: "Last 30 Days", icon: "🔄", type: "range"},
+        {id: "last-90-days", label: "Last 90 Days", icon: "📊", type: "range"},
+        {id: "mar-1-30", label: "March 1-30", icon: "🗓️", type: "range"},
     ];
+
+    const isSelectionValid = () => {
+        if (dateSelection.type === 'single') {
+            return dateSelection.single !== null;
+        } else {
+            return dateSelection.range.startDate !== null && dateSelection.range.endDate !== null;
+        }
+    };
 
     return (
         <div
-            className={`w-full mx-auto bg-white dark:bg-gray-900 rounded-md shadow-lg overflow-auto border border-gray-200 dark:border-gray-700 ${className}`}>
-            {/* Header with title and close button */}
+            className={`w-full flex flex-col h-full max-h-[80vh] mx-auto bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+            {/* Header with title, selection type toggle and close button */}
             <div
-                className="px-6 py-4 bg-gradient-to-r from-green-500 to-indigo-600 dark:from-green-800 dark:to-indigo-900">
+                className="px-6 py-4 scrollbar-thin bg-gradient-to-r from-green-500 to-indigo-600 dark:from-green-800 dark:to-indigo-900">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h3 className="text-xl font-semibold text-white">Select Date Range</h3>
+                        <h3 className="text-xl font-semibold text-white">Select Date</h3>
                         <p className="text-green-100 text-sm">Choose dates for your report</p>
                     </div>
                     <Button
@@ -193,124 +322,124 @@ export default function ReportDateRangeTemplate({
                     </Button>
                 </div>
 
-                {/* Date range summary */}
-                <div className="mt-3 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg flex items-center gap-2">
-                    <CalendarIcon className="h-4 w-4 text-white"/>
-                    <span className="text-white font-medium text-sm">
-            {dateRangeText()}
-          </span>
+                {/* Selection type toggle */}
+                <div className="mt-3 flex items-center justify-between">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-md p-1 flex">
+                        <button
+                            onClick={() => dateSelection.type !== 'single' && toggleSelectionType()}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                dateSelection.type === 'single'
+                                    ? 'bg-white text-green-700'
+                                    : 'text-white hover:bg-white/10'
+                            }`}
+                        >
+                            Single Date
+                        </button>
+                        <button
+                            onClick={() => dateSelection.type !== 'range' && toggleSelectionType()}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                dateSelection.type === 'range'
+                                    ? 'bg-white text-green-700'
+                                    : 'text-white hover:bg-white/10'
+                            }`}
+                        >
+                            Date Range
+                        </button>
+                    </div>
+
+                    {/* Date selection summary */}
+                    <div className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-white"/>
+                        <span className="text-white font-medium text-sm">
+              {dateSelectionText()}
+            </span>
+                    </div>
                 </div>
             </div>
+            <div className="flex-grow overflow-y-auto">
+                <div className="p-6">
+                    {/* Quick selection buttons */}
+                    <div className="mb-6">
+                        <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Quick Select</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            {quickSelections
+                                .filter(option => (
+                                    dateSelection.type === 'single' ? option.type === 'single' : true
+                                ))
+                                .map((option) => (
+                                    <Button
+                                        key={option.id}
+                                        variant={quickSelection === option.id ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => handleQuickSelect(option.id)}
+                                        className={`text-xs justify-start ${
+                                            quickSelection === option.id
+                                                ? "bg-green-500 hover:bg-green-600 text-white border-green-500 dark:bg-green-600 dark:hover:bg-green-700"
+                                                : "hover:border-green-400 hover:text-green-500 dark:hover:text-green-400 dark:border-gray-700"
+                                        }`}
+                                    >
+                                        <span className="mr-1">{option.icon}</span>
+                                        {option.label}
+                                    </Button>
+                                ))}
+                        </div>
+                    </div>
 
-            <div className="p-6">
-                {/* Quick selection buttons */}
-                <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Quick Select</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                        {quickSelections.map((option) => (
+                    {/* Calendar section */}
+                    <div
+                        className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-1">
+                        {/* Calendar header */}
+                        <div className="flex items-center justify-between px-2 py-2">
                             <Button
-                                key={option.id}
-                                variant={quickSelection === option.id ? "default" : "outline"}
+                                variant="ghost"
                                 size="sm"
-                                onClick={() => handleQuickSelect(option.id)}
-                                className={`text-xs justify-start ${
-                                    quickSelection === option.id
-                                        ? "bg-green-500 hover:bg-green-600 text-white border-green-500 dark:bg-green-600 dark:hover:bg-green-700"
-                                        : "hover:border-green-400 hover:text-green-500 dark:hover:text-green-400 dark:border-gray-700"
-                                }`}
+                                onClick={prevMonth}
+                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                             >
-                                <span className="mr-1">{option.icon}</span>
-                                {option.label}
+                                <ChevronLeft className="h-4 w-4"/>
                             </Button>
-                        ))}
-                    </div>
-                </div>
 
-                {/* Calendar section */}
-                <div
-                    className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-1">
-                    {/* Calendar header */}
-                    <div className="flex items-center justify-between px-2 py-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={prevMonth}
-                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                        >
-                            <ChevronLeft className="h-4 w-4"/>
-                        </Button>
+                            <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                                {format(calendarMonth, "MMMM yyyy")}
+                            </h3>
 
-                        <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                            {format(calendarMonth, "MMMM yyyy")}
-                        </h3>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={nextMonth}
+                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                            >
+                                <ChevronRight className="h-4 w-4"/>
+                            </Button>
+                        </div>
 
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={nextMonth}
-                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                        >
-                            <ChevronRight className="h-4 w-4"/>
-                        </Button>
-                    </div>
-
-                    {/* Calendar grid */}
-                    <div className={`${calendarView === 'dual' ? 'grid grid-cols-2 gap-4' : ''}`}>
-                        <Calendar
-                            mode="single"
-                            selected={dateRange.endDate || dateRange.startDate || undefined}
-                            onSelect={handleSelectDate}
-                            month={calendarMonth}
-                            onMonthChange={setCalendarMonth}
-                            className="mx-auto"
-                            modifiers={{
-                                range: (date) => isDateInRange(date),
-                                //@ts-ignore
-                                rangeStart: (date) => isStartDate(date),
-                                //@ts-ignore
-                                rangeEnd: (date) => isEndDate(date),
-                            }}
-                            modifiersClassNames={{
-                                range: "bg-green-100 dark:bg-green-900/30",
-                                rangeStart: "bg-green-500 text-white rounded-l-md",
-                                rangeEnd: "bg-green-500 text-white rounded-r-md",
-                                today: "border border-green-300 dark:border-green-700",
-                            }}
-                            disabled={{
-                                after: maxDate,
-                                before: minDate,
-                            }}
-                            classNames={{
-                                day_today: "font-bold text-green-600 dark:text-green-400",
-                                day_selected: "bg-green-500 text-white hover:bg-green-600",
-                                day_outside: "text-gray-400 dark:text-gray-600 opacity-50",
-                                table: "border-collapse",
-                                cell: "text-center text-sm p-0",
-                                head_cell: "text-gray-500 dark:text-gray-400 font-normal text-xs",
-                                nav_button: "border border-gray-200 dark:border-gray-700 bg-transparent p-1",
-                                day: "h-8 w-8 p-0 relative [&:has([aria-selected])]:bg-transparent",
-                            }}
-                        />
-
-                        {calendarView === 'dual' && (
+                        {/* Calendar grid */}
+                        <div className={`${calendarView === 'dual' ? 'grid grid-cols-2 gap-4' : ''}`}>
                             <Calendar
                                 mode="single"
-                                selected={dateRange.endDate || dateRange.startDate || undefined}
+                                selected={
+                                    dateSelection.type === 'single'
+                                        ? dateSelection.single || undefined
+                                        : dateSelection.range.endDate || dateSelection.range.startDate || undefined
+                                }
                                 onSelect={handleSelectDate}
-                                month={addMonths(calendarMonth, 1)}
-                                onMonthChange={(month) => setCalendarMonth(addMonths(month, -1))}
+                                month={calendarMonth}
+                                onMonthChange={setCalendarMonth}
                                 className="mx-auto"
                                 modifiers={{
-                                    range: (date) => isDateInRange(date),
+                                    range: (date) => dateSelection.type === 'range' && isDateInRange(date),
                                     //@ts-ignore
-                                    rangeStart: (date) => isStartDate(date),
+                                    rangeStart: (date) => dateSelection.type === 'range' && isStartDate(date),
                                     //@ts-ignore
-                                    rangeEnd: (date) => isEndDate(date),
+                                    rangeEnd: (date) => dateSelection.type === 'range' && isEndDate(date),
+                                    //@ts-ignore
+                                    singleSelected: (date) => dateSelection.type === 'single' && isSingleSelectedDate(date),
                                 }}
                                 modifiersClassNames={{
                                     range: "bg-green-100 dark:bg-green-900/30",
                                     rangeStart: "bg-green-500 text-white rounded-l-md",
                                     rangeEnd: "bg-green-500 text-white rounded-r-md",
+                                    singleSelected: "bg-green-500 text-white rounded-md",
                                     today: "border border-green-300 dark:border-green-700",
                                 }}
                                 disabled={{
@@ -328,77 +457,139 @@ export default function ReportDateRangeTemplate({
                                     day: "h-8 w-8 p-0 relative [&:has([aria-selected])]:bg-transparent",
                                 }}
                             />
-                        )}
-                    </div>
 
-                    {/* Selected range display */}
-                    <div
-                        className="flex justify-between items-center px-4 py-2 mt-2 text-sm bg-gray-50 dark:bg-gray-900 rounded-md">
-                        <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Start:</span>{" "}
-                            <span className="text-gray-600 dark:text-gray-400">
-                {dateRange.startDate
-                    ? format(dateRange.startDate, "MMM d, yyyy")
-                    : "Not selected"}
-              </span>
+                            {calendarView === 'dual' && (
+                                <Calendar
+                                    mode="single"
+                                    selected={
+                                        dateSelection.type === 'single'
+                                            ? dateSelection.single || undefined
+                                            : dateSelection.range.endDate || dateSelection.range.startDate || undefined
+                                    }
+                                    onSelect={handleSelectDate}
+                                    month={addMonths(calendarMonth, 1)}
+                                    onMonthChange={(month) => setCalendarMonth(addMonths(month, -1))}
+                                    className="mx-auto"
+                                    modifiers={{
+                                        range: (date) => dateSelection.type === 'range' && isDateInRange(date),
+                                        //@ts-ignore
+                                        rangeStart: (date) => dateSelection.type === 'range' && isStartDate(date),
+                                        //@ts-ignore
+                                        rangeEnd: (date) => dateSelection.type === 'range' && isEndDate(date),
+                                        //@ts-ignore
+                                        singleSelected: (date) => dateSelection.type === 'single' && isSingleSelectedDate(date),
+                                    }}
+                                    modifiersClassNames={{
+                                        range: "bg-green-100 dark:bg-green-900/30",
+                                        rangeStart: "bg-green-500 text-white rounded-l-md",
+                                        rangeEnd: "bg-green-500 text-white rounded-r-md",
+                                        singleSelected: "bg-green-500 text-white rounded-md",
+                                        today: "border border-green-300 dark:border-green-700",
+                                    }}
+                                    disabled={{
+                                        after: maxDate,
+                                        before: minDate,
+                                    }}
+                                    classNames={{
+                                        day_today: "font-bold text-green-600 dark:text-green-400",
+                                        day_selected: "bg-green-500 text-white hover:bg-green-600",
+                                        day_outside: "text-gray-400 dark:text-gray-600 opacity-50",
+                                        table: "border-collapse",
+                                        cell: "text-center text-sm p-0",
+                                        head_cell: "text-gray-500 dark:text-gray-400 font-normal text-xs",
+                                        nav_button: "border border-gray-200 dark:border-gray-700 bg-transparent p-1",
+                                        day: "h-8 w-8 p-0 relative [&:has([aria-selected])]:bg-transparent",
+                                    }}
+                                />
+                            )}
                         </div>
-                        <div>
-                            <span className="font-medium text-gray-700 dark:text-gray-300">End:</span>{" "}
-                            <span className="text-gray-600 dark:text-gray-400">
-                {dateRange.endDate
-                    ? format(dateRange.endDate, "MMM d, yyyy")
-                    : "Not selected"}
-              </span>
+
+                        {/* Selected date/range display */}
+                        <div
+                            className="flex justify-between items-center px-4 py-2 mt-2 text-sm bg-gray-50 dark:bg-gray-900 rounded-md">
+                            {dateSelection.type === 'single' ? (
+                                <div className="w-full text-center">
+                                <span
+                                    className="font-medium text-gray-700 dark:text-gray-300">Selected Date:</span>{" "}
+                                    <span className="text-gray-600 dark:text-gray-400">
+                  {dateSelection.single
+                      ? format(dateSelection.single, "MMM d, yyyy")
+                      : "Not selected"}
+                </span>
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <span
+                                            className="font-medium text-gray-700 dark:text-gray-300">Start:</span>{" "}
+                                        <span className="text-gray-600 dark:text-gray-400">
+                    {dateSelection.range.startDate
+                        ? format(dateSelection.range.startDate, "MMM d, yyyy")
+                        : "Not selected"}
+                  </span>
+                                    </div>
+                                    <div>
+                                        <span className="font-medium text-gray-700 dark:text-gray-300">End:</span>{" "}
+                                        <span className="text-gray-600 dark:text-gray-400">
+                    {dateSelection.range.endDate
+                        ? format(dateSelection.range.endDate, "MMM d, yyyy")
+                        : "Not selected"}
+                  </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Footer/Actions */}
-            <div
-                className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex justify-between">
-                <Button
-                    variant="outline"
-                    onClick={onClose}
-                    className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                    Cancel
-                </Button>
-
-                <AnimatePresence>
-                    <motion.div
-                        animate={animating ? {
-                            scale: [1, 1.05, 1],
-                            transition: {duration: 0.5}
-                        } : {}}
+                {/* Footer/Actions */}
+                <div
+                    className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex justify-between">
+                    <Button
+                        variant="outline"
+                        onClick={onClose}
+                        className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
-                        <Button
-                            onClick={() => onConfirm(dateRange)}
-                            disabled={!dateRange.startDate || !dateRange.endDate}
-                            className="bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700 relative overflow-hidden"
+                        Cancel
+                    </Button>
+
+                    <AnimatePresence>
+                        <motion.div
+                            animate={animating ? {
+                                scale: [1, 1.05, 1],
+                                transition: {duration: 0.5}
+                            } : {}}
                         >
-                            <motion.span
-                                initial={{x: -20, opacity: 0}}
-                                animate={{x: 0, opacity: 1}}
-                                transition={{duration: 0.3}}
-                                className="flex items-center"
+                            <Button
+                                onClick={() => onConfirm(dateSelection)}
+                                disabled={!isSelectionValid()}
+                                className="bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700 relative overflow-hidden"
                             >
-                                <span>Apply Range</span>
-                                {(dateRange.startDate && dateRange.endDate) && (
-                                    <motion.span
-                                        initial={{scale: 0}}
-                                        animate={{scale: 1}}
-                                        transition={{delay: 0.2}}
-                                        className="ml-1"
-                                    >
-                                        ✓
-                                    </motion.span>
-                                )}
-                            </motion.span>
-                        </Button>
-                    </motion.div>
-                </AnimatePresence>
+                                <motion.span
+                                    initial={{x: -20, opacity: 0}}
+                                    animate={{x: 0, opacity: 1}}
+                                    transition={{duration: 0.3}}
+                                    className="flex items-center"
+                                >
+                                    <span>Apply {dateSelection.type === 'single' ? 'Date' : 'Range'}</span>
+                                    {isSelectionValid() && (
+                                        <motion.span
+                                            initial={{scale: 0}}
+                                            animate={{scale: 1}}
+                                            transition={{delay: 0.2}}
+                                            className="ml-1"
+                                        >
+                                            ✓
+                                        </motion.span>
+                                    )}
+                                </motion.span>
+                            </Button>
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+
             </div>
+
         </div>
+
     );
 }

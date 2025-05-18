@@ -158,7 +158,8 @@ export default function StartPreview({
                                                 d.dismiss()
                                             }}
                                             onClose={() => d.dismiss()}/>,
-                                        size: "lg"
+                                        size: "lg",
+                                        // design: ["scrollable"]
 
                                     })
                                 }}
