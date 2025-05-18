@@ -116,16 +116,51 @@ const DialogProvider: React.FC<{ children: ReactNode }> = ({children}) => {
     const [dialogs, setDialogs] = useState<DialogInstance[]>([]);
     const [prevState, sp] = useState(false)
     const [originalBodyStyles, setOriginalBodyStyles] = useState<Record<string, string>>({});
+
+    const initBody = useCallback(() => {
+        if (stack.length) {
+            return
+        }
+        const styleAttr = document.body.getAttribute("style") ?? "";
+        const styleObj = styleAttr
+            ? Object.fromEntries(
+                styleAttr
+                    .split(";")
+                    .map(rule => rule.trim())
+                    .filter(Boolean)
+                    .map(rule => {
+                        const [property, value] = rule.split(":").map(str => str.trim());
+                        return [property, value];
+                    })
+            )
+            : {};
+        setOriginalBodyStyles(styleObj);
+
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+        const scrollY = window.scrollY;
+        const newStyles = {
+            ...originalBodyStyles,
+            position: "fixed",
+            top: `-${scrollY}px`,
+            width: "100%",
+            paddingRight: `${scrollbarWidth}px`,
+        };
+        Object.assign(document.body.style, newStyles);
+    }, [originalBodyStyles, stack.length])
+
     const create = useCallback((context: DialogOptions) => {
         const d = Dialog(context)
         setDialogs(prev => [...prev, d])
         sp(prev => !prev)
+        initBody()
         stack.push(d.id, d)
+        sp(false)
         d.handler.onDismiss(() => {
             stack.pop()
             setDialogs(prev => prev.filter(dl => dl.id != d.id))
             sp(false)
-            if (!stack.length) {
+            if (stack.length == 0) {
+                document.body.removeAttribute("style")
                 Object.assign(document.body.style, originalBodyStyles)
             }
         });
@@ -133,7 +168,7 @@ const DialogProvider: React.FC<{ children: ReactNode }> = ({children}) => {
             sp(true)
         });
         return d.builder
-    }, [stack])
+    }, [initBody, originalBodyStyles, stack])
 
     useEffect(() => {
         const currentDialog = stack.getCurrentDialog();

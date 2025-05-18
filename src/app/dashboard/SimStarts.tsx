@@ -4,7 +4,7 @@ import simService from "@/services/simService";
 import {SIMCard, SIMStatus, Team, User} from "@/models";
 import {
     AlertCircle,
-    Award,
+    Award, BarChart,
     CheckCircle, ChevronDown,
     ChevronUp,
     Cpu,
@@ -14,6 +14,8 @@ import {
     XCircle
 } from "lucide-react";
 import Signal from "@/lib/Signal";
+import StartPreview from "@/app/dashboard/components/StartPreview";
+import {useDialog} from "@/app/_providers/dialog";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
@@ -29,14 +31,34 @@ export default function SimStats({refreshing = false}) {
 
     // Stats calculated from sim cards
     const totalCards = simCards.length;
-    const matchedCards = simCards.filter(card => card.match === SIMStatus.MATCH).length;
-    const unmatchedCards = simCards.filter(card => card.match === SIMStatus.UNMATCH).length;
-    const qualityCards = simCards.filter(card => card.quality === SIMStatus.QUALITY).length;
+    const matchedCards = simCards.filter(card => card.match === SIMStatus.MATCH);
+    const unmatchedCards = simCards.filter(card => card.match === SIMStatus.UNMATCH);
+    const qualityCards = simCards.filter(card => card.quality === SIMStatus.QUALITY);
 
     // Calculate percentages safely
-    const matchedPercent = totalCards ? Math.round((matchedCards / totalCards) * 100) : 0;
-    const unmatchedPercent = totalCards ? Math.round((unmatchedCards / totalCards) * 100) : 0;
-    const qualityPercent = matchedCards ? Math.round((qualityCards / matchedCards) * 100) : 0;
+    const matchedPercent = totalCards ? Math.round((matchedCards.length / totalCards) * 100) : 0;
+    const unmatchedPercent = totalCards ? Math.round((unmatchedCards.length / totalCards) * 100) : 0;
+    const qualityPercent = matchedCards ? Math.round((qualityCards.length / matchedCards.length) * 100) : 0;
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    function countByDate(cards: SimAdapter[]) {
+        return {
+            total: cards.length,
+            today: cards.filter(card => new Date(card.created_at) >= startOfToday).length,
+            thisWeek: cards.filter(card => new Date(card.created_at) >= startOfWeek).length
+        };
+    }
+
+    const matchedStats = countByDate(matchedCards);
+    const unmatchedStats = countByDate(unmatchedCards);
+    const qualityStats = countByDate(qualityCards);
+    const totalStats = countByDate(simCards); // For "Sold SIM Cards"
+    console.log("ttt", totalStats)
+
 
     const fetchSimCards = async () => {
         setIsLoading(true);
@@ -77,6 +99,7 @@ export default function SimStats({refreshing = false}) {
             fetchSimCards();
         }
     }, [refreshing, user]);
+    const dialog = useDialog()
 
     // Shimmer loading effect for each card
     const LoadingSkeleton = () => (
@@ -111,6 +134,45 @@ export default function SimStats({refreshing = false}) {
             </div>
         );
     }
+    const statCards = [
+        {
+            title: "Sold SIM Cards",
+            value: totalStats.total,
+            todayValue: totalStats.today,
+            weekValue: totalStats.thisWeek,
+            color: "blue",
+            icon: <BarChart size={18}/>,
+            expandable: true,
+        },
+        {
+            title: "Matched",
+            value: matchedStats.total,
+            todayValue: matchedStats.today,
+            weekValue: matchedStats.thisWeek,
+            percentage: matchedPercent,
+            color: "green",
+            icon: <CheckCircle size={20}/>,
+        },
+        {
+            title: "Unmatched",
+            value: unmatchedStats.total,
+            todayValue: unmatchedStats.today,
+            weekValue: unmatchedStats.thisWeek,
+            percentage: unmatchedPercent,
+            color: "red",
+            icon: <XCircle size={20}/>,
+        },
+        {
+            title: "Quality",
+            value: qualityStats.total,
+            todayValue: qualityStats.today,
+            weekValue: qualityStats.thisWeek,
+            percentage: qualityPercent,
+            color: "purple",
+            icon: <Award size={20}/>,
+        },
+    ];
+
 
     return (
         <div className="relative">
@@ -132,42 +194,35 @@ export default function SimStats({refreshing = false}) {
                 {isLoading && !isRefreshing ? (
                     <LoadingSkeleton/>
                 ) : (
-                    <>
-                        <StatCard
-                            title="Total SIM Cards"
-                            value={totalCards}
-                            color="blue"
-                            isRefreshing={isRefreshing}
-                            icon={<Cpu size={20}/>}
-                        />
-
-                        <StatCard
-                            title="Matched"
-                            value={matchedCards}
-                            percentage={matchedPercent}
-                            color="green"
-                            isRefreshing={isRefreshing}
-                            icon={<CheckCircle size={20}/>}
-                        />
-
-                        <StatCard
-                            title="Unmatched"
-                            value={unmatchedCards}
-                            percentage={unmatchedPercent}
-                            color="red"
-                            isRefreshing={isRefreshing}
-                            icon={<XCircle size={20}/>}
-                        />
-
-                        <StatCard
-                            title="Quality"
-                            value={qualityCards}
-                            percentage={qualityPercent}
-                            color="purple"
-                            isRefreshing={isRefreshing}
-                            icon={<Award size={20}/>}
-                        />
-                    </>
+                    statCards.map((card, index) => {
+                        const d = dialog;
+                        return (
+                            <StatCard
+                                key={index}
+                                title={card.title}
+                                value={card.value}
+                                weekValue={card.weekValue}
+                                todayValue={card.todayValue}
+                                percentage={card.percentage}
+                                //@ts-ignore
+                                color={card.color}
+                                isRefreshing={isRefreshing}
+                                icon={card.icon}
+                                onExpandClick={() => {
+                                    const dialogRef = d.create({
+                                        content: (
+                                            <StartPreview
+                                                card={card}
+                                                onClose={() => dialogRef.dismiss()}
+                                            />
+                                        ),
+                                        size: "lg",
+                                    });
+                                }
+                                }
+                            />
+                        );
+                    })
                 )}
             </div>
         </div>
@@ -341,22 +396,13 @@ function StatCard({
             <div className="pt-2 text-center">
                 <button
                     onClick={() => {
-                        setIsExpanded(!isExpanded);
-                        if (onExpandClick) onExpandClick(!isExpanded);
+                        onExpandClick?.();
                     }}
-                    className={`inline-flex items-center justify-center text-sm font-medium ${colorClasses[color].text} hover:opacity-80 transition-opacity`}
+                    className={`inline-flex items-center cursor-pointer justify-center text-sm font-medium ${colorClasses[color].text} hover:opacity-80 transition-opacity`}
                 >
-                    {isExpanded ? (
-                        <>
-                            <span>View Less</span>
-                            <ChevronUp size={16} className="ml-1"/>
-                        </>
-                    ) : (
-                        <>
-                            <span>View More</span>
-                            <ChevronDown size={16} className="ml-1"/>
-                        </>
-                    )}
+                    <span>View More</span>
+                    <ChevronDown size={16} className="ml-1"/>
+
                 </button>
             </div>
         </div>

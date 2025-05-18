@@ -36,7 +36,6 @@ import SimStarts from "@/app/dashboard/SimStarts";
 import Signal from "@/lib/Signal";
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
-import StatCardWithWhatsappStyleExpansion from "@/app/dashboard/Starts2";
 
 export default function SafaricomDashboard() {
     const [role, setRole] = useState('admin');
@@ -230,8 +229,6 @@ export default function SafaricomDashboard() {
                             <p className="text-gray-500">Overview of SIM card sales and activations</p>
                         </motion.div>
                     </div>
-
-                    <StatCardWithWhatsappStyleExpansion/>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
                         {/* Stats Grid */}
                         <SimStarts refreshing={loading}/>
