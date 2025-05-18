@@ -306,7 +306,7 @@ export default function ReportDateRangeTemplate({
             className={`w-full flex flex-col h-full max-h-[80vh] mx-auto bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 ${className}`}>
             {/* Header with title, selection type toggle and close button */}
             <div
-                className="px-6 py-4 scrollbar-thin bg-gradient-to-r from-green-500 to-indigo-600 dark:from-green-800 dark:to-indigo-900">
+                className="px-6 py-4  bg-gradient-to-r from-green-500 to-indigo-600 dark:from-green-800 dark:to-indigo-900">
                 <div className="flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-semibold text-white">Select Date</h3>
@@ -356,7 +356,7 @@ export default function ReportDateRangeTemplate({
                     </div>
                 </div>
             </div>
-            <div className="flex-grow overflow-y-auto">
+            <div className="flex-grow scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500 overflow-y-auto">
                 <div className="p-6">
                     {/* Quick selection buttons */}
                     <div className="mb-6">

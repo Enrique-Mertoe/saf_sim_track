@@ -31,6 +31,10 @@ export const simCardService = {
     // Create a new SIM card record
     createSIMCard: async (simCardData: SIMCardCreate): Promise<SIMCard | null> => {
         const supabase = createSupabaseClient();
+        if (simCardData.sold_by_user_id === '') {
+            simCardData.sold_by_user_id = null;
+        }
+        console.log("card data", simCardData)
 
         const {data, error} = await supabase
             .from('sim_cards')
@@ -87,7 +91,7 @@ export const simCardService = {
             .single();
 
         if (error) {
-            console.error('Error fetching SIM card by serial number:', error);
+            // console.error('Error fetching SIM card by serial number:', error);
             return null;
         }
 

@@ -33,7 +33,7 @@ export interface SIMCard {
 
 export interface SIMCardCreate {
     serial_number: string;
-    sold_by_user_id: string;
+    sold_by_user_id?: string | null;
     sale_location?: string;
     team_id?: string;
     match: SIMStatus;

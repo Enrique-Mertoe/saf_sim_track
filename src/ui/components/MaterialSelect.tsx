@@ -166,7 +166,8 @@ export default function MaterialSelect({
         let displayValue: any;
 
         if (isObjectOptions) {
-            displayValue = option[displayKey];
+            const keys = displayKey.split(",").map(k => k.trim());
+            displayValue = keys.map(key => option[key] || "").join(" - ");
         } else {
             displayValue = option;
         }
