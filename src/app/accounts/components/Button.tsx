@@ -1,6 +1,11 @@
 import {motion} from "framer-motion";
+import React from "react";
 
-export default function Button({isLoading, onClick,text}: { isLoading: boolean, onClick: Closure ;text:string}) {
+export default function Button({isLoading, onClick, text, className = '', ...props}: {
+    isLoading: boolean,
+    onClick: Closure;
+    text: string
+} & React.HTMLAttributes<HTMLButtonElement>) {
     const colorLight = "#4CA350";
     const colorDark = "#005522";
     const buttonVariants = {
@@ -22,7 +27,7 @@ export default function Button({isLoading, onClick,text}: { isLoading: boolean, 
     };
     return (
         <motion.button
-            className="w-full h-14 flex cursor-pointer justify-center items-center rounded-2xl text-white font-bold py-3 px-4 overflow-hidden disabled:opacity-70"
+            className={`w-full h-14 flex cursor-pointer justify-center items-center rounded-2xl text-white font-bold py-3 px-4 overflow-hidden disabled:opacity-70 ${className}`}
             onClick={onClick}
             disabled={isLoading}
             variants={buttonVariants}

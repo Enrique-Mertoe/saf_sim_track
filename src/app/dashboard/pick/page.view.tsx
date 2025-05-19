@@ -9,6 +9,8 @@ import {teamService} from "@/services";
 import {toast} from "react-hot-toast";
 import Progress from "@/ui/components/MaterialProgress";
 import useApp from "@/ui/provider/AppProvider";
+import {Maximize2} from "lucide-react";
+import {useDialog} from "@/app/_providers/dialog";
 
 // Define TypeScript interfaces
 interface SerialNumber {
@@ -205,10 +207,27 @@ const SerialNumberForm: React.FC = () => {
                 team_id: selectedTeam
 
             }
+            updateSerialStatus(ser.id, {
+                isUploading: true,
+                isUploaded: false,
+                exists: true,
+                uploadError: null
+            })
             return ser_data
-        }), 50, (p, v) => {
+        }), 50, (p, v, chunk, errors) => {
             setcurrentPercentage(p)
             setSofar(v)
+            const all = chunk.map(s => s.serial_number)
+            serialsToUpload.forEach(serial => {
+                if (all.includes(serial.value)) {
+                    updateSerialStatus(serial.id, {
+                        isUploading: false,
+                        isUploaded: true,
+                        exists: true,
+                        uploadError: errors ? errors.join('\n') : null
+                    })
+                }
+            })
         });
         setIsUploading(false);
         setTimeout(clearAll, 1000)
@@ -258,6 +277,7 @@ const SerialNumberForm: React.FC = () => {
     const handleTeamChange = (value: string) => {
         setSelectedTeam(value);
     };
+    const dialog = useDialog()
 
     return (
         <div className="w-full mx-auto p-6">
@@ -301,16 +321,55 @@ const SerialNumberForm: React.FC = () => {
                         value={inputValue}
                         onChange={handleInputChange}
                         placeholder="Paste serial numbers separated by spaces or new lines (numbers less than 16 digits will be skipped)..."
-                        className="w-full h-32 p-4 border-2 border-green-300 rounded-lg
+                        className="w-full h-32 p-4 border-2 scrollbar-thin scrollbar-track-rounded-full border-green-300 rounded-lg
                             focus:ring-green-500 focus:border-green-500 transition-all duration-300
                             placeholder-gray-400 text-sm font-mono outline-0"
                     />
                     <div className="absolute right-4 bottom-4 font-medium">
                         <Button
+                            className={"!h-8 !rounded-sm"}
                             isLoading={isProcessing}
                             text="Process Serial Numbers"
                             onClick={handlePaste}
                         />
+                    </div>
+                    <div className="absolute right-1 top-1 font-medium">
+                        <button onClick={() => {
+                            const d = dialog.create({
+                                content: <div className="relative p-2 w-full max-h-full">
+                                    <div className="relative bg-white  dark:bg-gray-700">
+
+                                        <div
+                                            className="flex items-center justify-between p-2 border-b rounded-t dark:border-gray-600 border-gray-200">
+                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                                Serial numbers
+                                            </h3>
+                                            <button
+                                                onClick={() => d.dismiss()}
+                                                type="button"
+                                                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                                data-modal-hide="default-modal">
+                                                <svg className="w-3 h-3" aria-hidden="true"
+                                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                                    <path stroke="currentColor" strokeLinecap="round"
+                                                          strokeLinejoin="round" strokeWidth="2"
+                                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                </svg>
+                                                <span className="sr-only">Close modal</span>
+                                            </button>
+                                        </div>
+
+                                        <div className="p-4 md:p-5 space-y-4">
+                                            {inputValue.split("<br>").join("\n")}
+                                        </div>
+                                    </div>
+                                </div>,
+                                size: "lg",
+                                design: ["scrollable"]
+                            })
+                        }} className={"cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors"}>
+                            <Maximize2 size={24}/>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -555,7 +614,7 @@ const SerialItem = ({
             }
         };
 
-        uploadSerial().then();
+        // uploadSerial().then();
     }, [serial.isUploading]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {

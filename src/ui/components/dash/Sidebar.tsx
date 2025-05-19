@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {motion, AnimatePresence} from 'framer-motion';
 import {
     Award, Grid,Cpu, LogOut, Map, Phone, PieChart,
-    RefreshCw, Settings, UserPlus, Users,
+    ClipboardList, Settings, UserPlus, Users,
 } from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
 import {create} from 'zustand';
@@ -216,7 +216,7 @@ export default function Sidebar() {
             navItems.push(
                 {href: '/dashboard/users', icon: Users, label: 'Users'},
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
-                {href: '/dashboard/pick', icon: PieChart, label: 'PickList'},
+                {href: '/dashboard/pick', icon: ClipboardList, label: 'PickList'},
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );

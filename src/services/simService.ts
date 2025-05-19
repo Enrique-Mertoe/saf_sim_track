@@ -52,7 +52,7 @@ export const simCardService = {
     createSIMCardBatch: async (
         simCardsData: SIMCardCreate[],
         chunkSize: number = 10,
-        updateProgress: ((percent: number, sofar: number) => void) = () => {
+        updateProgress: ((percent: number, sofar: number, chunk: SIMCardCreate[], errors: any[]) => void) = () => {
         }
     ): Promise<{
         success: number,
@@ -82,7 +82,7 @@ export const simCardService = {
             }
 
             const percent = Math.min(100, Math.round(((i + chunk.length) / simCardsData.length) * 100));
-            updateProgress(percent, successCount);
+            updateProgress(percent, successCount, chunk, errors);
         }
 
         return {

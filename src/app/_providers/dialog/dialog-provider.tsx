@@ -320,13 +320,19 @@ const DialogComponent: React.FC<DialogComponentProps> = ({
     };
 
     // Handle responsive design options with Tailwind
+    const scrollableDesign = () => {
+        if (!design)
+            return ""
+        if (design.includes("scrollable"))
+            return "overflow-y-auto scrollbar-thin h-full scrollbar-rounded-full"
+    }
     const getResponsiveClasses = () => {
         if (!design) return "";
 
         const classes: string[] = [];
 
         if (design.includes("scrollable")) {
-            classes.push("overflow-y-auto max-h-[80vh]");
+            classes.push("h-[80vh]");
         }
 
         if (design.includes("sm-down")) {
@@ -365,7 +371,7 @@ const DialogComponent: React.FC<DialogComponentProps> = ({
                 ${showContent ? "scale-100 opacity-100" : "scale-105 opacity-0"}`}
             >
                 <div
-                    className={`bg-white dark:bg-gray-800 ${radiusClasses[radius ?? 'lg']} shadow-xl overflow-hidden`}>
+                    className={`bg-white dark:bg-gray-800 ${radiusClasses[radius ?? 'lg']} shadow-xl ${scrollableDesign() || 'overflow-hidden'}`}>
                     {content}
                 </div>
             </div>
