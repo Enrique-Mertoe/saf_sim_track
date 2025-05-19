@@ -48,16 +48,15 @@ export default function SimStats({refreshing = false}) {
     function countByDate(cards: SimAdapter[]) {
         return {
             total: cards.length,
-            today: cards.filter(card => new Date(card.created_at) >= startOfToday).length,
-            thisWeek: cards.filter(card => new Date(card.created_at) >= startOfWeek).length
+            today: cards.filter(card => new Date(card.activation_date || "") >= startOfToday).length,
+            thisWeek: cards.filter(card => new Date(card.activation_date || "") >= startOfWeek).length
         };
     }
 
     const matchedStats = countByDate(matchedCards);
     const unmatchedStats = countByDate(unmatchedCards);
     const qualityStats = countByDate(qualityCards);
-    const totalStats = countByDate(simCards); // For "Sold SIM Cards"
-    console.log("ttt", totalStats)
+    const totalStats = countByDate(simCards);
 
 
     const fetchSimCards = async () => {
@@ -136,7 +135,7 @@ export default function SimStats({refreshing = false}) {
     }
     const statCards = [
         {
-            title: "Sold SIM Cards",
+            title: "SIM Cards",
             value: totalStats.total,
             todayValue: totalStats.today,
             weekValue: totalStats.thisWeek,

@@ -1,9 +1,16 @@
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useDialog} from "@/app/_providers/dialog";
 import {Calendar, X} from "lucide-react";
 import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import MaterialSelect from "@/ui/components/MaterialSelect";
+import {Team as Team1, User} from "@/models";
+import {teamService} from "@/services";
+import alert from "@/ui/alert";
 
+type Team = Team1 & {
+    users?: User,
+    leader: string
+}
 export default function StartPreview({
                                          card,
                                          onClose,
@@ -14,8 +21,20 @@ export default function StartPreview({
     const [selectedTab, setSelectedTab] = useState('daily');
     const [dateRange, setDateRange] = useState('week');
     const dialogRef = useRef(null);
+    const [teams, setTeams] = useState<Team[]>([])
+    useEffect(() => {
+        async function fetchTeams() {
+            const {data, error} = await teamService.getAllTeams()
+            if (error)
+                return alert.error(error.message)
+            setTeams((data as Team[])?.map(team => {
+                team.leader = team.users?.full_name ?? 'No leader'
+                return team
+            }))
+        }
 
-
+        fetchTeams().then()
+    }, []);
     const dialog = useDialog()
     if (!card) return null;
 
@@ -143,9 +162,11 @@ export default function StartPreview({
                                <span>Team:</span>
 
                                <MaterialSelect
-                                   className={"!w-[200px]"}
+                                   className={"!w-[250px]"}
                                    animation={"slide"}
-                                   options={['Apple', 'Banana', 'Cherry']}
+                                   options={teams}
+                                   valueKey={"id"}
+                                   displayKey={"name,leader"}
                                    onChange={(value) => console.log(value)}
                                />
                            </span>

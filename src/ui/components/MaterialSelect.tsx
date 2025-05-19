@@ -276,7 +276,7 @@ export default function MaterialSelect({
             positionClass = dropdownPlacement === 'top' ? "bottom-full mb-1" : "top-full mt-1";
         }
 
-        return `${baseClasses} ${roundedClass} ${positionClass} max-h-60 overflow-auto ${dropdownClassName}`;
+        return `${baseClasses} ${roundedClass} ${positionClass} max-h-60 overflow-auto scrollbar-thin scrollbar-track-rounded-full ${dropdownClassName}`;
     };
 
     const getOptionClasses = (isSelected: boolean) => {

@@ -5,7 +5,7 @@ import {usePathname, useRouter} from "next/navigation";
 import Link from 'next/link';
 import {motion, AnimatePresence} from 'framer-motion';
 import {
-    Award, Grid,Cpu, LogOut, Map, Phone, PieChart,
+    Award, Grid, Cpu, LogOut, Map, Phone, PieChart,
     ClipboardList, Settings, UserPlus, Users,
 } from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
@@ -223,7 +223,7 @@ export default function Sidebar() {
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
                 {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
-                // {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
+                {href: '/dashboard/leader-console', icon: PieChart, label: 'Sim Assignment'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.STAFF) {
