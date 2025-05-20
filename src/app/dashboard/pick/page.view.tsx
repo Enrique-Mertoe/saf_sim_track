@@ -1,19 +1,21 @@
 "use client"
-import React, { ChangeEvent, useEffect, useState, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, {ChangeEvent, useEffect, useState, useRef} from 'react';
+import {AnimatePresence, motion} from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-import { SIMCard, SIMCardCreate, SIMStatus, Team as Team1, User } from "@/models";
-import { teamService } from "@/services";
-import { toast } from "react-hot-toast";
+import {SIMCard, SIMCardCreate, SIMStatus, Team as Team1, User} from "@/models";
+import {teamService} from "@/services";
+import {toast} from "react-hot-toast";
 import Progress from "@/ui/components/MaterialProgress";
 import useApp from "@/ui/provider/AppProvider";
-import { FileText, Loader2, Maximize2 } from 'lucide-react';
-import { useDialog } from "@/app/_providers/dialog";
+import {FileText, Loader2, Maximize2} from 'lucide-react';
+import {useDialog} from "@/app/_providers/dialog";
 import PaginatedSerialGrid from "@/app/dashboard/pick/components/ItemList";
 import * as mammoth from 'mammoth';
 import * as Papaparse from 'papaparse';
+import alert from "@/ui/alert";
+import {string} from "yup";
 
 // Define TypeScript interfaces
 interface SerialNumber {
@@ -39,7 +41,7 @@ const generateId = (): string => {
 };
 
 const SerialNumberForm: React.FC = () => {
-    const { user } = useApp()
+    const {user} = useApp()
     const [inputValue, setInputValue] = useState<string>('');
     const [serialNumbers, setSerialNumbers] = useState<SerialNumber[]>([]);
     const [globalError, setGlobalError] = useState<string | null>(null);
@@ -62,7 +64,7 @@ const SerialNumberForm: React.FC = () => {
     // Initialize PDF.js when needed
     const initializePdfJs = async () => {
         if (pdfjsLib) return pdfjsLib;
-        
+
         try {
             setIsPdfInitializing(true);
             // Dynamically import PDF.js library
@@ -87,7 +89,7 @@ const SerialNumberForm: React.FC = () => {
 
     useEffect(() => {
         async function fetchTeams() {
-            const { data, error } = await teamService.getAllTeams()
+            const {data, error} = await teamService.getAllTeams()
             if (error)
                 return setGlobalError(error.message)
             setTeams((data as Team[])?.map(team => {
@@ -160,10 +162,13 @@ const SerialNumberForm: React.FC = () => {
         if (!pdfjs) {
             throw new Error('PDF processing library not initialized');
         }
+        let p_reason: any = undefined;
+        let done: boolean = true;
+        let is_prompting: boolean = false;
 
         try {
             setPdfProgress(0);
-            
+
             // Read the file as ArrayBuffer
             const arrayBuffer = await file.arrayBuffer();
 
@@ -177,23 +182,68 @@ const SerialNumberForm: React.FC = () => {
 
             // Handle password-protected PDFs
             loadingTask.onPassword = (callback: (arg0: string) => void, reason: number) => {
-                const password = prompt(
-                    reason === 1
-                        ? 'Enter password to open this PDF file:'
-                        : 'Invalid password. Please try again:',
-                    ''
-                );
+                p_reason = reason
+                done = false
+                if (is_prompting) return
+                alert.prompt({
+                    message:
+                        reason === 1
+                            ? 'Enter password to open this PDF file:'
+                            : 'Invalid password. Please try again:'
+                    , onCancel(): void {
+                        setGlobalError('Password required to extract text from this PDF.');
+                        setIsFileProcessing(false);
+                        loadingTask.destroy();
+                    },
+                    onConfirm() {
+                        setIsFileProcessing(false);
+                        loadingTask.destroy();
+                    }
+                    , async task(password: string): Promise<any> {
+                        if (password) {
+                            callback(password);
+                            return await new Promise<any>((resolve, reject) => {
+                                const t = setInterval(() => {
+                                    console.log("checking")
+                                    if (p_reason != undefined && p_reason !== 1) {
+                                        clearInterval(t)
+                                        return reject('Invalid password. Please try again')
+                                    }
 
-                if (password) {
-                    callback(password);
-                } else {
-                    setGlobalError('Password required to extract text from this PDF.');
-                    setIsFileProcessing(false);
-                    loadingTask.destroy();
-                }
+                                    if (done) {
+                                        clearInterval(t)
+                                        return resolve(true)
+                                    }
+
+                                }, 300)
+                            })
+                        } else {
+                            throw new Error('Password required to extract text from this PDF.');
+                            //     setIsFileProcessing(false);
+                            //     return loadingTask.destroy();
+                        }
+                    }
+
+                })
+                // const password = prompt(
+                //     reason === 1
+                //         ? 'Enter password to open this PDF file:'
+                //         : 'Invalid password. Please try again:',
+                //     ''
+                // );
+                //
+                // if (password) {
+                //     callback(password);
+                // } else {
+                // setGlobalError('Password required to extract text from this PDF.');
+                // setIsFileProcessing(false);
+                // loadingTask.destroy();
+                // }
             };
 
             const pdf = await loadingTask.promise;
+            done = true;
+            is_prompting = false
 
             // Get total number of pages
             const numPages = pdf.numPages;
@@ -239,7 +289,7 @@ const SerialNumberForm: React.FC = () => {
         // Reset the input field
         setInputValue('');
         // eslint-disable-next-line prefer-const
-        let { data, error: simError } = await simService.getAllSimCards(user!)
+        let {data, error: simError} = await simService.getAllSimCards(user!)
         if (!data || simError)
             data = []
         const simdataMapa = data.map((data: SIMCard) => data.serial_number)
@@ -298,7 +348,7 @@ const SerialNumberForm: React.FC = () => {
             setGlobalError(null);
 
             let text = '';
-            
+
             if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                 // Use our improved PDF extraction function
                 text = await extractTextFromPdf(file);
@@ -307,15 +357,15 @@ const SerialNumberForm: React.FC = () => {
                 text = await file.text();
             } else if (file.type === 'text/csv') {
                 const content = await file.text();
-                const results = Papaparse.parse(content, { header: true });
+                const results = Papaparse.parse(content, {header: true});
                 // Find column that might contain serial numbers
                 // @ts-ignore
                 const serialColumn = Object.keys(results.data[0]).find(key =>
-                    key.toLowerCase().includes('serial') || 
+                    key.toLowerCase().includes('serial') ||
                     key.toLowerCase().includes('number') ||
                     key.toLowerCase().includes('sim')
                 );
-                
+
                 if (serialColumn) {
                     // @ts-ignore
                     text = results.data.map(row => row[serialColumn]).join('\n');
@@ -324,11 +374,11 @@ const SerialNumberForm: React.FC = () => {
                     // @ts-ignore
                     text = results.data.flatMap(row => Object.values(row)).join('\n');
                 }
-            } else if (file.type.includes('word') || 
-                      file.name.endsWith('.docx') || 
-                      file.name.endsWith('.doc')) {
+            } else if (file.type.includes('word') ||
+                file.name.endsWith('.docx') ||
+                file.name.endsWith('.doc')) {
                 const arrayBuffer = await file.arrayBuffer();
-                const result = await mammoth.extractRawText({ arrayBuffer });
+                const result = await mammoth.extractRawText({arrayBuffer});
                 text = result.value;
             } else {
                 throw new Error('Unsupported file type. Please upload PDF, TXT, CSV, or Word document.');
@@ -380,7 +430,7 @@ const SerialNumberForm: React.FC = () => {
 
     const updateSerialStatus = (id: string, updates: Partial<SerialNumber>) => {
         setSerialNumbers(prev =>
-            prev.map(s => s.id === id ? { ...s, ...updates } : s)
+            prev.map(s => s.id === id ? {...s, ...updates} : s)
         );
     };
 
@@ -558,7 +608,7 @@ const SerialNumberForm: React.FC = () => {
                             onChange={handleFileUpload}
                             className="hidden"
                         />
-                        
+
                         {/* File upload button */}
                         <Button
                             className={"!h-8  !rounded-sm flex items-center"}
@@ -570,9 +620,9 @@ const SerialNumberForm: React.FC = () => {
                                 : "Upload"}
                             onClick={triggerFileUpload}
                             disabled={isAnyProcessRunning && !isFileProcessing}
-                            icon={isFileProcessing ? '' : <FileText className="mr-1 h-4 w-4" />}
+                            icon={isFileProcessing ? '' : <FileText className="mr-1 h-4 w-4"/>}
                         />
-                        
+
                         {/* Process button */}
                         <Button
                             className={"!h-8 !rounded-sm"}
@@ -583,7 +633,7 @@ const SerialNumberForm: React.FC = () => {
                         />
                     </div>
                     <div className="absolute right-1 top-1 font-medium">
-                        <button 
+                        <button
                             onClick={() => {
                                 const d = dialog.create({
                                     content: <div className="relative p-2 w-full max-h-full">
@@ -600,10 +650,11 @@ const SerialNumberForm: React.FC = () => {
                                                     className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
                                                     data-modal-hide="default-modal">
                                                     <svg className="w-3 h-3" aria-hidden="true"
-                                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                         viewBox="0 0 14 14">
                                                         <path stroke="currentColor" strokeLinecap="round"
-                                                            strokeLinejoin="round" strokeWidth="2"
-                                                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                              strokeLinejoin="round" strokeWidth="2"
+                                                              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                                                     </svg>
                                                     <span className="sr-only">Close modal</span>
                                                 </button>
@@ -617,7 +668,7 @@ const SerialNumberForm: React.FC = () => {
                                     size: "lg",
                                     design: ["scrollable"]
                                 })
-                            }} 
+                            }}
                             disabled={isAnyProcessRunning}
                             className={`cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
@@ -634,11 +685,12 @@ const SerialNumberForm: React.FC = () => {
             {isFileProcessing && totalPages > 0 && (
                 <div className="py-4 mb-6">
                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-gray-600">Extracting PDF text... {totalPages > 0 ? `(Page ${Math.ceil(pdfProgress / 100 * totalPages)} of ${totalPages})` : ''}</span>
+                        <span
+                            className="text-gray-600">Extracting PDF text... {totalPages > 0 ? `(Page ${Math.ceil(pdfProgress / 100 * totalPages)} of ${totalPages})` : ''}</span>
                         <span className="text-gray-600">{pdfProgress.toFixed(0)}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${pdfProgress}%` }}></div>
+                        <div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${pdfProgress}%`}}></div>
                     </div>
                 </div>
             )}
@@ -730,8 +782,8 @@ const SerialNumberForm: React.FC = () => {
                                     <>
                                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd"
-                                                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                                                clipRule="evenodd"/>
+                                                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                                                  clipRule="evenodd"/>
                                         </svg>
                                         Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''} to {teams.find(t => t.id === selectedTeam)?.name}
                                     </>
