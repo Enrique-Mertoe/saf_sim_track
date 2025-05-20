@@ -9,7 +9,7 @@ export default function Button({
     isLoading: boolean,
     onClick: Closure;
     text: string;
-    disabled: boolean;
+    disabled?: boolean;
     icon?: any
 } & React.HTMLAttributes<HTMLButtonElement>) {
     const colorLight = "#4CA350";
