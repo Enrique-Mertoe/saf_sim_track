@@ -1,10 +1,16 @@
 import {motion} from "framer-motion";
 import React from "react";
 
-export default function Button({isLoading, onClick, text, className = '', ...props}: {
+export default function Button({
+                                   isLoading, onClick, text, className = '', disabled = false,
+                                   icon = null,
+                                   ...props
+                               }: {
     isLoading: boolean,
     onClick: Closure;
-    text: string
+    text: string;
+    disabled: boolean;
+    icon?: any
 } & React.HTMLAttributes<HTMLButtonElement>) {
     const colorLight = "#4CA350";
     const colorDark = "#005522";
@@ -29,7 +35,7 @@ export default function Button({isLoading, onClick, text, className = '', ...pro
         <motion.button
             className={`w-full h-14 flex cursor-pointer justify-center items-center rounded-2xl text-white font-bold py-3 px-4 overflow-hidden disabled:opacity-70 ${className}`}
             onClick={onClick}
-            disabled={isLoading}
+            disabled={isLoading || disabled}
             variants={buttonVariants}
             whileHover="hover"
             whileTap="tap"
@@ -37,6 +43,9 @@ export default function Button({isLoading, onClick, text, className = '', ...pro
                 background: `linear-gradient(90deg, ${colorLight}, ${colorDark})`
             }}
         >
+            <>
+                {icon ? icon : ''}
+            </>
             {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (

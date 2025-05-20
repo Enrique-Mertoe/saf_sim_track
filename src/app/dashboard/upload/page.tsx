@@ -339,10 +339,307 @@
 //         </div>
 //     );
 // }
-
-import {notFound} from "next/navigation";
-
-export default function Page() {
-    notFound()
-    return <></>
-}
+// "use client"
+// import { useState, useCallback, useEffect } from 'react';
+//
+// export default function ImprovedPDFTextExtractor() {
+//   const [text, setText] = useState('');
+//   const [fileName, setFileName] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState('');
+//   const [progress, setProgress] = useState(0);
+//   const [totalPages, setTotalPages] = useState(0);
+//   const [pdfjsLib, setPdfjsLib] = useState(null);
+//   const [isInitializing, setIsInitializing] = useState(true);
+//
+//   // Initialize PDF.js
+//   useEffect(() => {
+//     async function initializePdfJs() {
+//       try {
+//         setIsInitializing(true);
+//         // Dynamically import PDF.js library
+//         const pdfjs = await import('pdfjs-dist/webpack');
+//
+//         // Set up the worker using the webpack approach
+//         // This way, the worker will always match the library version
+//         setPdfjsLib(pdfjs);
+//         setIsInitializing(false);
+//       } catch (err) {
+//         console.error('Error initializing PDF.js:', err);
+//         setError('Failed to initialize PDF processing library. Please try again later.');
+//         setIsInitializing(false);
+//       }
+//     }
+//
+//     initializePdfJs();
+//   }, []);
+//
+//   const normalizeText = (text) => {
+//     // Remove excessive whitespace and normalize line breaks
+//     return text
+//       .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
+//       .replace(/\n\s*\n/g, '\n\n') // Normalize paragraph breaks
+//       .trim();
+//   };
+//
+//   const extractText = useCallback(async (file) => {
+//     if (!pdfjsLib) {
+//       setError('PDF processing library not initialized yet. Please try again.');
+//       return;
+//     }
+//
+//     try {
+//       setLoading(true);
+//       setError('');
+//       setText('');
+//       setProgress(0);
+//
+//       // Read the file as ArrayBuffer
+//       const arrayBuffer = await file.arrayBuffer();
+//
+//       // Load the PDF document with password support
+//       // @ts-ignore
+//       const loadingTask = pdfjsLib.getDocument({
+//         data: arrayBuffer,
+//         // Enable additional features for better text extraction
+//         useSystemFonts: true,
+//         disableFontFace: false,
+//       });
+//
+//       // Handle password-protected PDFs
+//       loadingTask.onPassword = (callback: (arg0: string) => void, reason: number) => {
+//         const password = prompt(
+//           reason === 1
+//             ? 'Enter password to open this PDF file:'
+//             : 'Invalid password. Please try again:',
+//           ''
+//         );
+//
+//         if (password) {
+//           callback(password);
+//         } else {
+//           setError('Password required to extract text from this PDF.');
+//           setLoading(false);
+//           loadingTask.destroy();
+//         }
+//       };
+//
+//       const pdf = await loadingTask.promise;
+//
+//       // Get total number of pages
+//       const numPages = pdf.numPages;
+//       setTotalPages(numPages);
+//
+//       let fullText = '';
+//
+//       // Process pages in batches to avoid memory issues with large PDFs
+//       const BATCH_SIZE = 10;
+//       for (let i = 1; i <= numPages; i += BATCH_SIZE) {
+//         const batch = [];
+//
+//         // Create batch of promises for current set of pages
+//         for (let j = i; j <= Math.min(i + BATCH_SIZE - 1, numPages); j++) {
+//           batch.push(processPage(pdf, j));
+//         }
+//
+//         // Process batch
+//         const batchResults = await Promise.all(batch);
+//         fullText += batchResults.join('\n\n');
+//
+//         // Update progress after each batch
+//         setProgress(Math.min(i + BATCH_SIZE - 1, numPages) / numPages * 100);
+//       }
+//
+//       setText(normalizeText(fullText));
+//       setLoading(false);
+//       setProgress(100);
+//     } catch (err) {
+//       console.error('Error extracting text:', err);
+//       setError(`Failed to extract text: ${err.message || 'Please make sure it is a valid PDF file.'}`);
+//       setLoading(false);
+//     }
+//   }, [pdfjsLib]);
+//
+//   const processPage = async (pdf, pageNum) => {
+//     try {
+//       // Get the page
+//       const page = await pdf.getPage(pageNum);
+//
+//       // Get text content with enhanced options
+//       const textContent = await page.getTextContent({
+//         normalizeWhitespace: true,
+//         disableCombineTextItems: false
+//       });
+//
+//       // Track lines for better paragraph detection
+//       let lastY = null;
+//       let lines = [];
+//       let currentLine = [];
+//
+//       // Process each text item
+//       textContent.items.forEach(item => {
+//         // Skip empty items
+//         if (!item.str.trim()) return;
+//
+//         // Check if we're on a new line based on y-position
+//         if (lastY !== null && Math.abs(lastY - item.transform[5]) > 1) {
+//           // New line detected
+//           if (currentLine.length > 0) {
+//             lines.push(currentLine.join(' '));
+//             currentLine = [];
+//           }
+//         }
+//
+//         currentLine.push(item.str);
+//         lastY = item.transform[5];
+//       });
+//
+//       // Add the last line if it exists
+//       if (currentLine.length > 0) {
+//         lines.push(currentLine.join(' '));
+//       }
+//
+//       // Combine lines into paragraphs
+//       const pageText = lines.join('\n');
+//
+//       return `--- Page ${pageNum} ---\n${pageText}`;
+//     } catch (err) {
+//       console.error(`Error processing page ${pageNum}:`, err);
+//       return `[Error extracting text from page ${pageNum}]`;
+//     }
+//   };
+//
+//   const handleFileChange = useCallback(async (e) => {
+//     const file = e.target.files[0];
+//     if (!file) return;
+//
+//     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+//       setError('Please select a valid PDF file.');
+//       return;
+//     }
+//
+//     setFileName(file.name);
+//     await extractText(file);
+//   }, [extractText]);
+//
+//   const handleDrop = useCallback((e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//
+//     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+//       const file = e.dataTransfer.files[0];
+//       if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+//         setError('Please select a valid PDF file.');
+//         return;
+//       }
+//
+//       setFileName(file.name);
+//       extractText(file);
+//     }
+//   }, [extractText]);
+//
+//   const handleDragOver = useCallback((e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//   }, []);
+//
+//   return (
+//     <div className="max-w-4xl mx-auto p-6 bg-gray-50 rounded-lg shadow-md">
+//       <h1 className="text-2xl font-bold mb-6 text-gray-800">Enhanced PDF Text Extractor</h1>
+//
+//       {isInitializing ? (
+//         <div className="p-4 mb-6 bg-blue-50 text-blue-700 rounded-md border border-blue-200">
+//           Initializing PDF processor...
+//         </div>
+//       ) : (
+//         <div className="mb-6">
+//           <div
+//             onDrop={handleDrop}
+//             onDragOver={handleDragOver}
+//             className="block w-full text-center p-4 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+//           >
+//             <label htmlFor="pdf-upload" className="cursor-pointer">
+//               <div className="flex flex-col items-center justify-center">
+//                 <svg className="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+//                 </svg>
+//                 <span className="text-gray-600 font-medium">Click to upload PDF or drag and drop</span>
+//                 <span className="text-gray-500 text-sm mt-1">{fileName || 'No file selected'}</span>
+//               </div>
+//             </label>
+//             <input
+//               id="pdf-upload"
+//               type="file"
+//               accept=".pdf,application/pdf"
+//               className="hidden"
+//               onChange={handleFileChange}
+//             />
+//           </div>
+//         </div>
+//       )}
+//
+//       {error && (
+//         <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-md border border-red-200">
+//           {error}
+//         </div>
+//       )}
+//
+//       {loading && (
+//         <div className="py-4 mb-6">
+//           <div className="flex justify-between items-center mb-2">
+//             <span className="text-gray-600">Extracting text... {totalPages > 0 ? `(Page ${Math.ceil(progress / 100 * totalPages)} of ${totalPages})` : ''}</span>
+//             <span className="text-gray-600">{progress.toFixed(0)}%</span>
+//           </div>
+//           <div className="w-full bg-gray-200 rounded-full h-2.5">
+//             <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+//           </div>
+//         </div>
+//       )}
+//
+//       {text && (
+//         <div className="mt-6">
+//           <div className="flex justify-between items-center mb-3">
+//             <h2 className="text-xl font-semibold text-gray-700">Extracted Text:</h2>
+//             <div className="flex gap-2">
+//               <button
+//                 onClick={() => {
+//                   const blob = new Blob([text], { type: 'text/plain' });
+//                   const url = URL.createObjectURL(blob);
+//                   const a = document.createElement('a');
+//                   a.href = url;
+//                   a.download = fileName.replace('.pdf', '') + '-extracted.txt';
+//                   document.body.appendChild(a);
+//                   a.click();
+//                   document.body.removeChild(a);
+//                   URL.revokeObjectURL(url);
+//                 }}
+//                 className="p-2 bg-blue-100 rounded-md hover:bg-blue-200 text-blue-700 text-sm flex items-center"
+//                 title="Download as text file"
+//               >
+//                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+//                 </svg>
+//                 Download
+//               </button>
+//               <button
+//                 onClick={() => navigator.clipboard.writeText(text)}
+//                 className="p-2 bg-gray-100 rounded-md hover:bg-gray-200 text-gray-700 text-sm flex items-center"
+//                 title="Copy to clipboard"
+//               >
+//                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+//                 </svg>
+//                 Copy
+//               </button>
+//             </div>
+//           </div>
+//           <div className="relative">
+//             <pre className="bg-white p-4 rounded-md border border-gray-300 text-gray-800 text-sm h-96 overflow-auto whitespace-pre-wrap">
+//               {text}
+//             </pre>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }

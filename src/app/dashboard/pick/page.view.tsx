@@ -1,16 +1,19 @@
 "use client"
-import React, {ChangeEvent, useEffect, useState} from 'react';
-import {AnimatePresence, motion, percent} from 'framer-motion';
+import React, { ChangeEvent, useEffect, useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-import {SIMCard, SIMCardCreate, SIMStatus, Team as Team1, User} from "@/models";
-import {teamService} from "@/services";
-import {toast} from "react-hot-toast";
+import { SIMCard, SIMCardCreate, SIMStatus, Team as Team1, User } from "@/models";
+import { teamService } from "@/services";
+import { toast } from "react-hot-toast";
 import Progress from "@/ui/components/MaterialProgress";
 import useApp from "@/ui/provider/AppProvider";
-import {Maximize2} from "lucide-react";
-import {useDialog} from "@/app/_providers/dialog";
+import { FileText, Loader2, Maximize2 } from 'lucide-react';
+import { useDialog } from "@/app/_providers/dialog";
+import PaginatedSerialGrid from "@/app/dashboard/pick/components/ItemList";
+import * as mammoth from 'mammoth';
+import * as Papaparse from 'papaparse';
 
 // Define TypeScript interfaces
 interface SerialNumber {
@@ -36,7 +39,7 @@ const generateId = (): string => {
 };
 
 const SerialNumberForm: React.FC = () => {
-    const {user} = useApp()
+    const { user } = useApp()
     const [inputValue, setInputValue] = useState<string>('');
     const [serialNumbers, setSerialNumbers] = useState<SerialNumber[]>([]);
     const [globalError, setGlobalError] = useState<string | null>(null);
@@ -46,9 +49,35 @@ const SerialNumberForm: React.FC = () => {
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [checkingCount, setCheckingCount] = useState<number>(0);
     const [uploadingCount, setUploadingCount] = useState<number>(0);
-    const [currentPercentage, setcurrentPercentage] = useState<number>(0)
-    const [uploadedSofar, setSofar] = useState<number>(0)
-    const [teams, setTeams] = useState<Team[]>([])
+    const [currentPercentage, setcurrentPercentage] = useState<number>(0);
+    const [uploadedSofar, setSofar] = useState<number>(0);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [isFileProcessing, setIsFileProcessing] = useState<boolean>(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [pdfjsLib, setPdfjsLib] = useState(null);
+    const [isPdfInitializing, setIsPdfInitializing] = useState(false);
+    const [totalPages, setTotalPages] = useState(0);
+    const [pdfProgress, setPdfProgress] = useState(0);
+
+    // Initialize PDF.js when needed
+    const initializePdfJs = async () => {
+        if (pdfjsLib) return pdfjsLib;
+        
+        try {
+            setIsPdfInitializing(true);
+            // Dynamically import PDF.js library
+            // @ts-ignore
+            const pdfjs = await import('pdfjs-dist/webpack');
+            setPdfjsLib(pdfjs);
+            setIsPdfInitializing(false);
+            return pdfjs;
+        } catch (err) {
+            console.error('Error initializing PDF.js:', err);
+            setGlobalError('Failed to initialize PDF processing library. Please try again later.');
+            setIsPdfInitializing(false);
+            return null;
+        }
+    };
 
     // Handle input change
     const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -58,7 +87,7 @@ const SerialNumberForm: React.FC = () => {
 
     useEffect(() => {
         async function fetchTeams() {
-            const {data, error} = await teamService.getAllTeams()
+            const { data, error } = await teamService.getAllTeams()
             if (error)
                 return setGlobalError(error.message)
             setTeams((data as Team[])?.map(team => {
@@ -70,10 +99,138 @@ const SerialNumberForm: React.FC = () => {
         fetchTeams().then()
     }, []);
 
+    const normalizeText = (text: string) => {
+        // Remove excessive whitespace and normalize line breaks
+        return text
+            .replace(/\s+/g, ' ')      // Replace multiple spaces with a single space
+            .replace(/\n\s*\n/g, '\n\n') // Normalize paragraph breaks
+            .trim();
+    };
+
+    const processPage = async (pdf: { getPage: (arg0: any) => any; }, pageNum: number) => {
+        try {
+            // Get the page
+            const page = await pdf.getPage(pageNum);
+
+            // Get text content with enhanced options
+            const textContent = await page.getTextContent({
+                normalizeWhitespace: true,
+                disableCombineTextItems: false
+            });
+
+            // Track lines for better paragraph detection
+            let lastY: number | null = null;
+            const lines = [];
+            let currentLine: any[] = [];
+
+            // Process each text item
+            textContent.items.forEach((item: { str: string; transform: (number | null)[]; }) => {
+                // Skip empty items
+                if (!item.str.trim()) return;
+
+                // Check if we're on a new line based on y-position
+                // @ts-ignore
+                if (lastY !== null && Math.abs(lastY - item.transform[5]) > 1) {
+                    // New line detected
+                    if (currentLine.length > 0) {
+                        lines.push(currentLine.join(' '));
+                        currentLine = [];
+                    }
+                }
+
+                currentLine.push(item.str);
+                lastY = item.transform[5];
+            });
+
+            // Add the last line if it exists
+            if (currentLine.length > 0) {
+                lines.push(currentLine.join(' '));
+            }
+
+            // Combine lines into paragraphs
+            return lines.join('\n');
+        } catch (err) {
+            console.error(`Error processing page ${pageNum}:`, err);
+            return `[Error extracting text from page ${pageNum}]`;
+        }
+    };
+
+    const extractTextFromPdf = async (file: File) => {
+        const pdfjs = await initializePdfJs();
+        if (!pdfjs) {
+            throw new Error('PDF processing library not initialized');
+        }
+
+        try {
+            setPdfProgress(0);
+            
+            // Read the file as ArrayBuffer
+            const arrayBuffer = await file.arrayBuffer();
+
+            // Load the PDF document with password support
+            const loadingTask = pdfjs.getDocument({
+                data: arrayBuffer,
+                // Enable additional features for better text extraction
+                useSystemFonts: true,
+                disableFontFace: false,
+            });
+
+            // Handle password-protected PDFs
+            loadingTask.onPassword = (callback: (arg0: string) => void, reason: number) => {
+                const password = prompt(
+                    reason === 1
+                        ? 'Enter password to open this PDF file:'
+                        : 'Invalid password. Please try again:',
+                    ''
+                );
+
+                if (password) {
+                    callback(password);
+                } else {
+                    setGlobalError('Password required to extract text from this PDF.');
+                    setIsFileProcessing(false);
+                    loadingTask.destroy();
+                }
+            };
+
+            const pdf = await loadingTask.promise;
+
+            // Get total number of pages
+            const numPages = pdf.numPages;
+            setTotalPages(numPages);
+
+            let fullText = '';
+
+            // Process pages in batches to avoid memory issues with large PDFs
+            const BATCH_SIZE = 10;
+            for (let i = 1; i <= numPages; i += BATCH_SIZE) {
+                const batch = [];
+
+                // Create batch of promises for current set of pages
+                for (let j = i; j <= Math.min(i + BATCH_SIZE - 1, numPages); j++) {
+                    batch.push(processPage(pdf, j));
+                }
+
+                // Process batch
+                const batchResults = await Promise.all(batch);
+                fullText += batchResults.join('\n\n');
+
+                // Update progress after each batch
+                const progress = Math.min(i + BATCH_SIZE - 1, numPages) / numPages * 100;
+                setPdfProgress(progress);
+            }
+
+            return normalizeText(fullText);
+        } catch (err) {
+            console.error('Error extracting text from PDF:', err);
+            // @ts-ignore
+            throw new Error(`Failed to extract text from PDF: ${err.message || 'Please make sure it is a valid PDF file.'}`);
+        }
+    };
+
     const process = async () => {
         // Split by whitespace and filter out empty strings
         const serialsToParse = inputValue.split(/\s+/).filter(Boolean);
-
 
         if (serialsToParse.length === 0) {
             throw new Error('No valid serial numbers found');
@@ -82,7 +239,7 @@ const SerialNumberForm: React.FC = () => {
         // Reset the input field
         setInputValue('');
         // eslint-disable-next-line prefer-const
-        let {data, error: simError} = await simService.getAllSimCards(user!)
+        let { data, error: simError } = await simService.getAllSimCards(user!)
         if (!data || simError)
             data = []
         const simdataMapa = data.map((data: SIMCard) => data.serial_number)
@@ -124,11 +281,78 @@ const SerialNumberForm: React.FC = () => {
             // Use setTimeout to ensure the UI updates before the process begins
             await new Promise(resolve => setTimeout(resolve, 0));
             await process();
-        } catch (err: any) {
+        } catch (err) {
             console.error('Error processing serial numbers:', err);
+            // @ts-ignore
             setGlobalError(err.message || 'Failed to process serial numbers');
             setIsProcessing(false);
         }
+    };
+
+    const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setIsFileProcessing(true);
+            setGlobalError(null);
+
+            let text = '';
+            
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                // Use our improved PDF extraction function
+                text = await extractTextFromPdf(file);
+                toast.success(`PDF processed. ${text.length > 0 ? 'Found potential serial numbers.' : 'No text extracted.'}`);
+            } else if (file.type === 'text/plain') {
+                text = await file.text();
+            } else if (file.type === 'text/csv') {
+                const content = await file.text();
+                const results = Papaparse.parse(content, { header: true });
+                // Find column that might contain serial numbers
+                // @ts-ignore
+                const serialColumn = Object.keys(results.data[0]).find(key =>
+                    key.toLowerCase().includes('serial') || 
+                    key.toLowerCase().includes('number') ||
+                    key.toLowerCase().includes('sim')
+                );
+                
+                if (serialColumn) {
+                    // @ts-ignore
+                    text = results.data.map(row => row[serialColumn]).join('\n');
+                } else {
+                    // If no obvious column, just join all values
+                    // @ts-ignore
+                    text = results.data.flatMap(row => Object.values(row)).join('\n');
+                }
+            } else if (file.type.includes('word') || 
+                      file.name.endsWith('.docx') || 
+                      file.name.endsWith('.doc')) {
+                const arrayBuffer = await file.arrayBuffer();
+                const result = await mammoth.extractRawText({ arrayBuffer });
+                text = result.value;
+            } else {
+                throw new Error('Unsupported file type. Please upload PDF, TXT, CSV, or Word document.');
+            }
+
+            setInputValue(text);
+        } catch (err) {
+            console.error('Error processing file:', err);
+            // @ts-ignore
+            setGlobalError(err.message || 'Failed to process file');
+        } finally {
+            setIsFileProcessing(false);
+            setPdfProgress(0);
+            setTotalPages(0);
+            // Reset the file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
+    // Trigger the file input click
+    const triggerFileUpload = () => {
+        fileInputRef.current?.click();
     };
 
     const removeSerial = (id: string) => {
@@ -156,7 +380,7 @@ const SerialNumberForm: React.FC = () => {
 
     const updateSerialStatus = (id: string, updates: Partial<SerialNumber>) => {
         setSerialNumbers(prev =>
-            prev.map(s => s.id === id ? {...s, ...updates} : s)
+            prev.map(s => s.id === id ? { ...s, ...updates } : s)
         );
     };
 
@@ -199,13 +423,11 @@ const SerialNumberForm: React.FC = () => {
         setIsUploading(true);
         setUploadingCount(serialsToUpload.length);
 
-
         // Mark all serials as uploading
         await simService.createSIMCardBatch(serialsToUpload.map(ser => {
             const ser_data: SIMCardCreate = {
                 match: SIMStatus.UNMATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
                 team_id: selectedTeam
-
             }
             updateSerialStatus(ser.id, {
                 isUploading: true,
@@ -277,7 +499,10 @@ const SerialNumberForm: React.FC = () => {
     const handleTeamChange = (value: string) => {
         setSelectedTeam(value);
     };
-    const dialog = useDialog()
+    const dialog = useDialog();
+
+    // Check if any process is running
+    const isAnyProcessRunning = isProcessing || isUploading || isFileProcessing || isPdfInitializing;
 
     return (
         <div className="w-full mx-auto p-6">
@@ -300,9 +525,7 @@ const SerialNumberForm: React.FC = () => {
                     animation={"slide"}
                     onChange={handleTeamChange}
                     options={teams}
-                    // className="w-full p-3 border-2 border-green-300 rounded-lg
-                    // focus:ring-green-500 focus:border-green-500 transition-all duration-300
-                    // text-gray-700"
+                    disabled={isAnyProcessRunning}
                 />
             </div>
 
@@ -324,55 +547,102 @@ const SerialNumberForm: React.FC = () => {
                         className="w-full h-32 p-4 border-2 scrollbar-thin scrollbar-track-rounded-full border-green-300 rounded-lg
                             focus:ring-green-500 focus:border-green-500 transition-all duration-300
                             placeholder-gray-400 text-sm font-mono outline-0"
+                        disabled={isAnyProcessRunning}
                     />
-                    <div className="absolute right-4 bottom-4 font-medium">
+                    <div className="absolute right-4 bottom-4 font-medium flex gap-2">
+                        {/* Hidden file input */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".pdf,.txt,.csv,.doc,.docx"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                        />
+                        
+                        {/* File upload button */}
+                        <Button
+                            className={"!h-8  !rounded-sm flex items-center"}
+                            isLoading={isFileProcessing}
+                            text={isFileProcessing ?
+                                (totalPages > 0 ?
+                                    `Processing PDF (${Math.ceil(pdfProgress / 100 * totalPages)}/${totalPages})` :
+                                    "Processing File...")
+                                : "Upload"}
+                            onClick={triggerFileUpload}
+                            disabled={isAnyProcessRunning && !isFileProcessing}
+                            icon={isFileProcessing ? '' : <FileText className="mr-1 h-4 w-4" />}
+                        />
+                        
+                        {/* Process button */}
                         <Button
                             className={"!h-8 !rounded-sm"}
                             isLoading={isProcessing}
-                            text="Process Serial Numbers"
+                            text="Process"
                             onClick={handlePaste}
+                            disabled={isAnyProcessRunning || !inputValue.trim()}
                         />
                     </div>
                     <div className="absolute right-1 top-1 font-medium">
-                        <button onClick={() => {
-                            const d = dialog.create({
-                                content: <div className="relative p-2 w-full max-h-full">
-                                    <div className="relative bg-white  dark:bg-gray-700">
+                        <button 
+                            onClick={() => {
+                                const d = dialog.create({
+                                    content: <div className="relative p-2 w-full max-h-full">
+                                        <div className="relative bg-white  dark:bg-gray-700">
 
-                                        <div
-                                            className="flex items-center justify-between p-2 border-b rounded-t dark:border-gray-600 border-gray-200">
-                                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                                Serial numbers
-                                            </h3>
-                                            <button
-                                                onClick={() => d.dismiss()}
-                                                type="button"
-                                                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                                                data-modal-hide="default-modal">
-                                                <svg className="w-3 h-3" aria-hidden="true"
-                                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                                    <path stroke="currentColor" strokeLinecap="round"
-                                                          strokeLinejoin="round" strokeWidth="2"
-                                                          d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                                </svg>
-                                                <span className="sr-only">Close modal</span>
-                                            </button>
-                                        </div>
+                                            <div
+                                                className="flex items-center justify-between p-2 border-b rounded-t dark:border-gray-600 border-gray-200">
+                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                                    Serial numbers
+                                                </h3>
+                                                <button
+                                                    onClick={() => d.dismiss()}
+                                                    type="button"
+                                                    className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                                    data-modal-hide="default-modal">
+                                                    <svg className="w-3 h-3" aria-hidden="true"
+                                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                                                        <path stroke="currentColor" strokeLinecap="round"
+                                                            strokeLinejoin="round" strokeWidth="2"
+                                                            d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                    </svg>
+                                                    <span className="sr-only">Close modal</span>
+                                                </button>
+                                            </div>
 
-                                        <div className="p-4 md:p-5 space-y-4">
-                                            {inputValue.split("<br>").join("\n")}
+                                            <div className="p-4 md:p-5 space-y-4">
+                                                {inputValue.split("<br>").join("\n")}
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>,
-                                size: "lg",
-                                design: ["scrollable"]
-                            })
-                        }} className={"cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors"}>
+                                    </div>,
+                                    size: "lg",
+                                    design: ["scrollable"]
+                                })
+                            }} 
+                            disabled={isAnyProcessRunning}
+                            className={`cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
                             <Maximize2 size={24}/>
                         </button>
                     </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                    Supported file formats: PDF, TXT, CSV, DOC, DOCX
+                </p>
             </div>
+
+            {/* PDF Processing Progress */}
+            {isFileProcessing && totalPages > 0 && (
+                <div className="py-4 mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-gray-600">Extracting PDF text... {totalPages > 0 ? `(Page ${Math.ceil(pdfProgress / 100 * totalPages)} of ${totalPages})` : ''}</span>
+                        <span className="text-gray-600">{pdfProgress.toFixed(0)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${pdfProgress}%` }}></div>
+                    </div>
+                </div>
+            )}
+
             <Progress
                 progress={currentPercentage}
                 current={uploadedSofar}
@@ -444,7 +714,7 @@ const SerialNumberForm: React.FC = () => {
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 onClick={uploadAllSerials}
-                                disabled={newValidCount === 0 || isUploading}
+                                disabled={newValidCount === 0 || isAnyProcessRunning}
                                 className="text-green-600 hover:text-green-700 ms-auto px-4 py-2 font-medium
                             flex items-center justify-center min-w-[200px]
                             disabled:text-gray-400 disabled:cursor-not-allowed
@@ -460,8 +730,8 @@ const SerialNumberForm: React.FC = () => {
                                     <>
                                         <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd"
-                                                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                                                  clipRule="evenodd"/>
+                                                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                                                clipRule="evenodd"/>
                                         </svg>
                                         Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''} to {teams.find(t => t.id === selectedTeam)?.name}
                                     </>
@@ -470,29 +740,22 @@ const SerialNumberForm: React.FC = () => {
                         )}
                         <button
                             onClick={clearAll}
-                            className="text-sm text-red-600 hover:text-red-800"
+                            disabled={isAnyProcessRunning}
+                            className={`text-sm text-red-600 hover:text-red-800 ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             Clear All
                         </button>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <AnimatePresence>
-                            {serialNumbers.map((serial) => (
-                                <SerialItem
-                                    key={serial.id}
-                                    serial={serial}
-                                    editSerial={editSerial}
-                                    removeSerial={removeSerial}
-                                    selectedTeam={selectedTeam}
-                                    teams={teams}
-                                    onCheckComplete={handleCheckComplete}
-                                    onUploadComplete={handleUploadComplete}
-                                    updateSerialStatus={updateSerialStatus}
-                                />
-                            ))}
-                        </AnimatePresence>
-                    </div>
+                    <PaginatedSerialGrid
+                        serialNumbers={serialNumbers}
+                        editSerial={editSerial}
+                        removeSerial={removeSerial}
+                        selectedTeam={selectedTeam}
+                        teams={teams}
+                        onCheckComplete={handleCheckComplete}
+                        onUploadComplete={handleUploadComplete}
+                        updateSerialStatus={updateSerialStatus}
+                    />
                 </div>
             )}
 
@@ -501,248 +764,3 @@ const SerialNumberForm: React.FC = () => {
 };
 
 export default SerialNumberForm;
-
-// SerialItem component handles its own checking and uploading processes
-const SerialItem = ({
-                        serial,
-                        editSerial,
-                        removeSerial,
-                        selectedTeam,
-                        teams,
-                        onCheckComplete,
-                        onUploadComplete,
-                        updateSerialStatus
-                    }: {
-    serial: SerialNumber;
-    editSerial: (id: string, value: string) => void;
-    removeSerial: (id: string) => void;
-    selectedTeam: string;
-    teams: Team[];
-    onCheckComplete: () => void;
-    onUploadComplete: (success: boolean) => void;
-    updateSerialStatus: (id: string, updates: Partial<SerialNumber>) => void;
-}) => {
-    const [isEditing, setIsEditing] = useState<boolean>(false);
-
-    // Check if a serial exists in the database
-    const checkIfSerialExists = async (serial: string): Promise<boolean> => {
-        try {
-            const simCard = await simService.getSIMCardBySerialNumber(serial);
-            return !!(simCard && simCard.id);
-        } catch (error) {
-            console.error("Error checking serial:", error);
-            return false;
-        }
-    };
-
-    // Check the serial existence when component mounts or when serial value changes
-    useEffect(() => {
-        const checkSerialExistence = async () => {
-            if (!serial.isChecking) return;
-
-            try {
-                if (!serial.isValid) {
-                    updateSerialStatus(serial.id, {
-                        isChecking: false,
-                        checkError: 'Not a valid number'
-                    });
-                    onCheckComplete();
-                    return;
-                }
-
-                // Check if serial exists
-                const exists = await checkIfSerialExists(serial.value);
-
-                updateSerialStatus(serial.id, {
-                    isChecking: false,
-                    exists: exists,
-                    checkError: null
-                });
-            } catch (err: any) {
-                console.error('Error checking serial existence:', err);
-                updateSerialStatus(serial.id, {
-                    isChecking: false,
-                    checkError: 'Check failed: ' + (err.message || 'Unknown error')
-                });
-            } finally {
-                onCheckComplete();
-            }
-        };
-
-        // checkSerialExistence();
-    }, [serial.id, serial.value, serial.isValid, serial.isChecking]);
-
-    // Handle serial upload
-    useEffect(() => {
-        const uploadSerial = async () => {
-            if (!serial.isUploading) return;
-
-            try {
-                // Skip if not valid, already exists, already uploaded
-                if (!serial.isValid || serial.exists || serial.isUploaded || serial.isChecking) {
-                    updateSerialStatus(serial.id, {isUploading: false});
-                    onUploadComplete(false);
-                    return;
-                }
-                console.log("serial", selectedTeam)
-                const simdata = await simService.createSIMCard({
-                    serial_number: serial.value,
-                    team_id: selectedTeam,
-                    sold_by_user_id: null,
-                    match: SIMStatus.UNMATCH,
-                    quality: SIMStatus.NONQUALITY
-                })
-                if (!simdata) {
-                    throw new Error("Failed to upload SIM serial");
-                }
-                // Success case
-                updateSerialStatus(serial.id, {
-                    isUploading: false,
-                    isUploaded: true,
-                    exists: true,
-                    uploadError: null
-                });
-                onUploadComplete(true);
-
-            } catch (err: any) {
-                console.error('Error uploading serial:', serial.value, err);
-                updateSerialStatus(serial.id, {
-                    isUploading: false,
-                    uploadError: err.message || 'Failed to upload'
-                });
-                onUploadComplete(false);
-            }
-        };
-
-        // uploadSerial().then();
-    }, [serial.isUploading]);
-
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const newValue = e.target.value;
-        editSerial(serial.id, newValue);
-        setIsEditing(true);
-    };
-
-    const handleInputBlur = () => {
-        setIsEditing(false);
-    };
-
-    return (
-        <motion.div
-            key={serial.id}
-            initial={{opacity: 0, scale: 0.8}}
-            animate={{opacity: 1, scale: 1}}
-            exit={{opacity: 0, scale: 0.8, transition: {duration: 0.3}}}
-            transition={{duration: 0.2}}
-            className={`p-3 rounded-lg border shadow-sm relative
-                ${serial.isUploaded
-                ? 'border-purple-200 bg-purple-50'
-                : serial.isUploading
-                    ? 'border-blue-200 bg-blue-50'
-                    : serial.isChecking
-                        ? 'border-blue-200 bg-blue-50'
-                        : serial.isValid
-                            ? serial.exists
-                                ? 'border-yellow-200 bg-yellow-50'
-                                : serial.uploadError
-                                    ? 'border-red-200 bg-red-50'
-                                    : 'border-green-200 bg-green-50'
-                            : 'border-red-200 bg-red-50'}`}
-        >
-            <input
-                type="text"
-                value={serial.value}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                disabled={serial.isUploaded || serial.isUploading || serial.isChecking}
-                className={`w-full p-2 rounded border font-mono text-sm
-                    ${serial.isValid && !serial.isChecking
-                    ? isEditing ? 'border-blue-500' : 'border-gray-200 focus:border-green-500'
-                    : serial.isChecking
-                        ? 'border-blue-300'
-                        : 'border-red-300 focus:border-red-500'}
-                    ${(serial.isUploaded || serial.isUploading || serial.isChecking) ? 'bg-gray-100' : ''}`}
-            />
-
-            <div className="mt-2 flex justify-between items-center">
-                <div className="flex items-center">
-                    {serial.isChecking ? (
-                        <span className="flex items-center text-blue-600 text-xs">
-                            <span
-                                className="inline-block animate-spin h-3 w-3 mr-1 border-2 border-blue-600 border-t-transparent rounded-full"></span>
-                            Checking...
-                        </span>
-                    ) : serial.isUploading ? (
-                        <span className="flex items-center text-blue-600 text-xs">
-                            <span
-                                className="inline-block animate-spin h-3 w-3 mr-1 border-2 border-blue-600 border-t-transparent rounded-full"></span>
-                            Uploading to {teams.find(t => t.id === selectedTeam)?.name}...
-                        </span>
-                    ) : serial.isUploaded ? (
-                        <span className="flex items-center text-purple-600 text-xs">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                      clipRule="evenodd"/>
-                            </svg>
-                            Uploaded to {teams.find(t => t.id === selectedTeam)?.name}
-                        </span>
-                    ) : serial.uploadError ? (
-                        <span className="flex items-center text-red-600 text-xs">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                      clipRule="evenodd"/>
-                            </svg>
-                            {serial.uploadError}
-                        </span>
-                    ) : serial.isValid ? (
-                        serial.exists ? (
-                            <span className="flex items-center text-yellow-600 text-xs">
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd"
-                                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1H9z"
-                                          clipRule="evenodd"/>
-                                </svg>
-                                Already exists
-                            </span>
-                        ) : (
-                            <span className="flex items-center text-green-600 text-xs">
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd"
-                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                          clipRule="evenodd"/>
-                                </svg>
-                                Ready to upload
-                            </span>
-                        )
-                    ) : (
-                        <span className="flex items-center text-red-600 text-xs">
-                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                      clipRule="evenodd"/>
-                            </svg>
-                            {serial.checkError || 'Invalid format'}
-                        </span>
-                    )}
-                </div>
-
-                {!serial.isUploaded && !serial.isUploading && !serial.isChecking && (
-                    <motion.button
-                        whileHover={{scale: 1.1}}
-                        whileTap={{scale: 0.9}}
-                        onClick={() => removeSerial(serial.id)}
-                        className="text-gray-400 hover:text-red-600"
-                    >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd"
-                                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                  clipRule="evenodd"/>
-                        </svg>
-                    </motion.button>
-                )}
-            </div>
-        </motion.div>
-    );
-};
