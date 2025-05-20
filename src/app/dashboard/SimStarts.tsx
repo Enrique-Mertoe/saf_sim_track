@@ -16,6 +16,7 @@ import {
 import Signal from "@/lib/Signal";
 import StartPreview from "@/app/dashboard/components/StartPreview";
 import {useDialog} from "@/app/_providers/dialog";
+import StatActivity from "@/app/dashboard/StatActivity";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
@@ -210,12 +211,13 @@ export default function SimStats({refreshing = false}) {
                                 onExpandClick={() => {
                                     const dialogRef = d.create({
                                         content: (
-                                            <StartPreview
-                                                card={card}
+                                            <StatActivity
+                                                start={card}
                                                 onClose={() => dialogRef.dismiss()}
                                             />
                                         ),
                                         size: "lg",
+                                        design:["scrollable"]
                                     });
                                 }
                                 }

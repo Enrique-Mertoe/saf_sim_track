@@ -35,6 +35,7 @@ type SelectProps = {
     error?: boolean;
     placeholder?: string;
     clearable?: boolean;
+    theme?: 'light' | 'dark' | 'auto';
 
     // Dropdown positioning
     dropdownPosition?: 'auto' | 'top' | 'bottom';
@@ -66,6 +67,7 @@ export default function MaterialSelect({
                                            error = false,
                                            placeholder = 'Select an option',
                                            clearable = false,
+                                           theme = 'light',
                                            dropdownPosition = 'auto',
                                            animation = 'fade',
                                            animationDuration = 0.2,
@@ -74,10 +76,44 @@ export default function MaterialSelect({
                                            optionClassName = '',
                                        }: SelectProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedValue, setSelectedValue] = useState<any>(value || defaultValue || null);
+    const [selectedValue, setSelectedValue] = useState<any>(null);
+    const [customDisplayText, setCustomDisplayText] = useState<string | null>(null);
     const [dropdownPlacement, setDropdownPlacement] = useState<'top' | 'bottom'>('bottom');
     const selectRef = useRef<HTMLDivElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Process comma-separated defaultValue or value
+    // Format: "Display Text,actualValue"
+    const processCommaSeparatedValue = (val: any) => {
+        if (typeof val === 'string' && val.includes(',')) {
+            const parts = val.split(',');
+            const displayText = parts[0].trim();
+            const actualValue = parts[parts.length - 1].trim();
+
+            return {
+                displayText,
+                value: actualValue
+            };
+        }
+
+        return {
+            displayText: null,
+            value: val
+        };
+    };
+
+    // Initialize with provided value or defaultValue
+    useEffect(() => {
+        if (value !== undefined) {
+            const processed = processCommaSeparatedValue(value);
+            setSelectedValue(processed.value);
+            setCustomDisplayText(processed.displayText);
+        } else if (defaultValue !== undefined) {
+            const processed = processCommaSeparatedValue(defaultValue);
+            setSelectedValue(processed.value);
+            setCustomDisplayText(processed.displayText);
+        }
+    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -96,7 +132,9 @@ export default function MaterialSelect({
     // Update selected value when value prop changes
     useEffect(() => {
         if (value !== undefined) {
-            setSelectedValue(value);
+            const processed = processCommaSeparatedValue(value);
+            setSelectedValue(processed.value);
+            setCustomDisplayText(processed.displayText);
         }
     }, [value]);
 
@@ -162,12 +200,16 @@ export default function MaterialSelect({
                 };
         }
     };
+
     const getDisplayValue = (option: any): string => {
         let displayValue: any;
 
         if (isObjectOptions) {
             const keys = displayKey.split(",").map(k => k.trim());
-            displayValue = keys.map(key => option[key] || "").join(" - ");
+            displayValue = keys
+                .map(key => option[key] || "")
+                .filter(val => val !== "") // remove empty values
+                .join(" - ");
         } else {
             displayValue = option;
         }
@@ -177,7 +219,8 @@ export default function MaterialSelect({
         }
 
         return String(displayValue);
-    };
+    }
+
     // Helper to get value
     const getValue = (option: any): any => {
         if (isObjectOptions) {
@@ -192,7 +235,7 @@ export default function MaterialSelect({
 
         return options.find((option: any) => {
             const value = isObjectOptions ? option[valueKey] : option;
-            return value === selectedValue;
+            return String(value) === String(selectedValue);
         });
     };
 
@@ -200,6 +243,7 @@ export default function MaterialSelect({
     const handleSelect = (option: any) => {
         const value = getValue(option);
         setSelectedValue(value);
+        setCustomDisplayText(null); // Reset custom display text when manually selecting
         onChange?.(value);
         setIsOpen(false);
     };
@@ -208,6 +252,7 @@ export default function MaterialSelect({
     const handleClear = (e: React.MouseEvent) => {
         e.stopPropagation();
         setSelectedValue(null);
+        setCustomDisplayText(null);
         onChange?.(null);
     };
 
@@ -240,22 +285,22 @@ export default function MaterialSelect({
         if (rounded === 'lg') roundedClass = "rounded-lg";
         if (rounded === 'full') roundedClass = "rounded-full";
 
-        // Variant classes
-        let variantClass = "border border-gray-300 bg-white";
-        if (variant === 'outline') variantClass = "border border-gray-300 bg-transparent";
-        if (variant === 'ghost') variantClass = "bg-transparent hover:bg-gray-100";
-        if (variant === 'soft') variantClass = "bg-gray-100 border-none";
+        // Theme & Variant classes
+        let variantClass = "border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200";
+        if (variant === 'outline') variantClass = "border border-gray-300 bg-transparent dark:border-gray-600 dark:text-gray-200";
+        if (variant === 'ghost') variantClass = "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200";
+        if (variant === 'soft') variantClass = "bg-gray-100 border-none dark:bg-gray-700 dark:text-gray-200";
 
         // Error state
         if (error) {
-            variantClass = "border border-red-500";
+            variantClass = "border border-red-500 dark:border-red-500";
         }
 
-        return `${baseClasses} ${heightClass} ${roundedClass} ${variantClass} px-3 focus:outline-none focus:ring-2 focus:ring-blue-500`;
+        return `${baseClasses} ${heightClass} ${roundedClass} ${variantClass} px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400`;
     };
 
     const getDropdownClasses = () => {
-        const baseClasses = "absolute z-50 w-full bg-white border border-gray-300 shadow-lg";
+        const baseClasses = "absolute z-50 w-full bg-white border border-gray-300 shadow-lg dark:bg-gray-800 dark:border-gray-600 dark:text-gray-200";
 
         // Border radius classes
         let roundedClass = "rounded-md";
@@ -281,7 +326,9 @@ export default function MaterialSelect({
 
     const getOptionClasses = (isSelected: boolean) => {
         const baseClasses = "flex items-center justify-between px-3 py-2 cursor-pointer";
-        const selectedClass = isSelected ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100";
+        const selectedClass = isSelected ?
+            "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300" :
+            "hover:bg-gray-100 dark:hover:bg-gray-700";
 
         // Size classes
         let sizeClass = "text-sm";
@@ -292,7 +339,16 @@ export default function MaterialSelect({
     };
 
     const selectedOption = getSelectedOption();
-    const displayText = selectedOption ? getDisplayValue(selectedOption) : placeholder;
+    let displayText = placeholder;
+
+    // Determine what text to display in the select box
+    if (customDisplayText !== null && selectedValue !== null) {
+        // Use the custom display text from comma-separated value
+        displayText = customDisplayText;
+    } else if (selectedOption) {
+        // Use the normal display value from the selected option
+        displayText = getDisplayValue(selectedOption);
+    }
 
     return (
         <div
@@ -307,9 +363,10 @@ export default function MaterialSelect({
             >
                 <div className="truncate">
                     {selectedValue !== null ? (
-                        <span className={selectedValue === null ? "text-gray-400" : ""}>{displayText}</span>
+                        <span
+                            className={selectedValue === null ? "text-gray-400 dark:text-gray-500" : ""}>{displayText}</span>
                     ) : (
-                        <span className="text-gray-400">{placeholder}</span>
+                        <span className="text-gray-400 dark:text-gray-500">{placeholder}</span>
                     )}
                 </div>
                 <div className="flex items-center space-x-1">
@@ -317,7 +374,7 @@ export default function MaterialSelect({
                         <motion.button
                             type="button"
                             onClick={handleClear}
-                            className="p-1 rounded-full hover:bg-gray-200"
+                            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                             whileHover={{scale: 1.1}}
                             whileTap={{scale: 0.95}}
                         >
@@ -346,11 +403,12 @@ export default function MaterialSelect({
                         transition={{duration: animationDuration}}
                     >
                         {options.length === 0 ? (
-                            <div className="px-3 py-2 text-sm text-gray-500">No options available</div>
+                            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No options
+                                available</div>
                         ) : (
                             options.map((option: any, index: number) => {
                                 const value = getValue(option);
-                                const isSelected = value === selectedValue;
+                                const isSelected = String(value) === String(selectedValue);
 
                                 return (
                                     <motion.div

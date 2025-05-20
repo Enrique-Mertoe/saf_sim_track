@@ -7,7 +7,7 @@ import Calendar from "@/ui/components/Calendar";
 import {Button} from "@/ui/components/Button";
 import {ChevronLeft, ChevronRight, CalendarIcon} from "lucide-react";
 
-type DateSelection = {
+export type DateSelection = {
     type: 'range' | 'single';
     single: Date | null;
     range: {

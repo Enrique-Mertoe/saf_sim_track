@@ -1,4 +1,4 @@
-
+import { DateTime } from "luxon";
 type JsonResponse = {
     ok?: boolean;
     error?: string;
@@ -181,3 +181,6 @@ export function escapeHtml(str: string) {
     }[match] || match));
 }
 
+export function now(){
+    return DateTime.now().setZone('Africa/Nairobi').toISO();
+}

@@ -1,16 +1,23 @@
 import {useEffect, useRef, useState} from "react";
 import {useDialog} from "@/app/_providers/dialog";
-import {Calendar, X} from "lucide-react";
-import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
+import {BarChart, Calendar, X} from "lucide-react";
+import ReportDateRangeTemplate, {DateSelection} from "@/ui/components/ReportDateModal";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-import {Team as Team1, User} from "@/models";
+import {SIMCard, SIMStatus, Team as Team1, User} from "@/models";
 import {teamService} from "@/services";
 import alert from "@/ui/alert";
+import TeamList from "@/ui/components/user/TeamList";
+import {useActivity} from "@/app/dashboard/leader-console/components/ActivityCombat";
+import {createSupabaseClient} from "@/lib/supabase/client";
+import _ from "lodash";
+import TeamPerformanceChart from "@/app/dashboard/TeamPerformanceChart";
+import ConsolidatedStatsCard from "@/app/dashboard/ConsolidatedStatsCard";
 
-type Team = Team1 & {
+type TeamType = Team1 & {
     users?: User,
     leader: string
 }
+const supabase = createSupabaseClient()
 export default function StartPreview({
                                          card,
                                          onClose,
@@ -19,96 +26,145 @@ export default function StartPreview({
     onClose: Closure,
 }) {
     const [selectedTab, setSelectedTab] = useState('daily');
-    const [dateRange, setDateRange] = useState('week');
+    const [dateRange, setDateRange] = useState<DateSelection["range"]>({startDate: null, endDate: null});
+    const [selectedTeam, setSelectedTeam] = useState(null);
+    const [teams, setTeams] = useState<TeamType[]>([]);
+    const [filteredTeams, setTeams2] = useState<TeamType[]>(teams);
+    const [simCards, setSimCards] = useState<SIMCard[]>([]);
+    const [previousSimCards, setPreviousSimCards] = useState<SIMCard[]>([]);
+    const [loading, setLoading] = useState(true);
+
     const dialogRef = useRef(null);
-    const [teams, setTeams] = useState<Team[]>([])
+    const dialog = useDialog();
+    const {navigate: intent} = useActivity();
+
+    // Fetch teams on component mount
     useEffect(() => {
         async function fetchTeams() {
-            const {data, error} = await teamService.getAllTeams()
+            const {data, error} = await teamService.getAllTeams();
             if (error)
-                return alert.error(error.message)
-            setTeams((data as Team[])?.map(team => {
-                team.leader = team.users?.full_name ?? 'No leader'
-                return team
-            }))
+                return alert.error(error.message);
+
+            setTeams((data as TeamType[])?.map(team => {
+                team.leader = team.users?.full_name ?? 'No leader';
+                return team;
+            }));
         }
 
-        fetchTeams().then()
+        fetchTeams();
     }, []);
-    const dialog = useDialog()
-    if (!card) return null;
 
-    const colorClasses = {
-        blue: {
-            bg: "bg-blue-50 dark:bg-blue-900/20",
-            lightBg: "bg-blue-50/50",
-            border: "border-blue-200 dark:border-blue-800",
-            text: "text-blue-600 dark:text-blue-400",
-            activeBg: "bg-blue-100 dark:bg-blue-800"
-        },
-        green: {
-            bg: "bg-green-50 dark:bg-green-900/20",
-            lightBg: "bg-green-50/50",
-            border: "border-green-200 dark:border-green-800",
-            text: "text-green-600 dark:text-green-400",
-            activeBg: "bg-green-100 dark:bg-green-800"
-        },
-        red: {
-            bg: "bg-red-50 dark:bg-red-900/20",
-            lightBg: "bg-red-50/50",
-            border: "border-red-200 dark:border-red-800",
-            text: "text-red-600 dark:text-red-400",
-            activeBg: "bg-red-100 dark:bg-red-800"
-        },
-        purple: {
-            bg: "bg-purple-50 dark:bg-purple-900/20",
-            lightBg: "bg-purple-50/50",
-            border: "border-purple-200 dark:border-purple-800",
-            text: "text-purple-600 dark:text-purple-400",
-            activeBg: "bg-purple-100 dark:bg-purple-800"
+    // Compute date range based on selected tab
+    useEffect(() => {
+        const now = new Date();
+        const start = new Date();
+        const end = new Date();
+
+        if (selectedTab === 'daily') {
+            // Today
+            start.setHours(0, 0, 0, 0);
+        } else if (selectedTab === 'weekly') {
+            // Last 7 days
+            start.setDate(now.getDate() - 6);
+            start.setHours(0, 0, 0, 0);
+        } else if (selectedTab === 'monthly') {
+            // Last 30 days
+            start.setDate(now.getDate() - 29);
+            start.setHours(0, 0, 0, 0);
         }
+
+        end.setHours(23, 59, 59, 999);
+
+        setDateRange({startDate: start, endDate: end});
+    }, [selectedTab]);
+
+    // Fetch SIM cards data when filters change
+    useEffect(() => {
+        async function fetchSimCards() {
+            if (!dateRange.startDate || !dateRange.endDate) return;
+
+            setLoading(true);
+
+            // Calculate previous period dates based on current selection
+            const currentStartDate = new Date(dateRange.startDate);
+            const currentEndDate = new Date(dateRange.endDate);
+            const duration = currentEndDate.getTime() - currentStartDate.getTime();
+
+            const previousStartDate = new Date(currentStartDate.getTime() - duration);
+            const previousEndDate = new Date(currentStartDate.getTime() - 1); // 1ms before current start
+
+            // Fetch current period data
+            let query = supabase
+                .from('sim_cards')
+                .select('*')
+                .gte('created_at', dateRange.startDate.toISOString())
+                .lte('created_at', dateRange.endDate.toISOString());
+
+            if (selectedTeam) {
+                query = query.eq('team_id', selectedTeam);
+            }
+
+            const {data: currentData, error: currentError} = await query;
+
+            if (currentError) {
+                alert.error('Failed to fetch SIM card data');
+                setLoading(false);
+                return;
+            }
+
+            // Fetch previous period data
+            let previousQuery = supabase
+                .from('sim_cards')
+                .select('*')
+                .gte('created_at', previousStartDate.toISOString())
+                .lte('created_at', previousEndDate.toISOString());
+
+            if (selectedTeam) {
+                previousQuery = previousQuery.eq('team_id', selectedTeam);
+            }
+
+            const {data: previousData, error: previousError} = await previousQuery;
+
+            if (previousError) {
+                console.error('Failed to fetch previous period data', previousError);
+                // Continue even if previous data fetch fails
+            }
+
+            setSimCards(currentData as SIMCard[]);
+            setPreviousSimCards((previousData || []) as SIMCard[]);
+            setLoading(false);
+        }
+
+        fetchSimCards();
+    }, [dateRange, selectedTeam]);
+
+    useEffect(() => {
+        if (selectedTeam)
+            setTeams2(teams.filter(t => t.id == selectedTeam))
+        else
+            setTeams2(teams)
+    }, [selectedTeam, teams]);
+
+    const handleDateRangeSelect = (start: Date | null, end: Date | null) => {
+        setDateRange({startDate: start, endDate: end});
+        setSelectedTab('custom');
     };
 
-    // Sample detailed data
-    const detailedData = {
-        daily: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            values: [1200, 1550, 950, 1800, 2100, 1600, 1300]
-        },
-        weekly: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-            values: [8500, 7900, 9200, 10500]
-        },
-        monthly: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-            values: [35000, 29500, 32000, 41000, 38000]
-        }
-    };
     return (
         <div
             ref={dialogRef}
-            className={`${
-                //@ts-ignore
-                colorClasses[card.color].bg} rounded-lg shadow-xl border ${
-                //@ts-ignore
-                colorClasses[card.color].border} 
-        overflow-hidden`}
+            className="bg-gray-50 dark:bg-gray-800 rounded-lg h-full shadow-xl border border-gray-200 dark:border-gray-900 overflow-hidden"
         >
-            <>
+            <div className="flex flex-col h-full">
                 {/* Header */}
-                <div
-                    className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center">
-                        <div className={`${
-                            //@ts-ignore
-                            colorClasses[card.color].activeBg} p-2 rounded-lg mr-3`}>
-                            <div className={
-                                //@ts-ignore
-                                colorClasses[card.color].text}>
-                                {card.icon}
+                        <div className="bg-blue-100 dark:bg-blue-800 p-2 rounded-lg mr-3">
+                            <div className="text-blue-600 dark:text-blue-400">
+                                <BarChart size={20}/>
                             </div>
                         </div>
-                        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{card.title} Details</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Performance Stats</h3>
                     </div>
                     <button
                         onClick={onClose}
@@ -118,124 +174,104 @@ export default function StartPreview({
                     </button>
                 </div>
 
-                {/* Content */}
-                <div className="p-5 overflow-auto">
-                    {/* Summary */}
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total</p>
-                            <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{card.value.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Today</p>
-                            <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{card.todayValue.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">This Week</p>
-                            <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{card.weekValue.toLocaleString()}</p>
-                        </div>
-                    </div>
+                <div className="flex flex-col overflow-y-auto scrollbar-thin flex-grow">
+                    {/* Content */}
+                    <div className="p-5 flex-grow overflow-auto">
+                        {/* Consolidated Stats Card */}
+                        <ConsolidatedStatsCard
+                            simCards={simCards}
+                            previousSimCards={previousSimCards}
+                            loading={loading}
+                            period={selectedTab as 'daily' | 'weekly' | 'monthly' | 'custom'}
+                        />
 
-                    {/* Filters */}
-                    <div className="flex flex-wrap justify-between mb-6">
-                        {/* Tabs */}
-                        <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 sm:mb-0">
-                            {['daily', 'weekly', 'monthly'].map((tab) => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setSelectedTab(tab)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors
+                        {/* Filters */}
+                        <div className="flex flex-wrap justify-between mb-6">
+                            {/* Tabs */}
+                            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-lg mb-4 sm:mb-0">
+                                {['daily', 'weekly', 'monthly'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setSelectedTab(tab)}
+                                        className={`px-4 py-2 text-sm font-medium rounded-md transition-colors
                       ${selectedTab === tab
-                                        ? `${
-                                            //@ts-ignore
-                                            colorClasses[card.color].activeBg} ${colorClasses[card.color].text}`
-                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                                >
-                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                                </button>
-                            ))}
-                        </div>
+                                            ? 'bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-400'
+                                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                                    >
+                                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                    </button>
+                                ))}
+                            </div>
 
-                        {/* Date Range */}
-                        <div className="flex space-x-2 items-center">
-                           <span className="flex gap-2 items-center">
-                               <span>Team:</span>
+                            {/* Team Selection and Date Range */}
+                            <div className="flex space-x-2 items-center">
+                                <span className="flex gap-2 items-center">
+                                  <span>Team:</span>
+                                  <MaterialSelect
+                                      defaultValue="-- Filter by team --,"
+                                      className="!w-[250px]"
+                                      animation="slide"
+                                      options={[{name: "None", id: null}, ...teams]}
+                                      valueKey="id"
+                                      displayKey="name,leader"
+                                      onChange={(value) => setSelectedTeam(value)}
+                                  />
+                                </span>
 
-                               <MaterialSelect
-                                   className={"!w-[250px]"}
-                                   animation={"slide"}
-                                   options={teams}
-                                   valueKey={"id"}
-                                   displayKey={"name,leader"}
-                                   onChange={(value) => console.log(value)}
-                               />
-                           </span>
-
-                            <button
-                                onClick={() => {
-                                    const d = dialog.create({
-                                        content: <ReportDateRangeTemplate
-                                            onConfirm={() => {
-                                                d.dismiss()
-                                            }}
-                                            onClose={() => d.dismiss()}/>,
-                                        size: "lg",
-                                        // design: ["scrollable"]
-
-                                    })
-                                }}
-                                className={`${
-                                    //@ts-ignore
-                                    colorClasses[card.color].lightBg} ${colorClasses[card.color].text} p-1 rounded-md flex items-center justify-center gap-2 cursor-pointer ml-2`}
-                            >
-                                <Calendar size={16} className="text-gray-500  dark:text-gray-400"/>
-                                Select period
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Chart Placeholder */}
-                    <div
-                        className="mt-4 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 h-64 flex items-center justify-center">
-                        <div className="text-center">
-                            <p className="text-gray-500 dark:text-gray-400 mb-2">
-                                Chart Visualization
-                                for {selectedTab.charAt(0).toUpperCase() + selectedTab.slice(1)} Data
-                            </p>
-                            <div className="flex justify-center space-x-6">
-                                {
-                                    //@ts-ignore
-                                    detailedData[selectedTab].labels.map((label, index) => (
-                                        <div key={index} className="flex flex-col items-center">
-                                            <div
-                                                className={`w-4 bg-${card.color}-500`}
-                                                style={{
-                                                    height: `${(
-                                                        //@ts-ignore
-                                                        detailedData[selectedTab].values[index] / Math.max(...detailedData[selectedTab].values)) * 100}px`,
-                                                    minHeight: '20px'
+                                <button
+                                    onClick={() => {
+                                        const d = dialog.create({
+                                            content: <ReportDateRangeTemplate
+                                                onConfirm={selection => {
+                                                    handleDateRangeSelect(selection.range.startDate, selection.range.endDate);
+                                                    d.dismiss();
                                                 }}
-                                            ></div>
-                                            <span className="text-xs mt-1 text-gray-500">{label}</span>
-                                        </div>
-                                    ))}
+                                                onClose={() => d.dismiss()}/>,
+                                            size: "lg",
+                                        });
+                                    }}
+                                    className="bg-blue-50/50 text-blue-600 dark:text-blue-400 p-1 rounded-md flex items-center justify-center gap-2 cursor-pointer ml-2"
+                                >
+                                    <Calendar size={16} className="text-gray-500 dark:text-gray-400"/>
+                                    Select period
+                                </button>
                             </div>
                         </div>
+
+                        {/* Improved Chart */}
+                        <div className="my-4">
+                            <TeamPerformanceChart
+                                simCards={simCards}
+                                teams={teams}
+                                selectedTab={selectedTab}
+                                dateRange={dateRange}
+                                loading={loading}
+                            />
+                        </div>
+
+                        {/* Team List */}
+                        <TeamList
+                            onClick={team => {
+                                intent("teams", {team: team});
+                            }}
+                            loading={loading}
+                            teams={filteredTeams}
+                            simCards={simCards}
+                        />
+                    </div>
+
+                    {/* Footer */}
+                    <div
+                        className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                        <button
+                            onClick={onClose}
+                            className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        >
+                            Close
+                        </button>
                     </div>
                 </div>
-
-                {/* Footer */}
-                <div
-                    className="flex justify-end p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        Close
-                    </button>
-                </div>
-            </>
-
+            </div>
         </div>
     );
 }

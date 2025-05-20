@@ -27,4 +27,7 @@ export enum SIMStatus {
     UNMATCH = 'N',
     QUALITY = 'QUALITY',
     NONQUALITY = 'NONQUALITY',
+    ACTIVATED = 'ACTIVATED',
+    ASSIGNED = 'ASSIGNED',
+    PENDING = 'PENDING',
 }
