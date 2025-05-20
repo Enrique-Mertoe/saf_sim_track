@@ -104,6 +104,9 @@ export default function Home() {
                                 Get Started
                             </motion.button>
                             <motion.button
+                                 onClick={e => {
+                                    location.href = "/soon"
+                                }}
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 className="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-white/10 transition-all duration-300"
