@@ -4,7 +4,7 @@ import {redirect} from "next/navigation";
 export default async function Home1() {
 const user = await Accounts.user();
     if (user) {
-        return redirect("/accounts/dashboard")
+        return redirect("/dashboard")
     }
     return (
         <Home/>
