@@ -1,8 +1,24 @@
 import React, {ChangeEvent, useEffect, useState} from "react";
 import simService from "@/services/simService";
-import {SIMStatus} from "@/models";
+import {SIMStatus, Team as Team1, User} from "@/models";
 import {motion} from "framer-motion";
 
+interface SerialNumber {
+    id: string; // Unique identifier for each serial
+    value: string;
+    isValid: boolean;
+    isChecking: boolean;
+    checkError: string | null;
+    exists: boolean;
+    isUploading: boolean;
+    isUploaded: boolean;
+    uploadError: string | null;
+}
+
+type Team = Team1 & {
+    users?: User,
+    leader: string
+}
 export const SerialItem = ({
                         serial,
                         editSerial,
