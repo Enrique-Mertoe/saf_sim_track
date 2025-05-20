@@ -15,7 +15,6 @@ import useApp from "@/ui/provider/AppProvider";
 import SerialList from "@/app/dashboard/leader-console/components/SerialList";
 import {itemVariants} from "@/app/dashboard/leader-console/components/Design";
 import {now} from "@/helper";
-import Screentester from "@/app/dashboard/leader-console/Screentester";
 
 // Enums
 const SIMStatus = {

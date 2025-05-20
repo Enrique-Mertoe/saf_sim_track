@@ -2,7 +2,6 @@ import {useState} from "react";
 import {Check, CreditCard, ChevronLeft, ChevronRight} from "lucide-react";
 import {motion} from "framer-motion";
 import {badgeVariants, itemVariants} from "@/app/dashboard/leader-console/components/Design";
-import Screentester from "@/app/dashboard/leader-console/Screentester";
 
 export default function SerialList({filteredSims, selectedSims, toggleSimSelection, selectionMode}: any) {
     const [currentPage, setCurrentPage] = useState(1);
