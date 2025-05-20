@@ -124,29 +124,6 @@ export default function Sidebar() {
         finishLoading
     } = useNavigationStore();
 
-    // Handle responsive states
-    useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
-            Signal.trigger("mobile-change", window.innerWidth < 768)
-            if (window.innerWidth > 768) {
-                setShowMobileMenu(false);
-            }
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-
-
-        Signal.on("mobile-open", open => {
-            setShowMobileMenu(open)
-        })
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            Signal.off("mobile-open")
-        };
-    }, []);
-
     // First load detection
     useEffect(() => {
         // Set first load complete after initial render
@@ -189,15 +166,6 @@ export default function Sidebar() {
         setTimeout(() => {
             signOut();
         }, 300);
-    };
-
-    const toggleSidebar = () => {
-        setIsCollapsed(() => {
-            const v = !isCollapsed;
-            Signal.trigger("param-change", v)
-            return v
-        });
-
     };
 
     const sidebarVariants = {
@@ -316,7 +284,7 @@ export default function Sidebar() {
     return (
         <motion.div
             id="sidebar"
-            variants={sidebarVariants}
+            // variants={sidebarVariants}
             initial={false} // Disable initial animation after first render
             animate={'expanded'}
             transition={{type: 'spring', damping: 20}}

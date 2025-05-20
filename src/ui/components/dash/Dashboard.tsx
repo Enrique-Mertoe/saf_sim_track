@@ -36,26 +36,19 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
             <div className="flex w-full mt-24 md:mt-14">
                 {/* Sidebar - Desktop */}
                 <motion.div
-                    variants={mobile ? {} : {
-                        // expanded: {width: '280px'},
-                        // collapsed: {width: '80px'}
-                    }}
                     initial={false}
                     animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`hidden bg-red-500 md:block bg-white shadow-md z-30 h-screen fixed`}>
+                    className={`hidden w-64 bg-red-500 md:block bg-white shadow-md z-30 h-screen fixed`}>
                     <Sidebar/>
                 </motion.div>
                 {/* Main Content */}
 
                 <motion.div
-                    variants={mobile ? {} : {
-                        expanded: {marginLeft: '280px'},
-                    }}
                     initial={false}
                     animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`flex-1 w-full overflow-x-hidden  relative`}>
+                    className={`flex-1 w-full md:ml-64 overflow-x-hidden  relative`}>
                     <PageTransition>
                         {children}
                     </PageTransition>
