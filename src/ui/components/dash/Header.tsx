@@ -5,9 +5,9 @@ import {
     ChevronDown,
     CreditCard,
     LogOut,
-    Menu,
+    Menu, Moon,
     Search,
-    Settings,
+    Settings, Sun,
     User,
     X
 } from "lucide-react";
@@ -16,7 +16,10 @@ import {useEffect, useState, useRef} from "react";
 import Signal from "@/lib/Signal";
 import {motion, AnimatePresence} from "framer-motion";
 import Sidebar from "@/ui/components/dash/Sidebar";
+import {createSupabaseClient} from "@/lib/supabase/client";
+import {useTheme} from "next-themes";
 
+const supabase = createSupabaseClient();
 export default function Header() {
     const {user, signOut} = useApp();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -24,16 +27,54 @@ export default function Header() {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
-    const [notifications, setNotifications] = useState([
-        {id: 1, title: "New assignment", message: "You have a new SIM tracking task", time: "2 mins ago", read: false},
-        {id: 2, title: "Status update", message: "Task #4872 has been completed", time: "1 hour ago", read: false},
-        {id: 3, title: "System update", message: "Tracker system updated to v2.3", time: "5 hours ago", read: false},
-    ]);
-
+    const [searchResults, setSearchResults] = useState<any>([]);
+    const [notifications, setNotifications] = useState<any>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const {theme, setTheme} = useTheme();
     const searchRef = useRef(null);
     const notificationRef = useRef(null);
     const profileRef = useRef(null);
+
+    useEffect(() => {
+        async function fetchNotifications() {
+            try {
+                setIsLoading(true);
+
+                // Replace with your actual table name and adjust query as needed
+                const {data, error} = await supabase
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', user?.id)
+                    .order('created_at', {ascending: false})
+                    .limit(10);
+
+                if (error) {
+                    throw error;
+                }
+
+                // If no data is available, use mock data
+                if (!data || data.length === 0) {
+                    setNotifications([]);
+                } else {
+                    setNotifications(data);
+                }
+            } catch (err) {
+                // @ts-ignore
+                setError(err.message);
+                console.error("Error fetching notifications:", err);
+
+                // Fallback to mock data
+                setNotifications([]);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        if (user?.id) {
+            fetchNotifications();
+        }
+    }, [user?.id]);
 
     // Handle clicks outside dropdowns
     useEffect(() => {
@@ -67,40 +108,160 @@ export default function Header() {
         };
     }, []);
 
-    // Mock search function
     useEffect(() => {
-        if (searchQuery.trim() === "") {
-            setSearchResults([]);
-            return;
+        async function performSearch() {
+            if (searchQuery.trim() === "") {
+                setSearchResults([]);
+                return;
+            }
+
+            try {
+                // First search for SIM cards in the database
+                const {data: simData, error: simError} = await supabase
+                    .from('sim_cards')
+                    .select('id, serial_number')
+                    .ilike('serial_number', `%${searchQuery}%`)
+                    .limit(5);
+
+                if (simError) throw simError;
+
+                // Format SIM results
+                const simResults = simData.map(sim => ({
+                    id: sim.id,
+                    title: `SIM #${sim.serial_number.slice(-5)}`,
+                    fullTitle: sim.serial_number,
+                    category: 'SIM',
+                    url: `/sim/${sim.id}`
+                }));
+
+                // Search for teams
+                const {data: teamData, error: teamError} = await supabase
+                    .from('teams')
+                    .select('id, name')
+                    .ilike('name', `%${searchQuery}%`)
+                    .limit(3);
+
+                if (teamError) throw teamError;
+
+                // Format team results
+                const teamResults = teamData.map(team => ({
+                    id: team.id,
+                    title: team.name,
+                    category: 'Team',
+                    url: `/teams/${team.id}`
+                }));
+
+                // Include navigation items that match
+                const navigationItems = [
+                    {id: 'nav1', title: 'Dashboard', category: 'Page', url: '/dashboard'},
+                    {id: 'nav2', title: 'SIM Management', category: 'Page', url: '/sim-management'},
+                    {id: 'nav3', title: 'Team Performance', category: 'Page', url: '/team-performance'},
+                    {id: 'nav4', title: 'Reports', category: 'Page', url: '/reports'},
+                    {id: 'nav5', title: 'User Settings', category: 'Page', url: '/settings'},
+                ];
+
+                const matchingNavItems = navigationItems
+                    .filter(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .slice(0, 3);
+
+                // Combine all results
+                const allResults = [...simResults, ...teamResults, ...matchingNavItems];
+
+                // If no database results, check if we need to show AI assistant suggestion
+                if (allResults.length === 0) {
+                    allResults.push({
+                        id: 'assistant',
+                        title: `Ask assistant about "${searchQuery}"`,
+                        category: 'Assistant',
+                        url: `/assistant?query=${encodeURIComponent(searchQuery)}`
+                    });
+                }
+
+                setSearchResults(allResults);
+            } catch (error) {
+                console.error("Search error:", error);
+                setSearchResults([]);
+            }
         }
 
-        // Mock search results based on query
-        const mockData = [
-            {id: 1, title: "SIM #82745", category: "Active"},
-            {id: 2, title: "SIM #47281", category: "Inactive"},
-            {id: 3, title: "SIM #36159", category: "Pending"},
-            {id: 4, title: "Dashboard overview", category: "Page"},
-            {id: 5, title: "User settings", category: "Page"},
-        ];
+        // Use a debounce timer for better performance
+        const timer = setTimeout(() => {
+            performSearch();
+        }, 300);
 
-        const filtered = mockData.filter(item =>
-            item.title.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-//@ts-ignore
-        setSearchResults(filtered);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
 
     // Mark all notifications as read
-    const markAllRead = () => {
-        setNotifications(prev => prev.map(notif => ({...notif, read: true})));
+    const markNotificationAsRead = async (notificationId: any) => {
+        try {
+            // Update in Supabase
+            if (user?.id) {
+                await supabase
+                    .from('notifications')
+                    .update({read: true})
+                    .eq('id', notificationId);
+            }
+
+            // Update local state
+            //@ts-ignore
+            setNotifications(prev => prev.map(notif =>
+                notif.id === notificationId ? {...notif, read: true} : notif
+            ));
+        } catch (error) {
+            console.error("Error marking notification as read:", error);
+        }
+    };
+
+    // Mark all notifications as read
+    const markAllRead = async () => {
+        try {
+            // Update in Supabase
+            if (user?.id) {
+                await supabase
+                    .from('notifications')
+                    .update({read: true})
+                    .eq('user_id', user.id)
+                    .eq('read', false);
+            }
+
+            // Update local state
+            //@ts-ignore
+            setNotifications(prev => prev.map(notif => ({...notif, read: true})));
+        } catch (error) {
+            console.error("Error marking all notifications as read:", error);
+        }
+    };
+    const formatNotificationTime = (isoString: any) => {
+        const date = new Date(isoString);
+        const now = new Date();
+        //@ts-ignore
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+
+        return date.toLocaleDateString();
     };
 
     // Get unread notification count
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = notifications.filter((n: any) => !n.read).length;
 
+    // Toggle theme
+    const toggleTheme = () => {
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+    };
     return (
         <>
-            <header className="bg-green-600 text-white fixed top-0 end-0 start-0 z-40 shadow-lg">
+            <header
+                className="bg-white dark:bg-gray-800 text-gray-800 dark:text-white fixed top-0 end-0 start-0 z-40 border border-b-gray-200 dark:border-gray-700 shadow-sm transition-colors duration-200">
                 <div className="container mx-auto px-4 py-3 flex justify-between items-center">
                     <div className="flex items-center space-x-3">
                         <motion.div
@@ -109,17 +270,31 @@ export default function Header() {
                             animate={{opacity: 1}}
                             transition={{duration: 0.5}}
                         >
-                            <CreditCard className="mr-2" size={24}/>
-                            <span>Safaricom SIM Tracker</span>
+                            <CreditCard className="mr-2 text-green-600 dark:text-green-400" size={24}/>
+                            <span className="text-gray-800 dark:text-white">Safaricom SIM Tracker</span>
                         </motion.div>
                     </div>
 
                     <div className="flex items-center space-x-4">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                            aria-label="Toggle theme"
+                        >
+                            {theme === 'dark' ? (
+                                <Sun size={20} className="text-amber-300"/>
+                            ) : (
+                                <Moon size={20} className="text-indigo-600"/>
+                            )}
+                        </button>
+
                         {/* Search bar */}
                         <div ref={searchRef} className="relative hidden md:block">
                             <button
                                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                                className="p-2 rounded-full hover:bg-green-500 transition-colors duration-200"
+                                className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                aria-label="Search"
                             >
                                 <Search size={20}/>
                             </button>
@@ -131,23 +306,24 @@ export default function Header() {
                                         animate={{opacity: 1, y: 0}}
                                         exit={{opacity: 0, y: -10}}
                                         transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl overflow-hidden z-50"
+                                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
                                     >
                                         <div className="p-2">
                                             <div className="relative">
                                                 <input
                                                     type="text"
-                                                    placeholder="Search SIMs, tasks..."
-                                                    className="w-full p-2 pl-8 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                    placeholder="Search SIMs, teams, pages..."
+                                                    className="w-full p-2 pl-8 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
                                                     autoFocus
                                                 />
-                                                <Search size={16} className="absolute left-2 top-3 text-gray-400"/>
+                                                <Search size={16}
+                                                        className="absolute left-2 top-3 text-gray-400 dark:text-gray-500"/>
                                                 {searchQuery && (
                                                     <button
                                                         onClick={() => setSearchQuery("")}
-                                                        className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                                                        className="absolute right-2 top-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                                                     >
                                                         <X size={16}/>
                                                     </button>
@@ -157,27 +333,33 @@ export default function Header() {
 
                                         {searchResults.length > 0 ? (
                                             <div className="max-h-64 overflow-y-auto">
-                                                {searchResults.map(result => (
-                                                    <div
-                                                        key={
-                                                            //@ts-ignore
-                                                            result.id}
-                                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between"
+                                                {searchResults.map((result: any) => (
+                                                    <a
+                                                        key={result.id}
+                                                        href={result.url}
+                                                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center border-b border-gray-100 dark:border-gray-700 last:border-0"
                                                     >
-                                                        <span className="text-gray-800">{
-                                                            //@ts-ignore
-                                                            result.title}</span>
-                                                        <span
-                                                            className="text-xs text-gray-500 px-2 py-1 bg-gray-200 rounded-full">
-                              {
-                                  //@ts-ignore
-                                  result.category}
-                            </span>
-                                                    </div>
+                                                        <span className="text-gray-800 dark:text-gray-200">
+                                                            {result.title}
+                                                            {result.fullTitle && (
+                                                                <span className="text-xs ml-2 text-gray-500">
+                                                                    ({result.fullTitle})
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                                            result.category === 'SIM' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                                result.category === 'Team' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
+                                                                    result.category === 'Assistant' ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200' :
+                                                                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                                                        }`}>
+                                                            {result.category}
+                                                        </span>
+                                                    </a>
                                                 ))}
                                             </div>
                                         ) : searchQuery ? (
-                                            <div className="p-4 text-center text-gray-500">
+                                            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                                 No results found for "{searchQuery}"
                                             </div>
                                         ) : null}
@@ -190,14 +372,15 @@ export default function Header() {
                         <div ref={notificationRef} className="relative">
                             <button
                                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                                className="relative p-2 rounded-full hover:bg-green-500 transition-colors duration-200"
+                                className="relative p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                aria-label="Notifications"
                             >
                                 <Bell size={20}/>
                                 {unreadCount > 0 && (
                                     <motion.span
                                         initial={{scale: 0}}
                                         animate={{scale: 1}}
-                                        className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
+                                        className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-white"
                                     >
                                         {unreadCount}
                                     </motion.span>
@@ -211,47 +394,62 @@ export default function Header() {
                                         animate={{opacity: 1, y: 0}}
                                         exit={{opacity: 0, y: -10}}
                                         transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl overflow-hidden z-50"
+                                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
                                     >
-                                        <div className="flex justify-between items-center px-4 py-2 bg-green-50">
-                                            <h3 className="font-semibold text-green-700">Notifications</h3>
-                                            <button
-                                                onClick={markAllRead}
-                                                className="text-xs text-green-600 hover:text-green-800"
-                                            >
-                                                Mark all as read
-                                            </button>
+                                        <div
+                                            className="flex justify-between items-center px-4 py-2 bg-green-50 dark:bg-green-900">
+                                            <h3 className="font-semibold text-green-700 dark:text-green-300">Notifications</h3>
+                                            {unreadCount > 0 && (
+                                                <button
+                                                    onClick={markAllRead}
+                                                    className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+                                                >
+                                                    Mark all as read
+                                                </button>
+                                            )}
                                         </div>
 
                                         <div className="max-h-80 overflow-y-auto">
-                                            {notifications.length > 0 ? (
-                                                notifications.map(notification => (
+                                            {isLoading ? (
+                                                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                                                    Loading notifications...
+                                                </div>
+                                            ) : error ? (
+                                                <div className="p-4 text-center text-red-500">
+                                                    Error loading notifications
+                                                </div>
+                                            ) : notifications.length > 0 ? (
+                                                notifications.map((notification: any) => (
                                                     <div
                                                         key={notification.id}
-                                                        className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 ${
-                                                            !notification.read ? 'bg-green-50' : ''
+                                                        className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                                                            !notification.read ? 'bg-green-50 dark:bg-green-900/20' : ''
                                                         }`}
+                                                        onClick={() => markNotificationAsRead(notification.id)}
                                                     >
                                                         <div className="flex justify-between">
-                                                            <h4 className="font-medium text-sm text-gray-800">{notification.title}</h4>
-                                                            <span
-                                                                className="text-xs text-gray-500">{notification.time}</span>
+                                                            <h4 className="font-medium text-sm text-gray-800 dark:text-gray-200">{notification.title}</h4>
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                                {formatNotificationTime(notification.created_at)}
+                                                            </span>
                                                         </div>
-                                                        <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                                                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{notification.message}</p>
                                                     </div>
                                                 ))
                                             ) : (
-                                                <div className="p-4 text-center text-gray-500">
+                                                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                                                     No notifications yet
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="px-4 py-2 bg-gray-50">
-                                            <button
-                                                className="text-sm text-green-600 hover:text-green-800 w-full text-center">
+                                        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700">
+                                            <a
+                                                href="/notifications"
+                                                className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 w-full text-center block"
+                                            >
                                                 View all notifications
-                                            </button>
+                                            </a>
                                         </div>
                                     </motion.div>
                                 )}
@@ -262,15 +460,18 @@ export default function Header() {
                         <div ref={profileRef} className="relative hidden md:block">
                             <button
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="flex items-center space-x-2 p-1 rounded-md hover:bg-green-500 transition-colors duration-200"
+                                className="flex items-center space-x-2 p-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
                             >
                                 <div
-                                    className="w-8 h-8 rounded-full bg-green-400 flex items-center justify-center text-white font-bold">
+                                    className="w-8 h-8 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center text-white font-bold">
                                     {user?.full_name ? user.full_name.charAt(0) : "U"}
                                 </div>
-                                <span className="max-w-32 capitalize truncate">{user?.full_name || "User"}</span>
+                                <span className="max-w-32 truncate text-gray-800 dark:text-gray-200">
+                                    {user?.full_name || "User"}
+                                </span>
                                 <ChevronDown size={16}
-                                             className={`transform transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}/>
+                                             className={`transform transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
+                                />
                             </button>
 
                             <AnimatePresence>
@@ -280,33 +481,40 @@ export default function Header() {
                                         animate={{opacity: 1, y: 0}}
                                         exit={{opacity: 0, y: -10}}
                                         transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden z-50"
+                                        className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
                                     >
-                                        <div className="px-4 py-3 border-b border-gray-100">
-                                            <p className="text-sm capitalize font-medium text-gray-700">{user?.full_name || "User"}</p>
-                                            <p className="text-xs text-gray-500 truncate">{user?.email || "user@example.com"}</p>
+                                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                                {user?.full_name || "User"}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                {user?.email || "user@example.com"}
+                                            </p>
                                         </div>
 
                                         <div className="py-1">
                                             <a href="/profile"
-                                               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                <User size={16} className="mr-2 text-gray-500"/>
+                                               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            >
+                                                <User size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
                                                 Profile
                                             </a>
                                             <a href="/settings"
-                                               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                                <Settings size={16} className="mr-2 text-gray-500"/>
+                                               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            >
+                                                <Settings size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
                                                 Settings
                                             </a>
                                         </div>
 
-                                        <div className="py-1 border-t border-gray-100">
+                                        <div className="py-1 border-t border-gray-100 dark:border-gray-700">
                                             <a href="/accounts/logout"
                                                onClick={e => {
                                                    e.preventDefault();
                                                    signOut()
                                                }}
-                                               className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                               className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            >
                                                 <LogOut size={16} className="mr-2"/>
                                                 Sign out
                                             </a>
@@ -322,13 +530,13 @@ export default function Header() {
                             transition={{duration: 0.3}}
                         >
                             <button
-                                className="md:hidden p-2 rounded-full hover:bg-green-500 transition-colors duration-200"
+                                className="md:hidden p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
                                 onClick={() => Signal.trigger("mobile-open", !isMobileMenuOpen)}
+                                aria-label="Toggle menu"
                             >
                                 {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
                             </button>
                         </motion.div>
-
                     </div>
                 </div>
 
@@ -337,16 +545,16 @@ export default function Header() {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Search SIMs, tasks..."
-                            className="w-full p-2 pl-8 text-sm text-gray-700 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="Search SIMs, teams, pages..."
+                            className="w-full p-2 pl-8 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <Search size={16} className="absolute left-2 top-3 text-gray-400"/>
+                        <Search size={16} className="absolute left-2 top-3 text-gray-400 dark:text-gray-500"/>
                         {searchQuery && (
                             <button
                                 onClick={() => setSearchQuery("")}
-                                className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
+                                className="absolute right-2 top-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                             >
                                 <X size={16}/>
                             </button>
@@ -360,23 +568,24 @@ export default function Header() {
                                 initial={{opacity: 0, y: -10}}
                                 animate={{opacity: 1, y: 0}}
                                 exit={{opacity: 0, y: -10}}
-                                className="absolute left-4 right-4 mt-1 bg-white rounded-lg shadow-lg z-40 max-h-60 overflow-y-auto"
+                                className="absolute left-4 right-4 mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-40 max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700"
                             >
-                                {searchResults.map(result => (
-                                    <div
-                                        //@ts-ignore
+                                {searchResults.map((result: any) => (
+                                    <a
                                         key={result.id}
-                                        className="px-4 py-2 border-b border-gray-100 hover:bg-gray-50 flex justify-between"
+                                        href={result.url}
+                                        className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 flex justify-between items-center last:border-0"
                                     >
-                                        <span className="text-gray-800">{
-                                            //@ts-ignore
-                                            result.title}</span>
-                                        <span className="text-xs text-gray-500 px-2 py-1 bg-gray-200 rounded-full">
-                      {
-                          //@ts-ignore
-                          result.category}
-                    </span>
-                                    </div>
+                                        <span className="text-gray-800 dark:text-gray-200">{result.title}</span>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                            result.category === 'SIM' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                result.category === 'Team' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
+                                                    result.category === 'Assistant' ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200' :
+                                                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                                        }`}>
+                                            {result.category}
+                                        </span>
+                                    </a>
                                 ))}
                             </motion.div>
                         )}

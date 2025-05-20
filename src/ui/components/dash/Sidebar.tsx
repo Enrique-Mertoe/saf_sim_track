@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {motion, AnimatePresence} from 'framer-motion';
 import {
     Award, Grid, Cpu, LogOut, Map, Phone, PieChart,
-    ClipboardList, Settings, UserPlus, Users,
+    ClipboardList, Settings, UserPlus, Users, Folder,
 } from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
 import {create} from 'zustand';
@@ -66,14 +66,8 @@ const NavItem = ({href, icon: Icon, label, onClick}: NavItemProps) => {
         if (isActive) return;
 
         // Start loading state
-        startLoading();
-
-        // Smooth transition to new route
-        const container = document.getElementById('main-content');
-        if (container) {
-            container.style.opacity = '0';
-            container.style.transform = 'translateY(10px)';
-        }
+        // startLoading();
+        Signal.trigger("app-page-loading", true)
         router.push(href, {scroll: false});
 
     };
@@ -162,15 +156,7 @@ export default function Sidebar() {
         if (sidebar) {
             sidebar.style.opacity = '0.5';
         }
-
-        setTimeout(() => {
             signOut();
-        }, 300);
-    };
-
-    const sidebarVariants = {
-        expanded: {width: '280px'},
-        collapsed: {width: '80px'}
     };
 
     // Navigation items based on user role
@@ -186,6 +172,7 @@ export default function Sidebar() {
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
                 {href: '/dashboard/pick', icon: ClipboardList, label: 'PickList'},
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
+                {href: '/dashboard/filemanager', icon: Folder, label: 'FileManager'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
