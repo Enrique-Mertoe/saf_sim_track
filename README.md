@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📱 SIM Card Management System
 
-## Getting Started
+A web-based system for tracking SIM card sales, matching them against Safaricom activation reports, and generating performance insights across multiple sales teams.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Overview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The **SIM Card Management System** helps Safaricom distributors monitor SIM card sales and activations. It streamlines tracking, quality control, and performance reporting by:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Recording sold SIM serial numbers
+- Uploading and matching against Safaricom activation reports
+- Calculating performance and quality metrics
+- Generating reports for team evaluation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 💼 Business Use Case
 
-To learn more about Next.js, take a look at the following resources:
+Distributors sell SIM cards via multiple teams. This system ensures:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Each team's sales and activations are monitored
+- Quality SIMs (top-up ≥ 50 KES) are identified
+- Team leaders can onboard, manage, and assess their staff
+- Admins maintain system-wide control, validation, and reporting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🔧 Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Layer         | Technology                      |
+|--------------|----------------------------------|
+| Frontend     | [Next.js (App Router)](https://nextjs.org/docs/app) + [Tailwind CSS](https://tailwindcss.com) |
+| Backend/API  | [Supabase](https://supabase.com) (Auth, DB, Storage, Functions) |
+| Database     | PostgreSQL (via Supabase)        |
+| Auth         | Supabase Auth (JWT + RLS)        |
+| File Storage | Supabase Storage (ID documents, report files) |
+| Deployment   | Vercel / Supabase / Any cloud    |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📚 Key Features
+
+### ✅ SIM Card Recording
+- Record serial numbers individually or in bulk (CSV/Excel)
+- QR Code scanning support
+- Input validation with error handling
+
+### 📊 Reporting & Performance Tracking
+- Match sold SIMs with Safaricom reports
+- Identify **Matched** vs **Unmatched**
+- Flag **Quality SIMs** (top-up ≥ 50 KES)
+- Team and staff-based performance summaries
+- Export data to Excel/CSV/PDF
+
+### 📁 Report Uploading
+- Upload Safaricom reports (CSV/Excel)
+- Automated matching process
+- Fraud detection flags and quality rating
+
+### 👥 User & Team Management
+- Admin, Team Leader, and Staff roles
+- Role-based dashboard access
+- Onboarding workflows and approval system
+
+---
+
+## 🧠 Data Models (Simplified)
+
+### Users
+- Role-based: `ADMIN`, `TEAM_LEADER`, `VAN_STAFF`, etc.
+- Fields: `fullName`, `phoneNumber`, `idNumber`, `mobigoNumber`, `idFrontUrl`, `status`, etc.
+
+### Teams
+- Fields: `teamName`, `teamLeader`, `region`, `territory`, etc.
+
+### SIM Cards
+- Status: `MATCHED`, `UNMATCHED`, `QUALITY`, `NOT_QUALITY`
+- Activation data, top-up amounts, fraud flags, etc.
+
+### Reports
+- Upload metadata
+- Matching & quality counts
+- Processing status
+
+### Logs & Requests
+- Onboarding/deletion workflows
+- System activity logs
+
+---
+
+## 🔐 User Roles
+
+| Role             | Capabilities                                                                 |
+|------------------|------------------------------------------------------------------------------|
+| Admin            | Manage all users, upload reports, generate full reports                      |
+| Team Leader      | Manage team members, submit onboarding, upload team reports, view metrics    |
+| Van Staff / Agent| Record SIM cards, view personal performance                                  |
+
+---
+
+## 📂 File Formats
+
+### SIM Card Upload (CSV/Excel)
