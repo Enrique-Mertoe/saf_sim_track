@@ -476,7 +476,7 @@ const SerialNumberForm: React.FC = () => {
         // Mark all serials as uploading
         await simService.createSIMCardBatch(serialsToUpload.map(ser => {
             const ser_data: SIMCardCreate = {
-                match: SIMStatus.UNMATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
+                match: SIMStatus.MATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
                 team_id: selectedTeam
             }
             updateSerialStatus(ser.id, {
