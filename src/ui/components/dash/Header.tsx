@@ -18,6 +18,7 @@ import {motion, AnimatePresence} from "framer-motion";
 import Sidebar from "@/ui/components/dash/Sidebar";
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {useTheme} from "next-themes";
+import { notificationService } from "@/services";
 
 const supabase = createSupabaseClient();
 export default function Header() {
@@ -37,34 +38,42 @@ export default function Header() {
     const profileRef = useRef(null);
 
     useEffect(() => {
+        let subscription: { unsubscribe: () => void } | null = null;
+
         async function fetchNotifications() {
             try {
                 setIsLoading(true);
 
-                // Replace with your actual table name and adjust query as needed
-                const {data, error} = await supabase
-                    .from('notifications')
-                    .select('*')
-                    .eq('user_id', user?.id)
-                    .order('created_at', {ascending: false})
-                    .limit(10);
+                // Use notification service to fetch notifications
+                const { data, error } = await notificationService.getUserNotifications(user?.id || '', 10);
 
                 if (error) {
                     throw error;
                 }
 
-                // If no data is available, use mock data
+                // If no data is available, use empty array
                 if (!data || data.length === 0) {
                     setNotifications([]);
                 } else {
                     setNotifications(data);
+                }
+
+                // Subscribe to real-time notifications
+                if (user?.id) {
+                    subscription = notificationService.subscribeToUserNotifications(
+                        user.id,
+                        (newNotification) => {
+                            // Add the new notification to the list
+                            setNotifications((prev: any) => [newNotification, ...prev]);
+                        }
+                    );
                 }
             } catch (err) {
                 // @ts-ignore
                 setError(err.message);
                 console.error("Error fetching notifications:", err);
 
-                // Fallback to mock data
+                // Fallback to empty array
                 setNotifications([]);
             } finally {
                 setIsLoading(false);
@@ -74,6 +83,13 @@ export default function Header() {
         if (user?.id) {
             fetchNotifications();
         }
+
+        // Clean up subscription when component unmounts or user changes
+        return () => {
+            if (subscription) {
+                subscription.unsubscribe();
+            }
+        };
     }, [user?.id]);
 
     // Handle clicks outside dropdowns
@@ -192,15 +208,12 @@ export default function Header() {
         return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    // Mark all notifications as read
+    // Mark a notification as read
     const markNotificationAsRead = async (notificationId: any) => {
         try {
-            // Update in Supabase
+            // Use notification service to mark as read
             if (user?.id) {
-                await supabase
-                    .from('notifications')
-                    .update({read: true})
-                    .eq('id', notificationId);
+                await notificationService.markAsRead(notificationId);
             }
 
             // Update local state
@@ -216,13 +229,9 @@ export default function Header() {
     // Mark all notifications as read
     const markAllRead = async () => {
         try {
-            // Update in Supabase
+            // Use notification service to mark all as read
             if (user?.id) {
-                await supabase
-                    .from('notifications')
-                    .update({read: true})
-                    .eq('user_id', user.id)
-                    .eq('read', false);
+                await notificationService.markAllAsRead(user.id);
             }
 
             // Update local state

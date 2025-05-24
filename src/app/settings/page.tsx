@@ -4,11 +4,13 @@ import {Save, Bell, Lock, User, Shield, Phone, Check, Loader2, AlertTriangle} fr
 import {motion, AnimatePresence} from 'framer-motion';
 import useApp from "@/ui/provider/AppProvider";
 import {userService} from '@/services/userService';
+import {authService} from '@/services';
 import {toast} from 'react-hot-toast';
 import {useFormik} from 'formik';
 import * as Yup from 'yup';
 import Dashboard from "@/ui/components/dash/Dashboard";
 import SecuritySettings from "@/app/settings/components/Security";
+import {UserRole} from "@/models/types";
 
 // Animation variants
 const fadeIn = {
@@ -103,9 +105,13 @@ export default function Settings() {
             //@ts-ignore
             locationServices: user?.settings?.location_services !== false,
             //@ts-ignore
-            autoApprove: user?.role === 'admin' ? (user?.settings?.auto_approve || false) : false,
+            autoApprove: user?.role === UserRole.ADMIN ? (user?.settings?.auto_approve || false) : false,
             //@ts-ignore
-            regionalRestrictions: user?.role === 'admin' ? (user?.settings?.regional_restrictions || true) : true
+            regionalRestrictions: user?.role === UserRole.ADMIN ? (user?.settings?.regional_restrictions || true) : true,
+            //@ts-ignore
+            teamNotifications: user?.role === UserRole.TEAM_LEADER ? (user?.settings?.team_notifications || true) : true,
+            //@ts-ignore
+            approvalRequired: user?.role === UserRole.TEAM_LEADER ? (user?.settings?.approval_required || false) : false
         },
         onSubmit: async (values) => {
             await handleSubmit('app', values);
@@ -190,21 +196,29 @@ export default function Settings() {
                 case 'security':
                     // Handle password changes
                     if (values.currentPassword && values.newPassword) {
-                        // Would integrate with authentication service
-                        // This is a placeholder for the actual implementation
-                        console.log('Password change requested');
+                        try {
+                            // Integrate with authentication service
+                            await authService.updatePassword(
+                                values.currentPassword,
+                                values.newPassword
+                            );
 
-                        // For now, we'll simulate success
-                        toast.success('Password updated successfully');
+                            toast.success('Password updated successfully');
 
-                        // Reset password fields
-                        await securityFormik.setValues({
-                            ...securityFormik.values,
-                            currentPassword: '',
-                            newPassword: '',
-                            confirmPassword: ''
-                        });
-                        await securityFormik.setTouched({});
+                            // Reset password fields
+                            await securityFormik.setValues({
+                                ...securityFormik.values,
+                                currentPassword: '',
+                                newPassword: '',
+                                confirmPassword: ''
+                            });
+                            await securityFormik.setTouched({});
+                        } catch (error) {
+                            console.error('Error changing password:', error);
+                            //@ts-ignore
+                            toast.error(error.message || 'Failed to change password');
+                            throw error;
+                        }
                     }
 
                     // Handle two-factor authentication toggle
@@ -224,12 +238,19 @@ export default function Settings() {
                         }
                     };
 
-                    // Admin-specific settings
-                    if (user?.role === 'admin') {
+                    // Role-specific settings
+                    if (user?.role === UserRole.ADMIN) {
                         //@ts-ignore
                         userData.settings.auto_approve = values.autoApprove;
                         //@ts-ignore
                         userData.settings.regional_restrictions = values.regionalRestrictions;
+                    }
+
+                    if (user?.role === UserRole.TEAM_LEADER) {
+                        //@ts-ignore
+                        userData.settings.team_notifications = values.teamNotifications;
+                        //@ts-ignore
+                        userData.settings.approval_required = values.approvalRequired;
                     }
                     break;
             }
@@ -244,9 +265,18 @@ export default function Settings() {
                 }
 
                 // Update user in context
-                // if (refreshUser) {
-                //     refreshUser();
-                // }
+                try {
+                    const { user: updatedUser } = await authService.getCurrentUser();
+                    // This would typically update the user in the context
+                    // For now, we'll just reload the page to get the updated user
+                    if (updatedUser) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 3000);
+                    }
+                } catch (error) {
+                    console.error('Error refreshing user data:', error);
+                }
 
                 // Mark as successful
                 setSuccess(true);
@@ -708,7 +738,7 @@ export default function Settings() {
                         animate="visible"
                         variants={fadeIn}
                     >
-                        {user?.role === 'admin' && (
+                        {user?.role === UserRole.ADMIN && (
                             <motion.div
                                 className="p-4 bg-yellow-50 border border-yellow-200 rounded-md"
                                 variants={slideIn}
@@ -720,6 +750,21 @@ export default function Settings() {
                                 <p className="text-sm text-yellow-700 mt-1">
                                     These settings apply to all users in the organization. Changes will be applied
                                     immediately.
+                                </p>
+                            </motion.div>
+                        )}
+
+                        {user?.role === UserRole.TEAM_LEADER && (
+                            <motion.div
+                                className="p-4 bg-blue-50 border border-blue-200 rounded-md"
+                                variants={slideIn}
+                            >
+                                <h3 className="font-medium text-blue-800 flex items-center">
+                                    <Shield size={18} className="mr-2"/>
+                                    Team Leader Settings
+                                </h3>
+                                <p className="text-sm text-blue-700 mt-1">
+                                    These settings apply to your team. Changes will be applied immediately.
                                 </p>
                             </motion.div>
                         )}
@@ -802,7 +847,7 @@ export default function Settings() {
                                 </div>
                             </div>
 
-                            {user?.role === 'admin' && (
+                            {user?.role === UserRole.ADMIN && (
                                 <motion.div
                                     initial={{opacity: 0}}
                                     animate={{opacity: 1}}
@@ -867,6 +912,60 @@ export default function Settings() {
                                             className="text-sm text-blue-700 hover:text-blue-900 font-medium flex items-center">
                                             <Shield size={14} className="mr-1"/>
                                             Go to Admin Dashboard
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {user?.role === UserRole.TEAM_LEADER && (
+                                <motion.div
+                                    initial={{opacity: 0}}
+                                    animate={{opacity: 1}}
+                                    transition={{delay: 0.3}}
+                                    className="mt-4 p-4 border-t border-gray-200"
+                                >
+                                    <h3 className="font-medium text-gray-700 mb-4">Team Management</h3>
+                                    <div className="p-4 border border-gray-200 rounded-md bg-gray-50 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">Team notifications</span>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    name="teamNotifications"
+                                                    checked={appFormik.values.teamNotifications}
+                                                    onChange={appFormik.handleChange}
+                                                    className="sr-only peer"
+                                                />
+                                                <div
+                                                    className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">Require approval for submissions</span>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    name="approvalRequired"
+                                                    checked={appFormik.values.approvalRequired}
+                                                    onChange={appFormik.handleChange}
+                                                    className="sr-only peer"
+                                                />
+                                                <div
+                                                    className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 p-4 border border-blue-200 rounded-md bg-blue-50">
+                                        <h4 className="text-sm font-medium text-blue-800 mb-2">Team Leader Controls</h4>
+                                        <p className="text-xs text-blue-700 mb-3">
+                                            Additional team management options are available in the team leader dashboard.
+                                        </p>
+                                        <button
+                                            className="text-sm text-blue-700 hover:text-blue-900 font-medium flex items-center">
+                                            <Shield size={14} className="mr-1"/>
+                                            Go to Team Dashboard
                                         </button>
                                     </div>
                                 </motion.div>
@@ -980,8 +1079,8 @@ export default function Settings() {
                             variants={tabVariants}
                             whileHover={{backgroundColor: '#f9fafb'}}
                         >
-                            {user?.role === 'admin' ? <Shield size={18}/> : <Phone size={18}/>}
-                            <span>{user?.role === 'admin' ? 'System' : 'App'} Settings</span>
+                            {user?.role === UserRole.ADMIN ? <Shield size={18}/> : <Phone size={18}/>}
+                            <span>{user?.role === UserRole.ADMIN ? 'System' : 'App'} Settings</span>
                         </motion.button>
                     </div>
 

@@ -8,3 +8,4 @@ export * from './reportingService';
 export * from './syncService';
 export * from './securityService';
 export * from './logService';
+export * from './notificationService';

@@ -170,6 +170,7 @@ export default function SimStats({refreshing = false}) {
             percentage: qualityPercent,
             color: "purple",
             icon: <Award size={20}/>,
+            description: "View detailed quality metrics breakdown by team",
         },
     ];
 
@@ -208,6 +209,7 @@ export default function SimStats({refreshing = false}) {
                                 color={card.color}
                                 isRefreshing={isRefreshing}
                                 icon={card.icon}
+                                description={card.description}
                                 onExpandClick={() => {
                                     const dialogRef = d.create({
                                         content: (
@@ -239,7 +241,8 @@ function StatCard({
                       isRefreshing,
                       todayValue = 0,
                       weekValue = 0,
-                      icon, onExpandClick
+                      icon, onExpandClick,
+                      description
                   }: {
     title: string;
     value: number;
@@ -250,6 +253,7 @@ function StatCard({
     isRefreshing: boolean;
     icon: React.ReactNode;
     onExpandClick?: Closure;
+    description?: string;
 }) {
     const [prevValue, setPrevValue] = useState(value);
     const [prevTodayValue, setPrevTodayValue] = useState(todayValue);
@@ -395,6 +399,9 @@ function StatCard({
             </div>
             {/* View More / Expand Section */}
             <div className="pt-2 text-center">
+                {description && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{description}</p>
+                )}
                 <button
                     onClick={() => {
                         onExpandClick?.();

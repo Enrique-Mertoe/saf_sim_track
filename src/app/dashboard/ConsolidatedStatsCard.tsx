@@ -49,6 +49,43 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
         unmatched: simCards.filter(card => card.match === SIMStatus.UNMATCH).length,
         activated: simCards.filter(card => card.status=SIMStatus.ACTIVATED).length,
         notActivated: simCards.filter(card => !(card.status == SIMStatus.ACTIVATED)).length,
+        // Detailed quality breakdown
+        topUpBelow50: simCards.filter(card => 
+            card.quality !== SIMStatus.QUALITY && 
+            card.top_up_amount !== undefined && 
+            card.top_up_amount > 0 && 
+            card.top_up_amount < 50
+        ).length,
+        noTopUp: simCards.filter(card => 
+            card.quality !== SIMStatus.QUALITY && 
+            (card.top_up_amount === undefined || card.top_up_amount === 0)
+        ).length,
+        topUp50NotConverted: simCards.filter(card => 
+            card.quality !== SIMStatus.QUALITY && 
+            card.top_up_amount !== undefined && 
+            card.top_up_amount >= 50
+        ).length,
+        // Group by team
+        teamStats: (() => {
+            const teamGroups = {};
+            simCards.forEach(card => {
+                const teamId = card.team_id || 'unknown';
+                if (!teamGroups[teamId]) {
+                    teamGroups[teamId] = {
+                        total: 0,
+                        quality: 0,
+                        nonQuality: 0
+                    };
+                }
+                teamGroups[teamId].total++;
+                if (card.quality === SIMStatus.QUALITY) {
+                    teamGroups[teamId].quality++;
+                } else {
+                    teamGroups[teamId].nonQuality++;
+                }
+            });
+            return teamGroups;
+        })()
     };
 
     // Calculate previous stats if available
@@ -60,12 +97,49 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
         unmatched: previousSimCards.filter(card => card.match === SIMStatus.UNMATCH).length,
         activated: previousSimCards.filter(card => card.status=SIMStatus.ACTIVATED).length,
         notActivated: previousSimCards.filter(card => !(card.status == SIMStatus.ACTIVATED)).length,
+        // Detailed quality breakdown
+        topUpBelow50: previousSimCards.filter(card => 
+            card.quality !== SIMStatus.QUALITY && 
+            card.top_up_amount !== undefined && 
+            card.top_up_amount > 0 && 
+            card.top_up_amount < 50
+        ).length,
+        noTopUp: previousSimCards.filter(card => 
+            card.quality !== SIMStatus.QUALITY && 
+            (card.top_up_amount === undefined || card.top_up_amount === 0)
+        ).length,
+        topUp50NotConverted: previousSimCards.filter(card => 
+            card.quality !== SIMStatus.QUALITY && 
+            card.top_up_amount !== undefined && 
+            card.top_up_amount >= 50
+        ).length,
+        // Group by team
+        teamStats: (() => {
+            const teamGroups = {};
+            previousSimCards.forEach(card => {
+                const teamId = card.team_id || 'unknown';
+                if (!teamGroups[teamId]) {
+                    teamGroups[teamId] = {
+                        total: 0,
+                        quality: 0,
+                        nonQuality: 0
+                    };
+                }
+                teamGroups[teamId].total++;
+                if (card.quality === SIMStatus.QUALITY) {
+                    teamGroups[teamId].quality++;
+                } else {
+                    teamGroups[teamId].nonQuality++;
+                }
+            });
+            return teamGroups;
+        })()
     };
 
     // Define stats items with their visual properties
     const statItems: StatItemType[] = [
         {
-            title: "Sold",
+            title: "Total Connections",
             value: stats.sold,
             previousValue: prevStats.sold,
             color: "bg-green-50",
@@ -76,7 +150,7 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
             darkBorderColor: "dark:border-green-800",
         },
         {
-            title: "Quality",
+            title: "Good Quality",
             value: stats.quality,
             previousValue: prevStats.quality,
             color: "bg-blue-50",
@@ -87,9 +161,37 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
             darkBorderColor: "dark:border-blue-800",
             pairs: [
                 {
-                    title: "Non-Quality",
+                    title: "Poor Quality",
                     value: stats.nonQuality,
                     previousValue: prevStats.nonQuality,
+                }
+            ]
+        },
+        {
+            title: "Poor Quality Breakdown",
+            value: stats.nonQuality,
+            previousValue: prevStats.nonQuality,
+            color: "bg-red-50",
+            darkColor: "dark:bg-red-900/20",
+            lightColor: "text-red-600",
+            darkLightColor: "dark:text-red-400",
+            borderColor: "border-red-200",
+            darkBorderColor: "dark:border-red-800",
+            pairs: [
+                {
+                    title: "Top-up Below 50",
+                    value: stats.topUpBelow50,
+                    previousValue: prevStats.topUpBelow50,
+                },
+                {
+                    title: "No Top-up",
+                    value: stats.noTopUp,
+                    previousValue: prevStats.noTopUp,
+                },
+                {
+                    title: "Top-up 50+ Not Converted",
+                    value: stats.topUp50NotConverted,
+                    previousValue: prevStats.topUp50NotConverted,
                 }
             ]
         },
@@ -108,24 +210,6 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
                     title: "Unmatched",
                     value: stats.unmatched,
                     previousValue: prevStats.unmatched,
-                }
-            ]
-        },
-        {
-            title: "Activated",
-            value: stats.activated,
-            previousValue: prevStats.activated,
-            color: "bg-amber-50",
-            darkColor: "dark:bg-amber-900/20",
-            lightColor: "text-amber-600",
-            darkLightColor: "dark:text-amber-400",
-            borderColor: "border-amber-200",
-            darkBorderColor: "dark:border-amber-800",
-            pairs: [
-                {
-                    title: "Not Activated",
-                    value: stats.notActivated,
-                    previousValue: prevStats.notActivated,
                 }
             ]
         }

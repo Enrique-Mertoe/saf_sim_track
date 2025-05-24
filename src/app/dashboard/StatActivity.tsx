@@ -4,9 +4,10 @@ import StartPreview from "@/app/dashboard/components/StartPreview";
 import TeamList from "@/ui/components/user/TeamList";
 import StaffList from "@/ui/components/user/StaffList";
 import {SIMStatus, Team, User} from "@/models";
-import {Activity, ArrowLeft, Calendar, Users, Map, Package, CheckCircle, Award, AlertTriangle} from "lucide-react";
+import {Activity, ArrowLeft, Calendar, Users, Map, Package, CheckCircle, Award, AlertTriangle, BarChart3} from "lucide-react";
 import simService from "@/services/simService";
-import {userService} from "@/services";
+import {userService, teamService} from "@/services";
+import QualityBreakdown from "@/app/dashboard/components/QualityBreakdown";
 
 export default function StatActivity({start, onClose}: any) {
     return (
@@ -16,41 +17,201 @@ export default function StatActivity({start, onClose}: any) {
                 <Screen name={"teams"}>
                     <TeamsActivity/>
                 </Screen>
-                {/*<Screen name="Screen1">*/}
-                {/*    <Screen1/>*/}
-                {/*</Screen>*/}
-
-                {/*<Screen*/}
-                {/*    name="Screen2"*/}
-                {/*    onDestroy={handleDestroy}*/}
-                {/*    onPause={handlePause}*/}
-                {/*    onResume={handleResume}*/}
-                {/*>*/}
-                {/*    <Screen2/>*/}
-                {/*</Screen>*/}
-
-                {/*<Screen*/}
-                {/*    name="Screen3"*/}
-                {/*    onPause={handlePause}*/}
-                {/*    onResume={handleResume}*/}
-                {/*>*/}
-                {/*    <Screen3/>*/}
-                {/*</Screen>*/}
-
-                {/*<Screen name="Screen4">*/}
-                {/*    <Screen4/>*/}
-                {/*</Screen>*/}
+                <Screen name={"quality"}>
+                    <QualityActivity/>
+                </Screen>
             </NavigationProvider>
         </div>
     )
 }
 
 function MainActivity({start, onClose}: any) {
+    const {navigate} = useActivity();
+
+    // Check if the card is related to quality metrics
+    const isQualityCard = start?.title === 'Quality';
+
+    // If it's a quality card, navigate to the quality screen
+    useEffect(() => {
+        if (isQualityCard) {
+            navigate('quality', { card: start });
+        }
+    }, [isQualityCard, navigate, start]);
+
     return (
         <Screen name={"main"}>
             <StartPreview card={start} onClose={onClose}/>
         </Screen>
     )
+}
+
+function QualityActivity() {
+    const {getParams, goBack} = useActivity();
+    const card = getParams()["card"];
+    const [currentDate] = useState(new Date().toLocaleDateString());
+    const [simCards, setSimCards] = useState([]);
+    const [previousSimCards, setPreviousSimCards] = useState([]);
+    const [teamData, setTeamData] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
+
+    // Fetch SIM cards and team data
+    useEffect(() => {
+        async function fetchData() {
+            setLoading(true);
+
+            try {
+                // Get current date and previous period date range
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                let startDate, endDate, prevStartDate, prevEndDate;
+
+                // Set date ranges based on selected period
+                switch (period) {
+                    case 'daily':
+                        startDate = today;
+                        endDate = new Date(today);
+                        endDate.setHours(23, 59, 59, 999);
+
+                        prevStartDate = new Date(today);
+                        prevStartDate.setDate(today.getDate() - 1);
+                        prevEndDate = new Date(prevStartDate);
+                        prevEndDate.setHours(23, 59, 59, 999);
+                        break;
+
+                    case 'weekly':
+                        startDate = new Date(today);
+                        startDate.setDate(today.getDate() - 6);
+                        endDate = new Date(today);
+                        endDate.setHours(23, 59, 59, 999);
+
+                        prevStartDate = new Date(startDate);
+                        prevStartDate.setDate(startDate.getDate() - 7);
+                        prevEndDate = new Date(startDate);
+                        prevEndDate.setDate(startDate.getDate() - 1);
+                        prevEndDate.setHours(23, 59, 59, 999);
+                        break;
+
+                    case 'monthly':
+                        startDate = new Date(today);
+                        startDate.setDate(1);
+                        endDate = new Date(today);
+                        endDate.setHours(23, 59, 59, 999);
+
+                        prevStartDate = new Date(startDate);
+                        prevStartDate.setMonth(startDate.getMonth() - 1);
+                        prevEndDate = new Date(startDate);
+                        prevEndDate.setDate(startDate.getDate() - 1);
+                        prevEndDate.setHours(23, 59, 59, 999);
+                        break;
+
+                    default: // custom or fallback
+                        startDate = new Date(today);
+                        startDate.setDate(today.getDate() - 30);
+                        endDate = new Date(today);
+                        endDate.setHours(23, 59, 59, 999);
+
+                        prevStartDate = new Date(startDate);
+                        prevStartDate.setDate(startDate.getDate() - 30);
+                        prevEndDate = new Date(startDate);
+                        prevEndDate.setDate(startDate.getDate() - 1);
+                        prevEndDate.setHours(23, 59, 59, 999);
+                }
+
+                // Fetch all SIM cards - we'll filter them client-side for this demo
+                // In a production app, you'd want to filter on the server
+                const {data: allSimData} = await simService.getAllSimCards(null);
+
+                if (allSimData) {
+                    // Filter SIM cards for current period
+                    const currentPeriodSims = allSimData.filter(sim => {
+                        const simDate = new Date(sim.created_at);
+                        return simDate >= startDate && simDate <= endDate;
+                    });
+
+                    // Filter SIM cards for previous period
+                    const previousPeriodSims = allSimData.filter(sim => {
+                        const simDate = new Date(sim.created_at);
+                        return simDate >= prevStartDate && simDate <= prevEndDate;
+                    });
+
+                    setSimCards(currentPeriodSims);
+                    setPreviousSimCards(previousPeriodSims);
+                }
+
+                // Fetch teams to get team names
+                const {data: teamsData} = await teamService.getAllTeams();
+                const teamMap = {};
+
+                if (teamsData) {
+                    teamsData.forEach(team => {
+                        teamMap[team.id] = team.name;
+                    });
+                }
+
+                setTeamData(teamMap);
+            } catch (error) {
+                console.error("Error fetching data for quality breakdown:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, [period]);
+
+    return (
+        <div className="bg-gray-50 flex flex-col h-full">
+            {/* Header */}
+            <div className="bg-white px-4 py-4 flex items-center justify-between shadow-sm">
+                <div className="flex items-center">
+                    <button
+                        onClick={() => goBack()}
+                        className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={20} className="text-gray-600"/>
+                    </button>
+                    <div className="ml-4">
+                        <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                            <BarChart3 className="mr-2 text-purple-600" size={20}/>
+                            Quality Metrics Breakdown
+                        </h2>
+                        <div className="flex items-center text-sm text-gray-500 mt-1">
+                            <Calendar size={14} className="mr-1"/>
+                            <span>{currentDate}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                    <select
+                        className="py-2 px-4 bg-white text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+                        value={period}
+                        onChange={(e) => setPeriod(e.target.value as any)}
+                    >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <button
+                        className="py-2 px-4 bg-white text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-colors text-sm font-medium">
+                        Export Report
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="overflow-y-auto flex-grow scrollbar-thin p-6">
+                <QualityBreakdown
+                    simCards={simCards}
+                    previousSimCards={previousSimCards}
+                    loading={loading}
+                    period={period}
+                    teamData={teamData}
+                />
+            </div>
+        </div>
+    );
 }
 
 
