@@ -72,7 +72,6 @@ export async function updateSession(request: NextRequest) {
                 .select('*')
                 .eq('id', user.id)
                 .single();
-            console.log("profile", profile)
             if (!profile) {
                 // User profile not found, redirect to login
                 const url = request.nextUrl.clone()
@@ -91,7 +90,6 @@ export async function updateSession(request: NextRequest) {
 
             // Handle different scenarios based on user role and subscription status
             if (profile.role === UserRole.ADMIN) {
-                console.log(`Admin role: ${user.email}, subscription: ${hasActiveSubscription ? 'active' : 'expired'}`)
                 // Admin with no/expired subscription should be redirected to subscription page
                 if (!hasActiveSubscription && !request.nextUrl.pathname.startsWith('/subscribe')) {
                     const url = request.nextUrl.clone()

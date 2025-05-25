@@ -73,16 +73,15 @@ export async function POST(request: NextRequest) {
         };
 
 
-        let intasend = new IntaSend(
+        const intasend = new IntaSend(
             process.env.INTASEND_PUBLISHABLE_KEY,
             process.env.INTASEND_SECRET_KEY,
             process.env.INTASEND_ENVIRONMENT != "production",
         );
         // const IntaSend1 = require("IntaSend")
 
-        let collection = intasend.collection();
+        const collection = intasend.collection();
         const  response = await collection.charge(intasendPayload);
-        console.log(response)
         // Update the payment request with the Intasend checkout ID
         if (response && response.id) {
             await supabase
