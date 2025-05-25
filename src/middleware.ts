@@ -6,6 +6,7 @@ import {updateSession} from "@/lib/supabase/middleware";
 const freePaths = [
     '/accounts',
     "/api/auth",
+    "/api/session",
     "/tt1",
     "/help",
     "/contact-us",

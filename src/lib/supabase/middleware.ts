@@ -50,6 +50,7 @@ export async function updateSession(request: NextRequest) {
     const freePaths = [
         '/accounts',
         '/api/auth',
+        "/api/session",
         '/subscribe',
         '/subscription',
         '/service-unavailable',

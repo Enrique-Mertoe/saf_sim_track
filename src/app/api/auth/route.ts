@@ -2,7 +2,7 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {cookies} from 'next/headers';
 import jwt from 'jsonwebtoken';
-import {flushSession, getSession} from "@/lib/session";
+import {flushSession, getSession, removeSession, removeSessionKeys} from "@/lib/session";
 import {adminAuth, adminFirestore as admin} from "@/lib/firebase/admin";
 import {authService} from "@/services";
 import Accounts from "@/lib/accounts";
@@ -196,7 +196,7 @@ async function updateUser(request: NextRequest, data: UpdateUserData) {
 
 // Logout user
 async function logout() {
-    await flushSession()
+    await removeSessionKeys(["user"])
     return makeResponse({
         ok: true,
         message: 'Logged out successfully'

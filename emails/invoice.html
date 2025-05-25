@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Receipt - SIM Card Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333333;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background-color: #00a86b;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header img {
+            max-height: 60px;
+        }
+
+        .header h1 {
+            color: white;
+            margin: 10px 0 0;
+            font-weight: 600;
+            font-size: 24px;
+        }
+
+        .content {
+            padding: 24px;
+            line-height: 1.6;
+        }
+
+        .welcome-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333333;
+        }
+
+        .success-badge {
+            display: inline-block;
+            background-color: #e0f7ea;
+            color: #00a86b;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #00a86b;
+            color: #ffffff !important;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .invoice {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .invoice h3 {
+            margin-top: 0;
+            color: #00a86b;
+            font-size: 18px;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 10px;
+        }
+
+        .invoice p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .invoice strong {
+            display: inline-block;
+            width: 150px;
+            color: #555555;
+        }
+
+        .subscription {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .subscription h3 {
+            margin-top: 0;
+            color: #00a86b;
+            font-size: 18px;
+            border-bottom: 1px solid #eeeeee;
+            padding-bottom: 10px;
+        }
+
+        .subscription p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .subscription strong {
+            display: inline-block;
+            width: 150px;
+            color: #555555;
+        }
+
+        .total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00a86b;
+            text-align: right;
+            margin-top: 20px;
+            border-top: 1px solid #eeeeee;
+            padding-top: 10px;
+        }
+
+        .footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #777777;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        .features {
+            margin: 25px 0;
+        }
+
+        .feature {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .feature-icon {
+            background-color: #e0f7ea;
+            color: #00a86b;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-text h4 {
+            margin: 0 0 5px;
+            color: #00a86b;
+            font-size: 16px;
+        }
+
+        .feature-text p {
+            margin: 0;
+            font-size: 14px;
+            color: #666666;
+        }
+
+        @media only screen and (max-width: 480px) {
+            .header {
+                padding: 15px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .button {
+                padding: 12px 20px;
+                font-size: 15px;
+                display: block;
+                width: 80%;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="header">
+        <img src="https://via.placeholder.com/240x60?text=SCMS+Logo" alt="SCMS Logo">
+        <h1>SIM Card Management System</h1>
+    </div>
+
+    <div class="content">
+        <p class="welcome-text">Hello {{user.fullName}},</p>
+
+        <p>Thank you for your payment. Your subscription has been successfully processed.</p>
+        <div class="success-badge">Payment Successful</div>
+
+        <div class="invoice">
+            <h3>Invoice Details</h3>
+            <p><strong>Invoice Number:</strong> {{invoice.reference}}</p>
+            <p><strong>Date:</strong> {{invoice.date}}</p>
+            <p><strong>Payment Method:</strong> M-PESA</p>
+            <p><strong>Phone Number:</strong> {{invoice.phoneNumber}}</p>
+            <p><strong>Plan:</strong> {{invoice.planName}}</p>
+            <p class="total-amount">Total: KES {{invoice.amount}}</p>
+        </div>
+
+        <div class="subscription">
+            <h3>Subscription Details</h3>
+            <p><strong>Plan:</strong> {{invoice.planName}}</p>
+            <p><strong>Status:</strong> Active</p>
+            <p><strong>Start Date:</strong> {{subscription.startDate}}</p>
+            <p><strong>Expiry Date:</strong> {{subscription.expiryDate}}</p>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">✓</div>
+                <div class="feature-text">
+                    <h4>Access to Premium Features</h4>
+                    <p>Your subscription includes all premium features of the SIM Card Management System.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-text">
+                    <h4>Performance Analytics</h4>
+                    <p>Access detailed performance reports for your team and individuals.</p>
+                </div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔐</div>
+                <div class="feature-text">
+                    <h4>Secure System</h4>
+                    <p>Role-based access ensures you see only what's relevant to you.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="button-container">
+            <a href="{{dashboardUrl}}" class="button">Go to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Safaricom SIM Card Management System. All rights reserved.</p>
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>For support, contact your team leader or system administrator.</p>
+    </div>
+</div>
+</body>
+</html>
