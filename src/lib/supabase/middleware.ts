@@ -105,11 +105,27 @@ export async function updateSession(request: NextRequest) {
 
             // Handle different scenarios based on user role and subscription status
             if (profile.role === UserRole.ADMIN) {
-                // Admin with no/expired subscription should be redirected to subscription page
+                // Only check subscription if not already on the subscribe page
                 if (!hasActiveSubscription && !request.nextUrl.pathname.startsWith('/subscribe')) {
+                    // Check if user has any subscription records (active or expired)
+                    const {data: subscriptionHistory} = await supabase
+                        .from('subscriptions')
+                        .select('id, expires_at')
+                        .eq('user_id', user.id)
+                        .order('expires_at', { ascending: false })
+                        .limit(1);
+
                     const url = request.nextUrl.clone()
                     url.pathname = '/subscribe'
-                    url.searchParams.set('renew', 'true')
+
+                    if (subscriptionHistory && subscriptionHistory.length > 0) {
+                        // User has a subscription record - it's expired
+                        url.searchParams.set('action', 'renew')
+                    } else {
+                        // User has never subscribed
+                        url.searchParams.set('action', 'new')
+                    }
+
                     return NextResponse.redirect(url)
                 }
             } else if (profile.role === UserRole.TEAM_LEADER) {

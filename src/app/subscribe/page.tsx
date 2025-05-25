@@ -74,16 +74,25 @@ export default function SubscriptionPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState<'monthly' | 'annual'>('monthly');
+    const [subscriptionAction, setSubscriptionAction] = useState<'new' | 'renew'>('new');
 
     const currentPlan = plans[0]
         ? plans.find(plan => plan.id === plans[0]?.id)
         : null;
 
-    // Check for plan parameter in URL when component mounts
+    // Check for plan and action parameters in URL when component mounts
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const urlParams = new URLSearchParams(window.location.search);
             const planId = urlParams.get('plan');
+            const action = urlParams.get('action');
+
+            // Set subscription action based on URL parameter
+            if (action === 'renew') {
+                setSubscriptionAction('renew');
+            } else {
+                setSubscriptionAction('new');
+            }
 
             if (planId && user) {
                 // Find the plan with the matching ID
@@ -151,10 +160,14 @@ export default function SubscriptionPage() {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                            Choose Your Plan
+                            {subscriptionAction === 'renew' 
+                                ? 'Renew or Change Your Plan' 
+                                : 'Choose Your Plan'}
                         </h1>
                         <p className="text-gray-600 text-sm">
-                            Select the perfect plan for your SIM card business
+                            {subscriptionAction === 'renew'
+                                ? 'Your subscription has expired. Renew or select a different plan to continue.'
+                                : 'Select the perfect plan for your SIM card business'}
                         </p>
                     </div>
 
@@ -241,7 +254,9 @@ export default function SubscriptionPage() {
                                             : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                                     }`}
                                 >
-                                    Get Started
+                                    {subscriptionAction === 'renew' 
+                                        ? (plan.recommended ? 'Select This Plan' : 'Change to This Plan') 
+                                        : 'Get Started'}
                                 </button>
                             </div>
                         ))}

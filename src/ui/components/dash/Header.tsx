@@ -35,7 +35,7 @@ export default function Header() {
                 setIsLoading(true);
 
                 // Use notification service to fetch notifications
-                const { data, error } = await notificationService.getUserNotifications(user?.id || '', 10);
+                const {data, error} = await notificationService.getUserNotifications(user?.id || '', 10);
 
                 if (error) {
                     throw error;
@@ -287,57 +287,57 @@ export default function Header() {
                                 <Moon size={20} className="text-indigo-600"/>
                             )}
                         </button>
-
-                        {/* Search bar */}
-                        <div ref={searchRef} className="relative hidden md:block">
-                            <button
-                                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                                className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
-                                aria-label="Search"
-                            >
-                                <Search size={20}/>
-                            </button>
-
-                            <AnimatePresence>
-                                {isSearchOpen && (
-                                    <motion.div
-                                        initial={{opacity: 0, y: -10}}
-                                        animate={{opacity: 1, y: 0}}
-                                        exit={{opacity: 0, y: -10}}
-                                        transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
+                        {user && (
+                            <>                        {/* Search bar */}
+                                <div ref={searchRef} className="relative hidden md:block">
+                                    <button
+                                        onClick={() => setIsSearchOpen(!isSearchOpen)}
+                                        className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                        aria-label="Search"
                                     >
-                                        <div className="p-2">
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Search SIMs, teams, pages..."
-                                                    className="w-full p-2 pl-8 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    autoFocus
-                                                />
-                                                <Search size={16}
-                                                        className="absolute left-2 top-3 text-gray-400 dark:text-gray-500"/>
-                                                {searchQuery && (
-                                                    <button
-                                                        onClick={() => setSearchQuery("")}
-                                                        className="absolute right-2 top-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                                                    >
-                                                        <X size={16}/>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
+                                        <Search size={20}/>
+                                    </button>
 
-                                        {searchResults.length > 0 ? (
-                                            <div className="max-h-64 overflow-y-auto">
-                                                {searchResults.map((result: any) => (
-                                                    <a
-                                                        key={result.id}
-                                                        href={result.url}
-                                                        className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center border-b border-gray-100 dark:border-gray-700 last:border-0"
-                                                    >
+                                    <AnimatePresence>
+                                        {isSearchOpen && (
+                                            <motion.div
+                                                initial={{opacity: 0, y: -10}}
+                                                animate={{opacity: 1, y: 0}}
+                                                exit={{opacity: 0, y: -10}}
+                                                transition={{duration: 0.2}}
+                                                className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
+                                            >
+                                                <div className="p-2">
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search SIMs, teams, pages..."
+                                                            className="w-full p-2 pl-8 text-sm text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                            value={searchQuery}
+                                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                        <Search size={16}
+                                                                className="absolute left-2 top-3 text-gray-400 dark:text-gray-500"/>
+                                                        {searchQuery && (
+                                                            <button
+                                                                onClick={() => setSearchQuery("")}
+                                                                className="absolute right-2 top-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                                                            >
+                                                                <X size={16}/>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {searchResults.length > 0 ? (
+                                                    <div className="max-h-64 overflow-y-auto">
+                                                        {searchResults.map((result: any) => (
+                                                            <a
+                                                                key={result.id}
+                                                                href={result.url}
+                                                                className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center border-b border-gray-100 dark:border-gray-700 last:border-0"
+                                                            >
                                                         <span className="text-gray-800 dark:text-gray-200">
                                                             {result.title}
                                                             {result.fullTitle && (
@@ -346,183 +346,191 @@ export default function Header() {
                                                                 </span>
                                                             )}
                                                         </span>
-                                                        <span className={`text-xs px-2 py-1 rounded-full ${
-                                                            result.category === 'SIM' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
-                                                                result.category === 'Team' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
-                                                                    result.category === 'Assistant' ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200' :
-                                                                        'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                                                        }`}>
+                                                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                                                    result.category === 'SIM' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                                                                        result.category === 'Team' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
+                                                                            result.category === 'Assistant' ? 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200' :
+                                                                                'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                                                                }`}>
                                                             {result.category}
                                                         </span>
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        ) : searchQuery ? (
-                                            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                                                No results found for "{searchQuery}"
-                                            </div>
-                                        ) : null}
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                ) : searchQuery ? (
+                                                    <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                                                        No results found for "{searchQuery}"
+                                                    </div>
+                                                ) : null}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
 
-                        {/* Notifications */}
-                        <div ref={notificationRef} className="relative">
-                            <button
-                                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                                className="relative p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
-                                aria-label="Notifications"
-                            >
-                                <Bell size={20}/>
-                                {unreadCount > 0 && (
-                                    <motion.span
-                                        initial={{scale: 0}}
-                                        animate={{scale: 1}}
-                                        className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-white"
+                                {/*// Notifications*/}
+                                <div ref={notificationRef} className="relative">
+                                    <button
+                                        onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                                        className="relative p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                        aria-label="Notifications"
                                     >
-                                        {unreadCount}
-                                    </motion.span>
-                                )}
-                            </button>
+                                        <Bell size={20}/>
+                                        {unreadCount > 0 && (
+                                            <motion.span
+                                                initial={{scale: 0}}
+                                                animate={{scale: 1}}
+                                                className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold text-white"
+                                            >
+                                                {unreadCount}
+                                            </motion.span>
+                                        )}
+                                    </button>
 
-                            <AnimatePresence>
-                                {isNotificationOpen && (
-                                    <motion.div
-                                        initial={{opacity: 0, y: -10}}
-                                        animate={{opacity: 1, y: 0}}
-                                        exit={{opacity: 0, y: -10}}
-                                        transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
-                                    >
-                                        <div
-                                            className="flex justify-between items-center px-4 py-2 bg-green-50 dark:bg-green-900">
-                                            <h3 className="font-semibold text-green-700 dark:text-green-300">Notifications</h3>
-                                            {unreadCount > 0 && (
-                                                <button
-                                                    onClick={markAllRead}
-                                                    className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
-                                                >
-                                                    Mark all as read
-                                                </button>
-                                            )}
-                                        </div>
+                                    <AnimatePresence>
+                                        {isNotificationOpen && (
+                                            <motion.div
+                                                initial={{opacity: 0, y: -10}}
+                                                animate={{opacity: 1, y: 0}}
+                                                exit={{opacity: 0, y: -10}}
+                                                transition={{duration: 0.2}}
+                                                className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
+                                            >
+                                                <div
+                                                    className="flex justify-between items-center px-4 py-2 bg-green-50 dark:bg-green-900">
+                                                    <h3 className="font-semibold text-green-700 dark:text-green-300">Notifications</h3>
+                                                    {unreadCount > 0 && (
+                                                        <button
+                                                            onClick={markAllRead}
+                                                            className="text-xs text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
+                                                        >
+                                                            Mark all as read
+                                                        </button>
+                                                    )}
+                                                </div>
 
-                                        <div className="max-h-80 overflow-y-auto">
-                                            {isLoading ? (
-                                                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                                                    Loading notifications...
-                                                </div>
-                                            ) : error ? (
-                                                <div className="p-4 text-center text-red-500">
-                                                    Error loading notifications
-                                                </div>
-                                            ) : notifications.length > 0 ? (
-                                                notifications.map((notification: any) => (
-                                                    <div
-                                                        key={notification.id}
-                                                        className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
-                                                            !notification.read ? 'bg-green-50 dark:bg-green-900/20' : ''
-                                                        }`}
-                                                        onClick={() => markNotificationAsRead(notification.id)}
-                                                    >
-                                                        <div className="flex justify-between">
-                                                            <h4 className="font-medium text-sm text-gray-800 dark:text-gray-200">{notification.title}</h4>
-                                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                <div className="max-h-80 overflow-y-auto">
+                                                    {isLoading ? (
+                                                        <div
+                                                            className="p-4 text-center text-gray-500 dark:text-gray-400">
+                                                            Loading notifications...
+                                                        </div>
+                                                    ) : error ? (
+                                                        <div className="p-4 text-center text-red-500">
+                                                            Error loading notifications
+                                                        </div>
+                                                    ) : notifications.length > 0 ? (
+                                                        notifications.map((notification: any) => (
+                                                            <div
+                                                                key={notification.id}
+                                                                className={`px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 ${
+                                                                    !notification.read ? 'bg-green-50 dark:bg-green-900/20' : ''
+                                                                }`}
+                                                                onClick={() => markNotificationAsRead(notification.id)}
+                                                            >
+                                                                <div className="flex justify-between">
+                                                                    <h4 className="font-medium text-sm text-gray-800 dark:text-gray-200">{notification.title}</h4>
+                                                                    <span
+                                                                        className="text-xs text-gray-500 dark:text-gray-400">
                                                                 {formatNotificationTime(notification.created_at)}
                                                             </span>
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{notification.message}</p>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div
+                                                            className="p-4 text-center text-gray-500 dark:text-gray-400">
+                                                            No notifications yet
                                                         </div>
-                                                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{notification.message}</p>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                                                    No notifications yet
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700">
-                                            <a
-                                                href="/notifications"
-                                                className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 w-full text-center block"
-                                            >
-                                                View all notifications
-                                            </a>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700">
+                                                    <a
+                                                        href="/notifications"
+                                                        className="text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200 w-full text-center block"
+                                                    >
+                                                        View all notifications
+                                                    </a>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
 
-                        {/* User profile dropdown */}
-                        {user && (
-                            <div ref={profileRef} className="relative hidden md:block">
-                                <button
-                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                    className="flex items-center space-x-2 p-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
-                                >
-                                    <div
-                                        className="w-8 h-8 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center text-white font-bold">
-                                        {user?.full_name ? user.full_name.charAt(0) : "U"}
-                                    </div>
-                                    <span className="max-w-32 truncate text-gray-800 dark:text-gray-200">
+
+                                {/*User profile dropdown */}
+
+                                <div ref={profileRef} className="relative hidden md:block">
+                                    <button
+                                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                        className="flex items-center space-x-2 p-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                    >
+                                        <div
+                                            className="w-8 h-8 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center text-white font-bold">
+                                            {user?.full_name ? user.full_name.charAt(0) : "U"}
+                                        </div>
+                                        <span className="max-w-32 truncate text-gray-800 dark:text-gray-200">
                                         {user?.full_name || "User"}
                                     </span>
-                                    <ChevronDown size={16}
-                                                className={`transform transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
+                                        <ChevronDown size={16}
+                                                     className={`transform transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
+                                        />
+                                    </button>
 
-                                <AnimatePresence>
-                                    {isProfileOpen && (
-                                        <motion.div
-                                            initial={{opacity: 0, y: -10}}
-                                            animate={{opacity: 1, y: 0}}
-                                            exit={{opacity: 0, y: -10}}
-                                            transition={{duration: 0.2}}
-                                            className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
-                                        >
-                                            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                                    {user?.full_name || "User"}
-                                                </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                    {user?.email || "user@example.com"}
-                                                </p>
-                                            </div>
+                                    <AnimatePresence>
+                                        {isProfileOpen && (
+                                            <motion.div
+                                                initial={{opacity: 0, y: -10}}
+                                                animate={{opacity: 1, y: 0}}
+                                                exit={{opacity: 0, y: -10}}
+                                                transition={{duration: 0.2}}
+                                                className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
+                                            >
+                                                <div
+                                                    className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                                        {user?.full_name || "User"}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                        {user?.email || "user@example.com"}
+                                                    </p>
+                                                </div>
 
-                                            <div className="py-1">
-                                                <a href="/profile"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                >
-                                                    <User size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
-                                                    Profile
-                                                </a>
-                                                <a href="/settings"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                >
-                                                    <Settings size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
-                                                    Settings
-                                                </a>
-                                            </div>
+                                                <div className="py-1">
+                                                    <a href="/profile"
+                                                       className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    >
+                                                        <User size={16}
+                                                              className="mr-2 text-gray-500 dark:text-gray-400"/>
+                                                        Profile
+                                                    </a>
+                                                    <a href="/settings"
+                                                       className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    >
+                                                        <Settings size={16}
+                                                                  className="mr-2 text-gray-500 dark:text-gray-400"/>
+                                                        Settings
+                                                    </a>
+                                                </div>
 
-                                            <div className="py-1 border-t border-gray-100 dark:border-gray-700">
-                                                <a href="/accounts/logout"
-                                                onClick={e => {
-                                                    e.preventDefault();
-                                                    signOut()
-                                                }}
-                                                className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                                >
-                                                    <LogOut size={16} className="mr-2"/>
-                                                    Sign out
-                                                </a>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                                                <div className="py-1 border-t border-gray-100 dark:border-gray-700">
+                                                    <a href="/accounts/logout"
+                                                       onClick={e => {
+                                                           e.preventDefault();
+                                                           signOut()
+                                                       }}
+                                                       className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    >
+                                                        <LogOut size={16} className="mr-2"/>
+                                                        Sign out
+                                                    </a>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </>
                         )}
 
                         {user ? (
@@ -540,8 +548,8 @@ export default function Header() {
                                 </button>
                             </motion.div>
                         ) : (
-                            <a 
-                                href="/login" 
+                            <a
+                                href="/login"
                                 className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium transition-colors duration-200"
                             >
                                 Get Started
