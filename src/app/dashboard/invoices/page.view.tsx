@@ -173,10 +173,8 @@ export default function InvoicesPageView() {
         toast.success('Invoice download started');
 
         try {
-            // Dynamically import jsPDF from CDN
-            //@ts-ignore
-            const jsPDFModule = await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm');
-            const jsPDF = jsPDFModule.default;
+            // Import jsPDF from local package
+            const jsPDF = (await import('jspdf')).default;
 
             // Create a new PDF document
             const doc = new jsPDF({
