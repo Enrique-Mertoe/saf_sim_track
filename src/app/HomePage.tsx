@@ -10,7 +10,7 @@ export default function Home() {
             title: "SIM Tracking",
             description: "Real-time tracking of SIM card sales and activations",
             icon: "📊",
-            color: "from-blue-500 to-blue-600"
+            color: "from-green-500 to-green-600"
         },
         {
             title: "Team Analytics",
@@ -57,7 +57,7 @@ export default function Home() {
         <div className="min-h-screen bg-white">
             {/* Hero Section - Compact */}
             <section
-                className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+                className="relative bg-gradient-to-br from-slate-900 via-green-900 to-indigo-900 text-white overflow-hidden">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <div
@@ -73,7 +73,7 @@ export default function Home() {
                     >
                         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
                             SIM Card Management
-                            <span className="block text-blue-400">Made Simple</span>
+                            <span className="block text-green-400">Made Simple</span>
                         </h1>
                         <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto">
                             Track, manage, and optimize your SIM operations with real-time insights and automated
@@ -81,13 +81,22 @@ export default function Home() {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <motion.a
+                                href={"/subscribe"}
+
+                                whileHover={{scale: 1.05}}
+                                whileTap={{scale: 0.95}}
+                                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
+                            >
+                                Choose plan
+                            </motion.a>
+                            <motion.a
                                 href={"/accounts/login"}
 
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
+                                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
                             >
-                                Start Free Trial
+                                Sign in
                             </motion.a>
                         </div>
                     </motion.div>
@@ -188,11 +197,11 @@ export default function Home() {
                                 >
                                     <div className="relative mb-6">
                                         <div
-                                            className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg">
+                                            className="w-20 h-20 bg-green-600 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-lg">
                                             {step.icon}
                                         </div>
                                         <div
-                                            className="absolute -top-2 -right-2 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">
+                                            className="absolute -top-2 -right-2 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold text-sm">
                                             {index + 1}
                                         </div>
                                     </div>
@@ -264,7 +273,7 @@ export default function Home() {
             </section>
 
             {/* CTA - Clean */}
-            <section className="py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
+            <section className="py-20 bg-gradient-to-r from-green-600 to-indigo-600">
                 <div className="container mx-auto px-6">
                     <motion.div
                         initial={{opacity: 0, y: 30}}
@@ -275,18 +284,18 @@ export default function Home() {
                         <h2 className="text-3xl md:text-4xl font-bold mb-6">
                             Ready to Transform Your SIM Management?
                         </h2>
-                        <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                        <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
                             Join hundreds of teams already using our platform to streamline their operations
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <motion.a
-                                href={"/accounts/login"}
+                                href={"/subscribe"}
 
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
+                                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
                             >
-                                Start Free Trial
+                                Choose plan
                             </motion.a>
                         </div>
                     </motion.div>
