@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server';
-import {adminFirestore as admin} from '@/lib/firebase/admin';
 import {makeResponse} from "@/helper";
-import { createUser } from '../../actions/admin-actions';
+import {createUser} from '../../actions/admin-actions';
+import {createSuperClient} from '@/lib/supabase/server';
 
 
 export async function POST(request: NextRequest) {
@@ -34,10 +34,21 @@ export async function POST(request: NextRequest) {
 // Add a middleware to check if setup is already completed
 export async function GET() {
     try {
-        // Check if setup is already completed
-        const setupDoc = await admin.collection('config').doc('setup').get();
+        const supabase = await createSuperClient();
 
-        if (setupDoc.exists && setupDoc.data()?.initialSetupComplete === true) {
+        // Check if setup is already completed
+        const { data: setupData, error } = await supabase
+            .from('config')
+            .select('*')
+            .eq('key', 'setup')
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            // PGRST116 is the error code for "no rows returned"
+            throw error;
+        }
+
+        if (setupData && setupData.value?.initialSetupComplete === true) {
             return NextResponse.json({
                 setupComplete: true,
                 message: 'Initial admin setup has already been completed.'

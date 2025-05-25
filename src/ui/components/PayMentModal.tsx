@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import React, {useState} from 'react';
+import {Dialog, Transition} from '@headlessui/react';
 
 interface Plan {
   id: string;
@@ -56,6 +56,22 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onSubmit(formattedPhone);
   };
 
+  // Get color theme based on plan
+  const getThemeColor = () => {
+    if (plan.id === 'business') {
+      return 'green';
+    } else if (plan.id === 'enterprise') {
+      return 'purple';
+    } else {
+      return 'gray';
+    }
+  };
+
+  const themeColor = getThemeColor();
+  const buttonColorClass = loading
+    ? `bg-${themeColor}-400 cursor-not-allowed`
+    : `bg-${themeColor}-600 hover:bg-${themeColor}-700 focus:ring-${themeColor}-500`;
+
   return (
     <Transition appear show={open} as={React.Fragment}>
       <Dialog as="div" className="relative z-10" onClose={loading ? () => {} : onClose}>
@@ -68,7 +84,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-25" />
+          <div className="fixed inset-0 bg-black/30 bg-opacity-25" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -83,18 +99,43 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               leaveTo="opacity-0 scale-95"
             >
               <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title
-                  as="h3"
-                  className="text-lg font-medium leading-6 text-gray-900"
-                >
-                  Pay with M-Pesa
-                </Dialog.Title>
+                <div className="flex items-center justify-between">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-bold text-gray-900"
+                  >
+                    Complete Your Subscription
+                  </Dialog.Title>
+                  <div className={`px-3 py-1 rounded-full text-xs font-medium bg-${themeColor}-100 text-${themeColor}-800`}>
+                    {plan.name}
+                  </div>
+                </div>
 
                 <div className="mt-4">
-                  <p className="text-sm text-gray-500">
-                    You are subscribing to the <span className="font-medium">{plan.name}</span> plan
-                    for <span className="font-medium">KES {plan.price.toLocaleString()}</span>.
-                  </p>
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Subscription fee</span>
+                      <span className="font-medium">KES {plan.price.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-gray-700">Billing cycle</span>
+                      <span className="font-medium">{plan.duration === 1 ? 'Monthly' : `Every ${plan.duration} months`}</span>
+                    </div>
+                    <div className="border-t border-gray-200 my-3"></div>
+                    <div className="flex justify-between items-center font-bold">
+                      <span>Total due today</span>
+                      <span className="text-lg">KES {plan.price.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="flex items-center mb-2">
+                      <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <span className="text-sm text-gray-600">Secure payment via M-Pesa</span>
+                    </div>
+                  </div>
 
                   <div className="mt-4">
                     <form onSubmit={handleSubmit}>
@@ -110,9 +151,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                             setPhoneNumber(e.target.value);
                             setPhoneError('');
                           }}
-                          className={`mt-1 block w-full rounded-md shadow-sm py-2 px-3 border ${
+                          className={`mt-1 block w-full rounded-md shadow-sm py-3 px-4 border ${
                             phoneError ? 'border-red-300' : 'border-gray-300'
-                          } focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+                          } focus:outline-none focus:ring-green-500 focus:border-green-500`}
                           placeholder="e.g. 0712345678"
                           disabled={loading}
                         />
@@ -130,7 +171,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                       <div className="mt-6 flex justify-end space-x-3">
                         <button
                           type="button"
-                          className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                           onClick={onClose}
                           disabled={loading}
                         >
@@ -138,10 +179,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         </button>
                         <button
                           type="submit"
-                          className={`inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                          className={`inline-flex intaSendPayButton justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                             loading
-                              ? 'bg-blue-400 cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                              ? 'bg-green-400 cursor-not-allowed'
+                              : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
                           }`}
                           disabled={loading}
                         >

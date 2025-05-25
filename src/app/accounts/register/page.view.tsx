@@ -1,6 +1,6 @@
 "use client"
-import {useState, useEffect} from 'react';
-import {Activity, Eye, EyeOff, Lock, User, Phone, AlertCircle} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {Activity, AlertCircle, Eye, EyeOff, Lock, Phone, User} from 'lucide-react';
 import {useRouter} from 'next/navigation';
 import toast from "react-hot-toast";
 import {$} from "@/lib/request";
@@ -121,7 +121,7 @@ export default function AdminSetupPage() {
             setErrors({} as any)
             setIsLoading(true);
             $.post({
-                url: "/api/auth/admin-setup",
+                url: "/api/auth/admin-setup", // Using the same endpoint for now, but with different role
                 contentType: $.JSON,
                 data: {
                     email: formValues.email,
@@ -131,20 +131,21 @@ export default function AdminSetupPage() {
                     id_front_url: '',
                     id_back_url: '',
                     phone_number: formValues.phone,
-                    role: 'admin',
+                    role: 'user', // Changed from 'admin' to 'user'
                 }
             }).catch(err => {
                 toast.error(`Registration failed. ${err.message}`);
-                setErrors(prev => ({...prev, general: err.message || 'Failed to create admin account'}));
+                setErrors(prev => ({...prev, general: err.message || 'Failed to create account'}));
             }).then(async res => {
-                toast.success('Login successful ' + res.message);
+                toast.success('Registration successful ' + res.message);
                 const {error: signInError} = await authService.signIn(
                     formValues.email, formValues.password);
                 if (signInError) {
-                    toast.error(`Unable to signin, redirecting to login page. ${signInError.message}`);
+                    toast.error(`Unable to sign in, redirecting to login page. ${signInError.message}`);
                     return
                 }
-                location.href = "/dashboard"
+                // Redirect to subscription page instead of dashboard
+                location.href = "/subscribe"
             }).done(() => {
                 setIsLoading(false);
             });
@@ -207,8 +208,8 @@ export default function AdminSetupPage() {
                         <h1 className="text-2xl font-bold text-green-600 dark:text-green-500">Safaricom</h1>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">Admin Initial Setup</h2>
-                    <p className="text-center text-gray-600 dark:text-gray-300 mb-6">Create an admin account to get started</p>
+                    <h2 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-gray-100">Create Your Account</h2>
+                    <p className="text-center text-gray-600 dark:text-gray-300 mb-6">Register to access Safaricom SIM card dealer services</p>
 
                     <div className="flex justify-center mb-6">
                         <div className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg flex">
@@ -398,7 +399,7 @@ export default function AdminSetupPage() {
                                         Creating account...
                                     </div>
                                 ) : (
-                                    'Create Admin Account'
+                                    'Create Account'
                                 )}
                             </button>
                         </div>
@@ -410,12 +411,16 @@ export default function AdminSetupPage() {
                                 <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">One-time setup</span>
+                                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Already have an account?</span>
                             </div>
                         </div>
 
                         <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">
-                            <p>This page will be disabled after admin setup is complete</p>
+                            <p>
+                                <a href="/accounts/login" className="text-green-600 hover:text-green-700 font-medium">
+                                    Sign in to your account
+                                </a>
+                            </p>
                         </div>
                     </div>
                 </div>

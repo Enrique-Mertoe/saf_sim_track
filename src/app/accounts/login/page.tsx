@@ -1,6 +1,6 @@
 "use client"
-import {useState, useEffect} from 'react';
-import {Activity, Eye, EyeOff, Lock, User, Phone, AlertCircle} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {AlertCircle, Eye, EyeOff, Lock, Phone, User} from 'lucide-react';
 import toast from "react-hot-toast";
 import {authService} from "@/services";
 import {$} from "@/lib/request";
@@ -334,6 +334,13 @@ export default function LoginPage() {
                 >
                     Having trouble logging in? <a href="#" className="text-green-600 hover:text-green-700 font-medium">Contact
                     Support</a>
+                </motion.div>
+                <motion.div
+                    className="mt-2 text-gray-600 text-sm"
+                    variants={textVariants}
+                >
+                    Don't have an account? <a href="/accounts/register" className="text-green-600 hover:text-green-700 font-medium">Register
+                    Now</a>
                 </motion.div>
             </div>
         </>
