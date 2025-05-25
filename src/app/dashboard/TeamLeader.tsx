@@ -193,7 +193,7 @@ export default function TeamLeader() {
             const supabase = createSupabaseClient();
 
             // Fetch SIM cards for the team within the date range
-            const { data: simCards, error: simError } = await supabase
+            const {data: simCards, error: simError} = await supabase
                 .from('sim_cards')
                 .select('*')
                 .eq('team_id', user.team_id)
@@ -218,8 +218,8 @@ export default function TeamLeader() {
                 setDailyPerformanceData([]);
                 setStaffPerformanceData([]);
                 setQualityDistributionData([
-                    { name: 'Good Quality', value: 0 },
-                    { name: 'Poor Quality', value: 0 }
+                    {name: 'Good Quality', value: 0},
+                    {name: 'Poor Quality', value: 0}
                 ]);
                 setIsLoading(false);
                 return;
@@ -231,20 +231,20 @@ export default function TeamLeader() {
             const poorQuality = totalConnections - goodQuality;
 
             // Calculate poor quality breakdown
-            const topUpBelow50 = simCards.filter(sim => 
-                sim.quality !== SIMStatus.QUALITY && 
-                sim.top_up_amount && 
+            const topUpBelow50 = simCards.filter(sim =>
+                sim.quality !== SIMStatus.QUALITY &&
+                sim.top_up_amount &&
                 sim.top_up_amount < 50
             ).length;
 
-            const notTopUp = simCards.filter(sim => 
-                sim.quality !== SIMStatus.QUALITY && 
+            const notTopUp = simCards.filter(sim =>
+                sim.quality !== SIMStatus.QUALITY &&
                 (!sim.top_up_amount || sim.top_up_amount === 0)
             ).length;
 
-            const topUpNotConverted = simCards.filter(sim => 
-                sim.quality !== SIMStatus.QUALITY && 
-                sim.top_up_amount && 
+            const topUpNotConverted = simCards.filter(sim =>
+                sim.quality !== SIMStatus.QUALITY &&
+                sim.top_up_amount &&
                 sim.top_up_amount >= 50
             ).length;
 
@@ -268,7 +268,7 @@ export default function TeamLeader() {
                 const teamIds = [user.team_id];
 
                 // Fetch team data for each team
-                const { data: teams, error: teamsError } = await supabase
+                const {data: teams, error: teamsError} = await supabase
                     .from('teams')
                     .select('*')
                     .in('id', teamIds);
@@ -282,20 +282,20 @@ export default function TeamLeader() {
                     const teamGoodQuality = teamSims.filter(sim => sim.quality === SIMStatus.QUALITY).length;
                     const teamPoorQuality = teamTotalConnections - teamGoodQuality;
 
-                    const teamTopUpBelow50 = teamSims.filter(sim => 
-                        sim.quality !== SIMStatus.QUALITY && 
-                        sim.top_up_amount && 
+                    const teamTopUpBelow50 = teamSims.filter(sim =>
+                        sim.quality !== SIMStatus.QUALITY &&
+                        sim.top_up_amount &&
                         sim.top_up_amount < 50
                     ).length;
 
-                    const teamNotTopUp = teamSims.filter(sim => 
-                        sim.quality !== SIMStatus.QUALITY && 
+                    const teamNotTopUp = teamSims.filter(sim =>
+                        sim.quality !== SIMStatus.QUALITY &&
                         (!sim.top_up_amount || sim.top_up_amount === 0)
                     ).length;
 
-                    const teamTopUpNotConverted = teamSims.filter(sim => 
-                        sim.quality !== SIMStatus.QUALITY && 
-                        sim.top_up_amount && 
+                    const teamTopUpNotConverted = teamSims.filter(sim =>
+                        sim.quality !== SIMStatus.QUALITY &&
+                        sim.top_up_amount &&
                         sim.top_up_amount >= 50
                     ).length;
 
@@ -328,20 +328,20 @@ export default function TeamLeader() {
                     const staffGoodQuality = staffSims.filter(sim => sim.quality === SIMStatus.QUALITY).length;
                     const staffPoorQuality = staffTotalConnections - staffGoodQuality;
 
-                    const staffTopUpBelow50 = staffSims.filter(sim => 
-                        sim.quality !== SIMStatus.QUALITY && 
-                        sim.top_up_amount && 
+                    const staffTopUpBelow50 = staffSims.filter(sim =>
+                        sim.quality !== SIMStatus.QUALITY &&
+                        sim.top_up_amount &&
                         sim.top_up_amount < 50
                     ).length;
 
-                    const staffNotTopUp = staffSims.filter(sim => 
-                        sim.quality !== SIMStatus.QUALITY && 
+                    const staffNotTopUp = staffSims.filter(sim =>
+                        sim.quality !== SIMStatus.QUALITY &&
                         (!sim.top_up_amount || sim.top_up_amount === 0)
                     ).length;
 
-                    const staffTopUpNotConverted = staffSims.filter(sim => 
-                        sim.quality !== SIMStatus.QUALITY && 
-                        sim.top_up_amount && 
+                    const staffTopUpNotConverted = staffSims.filter(sim =>
+                        sim.quality !== SIMStatus.QUALITY &&
+                        sim.top_up_amount &&
                         sim.top_up_amount >= 50
                     ).length;
 
@@ -366,11 +366,11 @@ export default function TeamLeader() {
                 // Generate staff performance data for radar chart
                 if (staffMetricsData.length > 0) {
                     const radarData: StaffPerformanceData[] = [
-                        { subject: 'Sales Volume' },
-                        { subject: 'Quality %' },
-                        { subject: 'Top-ups' },
-                        { subject: 'Activations' },
-                        { subject: 'Customer Info' }
+                        {subject: 'Sales Volume'},
+                        {subject: 'Quality %'},
+                        {subject: 'Top-ups'},
+                        {subject: 'Activations'},
+                        {subject: 'Customer Info'}
                     ];
 
                     // Add data for each staff member (limit to top 5)
@@ -379,8 +379,8 @@ export default function TeamLeader() {
                         .slice(0, 5);
 
                     for (const staff of topStaff) {
-                        const qualityPercent = staff.metrics.totalConnections > 0 
-                            ? (staff.metrics.goodQuality / staff.metrics.totalConnections) * 100 
+                        const qualityPercent = staff.metrics.totalConnections > 0
+                            ? (staff.metrics.goodQuality / staff.metrics.totalConnections) * 100
                             : 0;
 
                         // Sales Volume
@@ -436,7 +436,7 @@ export default function TeamLeader() {
 
             // Convert to array format for chart
             const dailyChartData: DailyPerformanceData[] = Object.keys(dailyData).map(date => {
-                const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'short' });
+                const dayOfWeek = new Date(date).toLocaleDateString('en-US', {weekday: 'short'});
                 return {
                     day: dayOfWeek,
                     sales: dailyData[date].sales,
@@ -449,8 +449,8 @@ export default function TeamLeader() {
 
             // Generate quality distribution data
             setQualityDistributionData([
-                { name: 'Good Quality', value: goodQuality },
-                { name: 'Poor Quality', value: poorQuality }
+                {name: 'Good Quality', value: goodQuality},
+                {name: 'Poor Quality', value: poorQuality}
             ]);
 
         } catch (error) {
@@ -579,7 +579,8 @@ export default function TeamLeader() {
                     {/* Filter Panel */}
                     {showFilterPanel && (
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8 animate-fadeIn">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Filter Options</h2>
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Filter
+                                Options</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Date Range Filter */}
                                 <div>
@@ -622,7 +623,7 @@ export default function TeamLeader() {
                                     </label>
                                     <select
                                         value={filters.qualityType}
-                                        onChange={(e) => handleFilterChange({ qualityType: e.target.value as any })}
+                                        onChange={(e) => handleFilterChange({qualityType: e.target.value as any})}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                                     >
                                         <option value="all">All Connections</option>
@@ -634,12 +635,13 @@ export default function TeamLeader() {
                                 {/* Poor Quality Reason Filter (only shown when poor quality is selected) */}
                                 {filters.qualityType === 'poor' && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        <label
+                                            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             Poor Quality Reason
                                         </label>
                                         <select
                                             value={filters.poorQualityReason}
-                                            onChange={(e) => handleFilterChange({ poorQualityReason: e.target.value as any })}
+                                            onChange={(e) => handleFilterChange({poorQualityReason: e.target.value as any})}
                                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
                                         >
                                             <option value="all">All Reasons</option>
@@ -655,8 +657,8 @@ export default function TeamLeader() {
                                 <button
                                     type="button"
                                     onClick={
-                                    //@ts-ignore
-                                    () => handleFilterChange(getDefaultDateRange())}
+                                        //@ts-ignore
+                                        () => handleFilterChange(getDefaultDateRange())}
                                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 >
                                     Reset Filters
@@ -671,7 +673,8 @@ export default function TeamLeader() {
                             </div>
                         </div>
                     )}
-
+                    {/* Team Overview Stats */}
+                    <TeamStats members={teamHierachy!} teamInfo={teamData!}/>
                     {/* Quality Metrics Summary */}
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
                         <div className="flex justify-between items-center mb-4">
@@ -688,84 +691,136 @@ export default function TeamLeader() {
                             <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Total Van Connections</p>
+                                        <p className="text-sm font-medium text-indigo-800 dark:text-indigo-300">Total
+                                            Van Connections</p>
                                         <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-200">{overallMetrics.totalConnections.toLocaleString()}</p>
                                     </div>
                                     <div className="bg-indigo-100 dark:bg-indigo-800 p-2 rounded-full">
-                                        <Smartphone className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+                                        <Smartphone className="h-5 w-5 text-indigo-600 dark:text-indigo-300"/>
                                     </div>
                                 </div>
 
                                 {teamHierachy && teamHierachy.staff && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3 }}
+                                    <motion.div
+                                        initial={{opacity: 0, y: 10}}
+                                        animate={{opacity: 1, y: 0}}
+                                        transition={{duration: 0.3}}
                                         className="mt-4"
                                     >
                                         <div className="flex items-center">
                                             <div className="flex -space-x-2 overflow-hidden">
-                                                {teamHierachy.staff.slice(0, 5).map((member, index) => (
+                                                {teamHierachy.staff.slice(0, 5).map((member, index) => {
+                                                    //@ts-ignore
+                                                    const getInitials = (name) => {
+                                                        return name
+                                                            .split(' ')
+                                                            //@ts-ignore
+                                                            .map(word => word.charAt(0).toUpperCase())
+                                                            .slice(0, 2)
+                                                            .join('');
+                                                    };
+
+                                                    return (
+                                                        <motion.div
+                                                            key={member.user_id}
+                                                            className="flex h-5 w-5 rounded-full ring-1 ring-white dark:ring-gray-800 bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-[8px] font-black cursor-pointer hover:shadow-md transition-all duration-200 leading-none"
+                                                            whileHover={{scale: 1.1, zIndex: 10}}
+                                                            title={member.full_name}
+                                                            onClick={() => {
+                                                                dialog.create({
+                                                                    content: (
+                                                                        <div className="p-4">
+                                                                            <div className="flex items-center mb-3">
+                                                                                <div
+                                                                                    className="h-8 w-8 rounded-full bg-gradient-to-br flex from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-xs font-black mr-3 shadow-sm leading-none">
+                                                                                    {getInitials(member.full_name)}
+                                                                                </div>
+                                                                                <h3 className="text-base hidden font-semibold text-gray-900 dark:text-gray-100">{member.full_name}</h3>
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <div
+                                                                                    className="flex justify-between items-center py-1">
+                                                                                    <span
+                                                                                        className="text-sm text-gray-600 dark:text-gray-400">Connections:</span>
+                                                                                    <span
+                                                                                        className="text-sm font-semibold text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
+                                        {staffMetrics.find(s => s.userId === member.user_id)?.metrics.totalConnections || 0}
+                                    </span>
+                                                                                </div>
+                                                                                <div
+                                                                                    className="flex justify-between items-center py-1">
+                                                                                    <span
+                                                                                        className="text-sm text-gray-600 dark:text-gray-400">Role:</span>
+                                                                                    <span
+                                                                                        className="text-sm font-medium text-gray-900 dark:text-gray-100">{member.role}</span>
+                                                                                </div>
+                                                                                <div
+                                                                                    className="flex justify-between items-center py-1">
+                                                                                    <span
+                                                                                        className="text-sm text-gray-600 dark:text-gray-400">Staff Type:</span>
+                                                                                    <span
+                                                                                        className="text-sm font-medium text-gray-900 dark:text-gray-100">{member.staff_type}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ),
+                                                                    cancelable: true,
+                                                                    size: "sm"
+                                                                });
+                                                            }}
+                                                        >
+                                                            {getInitials(member.full_name)}
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                                {teamHierachy.staff.length > 5 && (
                                                     <motion.div
-                                                        key={member.user_id}
-                                                        className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-indigo-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                        whileHover={{ scale: 1.15, zIndex: 10 }}
-                                                        title={member.full_name}
+                                                        className="h-5 w-5 rounded-full ring-1 ring-white dark:ring-gray-800 bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-white text-[8px] font-black cursor-pointer hover:shadow-md transition-all duration-200"
+                                                        whileHover={{scale: 1.1, zIndex: 10}}
                                                         onClick={() => {
                                                             dialog.create({
                                                                 content: (
-                                                                    <div className="p-6">
-                                                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{member.full_name}</h3>
-                                                                        <div className="space-y-3">
-                                                                            <div className="flex justify-between">
-                                                                                <span className="text-gray-600 dark:text-gray-400">Total Connections:</span>
-                                                                                <span className="font-medium">{staffMetrics.find(s => s.userId === member.user_id)?.metrics.totalConnections || 0}</span>
-                                                                            </div>
-                                                                            <div className="flex justify-between">
-                                                                                <span className="text-gray-600 dark:text-gray-400">Role:</span>
-                                                                                <span className="font-medium">{member.role}</span>
-                                                                            </div>
-                                                                            <div className="flex justify-between">
-                                                                                <span className="text-gray-600 dark:text-gray-400">Staff Type:</span>
-                                                                                <span className="font-medium">{member.staff_type}</span>
-                                                                            </div>
+                                                                    <div className="p-4">
+                                                                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">All
+                                                                            Team Members
+                                                                            ({teamHierachy.staff.length})</h3>
+                                                                        <div
+                                                                            className="space-y-2 max-h-80 overflow-y-auto">
+                                                                            {teamHierachy.staff.map(member => {
+                                                                                //@ts-ignore
+                                                                                const getInitials = (name) => {
+                                                                                    return name
+                                                                                        .split(' ')
+                                                                                        //@ts-ignore
+                                                                                        .map(word => word.charAt(0).toUpperCase())
+                                                                                        .slice(0, 2)
+                                                                                        .join('');
+                                                                                };
+
+                                                                                return (
+                                                                                    <div key={member.user_id}
+                                                                                         className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                                                                                        <div
+                                                                                            className="flex items-center">
+                                                                                            <div
+                                                                                                className="h-5 w-5 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white text-[8px] font-black mr-3 shadow-sm leading-none">
+                                                                                                {getInitials(member.full_name)}
+                                                                                            </div>
+                                                                                            <span
+                                                                                                className="text-sm font-medium text-gray-700 dark:text-gray-300">{member.full_name}</span>
+                                                                                        </div>
+                                                                                        <span
+                                                                                            className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
+                                            {staffMetrics.find(s => s.userId === member.user_id)?.metrics.totalConnections || 0}
+                                        </span>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
                                                                         </div>
                                                                     </div>
                                                                 ),
                                                                 cancelable: true,
                                                                 size: "sm"
-                                                            });
-                                                        }}
-                                                    >
-                                                        {member.full_name.charAt(0)}
-                                                    </motion.div>
-                                                ))}
-                                                {teamHierachy.staff.length > 5 && (
-                                                    <motion.div
-                                                        className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                        whileHover={{ scale: 1.15, zIndex: 10 }}
-                                                        onClick={() => {
-                                                            dialog.create({
-                                                                content: (
-                                                                    <div className="p-6">
-                                                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">All Team Members</h3>
-                                                                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                                                                            {teamHierachy.staff.map(member => (
-                                                                                <div key={member.user_id} className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
-                                                                                    <div className="flex items-center">
-                                                                                        <div className="h-8 w-8 rounded-full bg-indigo-400 flex items-center justify-center text-white text-xs font-medium mr-3">
-                                                                                            {member.full_name.charAt(0)}
-                                                                                        </div>
-                                                                                        <span>{member.full_name}</span>
-                                                                                    </div>
-                                                                                    <span className="font-medium">{staffMetrics.find(s => s.userId === member.user_id)?.metrics.totalConnections || 0}</span>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                ),
-                                                                cancelable: true,
-                                                                size: "md"
                                                             });
                                                         }}
                                                     >
@@ -785,19 +840,20 @@ export default function TeamLeader() {
                             <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="text-sm font-medium text-green-800 dark:text-green-300">Good Quality</p>
+                                        <p className="text-sm font-medium text-green-800 dark:text-green-300">Good
+                                            Quality</p>
                                         <p className="text-2xl font-bold text-green-900 dark:text-green-200">{overallMetrics.goodQuality.toLocaleString()}</p>
                                     </div>
                                     <div className="bg-green-100 dark:bg-green-800 p-2 rounded-full">
-                                        <Award className="h-5 w-5 text-green-600 dark:text-green-300" />
+                                        <Award className="h-5 w-5 text-green-600 dark:text-green-300"/>
                                     </div>
                                 </div>
 
                                 {teamHierachy && teamHierachy.staff && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: 0.1 }}
+                                    <motion.div
+                                        initial={{opacity: 0, y: 10}}
+                                        animate={{opacity: 1, y: 0}}
+                                        transition={{duration: 0.3, delay: 0.1}}
                                         className="mt-4"
                                     >
                                         <div className="flex items-center">
@@ -812,7 +868,7 @@ export default function TeamLeader() {
                                                         <motion.div
                                                             key={member.user_id}
                                                             className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-green-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                            whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                            whileHover={{scale: 1.15, zIndex: 10}}
                                                             title={member.full_name}
                                                             onClick={() => {
                                                                 const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -822,18 +878,23 @@ export default function TeamLeader() {
                                                                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{member.full_name}</h3>
                                                                             <div className="space-y-3">
                                                                                 <div className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400">Good Quality:</span>
-                                                                                    <span className="font-medium">{metrics?.goodQuality || 0}</span>
+                                                                                    <span
+                                                                                        className="text-gray-600 dark:text-gray-400">Good Quality:</span>
+                                                                                    <span
+                                                                                        className="font-medium">{metrics?.goodQuality || 0}</span>
                                                                                 </div>
                                                                                 <div className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400">Total Connections:</span>
-                                                                                    <span className="font-medium">{metrics?.totalConnections || 0}</span>
+                                                                                    <span
+                                                                                        className="text-gray-600 dark:text-gray-400">Total Connections:</span>
+                                                                                    <span
+                                                                                        className="font-medium">{metrics?.totalConnections || 0}</span>
                                                                                 </div>
                                                                                 <div className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400">Quality Rate:</span>
+                                                                                    <span
+                                                                                        className="text-gray-600 dark:text-gray-400">Quality Rate:</span>
                                                                                     <span className="font-medium">
-                                                                                        {metrics && metrics.totalConnections > 0 
-                                                                                            ? `${Math.round((metrics.goodQuality / metrics.totalConnections) * 100)}%` 
+                                                                                        {metrics && metrics.totalConnections > 0
+                                                                                            ? `${Math.round((metrics.goodQuality / metrics.totalConnections) * 100)}%`
                                                                                             : '0%'}
                                                                                     </span>
                                                                                 </div>
@@ -854,13 +915,15 @@ export default function TeamLeader() {
                                                 }).length > 5 && (
                                                     <motion.div
                                                         className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                        whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                        whileHover={{scale: 1.15, zIndex: 10}}
                                                         onClick={() => {
                                                             dialog.create({
                                                                 content: (
                                                                     <div className="p-6">
-                                                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff with Good Quality</h3>
-                                                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff
+                                                                            with Good Quality</h3>
+                                                                        <div
+                                                                            className="space-y-3 max-h-96 overflow-y-auto">
                                                                             {teamHierachy.staff
                                                                                 .filter(member => {
                                                                                     const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -874,14 +937,18 @@ export default function TeamLeader() {
                                                                                 .map(member => {
                                                                                     const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
                                                                                     return (
-                                                                                        <div key={member.user_id} className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
-                                                                                            <div className="flex items-center">
-                                                                                                <div className="h-8 w-8 rounded-full bg-green-400 flex items-center justify-center text-white text-xs font-medium mr-3">
+                                                                                        <div key={member.user_id}
+                                                                                             className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
+                                                                                            <div
+                                                                                                className="flex items-center">
+                                                                                                <div
+                                                                                                    className="h-8 w-8 rounded-full bg-green-400 flex items-center justify-center text-white text-xs font-medium mr-3">
                                                                                                     {member.full_name.charAt(0)}
                                                                                                 </div>
                                                                                                 <span>{member.full_name}</span>
                                                                                             </div>
-                                                                                            <span className="font-medium">{metrics?.goodQuality || 0}</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.goodQuality || 0}</span>
                                                                                         </div>
                                                                                     );
                                                                                 })}
@@ -894,9 +961,9 @@ export default function TeamLeader() {
                                                         }}
                                                     >
                                                         +{teamHierachy.staff.filter(member => {
-                                                            const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
-                                                            return metrics && metrics.goodQuality > 0;
-                                                        }).length - 5}
+                                                        const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
+                                                        return metrics && metrics.goodQuality > 0;
+                                                    }).length - 5}
                                                     </motion.div>
                                                 )}
                                             </div>
@@ -915,19 +982,20 @@ export default function TeamLeader() {
                             <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="text-sm font-medium text-red-800 dark:text-red-300">Poor Quality</p>
+                                        <p className="text-sm font-medium text-red-800 dark:text-red-300">Poor
+                                            Quality</p>
                                         <p className="text-2xl font-bold text-red-900 dark:text-red-200">{overallMetrics.poorQuality.toLocaleString()}</p>
                                     </div>
                                     <div className="bg-red-100 dark:bg-red-800 p-2 rounded-full">
-                                        <Info className="h-5 w-5 text-red-600 dark:text-red-300" />
+                                        <Info className="h-5 w-5 text-red-600 dark:text-red-300"/>
                                     </div>
                                 </div>
 
                                 {teamHierachy && teamHierachy.staff && (
-                                    <motion.div 
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: 0.2 }}
+                                    <motion.div
+                                        initial={{opacity: 0, y: 10}}
+                                        animate={{opacity: 1, y: 0}}
+                                        transition={{duration: 0.3, delay: 0.2}}
                                         className="mt-4"
                                     >
                                         <div className="flex items-center">
@@ -942,7 +1010,7 @@ export default function TeamLeader() {
                                                         <motion.div
                                                             key={member.user_id}
                                                             className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-red-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                            whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                            whileHover={{scale: 1.15, zIndex: 10}}
                                                             title={member.full_name}
                                                             onClick={() => {
                                                                 const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -952,37 +1020,53 @@ export default function TeamLeader() {
                                                                             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">{member.full_name}</h3>
                                                                             <div className="space-y-3">
                                                                                 <div className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400">Poor Quality:</span>
-                                                                                    <span className="font-medium">{metrics?.poorQuality || 0}</span>
+                                                                                    <span
+                                                                                        className="text-gray-600 dark:text-gray-400">Poor Quality:</span>
+                                                                                    <span
+                                                                                        className="font-medium">{metrics?.poorQuality || 0}</span>
                                                                                 </div>
                                                                                 <div className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400">Total Connections:</span>
-                                                                                    <span className="font-medium">{metrics?.totalConnections || 0}</span>
+                                                                                    <span
+                                                                                        className="text-gray-600 dark:text-gray-400">Total Connections:</span>
+                                                                                    <span
+                                                                                        className="font-medium">{metrics?.totalConnections || 0}</span>
                                                                                 </div>
                                                                                 <div className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400">Poor Quality Rate:</span>
+                                                                                    <span
+                                                                                        className="text-gray-600 dark:text-gray-400">Poor Quality Rate:</span>
                                                                                     <span className="font-medium">
-                                                                                        {metrics && metrics.totalConnections > 0 
-                                                                                            ? `${Math.round((metrics.poorQuality / metrics.totalConnections) * 100)}%` 
+                                                                                        {metrics && metrics.totalConnections > 0
+                                                                                            ? `${Math.round((metrics.poorQuality / metrics.totalConnections) * 100)}%`
                                                                                             : '0%'}
                                                                                     </span>
                                                                                 </div>
                                                                                 {metrics && metrics.poorQuality > 0 && (
                                                                                     <>
-                                                                                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                                                                            <h4 className="font-medium mb-2">Poor Quality Breakdown</h4>
+                                                                                        <div
+                                                                                            className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                                                            <h4 className="font-medium mb-2">Poor
+                                                                                                Quality Breakdown</h4>
                                                                                             <div className="space-y-2">
-                                                                                                <div className="flex justify-between">
-                                                                                                    <span className="text-gray-600 dark:text-gray-400">Top-up Below 50:</span>
-                                                                                                    <span className="font-medium">{metrics.poorQualityBreakdown.topUpBelow50}</span>
+                                                                                                <div
+                                                                                                    className="flex justify-between">
+                                                                                                    <span
+                                                                                                        className="text-gray-600 dark:text-gray-400">Top-up Below 50:</span>
+                                                                                                    <span
+                                                                                                        className="font-medium">{metrics.poorQualityBreakdown.topUpBelow50}</span>
                                                                                                 </div>
-                                                                                                <div className="flex justify-between">
-                                                                                                    <span className="text-gray-600 dark:text-gray-400">Not Topped Up:</span>
-                                                                                                    <span className="font-medium">{metrics.poorQualityBreakdown.notTopUp}</span>
+                                                                                                <div
+                                                                                                    className="flex justify-between">
+                                                                                                    <span
+                                                                                                        className="text-gray-600 dark:text-gray-400">Not Topped Up:</span>
+                                                                                                    <span
+                                                                                                        className="font-medium">{metrics.poorQualityBreakdown.notTopUp}</span>
                                                                                                 </div>
-                                                                                                <div className="flex justify-between">
-                                                                                                    <span className="text-gray-600 dark:text-gray-400">Topped Up But Not Converted:</span>
-                                                                                                    <span className="font-medium">{metrics.poorQualityBreakdown.topUpNotConverted}</span>
+                                                                                                <div
+                                                                                                    className="flex justify-between">
+                                                                                                    <span
+                                                                                                        className="text-gray-600 dark:text-gray-400">Topped Up But Not Converted:</span>
+                                                                                                    <span
+                                                                                                        className="font-medium">{metrics.poorQualityBreakdown.topUpNotConverted}</span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
@@ -1005,13 +1089,15 @@ export default function TeamLeader() {
                                                 }).length > 5 && (
                                                     <motion.div
                                                         className="inline-block h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-800 bg-gray-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                        whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                        whileHover={{scale: 1.15, zIndex: 10}}
                                                         onClick={() => {
                                                             dialog.create({
                                                                 content: (
                                                                     <div className="p-6">
-                                                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff with Poor Quality</h3>
-                                                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff
+                                                                            with Poor Quality</h3>
+                                                                        <div
+                                                                            className="space-y-3 max-h-96 overflow-y-auto">
                                                                             {teamHierachy.staff
                                                                                 .filter(member => {
                                                                                     const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1025,14 +1111,18 @@ export default function TeamLeader() {
                                                                                 .map(member => {
                                                                                     const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
                                                                                     return (
-                                                                                        <div key={member.user_id} className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
-                                                                                            <div className="flex items-center">
-                                                                                                <div className="h-8 w-8 rounded-full bg-red-400 flex items-center justify-center text-white text-xs font-medium mr-3">
+                                                                                        <div key={member.user_id}
+                                                                                             className="flex justify-between items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
+                                                                                            <div
+                                                                                                className="flex items-center">
+                                                                                                <div
+                                                                                                    className="h-8 w-8 rounded-full bg-red-400 flex items-center justify-center text-white text-xs font-medium mr-3">
                                                                                                     {member.full_name.charAt(0)}
                                                                                                 </div>
                                                                                                 <span>{member.full_name}</span>
                                                                                             </div>
-                                                                                            <span className="font-medium">{metrics?.poorQuality || 0}</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQuality || 0}</span>
                                                                                         </div>
                                                                                     );
                                                                                 })}
@@ -1045,9 +1135,9 @@ export default function TeamLeader() {
                                                         }}
                                                     >
                                                         +{teamHierachy.staff.filter(member => {
-                                                            const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
-                                                            return metrics && metrics.poorQuality > 0;
-                                                        }).length - 5}
+                                                        const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
+                                                        return metrics && metrics.poorQuality > 0;
+                                                    }).length - 5}
                                                     </motion.div>
                                                 )}
                                             </div>
@@ -1066,26 +1156,28 @@ export default function TeamLeader() {
                         {/* Poor Quality Breakdown */}
                         {overallMetrics.poorQuality > 0 && (
                             <div className="mt-6">
-                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Poor Quality Breakdown</h3>
+                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Poor Quality
+                                    Breakdown</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Top-up Below 50 */}
                                     <div className="bg-amber-50 dark:bg-amber-900/30 p-3 rounded-lg">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Line Top-up Below 50</p>
+                                                <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Line
+                                                    Top-up Below 50</p>
                                                 <p className="text-xl font-bold text-amber-900 dark:text-amber-200">{overallMetrics.poorQualityBreakdown.topUpBelow50.toLocaleString()}</p>
                                             </div>
                                             <div className="text-xs text-amber-700 dark:text-amber-400">
-                                                {overallMetrics.poorQuality > 0 ? 
+                                                {overallMetrics.poorQuality > 0 ?
                                                     Math.round((overallMetrics.poorQualityBreakdown.topUpBelow50 / overallMetrics.poorQuality) * 100) : 0}%
                                             </div>
                                         </div>
 
                                         {teamHierachy && teamHierachy.staff && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, y: 5 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3, delay: 0.1 }}
+                                            <motion.div
+                                                initial={{opacity: 0, y: 5}}
+                                                animate={{opacity: 1, y: 0}}
+                                                transition={{duration: 0.3, delay: 0.1}}
                                                 className="mt-2"
                                             >
                                                 <div className="flex items-center">
@@ -1100,7 +1192,7 @@ export default function TeamLeader() {
                                                                 <motion.div
                                                                     key={member.user_id}
                                                                     className="inline-block h-6 w-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-amber-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                                    whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                                    whileHover={{scale: 1.15, zIndex: 10}}
                                                                     title={member.full_name}
                                                                     onClick={() => {
                                                                         const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1109,13 +1201,19 @@ export default function TeamLeader() {
                                                                                 <div className="p-4">
                                                                                     <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">{member.full_name}</h3>
                                                                                     <div className="space-y-2">
-                                                                                        <div className="flex justify-between">
-                                                                                            <span className="text-gray-600 dark:text-gray-400">Top-up Below 50:</span>
-                                                                                            <span className="font-medium">{metrics?.poorQualityBreakdown.topUpBelow50 || 0}</span>
+                                                                                        <div
+                                                                                            className="flex justify-between">
+                                                                                            <span
+                                                                                                className="text-gray-600 dark:text-gray-400">Top-up Below 50:</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQualityBreakdown.topUpBelow50 || 0}</span>
                                                                                         </div>
-                                                                                        <div className="flex justify-between">
-                                                                                            <span className="text-gray-600 dark:text-gray-400">Total Poor Quality:</span>
-                                                                                            <span className="font-medium">{metrics?.poorQuality || 0}</span>
+                                                                                        <div
+                                                                                            className="flex justify-between">
+                                                                                            <span
+                                                                                                className="text-gray-600 dark:text-gray-400">Total Poor Quality:</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQuality || 0}</span>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -1134,13 +1232,15 @@ export default function TeamLeader() {
                                                         }).length > 3 && (
                                                             <motion.div
                                                                 className="inline-block h-6 w-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-gray-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                                whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                                whileHover={{scale: 1.15, zIndex: 10}}
                                                                 onClick={() => {
                                                                     dialog.create({
                                                                         content: (
                                                                             <div className="p-4">
-                                                                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Staff with Top-up Below 50</h3>
-                                                                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Staff
+                                                                                    with Top-up Below 50</h3>
+                                                                                <div
+                                                                                    className="space-y-2 max-h-60 overflow-y-auto">
                                                                                     {teamHierachy.staff
                                                                                         .filter(member => {
                                                                                             const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1154,14 +1254,20 @@ export default function TeamLeader() {
                                                                                         .map(member => {
                                                                                             const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
                                                                                             return (
-                                                                                                <div key={member.user_id} className="flex justify-between items-center p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
-                                                                                                    <div className="flex items-center">
-                                                                                                        <div className="h-6 w-6 rounded-full bg-amber-400 flex items-center justify-center text-white text-xs font-medium mr-2">
+                                                                                                <div
+                                                                                                    key={member.user_id}
+                                                                                                    className="flex justify-between items-center p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
+                                                                                                    <div
+                                                                                                        className="flex items-center">
+                                                                                                        <div
+                                                                                                            className="h-6 w-6 rounded-full bg-amber-400 flex items-center justify-center text-white text-xs font-medium mr-2">
                                                                                                             {member.full_name.charAt(0)}
                                                                                                         </div>
-                                                                                                        <span className="text-sm">{member.full_name}</span>
+                                                                                                        <span
+                                                                                                            className="text-sm">{member.full_name}</span>
                                                                                                     </div>
-                                                                                                    <span className="font-medium text-sm">{metrics?.poorQualityBreakdown.topUpBelow50 || 0}</span>
+                                                                                                    <span
+                                                                                                        className="font-medium text-sm">{metrics?.poorQualityBreakdown.topUpBelow50 || 0}</span>
                                                                                                 </div>
                                                                                             );
                                                                                         })}
@@ -1174,9 +1280,9 @@ export default function TeamLeader() {
                                                                 }}
                                                             >
                                                                 +{teamHierachy.staff.filter(member => {
-                                                                    const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
-                                                                    return metrics && metrics.poorQualityBreakdown.topUpBelow50 > 0;
-                                                                }).length - 3}
+                                                                const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
+                                                                return metrics && metrics.poorQualityBreakdown.topUpBelow50 > 0;
+                                                            }).length - 3}
                                                             </motion.div>
                                                         )}
                                                     </div>
@@ -1189,20 +1295,21 @@ export default function TeamLeader() {
                                     <div className="bg-orange-50 dark:bg-orange-900/30 p-3 rounded-lg">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <p className="text-xs font-medium text-orange-800 dark:text-orange-300">Line Not Topped Up</p>
+                                                <p className="text-xs font-medium text-orange-800 dark:text-orange-300">Line
+                                                    Not Topped Up</p>
                                                 <p className="text-xl font-bold text-orange-900 dark:text-orange-200">{overallMetrics.poorQualityBreakdown.notTopUp.toLocaleString()}</p>
                                             </div>
                                             <div className="text-xs text-orange-700 dark:text-orange-400">
-                                                {overallMetrics.poorQuality > 0 ? 
+                                                {overallMetrics.poorQuality > 0 ?
                                                     Math.round((overallMetrics.poorQualityBreakdown.notTopUp / overallMetrics.poorQuality) * 100) : 0}%
                                             </div>
                                         </div>
 
                                         {teamHierachy && teamHierachy.staff && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, y: 5 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3, delay: 0.15 }}
+                                            <motion.div
+                                                initial={{opacity: 0, y: 5}}
+                                                animate={{opacity: 1, y: 0}}
+                                                transition={{duration: 0.3, delay: 0.15}}
                                                 className="mt-2"
                                             >
                                                 <div className="flex items-center">
@@ -1217,7 +1324,7 @@ export default function TeamLeader() {
                                                                 <motion.div
                                                                     key={member.user_id}
                                                                     className="inline-block h-6 w-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-orange-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                                    whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                                    whileHover={{scale: 1.15, zIndex: 10}}
                                                                     title={member.full_name}
                                                                     onClick={() => {
                                                                         const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1226,13 +1333,19 @@ export default function TeamLeader() {
                                                                                 <div className="p-4">
                                                                                     <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">{member.full_name}</h3>
                                                                                     <div className="space-y-2">
-                                                                                        <div className="flex justify-between">
-                                                                                            <span className="text-gray-600 dark:text-gray-400">Not Topped Up:</span>
-                                                                                            <span className="font-medium">{metrics?.poorQualityBreakdown.notTopUp || 0}</span>
+                                                                                        <div
+                                                                                            className="flex justify-between">
+                                                                                            <span
+                                                                                                className="text-gray-600 dark:text-gray-400">Not Topped Up:</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQualityBreakdown.notTopUp || 0}</span>
                                                                                         </div>
-                                                                                        <div className="flex justify-between">
-                                                                                            <span className="text-gray-600 dark:text-gray-400">Total Poor Quality:</span>
-                                                                                            <span className="font-medium">{metrics?.poorQuality || 0}</span>
+                                                                                        <div
+                                                                                            className="flex justify-between">
+                                                                                            <span
+                                                                                                className="text-gray-600 dark:text-gray-400">Total Poor Quality:</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQuality || 0}</span>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -1251,13 +1364,15 @@ export default function TeamLeader() {
                                                         }).length > 3 && (
                                                             <motion.div
                                                                 className="inline-block h-6 w-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-gray-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                                whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                                whileHover={{scale: 1.15, zIndex: 10}}
                                                                 onClick={() => {
                                                                     dialog.create({
                                                                         content: (
                                                                             <div className="p-4">
-                                                                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Staff with Not Topped Up</h3>
-                                                                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Staff
+                                                                                    with Not Topped Up</h3>
+                                                                                <div
+                                                                                    className="space-y-2 max-h-60 overflow-y-auto">
                                                                                     {teamHierachy.staff
                                                                                         .filter(member => {
                                                                                             const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1271,14 +1386,20 @@ export default function TeamLeader() {
                                                                                         .map(member => {
                                                                                             const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
                                                                                             return (
-                                                                                                <div key={member.user_id} className="flex justify-between items-center p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
-                                                                                                    <div className="flex items-center">
-                                                                                                        <div className="h-6 w-6 rounded-full bg-orange-400 flex items-center justify-center text-white text-xs font-medium mr-2">
+                                                                                                <div
+                                                                                                    key={member.user_id}
+                                                                                                    className="flex justify-between items-center p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
+                                                                                                    <div
+                                                                                                        className="flex items-center">
+                                                                                                        <div
+                                                                                                            className="h-6 w-6 rounded-full bg-orange-400 flex items-center justify-center text-white text-xs font-medium mr-2">
                                                                                                             {member.full_name.charAt(0)}
                                                                                                         </div>
-                                                                                                        <span className="text-sm">{member.full_name}</span>
+                                                                                                        <span
+                                                                                                            className="text-sm">{member.full_name}</span>
                                                                                                     </div>
-                                                                                                    <span className="font-medium text-sm">{metrics?.poorQualityBreakdown.notTopUp || 0}</span>
+                                                                                                    <span
+                                                                                                        className="font-medium text-sm">{metrics?.poorQualityBreakdown.notTopUp || 0}</span>
                                                                                                 </div>
                                                                                             );
                                                                                         })}
@@ -1291,9 +1412,9 @@ export default function TeamLeader() {
                                                                 }}
                                                             >
                                                                 +{teamHierachy.staff.filter(member => {
-                                                                    const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
-                                                                    return metrics && metrics.poorQualityBreakdown.notTopUp > 0;
-                                                                }).length - 3}
+                                                                const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
+                                                                return metrics && metrics.poorQualityBreakdown.notTopUp > 0;
+                                                            }).length - 3}
                                                             </motion.div>
                                                         )}
                                                     </div>
@@ -1306,20 +1427,21 @@ export default function TeamLeader() {
                                     <div className="bg-rose-50 dark:bg-rose-900/30 p-3 rounded-lg">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <p className="text-xs font-medium text-rose-800 dark:text-rose-300">Topped Up But Not Converted</p>
+                                                <p className="text-xs font-medium text-rose-800 dark:text-rose-300">Topped
+                                                    Up But Not Converted</p>
                                                 <p className="text-xl font-bold text-rose-900 dark:text-rose-200">{overallMetrics.poorQualityBreakdown.topUpNotConverted.toLocaleString()}</p>
                                             </div>
                                             <div className="text-xs text-rose-700 dark:text-rose-400">
-                                                {overallMetrics.poorQuality > 0 ? 
+                                                {overallMetrics.poorQuality > 0 ?
                                                     Math.round((overallMetrics.poorQualityBreakdown.topUpNotConverted / overallMetrics.poorQuality) * 100) : 0}%
                                             </div>
                                         </div>
 
                                         {teamHierachy && teamHierachy.staff && (
-                                            <motion.div 
-                                                initial={{ opacity: 0, y: 5 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3, delay: 0.2 }}
+                                            <motion.div
+                                                initial={{opacity: 0, y: 5}}
+                                                animate={{opacity: 1, y: 0}}
+                                                transition={{duration: 0.3, delay: 0.2}}
                                                 className="mt-2"
                                             >
                                                 <div className="flex items-center">
@@ -1334,7 +1456,7 @@ export default function TeamLeader() {
                                                                 <motion.div
                                                                     key={member.user_id}
                                                                     className="inline-block h-6 w-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-rose-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                                    whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                                    whileHover={{scale: 1.15, zIndex: 10}}
                                                                     title={member.full_name}
                                                                     onClick={() => {
                                                                         const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1343,13 +1465,19 @@ export default function TeamLeader() {
                                                                                 <div className="p-4">
                                                                                     <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">{member.full_name}</h3>
                                                                                     <div className="space-y-2">
-                                                                                        <div className="flex justify-between">
-                                                                                            <span className="text-gray-600 dark:text-gray-400">Topped Up But Not Converted:</span>
-                                                                                            <span className="font-medium">{metrics?.poorQualityBreakdown.topUpNotConverted || 0}</span>
+                                                                                        <div
+                                                                                            className="flex justify-between">
+                                                                                            <span
+                                                                                                className="text-gray-600 dark:text-gray-400">Topped Up But Not Converted:</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQualityBreakdown.topUpNotConverted || 0}</span>
                                                                                         </div>
-                                                                                        <div className="flex justify-between">
-                                                                                            <span className="text-gray-600 dark:text-gray-400">Total Poor Quality:</span>
-                                                                                            <span className="font-medium">{metrics?.poorQuality || 0}</span>
+                                                                                        <div
+                                                                                            className="flex justify-between">
+                                                                                            <span
+                                                                                                className="text-gray-600 dark:text-gray-400">Total Poor Quality:</span>
+                                                                                            <span
+                                                                                                className="font-medium">{metrics?.poorQuality || 0}</span>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
@@ -1368,13 +1496,16 @@ export default function TeamLeader() {
                                                         }).length > 3 && (
                                                             <motion.div
                                                                 className="inline-block h-6 w-6 rounded-full ring-1 ring-white dark:ring-gray-800 bg-gray-400 flex items-center justify-center text-white text-xs font-medium cursor-pointer hover:z-10 hover:scale-110 transition-all duration-200"
-                                                                whileHover={{ scale: 1.15, zIndex: 10 }}
+                                                                whileHover={{scale: 1.15, zIndex: 10}}
                                                                 onClick={() => {
                                                                     dialog.create({
                                                                         content: (
                                                                             <div className="p-4">
-                                                                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Staff with Topped Up But Not Converted</h3>
-                                                                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                                                <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Staff
+                                                                                    with Topped Up But Not
+                                                                                    Converted</h3>
+                                                                                <div
+                                                                                    className="space-y-2 max-h-60 overflow-y-auto">
                                                                                     {teamHierachy.staff
                                                                                         .filter(member => {
                                                                                             const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
@@ -1388,14 +1519,20 @@ export default function TeamLeader() {
                                                                                         .map(member => {
                                                                                             const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
                                                                                             return (
-                                                                                                <div key={member.user_id} className="flex justify-between items-center p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
-                                                                                                    <div className="flex items-center">
-                                                                                                        <div className="h-6 w-6 rounded-full bg-rose-400 flex items-center justify-center text-white text-xs font-medium mr-2">
+                                                                                                <div
+                                                                                                    key={member.user_id}
+                                                                                                    className="flex justify-between items-center p-1 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
+                                                                                                    <div
+                                                                                                        className="flex items-center">
+                                                                                                        <div
+                                                                                                            className="h-6 w-6 rounded-full bg-rose-400 flex items-center justify-center text-white text-xs font-medium mr-2">
                                                                                                             {member.full_name.charAt(0)}
                                                                                                         </div>
-                                                                                                        <span className="text-sm">{member.full_name}</span>
+                                                                                                        <span
+                                                                                                            className="text-sm">{member.full_name}</span>
                                                                                                     </div>
-                                                                                                    <span className="font-medium text-sm">{metrics?.poorQualityBreakdown.topUpNotConverted || 0}</span>
+                                                                                                    <span
+                                                                                                        className="font-medium text-sm">{metrics?.poorQualityBreakdown.topUpNotConverted || 0}</span>
                                                                                                 </div>
                                                                                             );
                                                                                         })}
@@ -1408,9 +1545,9 @@ export default function TeamLeader() {
                                                                 }}
                                                             >
                                                                 +{teamHierachy.staff.filter(member => {
-                                                                    const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
-                                                                    return metrics && metrics.poorQualityBreakdown.topUpNotConverted > 0;
-                                                                }).length - 3}
+                                                                const metrics = staffMetrics.find(s => s.userId === member.user_id)?.metrics;
+                                                                return metrics && metrics.poorQualityBreakdown.topUpNotConverted > 0;
+                                                            }).length - 3}
                                                             </motion.div>
                                                         )}
                                                     </div>
@@ -1423,14 +1560,13 @@ export default function TeamLeader() {
                         )}
                     </div>
 
-                    {/* Team Overview Stats */}
-                    <TeamStats members={teamHierachy!} teamInfo={teamData!}/>
 
                     {/* Team Performance Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         {/* Daily Performance Chart */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-gray-900">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Daily Performance</h2>
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Daily
+                                Performance</h2>
                             <div className="h-72">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart
@@ -1438,7 +1574,8 @@ export default function TeamLeader() {
                                         margin={{top: 5, right: 30, left: 20, bottom: 5}}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.8}/>
-                                        <XAxis dataKey="day" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false}/>
+                                        <XAxis dataKey="day" stroke="#6b7280" fontSize={12} tickLine={false}
+                                               axisLine={false}/>
                                         <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false}/>
                                         <Tooltip
                                             contentStyle={{
@@ -1449,8 +1586,10 @@ export default function TeamLeader() {
                                         />
                                         <Legend/>
                                         <Bar dataKey="sales" name="Total Sales" fill="#6366f1" radius={[4, 4, 0, 0]}/>
-                                        <Bar dataKey="quality" name="Quality Sales" fill="#4ade80" radius={[4, 4, 0, 0]}/>
-                                        <Line type="monotone" dataKey="target" name="Target" stroke="#f59e0b" strokeWidth={2} dot={{r: 4}}/>
+                                        <Bar dataKey="quality" name="Quality Sales" fill="#4ade80"
+                                             radius={[4, 4, 0, 0]}/>
+                                        <Line type="monotone" dataKey="target" name="Target" stroke="#f59e0b"
+                                              strokeWidth={2} dot={{r: 4}}/>
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -1458,7 +1597,8 @@ export default function TeamLeader() {
 
                         {/* Staff Comparison Chart */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-gray-900">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff Performance Comparison</h2>
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff Performance
+                                Comparison</h2>
                             <div className="h-72">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RadarChart outerRadius={90} data={staffPerformanceData}>
@@ -1468,11 +1608,11 @@ export default function TeamLeader() {
                                         {staffMetrics.slice(0, 5).map((staff, index) => {
                                             const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe'];
                                             return (
-                                                <Radar 
+                                                <Radar
                                                     key={staff.userId}
-                                                    name={staff.fullName} 
-                                                    dataKey={staff.fullName} 
-                                                    stroke={colors[index % colors.length]} 
+                                                    name={staff.fullName}
+                                                    dataKey={staff.fullName}
+                                                    stroke={colors[index % colors.length]}
                                                     fill={colors[index % colors.length]}
                                                     fillOpacity={0.5}
                                                 />
@@ -1501,7 +1641,8 @@ export default function TeamLeader() {
 
                         {/* Quality Distribution */}
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Quality Distribution</h2>
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Quality
+                                Distribution</h2>
                             <div className="h-60">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
@@ -1527,20 +1668,26 @@ export default function TeamLeader() {
                             <div className="mt-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
-                                        <div className="text-xs text-green-800 dark:text-green-300 font-medium">Good Quality</div>
-                                        <div className="text-xl font-bold text-green-900 dark:text-green-200">{overallMetrics.goodQuality}</div>
+                                        <div className="text-xs text-green-800 dark:text-green-300 font-medium">Good
+                                            Quality
+                                        </div>
+                                        <div
+                                            className="text-xl font-bold text-green-900 dark:text-green-200">{overallMetrics.goodQuality}</div>
                                         <div className="text-xs text-green-700 dark:text-green-400">
-                                            {overallMetrics.totalConnections > 0 ? 
-                                                `${Math.round((overallMetrics.goodQuality / overallMetrics.totalConnections) * 100)}% of total` : 
+                                            {overallMetrics.totalConnections > 0 ?
+                                                `${Math.round((overallMetrics.goodQuality / overallMetrics.totalConnections) * 100)}% of total` :
                                                 '0% of total'}
                                         </div>
                                     </div>
                                     <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
-                                        <div className="text-xs text-red-800 dark:text-red-300 font-medium">Poor Quality</div>
-                                        <div className="text-xl font-bold text-red-900 dark:text-red-200">{overallMetrics.poorQuality}</div>
+                                        <div className="text-xs text-red-800 dark:text-red-300 font-medium">Poor
+                                            Quality
+                                        </div>
+                                        <div
+                                            className="text-xl font-bold text-red-900 dark:text-red-200">{overallMetrics.poorQuality}</div>
                                         <div className="text-xs text-red-700 dark:text-red-400">
-                                            {overallMetrics.totalConnections > 0 ? 
-                                                `${Math.round((overallMetrics.poorQuality / overallMetrics.totalConnections) * 100)}% of total` : 
+                                            {overallMetrics.totalConnections > 0 ?
+                                                `${Math.round((overallMetrics.poorQuality / overallMetrics.totalConnections) * 100)}% of total` :
                                                 '0% of total'}
                                         </div>
                                     </div>
@@ -1552,107 +1699,123 @@ export default function TeamLeader() {
                     {/* Staff Performance Details */}
                     {staffMetrics.length > 0 && (
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff Performance Details</h2>
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Staff Performance
+                                Details</h2>
 
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                     <thead className="bg-gray-50 dark:bg-gray-800">
-                                        <tr>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Staff Name
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Total Connections
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Good Quality
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Poor Quality
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Quality %
-                                            </th>
-                                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
+                                    <tr>
+                                        <th scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Staff Name
+                                        </th>
+                                        <th scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Total Connections
+                                        </th>
+                                        <th scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Good Quality
+                                        </th>
+                                        <th scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Poor Quality
+                                        </th>
+                                        <th scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Quality %
+                                        </th>
+                                        <th scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
                                     </thead>
-                                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                        {staffMetrics.map((staff) => (
-                                            <React.Fragment key={staff.userId}>
-                                                <tr className={expandedStaff === staff.userId ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                                        {staff.fullName}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        {staff.metrics.totalConnections}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">
-                                                        {staff.metrics.goodQuality}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
-                                                        {staff.metrics.poorQuality}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        {staff.metrics.totalConnections > 0 ? 
-                                                            `${Math.round((staff.metrics.goodQuality / staff.metrics.totalConnections) * 100)}%` : 
-                                                            '0%'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                        <button
-                                                            onClick={() => toggleStaffDetails(staff.userId)}
-                                                            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
-                                                        >
-                                                            {expandedStaff === staff.userId ? 'Hide Details' : 'Show Details'}
-                                                        </button>
-                                                    </td>
-                                                </tr>
+                                    <tbody
+                                        className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {staffMetrics.map((staff) => (
+                                        <React.Fragment key={staff.userId}>
+                                            <tr className={expandedStaff === staff.userId ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                                    {staff.fullName}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    {staff.metrics.totalConnections}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400">
+                                                    {staff.metrics.goodQuality}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
+                                                    {staff.metrics.poorQuality}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    {staff.metrics.totalConnections > 0 ?
+                                                        `${Math.round((staff.metrics.goodQuality / staff.metrics.totalConnections) * 100)}%` :
+                                                        '0%'}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    <button
+                                                        onClick={() => toggleStaffDetails(staff.userId)}
+                                                        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
+                                                    >
+                                                        {expandedStaff === staff.userId ? 'Hide Details' : 'Show Details'}
+                                                    </button>
+                                                </td>
+                                            </tr>
 
-                                                {/* Expanded details row */}
-                                                {expandedStaff === staff.userId && (
-                                                    <tr className="bg-indigo-50 dark:bg-indigo-900/20">
-                                                        <td colSpan={6} className="px-6 py-4">
-                                                            <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                                <h4 className="font-medium mb-2">Poor Quality Breakdown</h4>
-                                                                <div className="grid grid-cols-3 gap-4">
-                                                                    <div>
-                                                                        <p className="text-xs text-amber-700 dark:text-amber-400">Top-up Below 50</p>
-                                                                        <p className="font-medium">{staff.metrics.poorQualityBreakdown.topUpBelow50}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-xs text-orange-700 dark:text-orange-400">Not Topped Up</p>
-                                                                        <p className="font-medium">{staff.metrics.poorQualityBreakdown.notTopUp}</p>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-xs text-rose-700 dark:text-rose-400">Topped Up But Not Converted</p>
-                                                                        <p className="font-medium">{staff.metrics.poorQualityBreakdown.topUpNotConverted}</p>
-                                                                    </div>
+                                            {/* Expanded details row */}
+                                            {expandedStaff === staff.userId && (
+                                                <tr className="bg-indigo-50 dark:bg-indigo-900/20">
+                                                    <td colSpan={6} className="px-6 py-4">
+                                                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                                                            <h4 className="font-medium mb-2">Poor Quality Breakdown</h4>
+                                                            <div className="grid grid-cols-3 gap-4">
+                                                                <div>
+                                                                    <p className="text-xs text-amber-700 dark:text-amber-400">Top-up
+                                                                        Below 50</p>
+                                                                    <p className="font-medium">{staff.metrics.poorQualityBreakdown.topUpBelow50}</p>
                                                                 </div>
-
-                                                                <div className="mt-3">
-                                                                    <h4 className="font-medium mb-2">Possible Improvement Areas</h4>
-                                                                    <ul className="list-disc list-inside text-xs space-y-1">
-                                                                        {staff.metrics.poorQualityBreakdown.topUpBelow50 > 0 && (
-                                                                            <li>Encourage customers to top up with higher amounts (at least 50)</li>
-                                                                        )}
-                                                                        {staff.metrics.poorQualityBreakdown.notTopUp > 0 && (
-                                                                            <li>Follow up with customers to ensure they top up their lines</li>
-                                                                        )}
-                                                                        {staff.metrics.poorQualityBreakdown.topUpNotConverted > 0 && (
-                                                                            <li>Investigate why topped-up lines are not converting to quality</li>
-                                                                        )}
-                                                                        {staff.metrics.goodQuality < staff.metrics.totalConnections * 0.8 && (
-                                                                            <li>Provide additional training on quality customer onboarding</li>
-                                                                        )}
-                                                                    </ul>
+                                                                <div>
+                                                                    <p className="text-xs text-orange-700 dark:text-orange-400">Not
+                                                                        Topped Up</p>
+                                                                    <p className="font-medium">{staff.metrics.poorQualityBreakdown.notTopUp}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-rose-700 dark:text-rose-400">Topped
+                                                                        Up But Not Converted</p>
+                                                                    <p className="font-medium">{staff.metrics.poorQualityBreakdown.topUpNotConverted}</p>
                                                                 </div>
                                                             </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
-                                        ))}
+
+                                                            <div className="mt-3">
+                                                                <h4 className="font-medium mb-2">Possible Improvement
+                                                                    Areas</h4>
+                                                                <ul className="list-disc list-inside text-xs space-y-1">
+                                                                    {staff.metrics.poorQualityBreakdown.topUpBelow50 > 0 && (
+                                                                        <li>Encourage customers to top up with higher
+                                                                            amounts (at least 50)</li>
+                                                                    )}
+                                                                    {staff.metrics.poorQualityBreakdown.notTopUp > 0 && (
+                                                                        <li>Follow up with customers to ensure they top
+                                                                            up their lines</li>
+                                                                    )}
+                                                                    {staff.metrics.poorQualityBreakdown.topUpNotConverted > 0 && (
+                                                                        <li>Investigate why topped-up lines are not
+                                                                            converting to quality</li>
+                                                                    )}
+                                                                    {staff.metrics.goodQuality < staff.metrics.totalConnections * 0.8 && (
+                                                                        <li>Provide additional training on quality
+                                                                            customer onboarding</li>
+                                                                    )}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
                                     </tbody>
                                 </table>
                             </div>
