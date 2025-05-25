@@ -15,6 +15,7 @@ import {
     User,
     X
 } from 'lucide-react';
+import jsPDF from 'jspdf';
 import {AnimatePresence, motion} from 'framer-motion';
 import Dashboard from "@/ui/components/dash/Dashboard";
 import useApp from "@/ui/provider/AppProvider";
@@ -173,9 +174,6 @@ export default function InvoicesPageView() {
         toast.success('Invoice download started');
 
         try {
-            // Import jsPDF from local package
-            const jsPDF = (await import('jspdf')).default;
-
             // Create a new PDF document
             const doc = new jsPDF({
                 orientation: 'portrait',
