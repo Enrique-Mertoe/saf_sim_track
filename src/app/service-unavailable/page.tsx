@@ -1,12 +1,13 @@
 "use client";
 
-import React, {useEffect, useState} from 'react';
+import React, {Suspense, useEffect, useState} from 'react';
 import {useSearchParams} from 'next/navigation';
 import {AlertTriangle, Info, Lock, Users, UserX} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import {motion} from 'framer-motion';
 
-export default function ServiceUnavailablePage() {
+// Component that uses useSearchParams
+function ServiceUnavailableContent() {
   const searchParams = useSearchParams();
   const { user } = useApp();
   const [type, setType] = useState<string | null>(null);
@@ -28,7 +29,7 @@ export default function ServiceUnavailablePage() {
           actionLink: 'mailto:admin@example.com',
           color: 'yellow'
         };
-      
+
       case 'no-admin':
         return {
           title: 'No Administrator Found',
@@ -39,7 +40,7 @@ export default function ServiceUnavailablePage() {
           actionLink: 'mailto:support@example.com',
           color: 'red'
         };
-      
+
       case 'no-team':
         return {
           title: 'No Team Assignment',
@@ -50,7 +51,7 @@ export default function ServiceUnavailablePage() {
           actionLink: 'mailto:teamleader@example.com',
           color: 'blue'
         };
-      
+
       case 'no-team-leader':
         return {
           title: 'No Team Leader',
@@ -61,7 +62,7 @@ export default function ServiceUnavailablePage() {
           actionLink: 'mailto:admin@example.com',
           color: 'purple'
         };
-      
+
       case 'team-leader-no-subscription':
         return {
           title: 'Team Leader Subscription Required',
@@ -72,7 +73,7 @@ export default function ServiceUnavailablePage() {
           actionLink: 'mailto:teamleader@example.com',
           color: 'orange'
         };
-      
+
       default:
         return {
           title: 'Service Unavailable',
@@ -97,47 +98,56 @@ export default function ServiceUnavailablePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={`max-w-md w-full rounded-lg shadow-lg border ${colorClasses[content.color as keyof typeof colorClasses]} p-8`}
-      >
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-6">
-            {content.icon}
-          </div>
-          
-          <h1 className="text-2xl font-bold mb-2">{content.title}</h1>
-          
-          <div className="flex items-center mb-4">
-            <AlertTriangle className="h-5 w-5 mr-2" />
-            <p className="font-semibold">{content.message}</p>
-          </div>
-          
-          <p className="mb-8 text-gray-600">{content.description}</p>
-          
-          <a 
-            href={content.actionLink}
-            className={`px-4 py-2 rounded-md font-medium text-white ${
-              content.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
-              content.color === 'red' ? 'bg-red-500 hover:bg-red-600' :
-              content.color === 'blue' ? 'bg-blue-500 hover:bg-blue-600' :
-              content.color === 'purple' ? 'bg-purple-500 hover:bg-purple-600' :
-              content.color === 'orange' ? 'bg-orange-500 hover:bg-orange-600' :
-              'bg-gray-500 hover:bg-gray-600'
-            } transition-colors duration-200`}
-          >
-            {content.actionText}
-          </a>
-          
-          <div className="mt-8 text-sm text-gray-500">
-            <p>If you believe this is an error, please contact support.</p>
-            <p className="mt-1">User ID: {user?.id || 'Not logged in'}</p>
-          </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={`max-w-md w-full rounded-lg shadow-lg border ${colorClasses[content.color as keyof typeof colorClasses]} p-8`}
+    >
+      <div className="flex flex-col items-center text-center">
+        <div className="mb-6">
+          {content.icon}
         </div>
-      </motion.div>
+
+        <h1 className="text-2xl font-bold mb-2">{content.title}</h1>
+
+        <div className="flex items-center mb-4">
+          <AlertTriangle className="h-5 w-5 mr-2" />
+          <p className="font-semibold">{content.message}</p>
+        </div>
+
+        <p className="mb-8 text-gray-600">{content.description}</p>
+
+        <a 
+          href={content.actionLink}
+          className={`px-4 py-2 rounded-md font-medium text-white ${
+            content.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
+            content.color === 'red' ? 'bg-red-500 hover:bg-red-600' :
+            content.color === 'blue' ? 'bg-blue-500 hover:bg-blue-600' :
+            content.color === 'purple' ? 'bg-purple-500 hover:bg-purple-600' :
+            content.color === 'orange' ? 'bg-orange-500 hover:bg-orange-600' :
+            'bg-gray-500 hover:bg-gray-600'
+          } transition-colors duration-200`}
+        >
+          {content.actionText}
+        </a>
+
+        <div className="mt-8 text-sm text-gray-500">
+          <p>If you believe this is an error, please contact support.</p>
+          <p className="mt-1">User ID: {user?.id || 'Not logged in'}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Main component that wraps the content in Suspense
+export default function ServiceUnavailablePage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Suspense fallback={<div>Loading...</div>}>
+        <ServiceUnavailableContent />
+      </Suspense>
     </div>
   );
 }
