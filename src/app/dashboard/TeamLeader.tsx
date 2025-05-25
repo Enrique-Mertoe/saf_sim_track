@@ -1,156 +1,68 @@
 "use client"
-import {useState, useEffect, SetStateAction, useCallback} from 'react';
+import {useCallback, useEffect, useState} from 'react';
+import {Calendar, UserPlus} from 'lucide-react';
 import {
-    UserPlus,
-    Award,
-    Smartphone,
-    Calendar,
-    ChevronDown,
-    ChevronUp,
-    Clock,
-    Settings,
-    Phone,
-    Info,
-    Activity
-} from 'lucide-react';
-import {
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    BarChart,
     Bar,
-    PieChart,
-    Pie,
+    BarChart,
+    CartesianGrid,
     Cell,
+    Legend,
+    Line,
+    Pie,
+    PieChart,
+    PolarAngleAxis,
+    PolarGrid,
+    PolarRadiusAxis,
     Radar,
     RadarChart,
-    PolarGrid,
-    PolarAngleAxis,
-    PolarRadiusAxis
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
 } from 'recharts';
 import Dashboard from "@/ui/components/dash/Dashboard";
 import {TeamStats} from "@/app/dashboard/my-team/quicks";
-import {useRouter} from "next/navigation";
 import {CreateUser} from "@/ui/shortcuts";
 import {useDialog} from "@/app/_providers/dialog";
 import useApp from "@/ui/provider/AppProvider";
 import {teamService} from "@/services";
-import {Team, TeamHierarchy, User} from "@/models";
+import {SIMStatus, Team, TeamHierarchy, User} from "@/models";
 import TeamMembersPanel from "@/ui/components/dash/TeamMemberList";
+import simService from "@/services/simService";
+import {db} from '@/lib/firebase/client';
+import {collection, limit, onSnapshot, orderBy, query, where} from 'firebase/firestore';
 
 
-// Sample data for team members
-const teamMembers = [
-    {
-        id: 1,
-        name: 'John Doe',
-        role: 'VAN_STAFF',
-        vanLocation: 'Nairobi CBD',
-        status: 'ACTIVE',
-        phoneNumber: '+254712345678',
-        mobigoNumber: '+254779012345',
-        salesThisMonth: 142,
-        qualitySales: 128,
-        percentQuality: 90.1,
-        lastActive: '1 hour ago',
-        avatar: '/api/placeholder/40/40'
-    },
-    {
-        id: 2,
-        name: 'Jane Smith',
-        role: 'VAN_STAFF',
-        vanLocation: 'Westlands',
-        status: 'ACTIVE',
-        phoneNumber: '+254723456789',
-        mobigoNumber: '+254779123456',
-        salesThisMonth: 165,
-        qualitySales: 157,
-        percentQuality: 95.2,
-        lastActive: '30 mins ago',
-        avatar: '/api/placeholder/40/40'
-    },
-    {
-        id: 3,
-        name: 'David Kamau',
-        role: 'MPESA_ONLY_AGENT',
-        vanLocation: null,
-        status: 'ACTIVE',
-        phoneNumber: '+254734567890',
-        mobigoNumber: '+254779234567',
-        salesThisMonth: 98,
-        qualitySales: 91,
-        percentQuality: 92.9,
-        lastActive: '2 hours ago',
-        avatar: '/api/placeholder/40/40'
-    },
-    {
-        id: 4,
-        name: 'Sarah Wanjiku',
-        role: 'NON_MPESA_AGENT',
-        vanLocation: null,
-        status: 'SUSPENDED',
-        phoneNumber: '+254745678901',
-        mobigoNumber: '+254779345678',
-        salesThisMonth: 23,
-        qualitySales: 18,
-        percentQuality: 78.3,
-        lastActive: '3 days ago',
-        avatar: '/api/placeholder/40/40'
-    },
-    {
-        id: 5,
-        name: 'Michael Ochieng',
-        role: 'VAN_STAFF',
-        vanLocation: 'Karen',
-        status: 'ACTIVE',
-        phoneNumber: '+254756789012',
-        mobigoNumber: '+254779456789',
-        salesThisMonth: 134,
-        qualitySales: 127,
-        percentQuality: 94.8,
-        lastActive: '45 mins ago',
-        avatar: '/api/placeholder/40/40'
-    }
-];
+// Team members are now fetched from the database via TeamMembersPanel component
 
-// Sample daily performance data
-const dailyPerformanceData = [
-    {day: 'Mon', sales: 42, quality: 36, target: 40},
-    {day: 'Tue', sales: 38, quality: 34, target: 40},
-    {day: 'Wed', sales: 45, quality: 41, target: 40},
-    {day: 'Thu', sales: 39, quality: 36, target: 40},
-    {day: 'Fri', sales: 52, quality: 48, target: 40},
-    {day: 'Sat', sales: 31, quality: 28, target: 30},
-    {day: 'Sun', sales: 27, quality: 25, target: 30}
-];
+// State for daily performance data
+const [dailyPerformanceData, setDailyPerformanceData] = useState([
+    {day: 'Mon', sales: 0, quality: 0, target: 40},
+    {day: 'Tue', sales: 0, quality: 0, target: 40},
+    {day: 'Wed', sales: 0, quality: 0, target: 40},
+    {day: 'Thu', sales: 0, quality: 0, target: 40},
+    {day: 'Fri', sales: 0, quality: 0, target: 40},
+    {day: 'Sat', sales: 0, quality: 0, target: 30},
+    {day: 'Sun', sales: 0, quality: 0, target: 30}
+]);
 
-// Sample staff performance data for radar chart
-const staffPerformanceData = [
-    {subject: 'Sales Volume', A: 120, B: 110, C: 140, D: 80, E: 100, fullMark: 150},
-    {subject: 'Quality %', A: 98, B: 130, C: 110, D: 60, E: 120, fullMark: 150},
-    {subject: 'Top-ups', A: 86, B: 130, C: 70, D: 60, E: 110, fullMark: 150},
-    {subject: 'Activations', A: 99, B: 100, C: 120, D: 70, E: 90, fullMark: 150},
-    {subject: 'Customer Info', A: 85, B: 90, C: 100, D: 80, E: 70, fullMark: 150}
-];
+// State for staff performance data for radar chart
+const [staffPerformanceData, setStaffPerformanceData] = useState([
+    {subject: 'Sales Volume', fullMark: 150},
+    {subject: 'Quality %', fullMark: 150},
+    {subject: 'Top-ups', fullMark: 150},
+    {subject: 'Activations', fullMark: 150},
+    {subject: 'Customer Info', fullMark: 150}
+]);
 
-// Sample staff activity data
-const recentActivities = [
-    {id: 1, staff: 'John Doe', action: 'Registered 15 new SIM cards', time: '1 hour ago'},
-    {id: 2, staff: 'Jane Smith', action: 'Achieved 100% quality on today\'s sales', time: '2 hours ago'},
-    {id: 3, staff: 'David Kamau', action: 'Completed daily target of 20 sales', time: '3 hours ago'},
-    {id: 4, staff: 'Michael Ochieng', action: 'Updated customer information for 5 SIMs', time: '4 hours ago'},
-    {id: 5, staff: 'Jane Smith', action: 'Registered 12 new SIM cards', time: '5 hours ago'}
-];
+// State for staff activity data
+const [recentActivities, setRecentActivities] = useState([]);
 
-// Sample quality distribution data
-const qualityDistributionData = [
-    {name: 'Quality SIMs', value: 521},
-    {name: 'Non-Quality SIMs', value: 41}
-];
+// State for quality distribution data
+const [qualityDistributionData, setQualityDistributionData] = useState([
+    {name: 'Quality SIMs', value: 0},
+    {name: 'Non-Quality SIMs', value: 0}
+]);
 
 
 type TeamAdapter = Team & {
@@ -204,7 +116,159 @@ export default function TeamLeader() {
         if (!user)
             return
         fetchTeamData().then()
+
+        // Fetch real-time data for dashboard metrics
+        const fetchDashboardData = async () => {
+            if (!user?.team_id) return;
+
+            try {
+                // Fetch SIM cards data for the team
+                const { data: simCards } = await simService.getSIMCardsByTeamId(user.team_id);
+
+                if (!simCards) return;
+
+                // Get team members
+                const { data: teamMembers } = await teamService.getTeamMembers(user.team_id);
+
+                // Process data for daily performance chart
+                const today = new Date();
+                const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                // Initialize daily data with zeros
+                const dailyData = daysOfWeek.map(day => ({
+                    day,
+                    sales: 0,
+                    quality: 0,
+                    target: day === 'Sat' || day === 'Sun' ? 30 : 40
+                }));
+
+                // Group SIM cards by day of week
+                simCards.forEach(sim => {
+                    const simDate = new Date(sim.sale_date || sim.created_at);
+                    const simDay = daysOfWeek[simDate.getDay()];
+                    const dayData = dailyData.find(d => d.day === simDay);
+
+                    if (dayData) {
+                        dayData.sales++;
+                        if (sim.quality === SIMStatus.QUALITY) {
+                            dayData.quality++;
+                        }
+                    }
+                });
+
+                setDailyPerformanceData(dailyData);
+
+                // Process data for quality distribution
+                const qualitySims = simCards.filter(sim => sim.quality === SIMStatus.QUALITY).length;
+                const nonQualitySims = simCards.filter(sim => sim.quality === SIMStatus.NONQUALITY).length;
+
+                setQualityDistributionData([
+                    { name: 'Quality SIMs', value: qualitySims },
+                    { name: 'Non-Quality SIMs', value: nonQualitySims }
+                ]);
+
+                // Process data for staff performance radar chart
+                if (teamMembers && teamMembers.length > 0) {
+                    // Get top 5 team members by sales volume
+                    const topMembers = [...teamMembers]
+                        .sort((a, b) => {
+                            const aCount = simCards.filter(sim => sim.sold_by_user_id === a.id).length;
+                            const bCount = simCards.filter(sim => sim.sold_by_user_id === b.id).length;
+                            return bCount - aCount;
+                        })
+                        .slice(0, 5);
+
+                    // Create radar chart data
+                    const radarData = [
+                        { subject: 'Sales Volume', fullMark: 150 },
+                        { subject: 'Quality %', fullMark: 150 },
+                        { subject: 'Top-ups', fullMark: 150 },
+                        { subject: 'Activations', fullMark: 150 },
+                        { subject: 'Customer Info', fullMark: 150 }
+                    ];
+
+                    // Add data for each team member
+                    topMembers.forEach((member, index) => {
+                        const memberSims = simCards.filter(sim => sim.sold_by_user_id === member.id);
+                        const salesVolume = memberSims.length;
+                        const qualityRate = memberSims.length > 0 
+                            ? (memberSims.filter(sim => sim.quality === SIMStatus.QUALITY).length / memberSims.length) * 100
+                            : 0;
+                        const topUps = memberSims.filter(sim => sim.top_up_amount > 0).length;
+                        const activations = memberSims.filter(sim => sim.status === 'ACTIVE').length;
+                        const customerInfo = memberSims.filter(sim => sim.customer_name && sim.customer_id_number).length;
+
+                        // Map to keys A, B, C, D, E for the radar chart
+                        const key = String.fromCharCode(65 + index); // A, B, C, D, E
+
+                        radarData[0][key] = Math.min(salesVolume * 10, 150); // Scale sales volume
+                        radarData[1][key] = Math.min(qualityRate, 150);
+                        radarData[2][key] = Math.min(topUps * 15, 150); // Scale top-ups
+                        radarData[3][key] = Math.min(activations * 15, 150); // Scale activations
+                        radarData[4][key] = Math.min(customerInfo * 15, 150); // Scale customer info
+                    });
+
+                    setStaffPerformanceData(radarData);
+                }
+
+                // Set up Firebase real-time listener for recent activities
+                const activitiesQuery = query(
+                    collection(db, 'activities'),
+                    where('team_id', '==', user.team_id),
+                    orderBy('timestamp', 'desc'),
+                    limit(5)
+                );
+
+                const unsubscribe = onSnapshot(activitiesQuery, (snapshot) => {
+                    const activities = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const timestamp = data.timestamp?.toDate() || new Date();
+                        const timeAgo = getTimeAgo(timestamp);
+
+                        activities.push({
+                            id: doc.id,
+                            staff: data.user_name || 'Unknown User',
+                            action: data.action || 'Performed an action',
+                            time: timeAgo
+                        });
+                    });
+
+                    setRecentActivities(activities);
+                });
+
+                // Return cleanup function
+                return () => unsubscribe();
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        };
+
+        fetchDashboardData();
     }, [fetchTeamData, user]);
+
+    // Helper function to format time ago
+    const getTimeAgo = (date) => {
+        const seconds = Math.floor((new Date() - date) / 1000);
+
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + ' years ago';
+
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + ' months ago';
+
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + ' days ago';
+
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + ' hours ago';
+
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + ' minutes ago';
+
+        return Math.floor(seconds) + ' seconds ago';
+    };
 
     const toggleStaffDetails = (id: number) => {
         if (expandedStaff === id) {
@@ -376,4 +440,3 @@ export default function TeamLeader() {
         </Dashboard>
     )
 }
-

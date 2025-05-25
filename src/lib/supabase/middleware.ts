@@ -2,6 +2,14 @@ import {createServerClient} from '@supabase/ssr'
 import {type NextRequest, NextResponse} from 'next/server'
 import {UserRole} from '@/models/types'
 
+// List of isolated emails that bypass subscription checks
+// All emails should be in lowercase for case-insensitive comparison
+const ISOLATED_EMAILS = [
+    'admin@example.com',
+    'abutimartin778@gmail.com',
+    'smallvillecycle5@gmail.com'
+].map(email => email.toLowerCase());
+
 export async function updateSession(request: NextRequest) {
     let supabaseResponse = NextResponse.next({
         request,
@@ -62,6 +70,13 @@ export async function updateSession(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith("/api/payments/")) {
         return supabaseResponse
     }
+
+    // Check if user's email is in the isolated emails list
+    if (user.email && ISOLATED_EMAILS.includes(user.email.toLowerCase())) {
+        console.log('Isolated email detected, bypassing subscription check:', user.email);
+        return supabaseResponse;
+    }
+
     // If user is authenticated and not accessing a free path, check subscription and role
     if (user && !isFreePath) {
         try {
