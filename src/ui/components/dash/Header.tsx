@@ -1,24 +1,14 @@
 "use client"
 
-import {
-    Bell,
-    ChevronDown,
-    CreditCard,
-    LogOut,
-    Menu, Moon,
-    Search,
-    Settings, Sun,
-    User,
-    X
-} from "lucide-react";
+import {Bell, ChevronDown, CreditCard, LogOut, Menu, Moon, Search, Settings, Sun, User, X} from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useRef, useState} from "react";
 import Signal from "@/lib/Signal";
-import {motion, AnimatePresence} from "framer-motion";
+import {AnimatePresence, motion} from "framer-motion";
 import Sidebar from "@/ui/components/dash/Sidebar";
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {useTheme} from "next-themes";
-import { notificationService } from "@/services";
+import {notificationService} from "@/services";
 
 const supabase = createSupabaseClient();
 export default function Header() {
@@ -466,86 +456,97 @@ export default function Header() {
                         </div>
 
                         {/* User profile dropdown */}
-                        <div ref={profileRef} className="relative hidden md:block">
-                            <button
-                                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="flex items-center space-x-2 p-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                        {user && (
+                            <div ref={profileRef} className="relative hidden md:block">
+                                <button
+                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                    className="flex items-center space-x-2 p-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                >
+                                    <div
+                                        className="w-8 h-8 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center text-white font-bold">
+                                        {user?.full_name ? user.full_name.charAt(0) : "U"}
+                                    </div>
+                                    <span className="max-w-32 truncate text-gray-800 dark:text-gray-200">
+                                        {user?.full_name || "User"}
+                                    </span>
+                                    <ChevronDown size={16}
+                                                className={`transform transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+
+                                <AnimatePresence>
+                                    {isProfileOpen && (
+                                        <motion.div
+                                            initial={{opacity: 0, y: -10}}
+                                            animate={{opacity: 1, y: 0}}
+                                            exit={{opacity: 0, y: -10}}
+                                            transition={{duration: 0.2}}
+                                            className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
+                                        >
+                                            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                                    {user?.full_name || "User"}
+                                                </p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                    {user?.email || "user@example.com"}
+                                                </p>
+                                            </div>
+
+                                            <div className="py-1">
+                                                <a href="/profile"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                >
+                                                    <User size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
+                                                    Profile
+                                                </a>
+                                                <a href="/settings"
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                >
+                                                    <Settings size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
+                                                    Settings
+                                                </a>
+                                            </div>
+
+                                            <div className="py-1 border-t border-gray-100 dark:border-gray-700">
+                                                <a href="/accounts/logout"
+                                                onClick={e => {
+                                                    e.preventDefault();
+                                                    signOut()
+                                                }}
+                                                className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                >
+                                                    <LogOut size={16} className="mr-2"/>
+                                                    Sign out
+                                                </a>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
+
+                        {user ? (
+                            /* Mobile menu toggle */
+                            <motion.div
+                                animate={{rotate: isMobileMenuOpen ? 180 : 0}}
+                                transition={{duration: 0.3}}
                             >
-                                <div
-                                    className="w-8 h-8 rounded-full bg-green-500 dark:bg-green-600 flex items-center justify-center text-white font-bold">
-                                    {user?.full_name ? user.full_name.charAt(0) : "U"}
-                                </div>
-                                <span className="max-w-32 truncate text-gray-800 dark:text-gray-200">
-                                    {user?.full_name || "User"}
-                                </span>
-                                <ChevronDown size={16}
-                                             className={`transform transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
-                                />
-                            </button>
-
-                            <AnimatePresence>
-                                {isProfileOpen && (
-                                    <motion.div
-                                        initial={{opacity: 0, y: -10}}
-                                        animate={{opacity: 1, y: 0}}
-                                        exit={{opacity: 0, y: -10}}
-                                        transition={{duration: 0.2}}
-                                        className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50 border border-gray-200 dark:border-gray-700"
-                                    >
-                                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                                {user?.full_name || "User"}
-                                            </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                {user?.email || "user@example.com"}
-                                            </p>
-                                        </div>
-
-                                        <div className="py-1">
-                                            <a href="/profile"
-                                               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <User size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
-                                                Profile
-                                            </a>
-                                            <a href="/settings"
-                                               className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <Settings size={16} className="mr-2 text-gray-500 dark:text-gray-400"/>
-                                                Settings
-                                            </a>
-                                        </div>
-
-                                        <div className="py-1 border-t border-gray-100 dark:border-gray-700">
-                                            <a href="/accounts/logout"
-                                               onClick={e => {
-                                                   e.preventDefault();
-                                                   signOut()
-                                               }}
-                                               className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <LogOut size={16} className="mr-2"/>
-                                                Sign out
-                                            </a>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Mobile menu toggle */}
-                        <motion.div
-                            animate={{rotate: isMobileMenuOpen ? 180 : 0}}
-                            transition={{duration: 0.3}}
-                        >
-                            <button
-                                className="md:hidden p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
-                                onClick={() => Signal.trigger("mobile-open", !isMobileMenuOpen)}
-                                aria-label="Toggle menu"
+                                <button
+                                    className="md:hidden p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-700 transition-colors duration-200"
+                                    onClick={() => Signal.trigger("mobile-open", !isMobileMenuOpen)}
+                                    aria-label="Toggle menu"
+                                >
+                                    {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <a 
+                                href="/login" 
+                                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium transition-colors duration-200"
                             >
-                                {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-                            </button>
-                        </motion.div>
+                                Get Started
+                            </a>
+                        )}
                     </div>
                 </div>
 
@@ -617,37 +618,39 @@ export default function Header() {
             </header>
 
             {/* Mobile Sidebar Menu */}
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <>
-                        <motion.div
-                            initial={{opacity: 0}}
-                            animate={{opacity: 0.5}}
-                            exit={{opacity: 0}}
-                            className="fixed inset-0 bg-black z-40 md:hidden"
-                            onClick={() => {
-                                Signal.trigger("mobile-open", !isMobileMenuOpen)
+            {user && (
+                <AnimatePresence>
+                    {isMobileMenuOpen && (
+                        <>
+                            <motion.div
+                                initial={{opacity: 0}}
+                                animate={{opacity: 0.5}}
+                                exit={{opacity: 0}}
+                                className="fixed inset-0 bg-black z-40 md:hidden"
+                                onClick={() => {
+                                    Signal.trigger("mobile-open", !isMobileMenuOpen)
 
-                            }}
-                        />
-                        <motion.div
-                            initial={{x: "-100%"}}
-                            animate={{x: 0}}
-                            exit={{x: "-100%"}}
-                            transition={{type: "tween", duration: 0.3}}
-                            className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"
-                        >
-                            <Sidebar/>
-                            <button
-                                className="md:hidden p-2 fixed top-5 right-5 z-[10406757] rounded-full text-light bg-gray-500 hover:bg-green-500 transition-colors duration-200"
-                                onClick={() => Signal.trigger("mobile-open", false)}
+                                }}
+                            />
+                            <motion.div
+                                initial={{x: "-100%"}}
+                                animate={{x: 0}}
+                                exit={{x: "-100%"}}
+                                transition={{type: "tween", duration: 0.3}}
+                                className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"
                             >
-                                {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-                            </button>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                                <Sidebar/>
+                                <button
+                                    className="md:hidden p-2 fixed top-5 right-5 z-[10406757] rounded-full text-light bg-gray-500 hover:bg-green-500 transition-colors duration-200"
+                                    onClick={() => Signal.trigger("mobile-open", false)}
+                                >
+                                    {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                                </button>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+            )}
         </>
     );
 }

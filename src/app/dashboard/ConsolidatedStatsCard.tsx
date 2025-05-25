@@ -1,7 +1,7 @@
 import React from 'react';
-import { SIMCard, SIMStatus } from "@/models";
-import { ArrowUpIcon, ArrowDownIcon, Minus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {SIMCard, SIMStatus} from "@/models";
+import {ArrowDownIcon, ArrowUpIcon, Minus} from 'lucide-react';
+import {motion} from 'framer-motion';
 
 type StatsCardProps = {
     simCards: SIMCard[];
@@ -70,17 +70,22 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
             const teamGroups = {};
             simCards.forEach(card => {
                 const teamId = card.team_id || 'unknown';
+                // @ts-ignore
                 if (!teamGroups[teamId]) {
+                    // @ts-ignore
                     teamGroups[teamId] = {
                         total: 0,
                         quality: 0,
                         nonQuality: 0
                     };
                 }
+                // @ts-ignore
                 teamGroups[teamId].total++;
                 if (card.quality === SIMStatus.QUALITY) {
+                    // @ts-ignore
                     teamGroups[teamId].quality++;
                 } else {
+                    // @ts-ignore
                     teamGroups[teamId].nonQuality++;
                 }
             });
@@ -118,17 +123,22 @@ export default function ConsolidatedStatsCard({ simCards, previousSimCards = [],
             const teamGroups = {};
             previousSimCards.forEach(card => {
                 const teamId = card.team_id || 'unknown';
+                // @ts-ignore
                 if (!teamGroups[teamId]) {
+                    // @ts-ignore
                     teamGroups[teamId] = {
                         total: 0,
                         quality: 0,
                         nonQuality: 0
                     };
                 }
+                // @ts-ignore
                 teamGroups[teamId].total++;
                 if (card.quality === SIMStatus.QUALITY) {
+                    // @ts-ignore
                     teamGroups[teamId].quality++;
                 } else {
+                    // @ts-ignore
                     teamGroups[teamId].nonQuality++;
                 }
             });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import axios from 'axios';
 import PaymentModal from "@/ui/components/PayMentModal";
@@ -79,7 +79,31 @@ export default function SubscriptionPage() {
         ? plans.find(plan => plan.id === plans[0]?.id)
         : null;
 
+    // Check for plan parameter in URL when component mounts
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const planId = urlParams.get('plan');
+
+            if (planId && user) {
+                // Find the plan with the matching ID
+                const selectedPlan = plans.find(plan => plan.id === planId);
+                if (selectedPlan) {
+                    // Automatically select the plan
+                    setSelectedPlan(selectedPlan);
+                    setShowPaymentModal(true);
+                }
+            }
+        }
+    }, [user, plans]);
+
     const handleSelectPlan = (plan: Plan) => {
+        if (!user) {
+            // Redirect to login page with the selected plan as a query parameter
+            router.push(`/login?redirect=subscribe&plan=${plan.id}`);
+            return;
+        }
+
         setSelectedPlan(plan);
         setShowPaymentModal(true);
     };

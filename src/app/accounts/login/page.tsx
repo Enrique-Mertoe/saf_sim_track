@@ -17,11 +17,11 @@ const fadeIn = (delay = 0) => {
 };
 
 export default function LoginPage() {
-
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loginMethod, setLoginMethod] = useState('email');
     const [animationComplete, setAnimationComplete] = useState(false);
+    const [redirectParams, setRedirectParams] = useState({ redirect: '', plan: '' });
     const [formValues, setFormValues] = useState({
         phone: '',
         email: '',
@@ -38,6 +38,15 @@ export default function LoginPage() {
         const timer = setTimeout(() => {
             setAnimationComplete(true);
         }, 300);
+
+        // Extract redirect parameters from URL
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('redirect') || '';
+            const plan = urlParams.get('plan') || '';
+            setRedirectParams({ redirect, plan });
+        }
+
         return () => clearTimeout(timer);
     }, []);
 
@@ -123,15 +132,14 @@ export default function LoginPage() {
                 }
                 toast.success('Login successful');
 
-                // if (res.data?.session)
-                //     signIn(res.data?.session.user, ok => {
-                //         if (ok) {
-                //             toast.success('Login successful');
-                location.href = "/dashboard";
-                //         } else {
-                //             throw ('Unable to login. Try again!');
-                //         }
-                //     })
+                // Handle redirect based on URL parameters
+                if (redirectParams.redirect === 'subscribe' && redirectParams.plan) {
+                    // Redirect to subscribe page with the selected plan
+                    location.href = `/subscribe?plan=${redirectParams.plan}`;
+                } else {
+                    // Default redirect to dashboard
+                    location.href = "/dashboard";
+                }
             } catch (err: any) {
                 toast.error(`Login failed. ${err}`);
                 setErrors(prev => ({...prev, general: err.message || 'Failed to login'}));
