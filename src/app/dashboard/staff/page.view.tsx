@@ -489,7 +489,7 @@ export default function OnboardStaff({user, onClose}: {
 
     return (
 
-        <div className="mx-auto h-full w-full pt-4 dark:bg-gray-800">
+        <div className="mx-auto minh-h-full w-full pt-4 dark:bg-gray-800">
 
             <div className="flex items-center px-4 justify-between mb-6">
                 <div className="w-10"></div>
@@ -512,7 +512,7 @@ export default function OnboardStaff({user, onClose}: {
             </div>
 
             <div
-                className={"overflow-y-auto border-t border-gray-200 dark:border-t-gray-700 p-6 max-h-96 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500"}>
+                className={"border-t border-gray-200 dark:border-t-gray-700 p-6 s"}>
                 {success ? (
                     renderSuccess()
                 ) : (

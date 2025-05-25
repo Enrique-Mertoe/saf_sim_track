@@ -2,7 +2,7 @@
 
 import React, {Suspense, useEffect, useState} from 'react';
 import {useSearchParams} from 'next/navigation';
-import {AlertTriangle, Info, Lock, Users, UserX} from 'lucide-react';
+import {AlertTriangle, Info, Lock, LogOut, Users, UserX} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import {motion} from 'framer-motion';
 
@@ -104,6 +104,16 @@ function ServiceUnavailableContent() {
       transition={{ duration: 0.5 }}
       className={`max-w-md w-full rounded-lg shadow-lg border ${colorClasses[content.color as keyof typeof colorClasses]} p-8`}
     >
+      <div className="flex justify-end w-full mb-4">
+        <a 
+          href="/accounts/logout"
+          className="flex items-center px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
+          title="Logout"
+        >
+          <LogOut size={16} className="mr-1" />
+          Logout
+        </a>
+      </div>
       <div className="flex flex-col items-center text-center">
         <div className="mb-6">
           {content.icon}
