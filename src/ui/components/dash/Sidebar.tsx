@@ -1,12 +1,22 @@
 'use client';
 
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {usePathname, useRouter} from "next/navigation";
 import Link from 'next/link';
-import {motion, AnimatePresence} from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 import {
-    Award, Grid, Cpu, LogOut, Map, Phone, PieChart,
-    ClipboardList, Settings, UserPlus, Users, Folder,
+    Award,
+    ClipboardList,
+    Cpu,
+    CreditCard,
+    Folder,
+    Grid,
+    LogOut,
+    Phone,
+    PieChart,
+    Settings,
+    UserPlus,
+    Users,
 } from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
 import {create} from 'zustand';
@@ -173,6 +183,7 @@ export default function Sidebar() {
                 {href: '/dashboard/pick', icon: ClipboardList, label: 'PickList'},
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/dashboard/filemanager', icon: Folder, label: 'FileManager'},
+                {href: '/dashboard/invoices', icon: CreditCard, label: 'Invoices'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {

@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server';
 import axios from 'axios';
 import {createSuperClient} from '@/lib/supabase/server';
+import AdminActions from '@/app/api/actions/admin-actions';
 
 // Intasend API endpoints
 const INTASEND_API_URL = 'https://sandbox.intasend.com/api/v1';
@@ -76,18 +77,50 @@ export async function GET(request: NextRequest) {
         message = 'Payment has been completed';
 
         // Update the user's subscription
+        const startDate = new Date().toISOString();
+        const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days from now
+
         const { error: subscriptionError } = await supabase
           .from('subscriptions')
           .upsert({
             user_id: paymentRequest.user_id,
             plan_id: paymentRequest.plan_id,
             status: 'active',
-            starts_at: new Date().toISOString(),
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
+            starts_at: startDate,
+            expires_at: expiryDate
           });
 
         if (subscriptionError) {
           console.error('Subscription update error:', subscriptionError);
+        }
+
+        // Get user details for the email
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', paymentRequest.user_id)
+          .single();
+
+        if (!userError && userData) {
+          // Send invoice email
+          try {
+            await AdminActions.send_invoice_email({
+              email: userData.email,
+              full_name: userData.full_name,
+              reference: paymentRequest.reference,
+              created_at: paymentRequest.created_at,
+              phone_number: paymentRequest.phone_number,
+              plan_id: paymentRequest.plan_id,
+              amount: paymentRequest.amount,
+              starts_at: startDate,
+              expires_at: expiryDate
+            });
+            console.log('Invoice email sent successfully');
+          } catch (emailError) {
+            console.error('Failed to send invoice email:', emailError);
+          }
+        } else {
+          console.error('Failed to get user data for invoice email:', userError);
         }
       } else if (response.data.status === 'FAILED') {
         paymentStatus = 'failed';

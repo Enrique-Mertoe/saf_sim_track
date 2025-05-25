@@ -8,6 +8,7 @@ export interface Team {
     van_number_plate?: string;
     van_location?: string;
     is_active: boolean;
+    admin_id?: string; // ID of the admin who created/owns this team
 }
 
 export interface TeamCreate {
@@ -17,6 +18,7 @@ export interface TeamCreate {
     territory?: string;
     van_number_plate?: string;
     van_location?: string;
+    admin_id?: string; // ID of the admin who is creating this team
 }
 
 export interface TeamUpdate {
@@ -27,6 +29,7 @@ export interface TeamUpdate {
     van_number_plate?: string;
     van_location?: string;
     is_active?: boolean;
+    admin_id?: string; // ID of the admin who owns this team
 }
 
 export type TeamHierarchy = {

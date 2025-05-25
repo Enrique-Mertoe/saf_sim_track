@@ -5,32 +5,103 @@ export const teamService = {
     // Get all teams
     async getAllTeams() {
         const supabase = createSupabaseClient();
-        return supabase
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        let query = supabase
             .from('teams')
-            .select('*, users!leader_id(*)')
-            .order('name');
+            .select('*, users!leader_id(*)');
+
+        // If user is admin, only fetch teams associated with this admin
+        if (userDetails?.role === 'admin') {
+            query = query.eq('admin_id', userDetails.id);
+        }
+
+        return query.order('name');
     },
     async count() {
         const supabase = createSupabaseClient();
-        const {count: teamTotal} = await supabase
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        let query = supabase
             .from('teams')
             .select('*', {count: 'exact', head: true});
+
+        // If user is admin, only count teams associated with this admin
+        if (userDetails?.role === 'admin') {
+            query = query.eq('admin_id', userDetails.id);
+        }
+
+        const {count: teamTotal} = await query;
         return teamTotal || 0;
     },
 
     // Get a single team by ID with leader info
     async getTeamById(teamId: string) {
         const supabase = createSupabaseClient();
-        return supabase
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        let query = supabase
             .from('teams')
             .select('*, leader:leader_id(*)')
-            .eq('id', teamId)
-            .single();
+            .eq('id', teamId);
+
+        // If user is admin, ensure they can only fetch their own teams
+        if (userDetails?.role === 'admin') {
+            query = query.eq('admin_id', userDetails.id);
+        }
+
+        return query.single();
     },
 
     // Get team hierarchy with team members
     async getTeamHierarchy(teamId: string) {
         const supabase = createSupabaseClient();
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        // If user is admin, ensure they can only fetch their own teams' hierarchy
+        if (userDetails?.role === 'admin') {
+            // First check if this team belongs to the admin
+            const { data: team } = await supabase
+                .from('teams')
+                .select('id')
+                .eq('id', teamId)
+                .eq('admin_id', userDetails.id)
+                .single();
+
+            // If team doesn't belong to this admin, return empty result
+            if (!team) {
+                return { data: null, error: { message: 'Team not found or access denied' } };
+            }
+        }
+
         return supabase
             .rpc('get_team_hierarchy', {in_team_id: teamId});
     },
@@ -38,6 +109,23 @@ export const teamService = {
     // Create a new team
     async createTeam(teamData: TeamCreate) {
         const supabase = createSupabaseClient();
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        // If the user is an admin, set the admin_id
+        if (userDetails?.role === 'admin') {
+            teamData = {
+                ...teamData,
+                admin_id: userDetails.id
+            };
+        }
+
         return supabase
             .from('teams')
             .insert(teamData)
@@ -48,17 +136,56 @@ export const teamService = {
     // Update an existing team
     async updateTeam(teamId: string, teamData: TeamUpdate) {
         const supabase = createSupabaseClient();
-        return supabase
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        let query = supabase
             .from('teams')
             .update(teamData)
-            .eq('id', teamId)
-            .select()
-            .single();
+            .eq('id', teamId);
+
+        // If user is admin, ensure they can only update their own teams
+        if (userDetails?.role === 'admin') {
+            query = query.eq('admin_id', userDetails.id);
+        }
+
+        return query.select().single();
     },
 
     // Get team performance metrics
     async getTeamPerformance(teamId: string, period?: string) {
         const supabase = createSupabaseClient();
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        // If user is admin, ensure they can only fetch their own teams' performance
+        if (userDetails?.role === 'admin') {
+            // First check if this team belongs to the admin
+            const { data: team } = await supabase
+                .from('teams')
+                .select('id')
+                .eq('id', teamId)
+                .eq('admin_id', userDetails.id)
+                .single();
+
+            // If team doesn't belong to this admin, return empty result
+            if (!team) {
+                return { data: null, error: { message: 'Team not found or access denied' } };
+            }
+        }
+
         let query = supabase
             .from('team_performance')
             .select('*')
@@ -74,6 +201,31 @@ export const teamService = {
     // Get staff performance within a team
     async getStaffPerformance(teamId: string, period?: string) {
         const supabase = createSupabaseClient();
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        // If user is admin, ensure they can only fetch their own teams' staff performance
+        if (userDetails?.role === 'admin') {
+            // First check if this team belongs to the admin
+            const { data: team } = await supabase
+                .from('teams')
+                .select('id')
+                .eq('id', teamId)
+                .eq('admin_id', userDetails.id)
+                .single();
+
+            // If team doesn't belong to this admin, return empty result
+            if (!team) {
+                return { data: null, error: { message: 'Team not found or access denied' } };
+            }
+        }
+
         let query = supabase
             .from('staff_performance')
             .select('*')

@@ -74,6 +74,20 @@ const generateWelcomeEmailTemplate = (templateData: any
         .replace('{{invitedBy.fullName}}', templateData.invitedBy)
         .replace('{{signUpUrl}}', templateData.resetPasswordUrl);
 };
+
+const generateInvoiceEmailTemplate = (templateData: any) => {
+    const invoiceEmailTemplate = getEmailTemplate('invoice');
+    return invoiceEmailTemplate
+        .replace('{{user.fullName}}', templateData.fullName)
+        .replace('{{invoice.reference}}', templateData.reference)
+        .replace('{{invoice.date}}', templateData.date)
+        .replace('{{invoice.phoneNumber}}', templateData.phoneNumber)
+        .replace('{{invoice.planName}}', templateData.planName)
+        .replace('{{invoice.amount}}', templateData.amount.toLocaleString())
+        .replace('{{subscription.startDate}}', templateData.startDate)
+        .replace('{{subscription.expiryDate}}', templateData.expiryDate)
+        .replace('{{dashboardUrl}}', templateData.dashboardUrl);
+};
 export const sendEmail = async ({
                                     to,
                                     subject,
@@ -135,6 +149,50 @@ async function sendInvite(options: any) {
     }
 }
 
+async function sendInvoiceEmail(options: any) {
+    try {
+        // Format dates
+        const startDate = new Date(options.starts_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const expiryDate = new Date(options.expires_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const invoiceDate = new Date(options.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        await sendEmail({
+            to: options.email,
+            subject: "Payment Receipt - SIM Card Management System",
+            html: generateInvoiceEmailTemplate({
+                fullName: options.full_name,
+                reference: options.reference,
+                date: invoiceDate,
+                phoneNumber: options.phone_number,
+                planName: options.plan_id,
+                amount: options.amount,
+                startDate: startDate,
+                expiryDate: expiryDate,
+                dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+            }),
+        });
+
+        return {success: true, error: null};
+    } catch (error) {
+        console.error('Error sending invoice email:', error);
+        return {success: false, error};
+    }
+}
+
 function makeResponse(data: { error?: string; [key: string]: any }) {
     if (data.error) {
         return NextResponse.json({error: data.error}, {status: 400});
@@ -155,6 +213,14 @@ class AdminActions {
     static async send_invite(data: any) {
         const {error} = await sendInvite(data);
         console.log(error)
+        if (error) {
+            return makeResponse({error: (error as any).message})
+        }
+        return makeResponse({ok: true})
+    }
+
+    static async send_invoice_email(data: any) {
+        const {error} = await sendInvoiceEmail(data);
         if (error) {
             return makeResponse({error: (error as any).message})
         }

@@ -5,6 +5,7 @@ import {useRouter} from 'next/navigation';
 import toast from "react-hot-toast";
 import {$} from "@/lib/request";
 import {authService} from "@/services";
+import {UserRole} from "@/models";
 
 // Define a utility for animations
 const fadeIn = (delay = 0) => {
@@ -131,7 +132,7 @@ export default function AdminSetupPage() {
                     id_front_url: '',
                     id_back_url: '',
                     phone_number: formValues.phone,
-                    role: 'user', // Changed from 'admin' to 'user'
+                    role: UserRole.ADMIN,
                 }
             }).catch(err => {
                 toast.error(`Registration failed. ${err.message}`);
