@@ -3,7 +3,7 @@
 
 import {Award, Briefcase, FileEdit, Key, Phone, Shield, Smartphone, User as UserIcon, Users} from 'lucide-react';
 import {useState} from 'react';
-import {User} from "@/models";
+import {User, UserStatus} from "@/models";
 
 interface UserProfileDetailsProps {
   user: User;
@@ -280,6 +280,7 @@ function EditableDetailsForm({ user, onSave }: { user: User; onSave: () => void 
         phone_number: formData.phone_number,
         mobigo_number: formData.mobigo_number || undefined,
         is_active: formData.is_active,
+        status: UserStatus.ACTIVE
       });
 
       if (error) {
