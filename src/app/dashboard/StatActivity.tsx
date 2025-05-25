@@ -1,13 +1,24 @@
 import {NavigationProvider, Screen, useActivity} from "@/app/dashboard/leader-console/components/ActivityCombat";
 import React, {useEffect, useState} from "react";
 import StartPreview from "@/app/dashboard/components/StartPreview";
-import TeamList from "@/ui/components/user/TeamList";
 import StaffList from "@/ui/components/user/StaffList";
 import {SIMStatus, Team, User} from "@/models";
-import {Activity, ArrowLeft, Calendar, Users, Map, Package, CheckCircle, Award, AlertTriangle, BarChart3} from "lucide-react";
+import {
+    Activity,
+    AlertTriangle,
+    ArrowLeft,
+    Award,
+    BarChart3,
+    Calendar,
+    CheckCircle,
+    Map,
+    Package,
+    Users
+} from "lucide-react";
 import simService from "@/services/simService";
-import {userService, teamService} from "@/services";
+import {teamService, userService} from "@/services";
 import QualityBreakdown from "@/app/dashboard/components/QualityBreakdown";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function StatActivity({start, onClose}: any) {
     return (
@@ -46,6 +57,7 @@ function MainActivity({start, onClose}: any) {
 }
 
 function QualityActivity() {
+    const {user} = useApp()
     const {getParams, goBack} = useActivity();
     const card = getParams()["card"];
     const [currentDate] = useState(new Date().toLocaleDateString());
@@ -58,7 +70,9 @@ function QualityActivity() {
     // Fetch SIM cards and team data
     useEffect(() => {
         async function fetchData() {
+            if (!user) return;
             setLoading(true);
+
 
             try {
                 // Get current date and previous period date range
@@ -120,7 +134,7 @@ function QualityActivity() {
 
                 // Fetch all SIM cards - we'll filter them client-side for this demo
                 // In a production app, you'd want to filter on the server
-                const {data: allSimData} = await simService.getAllSimCards(null);
+                const {data: allSimData} = await simService.getAllSimCards(user);
 
                 if (allSimData) {
                     // Filter SIM cards for current period
@@ -135,7 +149,9 @@ function QualityActivity() {
                         return simDate >= prevStartDate && simDate <= prevEndDate;
                     });
 
+                    // @ts-ignore
                     setSimCards(currentPeriodSims);
+                    // @ts-ignore
                     setPreviousSimCards(previousPeriodSims);
                 }
 
@@ -145,6 +161,7 @@ function QualityActivity() {
 
                 if (teamsData) {
                     teamsData.forEach(team => {
+                        // @ts-ignore
                         teamMap[team.id] = team.name;
                     });
                 }
@@ -158,7 +175,7 @@ function QualityActivity() {
         }
 
         fetchData();
-    }, [period]);
+    }, [period,user]);
 
     return (
         <div className="bg-gray-50 flex flex-col h-full">
