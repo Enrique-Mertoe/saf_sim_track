@@ -230,6 +230,7 @@ export default function UserProfilePage() {
                         // Find the UserProfileDetails component and trigger edit mode
                         const detailsElement = document.querySelector('[data-testid="edit-profile-button"]');
                         if (detailsElement) {
+                            //@ts-ignore
                             detailsElement.click();
                         }
                     }}

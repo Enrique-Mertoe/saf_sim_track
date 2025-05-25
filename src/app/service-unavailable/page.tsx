@@ -46,7 +46,7 @@ function ServiceUnavailableContent() {
           title: 'No Team Assignment',
           icon: <Users className="h-16 w-16 text-blue-500" />,
           message: 'You are not assigned to a team.',
-          description: 'You need to be assigned to a team by a Team Leader to access the system. Please contact your Team Leader for assistance.',
+          description: 'You need to be assigned to a team by Admin to access the system. Please contact your admin for assistance.',
           actionText: 'Contact Team Leader',
           actionLink: 'mailto:teamleader@example.com',
           color: 'blue'
@@ -144,7 +144,7 @@ function ServiceUnavailableContent() {
 
         <div className="mt-8 text-sm text-gray-500">
           <p>If you believe this is an error, please contact support.</p>
-          <p className="mt-1">User ID: {user?.id || 'Not logged in'}</p>
+          <p className="mt-1">User ID: {user?.phone_number || 'Not logged in'}</p>
         </div>
       </div>
     </motion.div>
