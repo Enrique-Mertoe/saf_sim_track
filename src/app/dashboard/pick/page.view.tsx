@@ -479,7 +479,7 @@ const SerialNumberForm: React.FC = () => {
                 match: SIMStatus.MATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
                 team_id: selectedTeam,
                 batch_id: batchId,
-                registered_by_user_id: user?.id!
+                registered_by_user_id: user!.id
             }
             updateSerialStatus(ser.id, {
                 isUploading: true,
