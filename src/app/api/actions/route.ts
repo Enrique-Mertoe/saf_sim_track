@@ -2,13 +2,11 @@ import {makeResponse} from "@/helper";
 import {NextRequest} from "next/server";
 import AdminActions, {Logs} from "@/app/api/actions/admin-actions";
 import {createSuperClient} from "@/lib/supabase/server";
-import {cookies} from "next/headers";
 
 // Profile actions class for handling user profile updates
 class ProfileActions {
     static async supabase() {
-        const cookieStore = cookies();
-        return await createSuperClient(cookieStore);
+        return await createSuperClient();
     }
 
     static async update_id_documents(data: any) {
