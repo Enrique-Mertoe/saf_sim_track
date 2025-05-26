@@ -1,6 +1,6 @@
 import React, {ChangeEvent, useEffect, useState} from "react";
 import simService from "@/services/simService";
-import {SIMStatus, Team as Team1, User} from "@/models";
+import {Team as Team1, User} from "@/models";
 import {motion} from "framer-motion";
 
 interface SerialNumber {
@@ -89,49 +89,7 @@ export const SerialItem = ({
     }, [serial.id, serial.value, serial.isValid, serial.isChecking]);
 
     // Handle serial upload
-    useEffect(() => {
-        const uploadSerial = async () => {
-            if (!serial.isUploading) return;
 
-            try {
-                // Skip if not valid, already exists, already uploaded
-                if (!serial.isValid || serial.exists || serial.isUploaded || serial.isChecking) {
-                    updateSerialStatus(serial.id, {isUploading: false});
-                    onUploadComplete(false);
-                    return;
-                }
-                console.log("serial", selectedTeam)
-                const simdata = await simService.createSIMCard({
-                    serial_number: serial.value,
-                    team_id: selectedTeam,
-                    sold_by_user_id: null,
-                    match: SIMStatus.UNMATCH,
-                    quality: SIMStatus.NONQUALITY
-                })
-                if (!simdata) {
-                    throw new Error("Failed to upload SIM serial");
-                }
-                // Success case
-                updateSerialStatus(serial.id, {
-                    isUploading: false,
-                    isUploaded: true,
-                    exists: true,
-                    uploadError: null
-                });
-                onUploadComplete(true);
-
-            } catch (err: any) {
-                console.error('Error uploading serial:', serial.value, err);
-                updateSerialStatus(serial.id, {
-                    isUploading: false,
-                    uploadError: err.message || 'Failed to upload'
-                });
-                onUploadComplete(false);
-            }
-        };
-
-        // uploadSerial().then();
-    }, [serial.isUploading]);
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
