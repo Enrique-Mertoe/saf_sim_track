@@ -328,8 +328,10 @@ export default function StaffUploadPage() {
                 sale_location: location,
                 sold_by_user_id: user!.id,
                 team_id: user!.team_id,
-                match:SIMStatus.UNMATCH,
-                quality:SIMStatus.NONQUALITY
+                match: SIMStatus.UNMATCH,
+                quality: SIMStatus.NONQUALITY,
+                batch_id: "",
+                registered_by_user_id: ""
             };
             // Upload to service
             const data = await simService.createSIMCard(simData);
