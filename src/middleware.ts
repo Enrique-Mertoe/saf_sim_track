@@ -1,6 +1,6 @@
 // middleware.ts
-import {NextResponse} from 'next/server';
 import type {NextRequest} from 'next/server';
+import {NextResponse} from 'next/server';
 import {updateSession} from "@/lib/supabase/middleware";
 
 const freePaths = [
@@ -8,6 +8,7 @@ const freePaths = [
     "/api/auth",
     "/api/session",
     "/tt1",
+    '/forum/topic/',
     "/help",
     "/contact-us",
 ];

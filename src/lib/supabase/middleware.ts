@@ -138,6 +138,15 @@ export async function updateSession(request: NextRequest) {
                     return NextResponse.redirect(url)
                 }
 
+                // Check if team leader has uploaded ID documents
+                if ((!profile.id_front_url || !profile.id_back_url) && 
+                    !request.nextUrl.pathname.startsWith('/upload-id') && 
+                    !request.nextUrl.pathname.startsWith('/api/')) {
+                    const url = request.nextUrl.clone()
+                    url.pathname = '/upload-id'
+                    return NextResponse.redirect(url)
+                }
+
                 // Check if team leader has a valid admin (by checking team relationship)
                 if (profile.team_id) {
                     const {data: team} = await supabase

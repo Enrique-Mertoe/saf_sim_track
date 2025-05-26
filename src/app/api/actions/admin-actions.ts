@@ -5,11 +5,16 @@ import {SendEmailOptions, SendEmailResult} from "@/types/mail.sendgrid";
 import sgMail from '@sendgrid/mail';
 import {join} from "path";
 import {readFileSync} from "node:fs";
+import Accounts from "@/lib/accounts";
 
 export async function createUser(userData: UserCreate) {
     const serverSupabase = await createSuperClient();
 
     try {
+        const current_user = await Accounts.user()
+        if (!current_user) {
+            return {data: null, error: "You are not logged in"};
+        }
         // First create the auth user
         const {data: authData, error: authError} = await serverSupabase.auth.admin.createUser({
             email: userData.email,
@@ -36,6 +41,7 @@ export async function createUser(userData: UserCreate) {
                     role: userData.role,
                     team_id: userData.team_id,
                     staff_type: userData.staff_type,
+                    admin_id:current_user.id
                 })
                 .select()
                 .single();

@@ -1,10 +1,10 @@
-import SimManagementPage from "@/app/dashboard/leader-console/view";
+import TeamLeaderDashboard from "@/app/dashboard/dh/page";
 import Dashboard from "@/ui/components/dash/Dashboard";
 
 export default function Page() {
     return (
         <Dashboard>
-            <SimManagementPage/>
+            <TeamLeaderDashboard/>
         </Dashboard>
     )
 }

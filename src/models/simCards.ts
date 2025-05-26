@@ -4,6 +4,7 @@ export interface SIMCard {
     id: string;
     created_at: string;
     assigned_on?: string;
+    registered_on?: string;
     serial_number: string;
     customer_msisdn: string;
     customer_id_number: string;
@@ -22,6 +23,7 @@ export interface SIMCard {
     top_up_date?: string;
     first_usage_date?: string;
     first_usage_amount?: number;
+    assigned_to_user_id?: string;
     status: SIMStatus;
     team_id: string;
     region: string;
@@ -39,6 +41,8 @@ export interface SIMCardCreate {
     team_id?: string;
     match: SIMStatus;
     quality: SIMStatus;
+    batch_id: string;
+    registered_by_user_id: string;
 }
 
 export interface SIMCardUpdate {

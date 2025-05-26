@@ -1,5 +1,5 @@
 "use client"
-import React, {ChangeEvent, useEffect, useState, useRef} from 'react';
+import React, {ChangeEvent, useEffect, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
@@ -9,13 +9,12 @@ import {teamService} from "@/services";
 import {toast} from "react-hot-toast";
 import Progress from "@/ui/components/MaterialProgress";
 import useApp from "@/ui/provider/AppProvider";
-import {FileText, Loader2, Maximize2} from 'lucide-react';
+import {FileText, Maximize2} from 'lucide-react';
 import {useDialog} from "@/app/_providers/dialog";
 import PaginatedSerialGrid from "@/app/dashboard/pick/components/ItemList";
 import * as mammoth from 'mammoth';
 import * as Papaparse from 'papaparse';
 import alert from "@/ui/alert";
-import {string} from "yup";
 
 // Define TypeScript interfaces
 interface SerialNumber {
@@ -472,12 +471,15 @@ const SerialNumberForm: React.FC = () => {
         setUploadMessage(`Starting upload of ${serialsToUpload.length} serials to ${teams.find(t => t.id === selectedTeam)?.name}...`);
         setIsUploading(true);
         setUploadingCount(serialsToUpload.length);
+        const batchId = `BATCH-${generateId()}`
 
         // Mark all serials as uploading
         await simService.createSIMCardBatch(serialsToUpload.map(ser => {
             const ser_data: SIMCardCreate = {
                 match: SIMStatus.MATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
-                team_id: selectedTeam
+                team_id: selectedTeam,
+                batch_id: batchId,
+                registered_by_user_id: user?.id!
             }
             updateSerialStatus(ser.id, {
                 isUploading: true,

@@ -1,12 +1,11 @@
 "use client"
 import {useEffect, useState} from 'react';
-import {AlertCircle, Eye, EyeOff, Lock, User, UserCircle, CheckCircle} from 'lucide-react';
+import {AlertCircle, CheckCircle, Eye, EyeOff, Lock, Phone, User, UserCircle} from 'lucide-react';
 import toast from "react-hot-toast";
-import {authService} from "@/services";
+import {authService, sessionService} from "@/services";
 import Button from "@/app/accounts/components/Button";
 import {AnimatePresence, motion} from "framer-motion";
 import {UserRole} from "@/models/types";
-import {sessionService} from '@/services';
 import {UserAccount} from './types';
 
 // Define a utility for animations
@@ -33,12 +32,15 @@ export default function LoginPage() {
     const [showPreviousAccounts, setShowPreviousAccounts] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<EnhancedUserAccount | null>(null);
     const [authState, setAuthState] = useState<'loading' | 'selectAccount' | 'newLogin' | 'passwordRequired' | 'authenticating'>('loading');
-    const [formValues, setFormValues] = useState({
+    const [signInMethod, setSignInMethod] = useState('email');
+    const [formValues, setFormValues] = useState<any>({
         email: '',
+        phone: '',
         password: '',
     });
-    const [errors, setErrors] = useState({
+    const [errors, setErrors] = useState<any>({
         email: '',
+        phone: '',
         password: '',
         general: ''
     });
@@ -97,16 +99,39 @@ export default function LoginPage() {
     const validateForm = () => {
         const newErrors = {
             email: '',
+            phone: '',
             password: '',
+            general: ''
         };
         let isValid = true;
 
-        if (!formValues.email) {
-            newErrors.email = 'Email address is required';
-            isValid = false;
-        } else if (!/\S+@\S+\.\S+/.test(formValues.email)) {
-            newErrors.email = 'Enter a valid email address';
-            isValid = false;
+        if (signInMethod === 'email') {
+            if (!formValues.email) {
+                newErrors.email = 'Email address is required';
+                isValid = false;
+            } else if (!/\S+@\S+\.\S+/.test(formValues.email)) {
+                newErrors.email = 'Enter a valid email address';
+                isValid = false;
+            }
+        } else if (signInMethod === 'phone') {
+            if (!formValues.phone) {
+                newErrors.phone = 'Phone number is required';
+                isValid = false;
+            } else {
+                // Remove all non-digit characters for validation
+                const digitsOnly = formValues.phone.replace(/\D/g, '');
+
+                // Check if we have at least 9 digits (minimum for a valid phone number)
+                if (digitsOnly.length < 9) {
+                    newErrors.phone = 'Phone number must have at least 9 digits';
+                    isValid = false;
+                }
+                // If more than 12 digits, it's probably invalid
+                else if (digitsOnly.length > 12) {
+                    newErrors.phone = 'Phone number has too many digits';
+                    isValid = false;
+                }
+            }
         }
 
         if (!formValues.password) {
@@ -137,9 +162,17 @@ export default function LoginPage() {
         }
     };
 
-    const performLogin = async (email: string, password: string) => {
+    const performLogin = async (identifier: string, password: string, isPhone: boolean = false) => {
         try {
-            const res = await authService.signIn(email, password);
+            let res;
+            if (isPhone) {
+                // Use phone-based authentication
+                res = await authService.signInWithPhone(identifier, password);
+            } else {
+                // Use email-based authentication
+                res = await authService.signIn(identifier, password);
+            }
+
             if (res.error) {
                 throw new Error(res.error.message);
             }
@@ -162,7 +195,7 @@ export default function LoginPage() {
             // Store/update user account with tokens for future seamless login
             await sessionService.storeUserAccount({
                 id: user.id,
-                email: user.email || email,
+                email: user.email || (isPhone ? '' : identifier),
                 fullName: user.full_name || '',
                 lastLogin: new Date().toISOString(),
                 hasStoredTokens: true,
@@ -245,10 +278,15 @@ export default function LoginPage() {
         try {
             setIsLoading(true);
             setAuthState('authenticating');
-            await performLogin(formValues.email, formValues.password);
+
+            if (signInMethod === 'phone') {
+                await performLogin(formValues.phone, formValues.password, true);
+            } else {
+                await performLogin(formValues.email, formValues.password, false);
+            }
         } catch (err: any) {
             toast.error(`Login failed. ${err.message}`);
-            setErrors(prev => ({...prev, general: err.message}));
+            setErrors((prev: any) => ({...prev, general: err.message}));
 
             if (selectedAccount) {
                 setAuthState('passwordRequired');
@@ -447,8 +485,41 @@ export default function LoginPage() {
                                 className="space-y-6"
                             >
                                 <form onSubmit={handleSubmit}>
-                                    {/* Email Input - only show for new login */}
+                                    {/* Toggle between email and phone */}
                                     {authState === 'newLogin' && (
+                                        <div className="mb-6">
+                                            <div className="flex flex-col items-center space-y-2">
+                                                <div className="bg-gray-100 dark:bg-gray-700 p-1 rounded-lg flex">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSignInMethod('phone')}
+                                                        className={`px-4 py-2 rounded ${signInMethod === 'phone'
+                                                            ? 'bg-green-600 text-white dark:bg-green-500'
+                                                            : 'text-gray-600 dark:text-gray-300'}`}
+                                                    >
+                                                        Phone
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSignInMethod('email')}
+                                                        className={`px-4 py-2 rounded ${signInMethod === 'email'
+                                                            ? 'bg-green-600 text-white dark:bg-green-500'
+                                                            : 'text-gray-600 dark:text-gray-300'}`}
+                                                    >
+                                                        Email
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
+                                                    {signInMethod === 'phone' 
+                                                        ? "You can log in with your phone number even if you registered with email"
+                                                        : "Use your registered email address to log in"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Email Input - only show for new login with email method */}
+                                    {authState === 'newLogin' && signInMethod === 'email' && (
                                         <div>
                                             <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 Email Address
@@ -466,13 +537,46 @@ export default function LoginPage() {
                                                     className={`pl-10 block w-full rounded-md py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} 
                                                         focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white`}
                                                     placeholder="Enter your email address"
-                                                    autoFocus
+                                                    autoFocus={signInMethod === 'email'}
                                                 />
                                             </div>
                                             {errors.email && (
                                                 <div className="mt-1 flex items-center text-red-500 text-sm">
                                                     <AlertCircle className="h-4 w-4 mr-1"/>
                                                     {errors.email}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Phone Input - only show for new login with phone method */}
+                                    {authState === 'newLogin' && signInMethod === 'phone' && (
+                                        <div>
+                                            <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                Phone Number
+                                            </label>
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
+                                                </div>
+                                                <input
+                                                    type="tel"
+                                                    id="phone"
+                                                    name="phone"
+                                                    value={formValues.phone}
+                                                    onChange={handleInputChange}
+                                                    className={`pl-10 block w-full rounded-md py-3 border ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} 
+                                                        focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white`}
+                                                    placeholder="e.g. 0712345678 or +254712345678"
+                                                    autoFocus={signInMethod === 'phone'}
+                                                    pattern="[0-9+\s\-()]+"
+                                                    title="Enter a valid phone number (digits, +, spaces, hyphens allowed)"
+                                                />
+                                            </div>
+                                            {errors.phone && (
+                                                <div className="mt-1 flex items-center text-red-500 text-sm">
+                                                    <AlertCircle className="h-4 w-4 mr-1"/>
+                                                    {errors.phone}
                                                 </div>
                                             )}
                                         </div>

@@ -1,6 +1,5 @@
 import {SIMCardCreate, SIMCardUpdate, SIMStatus} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
-import SignalEvent from "@/lib/supabase/signal";
 
 export const simCardService = {
     // Search SIM cards with various filters
@@ -24,26 +23,39 @@ export const simCardService = {
         const supabase = createSupabaseClient();
 
         // First get total count for pagination
-        const {count, error: countError} = await supabase
+        let query = supabase
             .from('sim_cards')
-            .select('*', {count: 'exact', head: true})
-            .ilike('serial_number', searchTerm ? `%${searchTerm}%` : '%')
-            .eq(status ? 'status' : 'id', status || '')
-            .eq(teamId ? 'team_id' : 'id', teamId || '')
-            .gte(fromDate ? 'created_at' : 'id', fromDate || '')
-            .lte(toDate ? 'created_at' : 'id', toDate || '');
+            .select('*', {count: 'exact', head: true});
+
+        if (searchTerm) {
+            query = query.ilike('serial_number', `%${searchTerm}%`);
+        }
+        if (status) {
+            query = query.eq('status', status);
+        }
+        if (teamId) {
+            query = query.eq('team_id', teamId);
+        }
+        if (fromDate) {
+            query = query.gte('created_at', new Date(fromDate).toISOString());
+        }
+        if (toDate) {
+            query = query.lte('created_at', new Date(toDate).toISOString());
+        }
+
+        const {count, error: countError} = await query;
+
 
         // Then get paginated data
         const {data, error} = await supabase
             .rpc('search_sim_cards', {
                 search_term: searchTerm || null,
                 status_filter: status || null,
-                team_id: teamId || null,
+                team_id_param: teamId || null,
                 from_date: fromDate ? new Date(fromDate).toISOString() : null,
                 to_date: toDate ? new Date(toDate).toISOString() : null
             })
             .range((page - 1) * pageSize, page * pageSize - 1);
-
         return {
             data,
             count,

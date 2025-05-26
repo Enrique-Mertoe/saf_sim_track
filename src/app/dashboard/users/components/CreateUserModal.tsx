@@ -1,9 +1,9 @@
 'use client';
 
-import React, {useState, useEffect, useRef} from 'react';
-import {Team, StaffType, UserRole} from "@/models";
-import {motion, AnimatePresence} from 'framer-motion';
-import {CheckCircle, AlertCircle, Upload, X, ArrowRight, Loader2} from 'lucide-react';
+import React, {useEffect, useRef, useState} from 'react';
+import {StaffType, Team} from "@/models";
+import {AnimatePresence, motion} from 'framer-motion';
+import {AlertCircle, ArrowRight, CheckCircle, Loader2, Upload, X} from 'lucide-react';
 import {storageService, teamService} from "@/services";
 import {generatePassword, generateUUID} from "@/helper";
 import {$} from "@/lib/request";
@@ -194,7 +194,8 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                 return;
             }
 
-            if (!idFrontFile || !idBackFile) {
+            // Only require ID images for roles other than TEAM_LEADER
+            if (formData.role !== 'TEAM_LEADER' && (!idFrontFile || !idBackFile)) {
                 setError('Both front and back ID images are required');
                 return;
             }
@@ -204,15 +205,26 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
 
             try {
                 const key = generateUUID()
-                const {url: idFrontUrl, error: e1} = await storageService.uploadIdFrontImage(`team-${key}`, idFrontFile)
-                console.log(e1)
-                if (e1) {
-                    return setError(e1.message)
+                let idFrontUrl = '';
+                let idBackUrl = '';
+
+                // Only upload ID images if they are provided
+                if (idFrontFile) {
+                    const {url, error: e1} = await storageService.uploadIdFrontImage(`team-${key}`, idFrontFile)
+                    console.log(e1)
+                    if (e1) {
+                        return setError(e1.message)
+                    }
+                    idFrontUrl = url;
                 }
-                const {url: idBackUrl, error: e2} = await storageService.uploadIdBackImage(`team-${key}`, idBackFile)
-                console.log(e2)
-                if (e2) {
-                    return setError(e2.message)
+
+                if (idBackFile) {
+                    const {url, error: e2} = await storageService.uploadIdBackImage(`team-${key}`, idBackFile)
+                    console.log(e2)
+                    if (e2) {
+                        return setError(e2.message)
+                    }
+                    idBackUrl = url;
                 }
                 $.post({
                     url: "/api/actions",
@@ -812,4 +824,3 @@ const renderStepContent = () => {
         </>
     );
 }
-              

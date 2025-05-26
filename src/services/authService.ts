@@ -3,7 +3,7 @@ import {createSupabaseClient} from "@/lib/supabase/client";
 import {notificationService} from "@/services/notificationService";
 
 export const authService = {
-    // Sign in a user
+    // Sign in a user with email
     async signIn(email: string, password: string) {
         const supabase = createSupabaseClient();
         const res = await supabase.auth.signInWithPassword({email, password});
@@ -20,6 +20,98 @@ export const authService = {
             );
         }
         return res
+    },
+
+    // Sign in a user with phone number
+    async signInWithPhone(phone: string, password: string) {
+        const supabase = createSupabaseClient();
+
+        try {
+            // Normalize the phone number by removing any non-digit characters
+            const normalizedPhone = phone.replace(/\D/g, '');
+
+            // Extract the last 9 digits for matching (most phone numbers will have at least this)
+            const lastNineDigits = normalizedPhone.slice(-9);
+            const lastEightDigits = normalizedPhone.slice(-8);
+
+            // Try different phone number formats to increase chances of finding the user
+            const phoneFormats = [
+                normalizedPhone,                   // Raw digits
+                `+${normalizedPhone}`,             // With + prefix
+                `+254${lastNineDigits}`,           // Kenya format with last 9 digits
+                `0${lastNineDigits}`               // Kenya format with 0 prefix
+            ];
+
+            // Find user by trying different phone number formats
+            let userData = null;
+            let userError = null;
+
+            // First try exact matches with different formats
+            for (const phoneFormat of phoneFormats) {
+                const result = await supabase
+                    .from('users')
+                    .select('email, phone_number')
+                    .eq('phone_number', phoneFormat)
+                    .limit(1);
+
+                if (!result.error && result.data && result.data.length > 0) {
+                    userData = result.data[0];
+                    break;
+                } else {
+                    userError = result.error;
+                }
+            }
+
+            // If no exact match, try partial matching with the last digits
+            if (!userData) {
+                // Try to match by the last 9 or 8 digits (which are most likely to be consistent)
+                const result = await supabase
+                    .from('users')
+                    .select('email, phone_number')
+                    .or(`phone_number.ilike.%${lastNineDigits},phone_number.ilike.%${lastEightDigits}`)
+                    .limit(1);
+
+                if (!result.error && result.data && result.data.length > 0) {
+                    userData = result.data[0];
+                }
+            }
+
+            if (!userData || !userData.email) {
+                console.log('No user found with phone number:', phone, 'Tried formats:', phoneFormats);
+                return { 
+                    error: { message: 'No account found with this phone number' },
+                    data: null
+                };
+            }
+
+            // Then sign in with the email and password
+            const res = await supabase.auth.signInWithPassword({
+                email: userData.email,
+                password
+            });
+
+            if (res.error)
+                return res;
+
+            if (res.data.user) {
+                await securityService.updateLastLogin();
+
+                // Create login notification
+                await notificationService.createAuthNotification(
+                    res.data.user.id,
+                    'login',
+                    'You have successfully logged in to your account'
+                );
+            }
+
+            return res;
+        } catch (error) {
+            console.error('Error in signInWithPhone:', error);
+            return {
+                error: { message: 'Failed to sign in with phone number' },
+                data: null
+            };
+        }
     },
     // Sign out the current user
     async signOut() {

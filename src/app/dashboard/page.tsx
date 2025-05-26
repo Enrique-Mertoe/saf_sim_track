@@ -1,10 +1,10 @@
 "use server"
 import SafaricomDashboard from "@/app/dashboard/page.view";
 import {UserRole} from "@/models";
-import TeamLeader from "@/app/dashboard/TeamLeader";
 import Accounts from "@/lib/accounts";
 import {redirect} from "next/navigation";
 import StaffAppRedirect from "@/app/dashboard/StaffAppRedirect";
+import TeamLeaderDashboard from "@/app/dashboard/dh/page";
 
 export default async function DashboardPage() {
     const user = await Accounts.user();
@@ -18,7 +18,7 @@ export default async function DashboardPage() {
                 user.role == UserRole.ADMIN ?
                     <SafaricomDashboard/>
                     : user.role == UserRole.TEAM_LEADER
-                        ? <TeamLeader/> : <StaffAppRedirect/>
+                        ? <TeamLeaderDashboard/> : <StaffAppRedirect/>
             }
         </>
     )

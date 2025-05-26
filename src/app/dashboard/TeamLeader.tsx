@@ -102,11 +102,11 @@ const formatDate = (date: Date): string => {
     return date.toISOString().split('T')[0];
 };
 
-// Function to get default date range (last 30 days)
+    // Function to get default date range (today)
 const getDefaultDateRange = (): DateRange => {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
+    // Default to today's date for daily view
 
     return {
         startDate: formatDate(startDate),
@@ -197,8 +197,9 @@ export default function TeamLeader() {
                 .from('sim_cards')
                 .select('*')
                 .eq('team_id', user.team_id)
-                .gte('created_at', filters.dateRange.startDate)
-                .lte('created_at', filters.dateRange.endDate);
+                .eq('status', SIMStatus.REGISTERED)
+                .gte('registered_on', filters.dateRange.startDate)
+                .lte('registered_on', filters.dateRange.endDate);
 
             if (simError) throw simError;
 
@@ -425,11 +426,11 @@ export default function TeamLeader() {
 
             // Fill in actual data
             for (const sim of simCards) {
-                const saleDate = sim.created_at.split('T')[0];
-                if (dailyData[saleDate]) {
-                    dailyData[saleDate].sales++;
+                const registrationDate = sim.registered_on ? sim.registered_on.split('T')[0] : sim.created_at.split('T')[0];
+                if (dailyData[registrationDate]) {
+                    dailyData[registrationDate].sales++;
                     if (sim.quality === SIMStatus.QUALITY) {
-                        dailyData[saleDate].quality++;
+                        dailyData[registrationDate].quality++;
                     }
                 }
             }

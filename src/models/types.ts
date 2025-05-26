@@ -30,4 +30,6 @@ export enum SIMStatus {
     ACTIVATED = 'ACTIVATED',
     ASSIGNED = 'ASSIGNED',
     PENDING = 'PENDING',
+    REGISTERED = 'REGISTERED',
+    SOLD = 'SOLD',
 }
