@@ -380,3 +380,31 @@ function blobToDataURL(blob: Blob, mimeType: string): Promise<string> {
         reader.readAsDataURL(blob)
     })
 }
+
+/**
+ * Get the download URL for the Android app APK
+ * @returns {Promise<string>} - URL to download the app
+ */
+export async function getAppDownloadUrl(): Promise<string | null> {
+    try {
+        const supabase = createSupabaseClient();
+        const filePath = 'apps/ssm.apk';
+        const bucket = 'sim-management';
+
+        // Create a signed URL with longer expiry for app download
+        const { data, error } = await supabase
+            .storage
+            .from(bucket)
+            .createSignedUrl(filePath, 86400); // 24 hours expiry
+
+        if (error || !data) {
+            console.error('❌ Failed to create signed URL for app download:', error?.message);
+            return null;
+        }
+
+        return data.signedUrl;
+    } catch (err) {
+        console.error('❌ Error getting app download URL:', err);
+        return null;
+    }
+}

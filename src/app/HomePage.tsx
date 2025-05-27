@@ -82,7 +82,6 @@ export default function Home() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <motion.a
                                 href={"/subscribe"}
-
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
@@ -91,12 +90,19 @@ export default function Home() {
                             </motion.a>
                             <motion.a
                                 href={"/accounts/login"}
-
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"
                             >
                                 Sign in
+                            </motion.a>
+                            <motion.a
+                                href={"/app-download"}
+                                whileHover={{scale: 1.05}}
+                                whileTap={{scale: 0.95}}
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300 flex items-center gap-2"
+                            >
+                                <span className="text-xl">📱</span> Get Mobile App
                             </motion.a>
                         </div>
                     </motion.div>
@@ -272,6 +278,102 @@ export default function Home() {
                 </div>
             </section>
 
+            {/* Mobile App Section */}
+            <section className="py-20 bg-slate-50">
+                <div className="container mx-auto px-6">
+                    <motion.div
+                        initial={{opacity: 0}}
+                        whileInView={{opacity: 1}}
+                        viewport={{once: true}}
+                        className="text-center mb-12"
+                    >
+                        <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                            Take SIM Management Mobile
+                        </h2>
+                        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                            Our Android app puts the power of SIM Manager in your pocket
+                        </p>
+                    </motion.div>
+
+                    <div className="flex flex-col md:flex-row items-center gap-12">
+                        <motion.div
+                            initial={{opacity: 0, x: -30}}
+                            whileInView={{opacity: 1, x: 0}}
+                            viewport={{once: true}}
+                            className="md:w-1/2 flex justify-center"
+                        >
+                            <div className="relative">
+                                {/* Phone mockup */}
+                                <div className="w-64 h-[500px] bg-slate-800 rounded-[36px] p-3 shadow-2xl relative overflow-hidden border-8 border-slate-700">
+                                    <div className="absolute top-0 left-0 right-0 h-6 bg-slate-800 rounded-t-[28px] flex justify-center items-start pt-1">
+                                        <div className="w-24 h-4 bg-slate-900 rounded-full"></div>
+                                    </div>
+                                    <div className="w-full h-full bg-gradient-to-br from-green-600 to-indigo-600 rounded-[24px] flex items-center justify-center overflow-hidden">
+                                        <div className="text-white text-center p-6">
+                                            <div className="text-5xl mb-4">📱</div>
+                                            <h3 className="text-xl font-bold mb-2">SIM Manager</h3>
+                                            <p className="text-green-100 text-sm">Mobile Experience</p>
+                                            <div className="mt-8 grid grid-cols-2 gap-3">
+                                                {["📊", "📈", "🔔", "⚙️"].map((icon, i) => (
+                                                    <div key={i} className="bg-white/10 p-3 rounded-lg">
+                                                        <div className="text-2xl">{icon}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Decorative elements */}
+                                <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-green-100 rounded-full opacity-70 z-[-1]"></div>
+                                <div className="absolute -top-4 -left-4 w-16 h-16 bg-indigo-100 rounded-full opacity-70 z-[-1]"></div>
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{opacity: 0, x: 30}}
+                            whileInView={{opacity: 1, x: 0}}
+                            viewport={{once: true}}
+                            transition={{delay: 0.2}}
+                            className="md:w-1/2"
+                        >
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-4">Why Go Mobile?</h3>
+                                    <ul className="space-y-4">
+                                        {[
+                                            {icon: "🚀", text: "Access your SIM data from anywhere, anytime"},
+                                            {icon: "🔔", text: "Receive instant notifications on important events"},
+                                            {icon: "📊", text: "View real-time performance metrics on the go"},
+                                            {icon: "🔄", text: "Seamlessly sync between desktop and mobile"}
+                                        ].map((item, i) => (
+                                            <li key={i} className="flex items-start gap-3">
+                                                <span className="text-2xl">{item.icon}</span>
+                                                <span className="text-slate-700">{item.text}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <motion.div
+                                    whileHover={{scale: 1.03}}
+                                    whileTap={{scale: 0.98}}
+                                    className="mt-8"
+                                >
+                                    <a 
+                                        href="/app-download" 
+                                        className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-lg shadow-lg transition-all duration-300"
+                                    >
+                                        <span className="text-xl">📲</span>
+                                        Download Our Android App
+                                    </a>
+                                </motion.div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
             {/* CTA - Clean */}
             <section className="py-20 bg-gradient-to-r from-green-600 to-indigo-600">
                 <div className="container mx-auto px-6">
@@ -290,7 +392,6 @@ export default function Home() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <motion.a
                                 href={"/subscribe"}
-
                                 whileHover={{scale: 1.05}}
                                 whileTap={{scale: 0.95}}
                                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-sm cursor-pointer font-semibold text-lg shadow-lg transition-all duration-300"

@@ -11,6 +11,7 @@ const freePaths = [
     '/forum/topic/',
     "/help",
     "/contact-us",
+    "/app-download",
 ];
 
 export async function middleware(req: NextRequest) {
