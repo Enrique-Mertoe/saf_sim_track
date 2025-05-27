@@ -95,9 +95,13 @@ export async function updateSession(request: NextRequest) {
             }
 
             function get_subscription_user() {
-                if (user?.role == UserRole.ADMIN) {
+                if (user?.role === UserRole.ADMIN) {
                     return user.id
-                } else return (user?.admin_id || '')
+                } else if (user?.admin_id) {
+                    return user.admin_id
+                } else {
+                    return ''
+                }
             }
 
             // Check subscription status
@@ -135,6 +139,14 @@ export async function updateSession(request: NextRequest) {
                     return NextResponse.redirect(url)
                 }
             } else if (profile.role === UserRole.TEAM_LEADER) {
+                // Team leader with no admin_id should see service unavailable page
+                if (!user.admin_id && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
+                    const url = request.nextUrl.clone()
+                    url.pathname = '/service-unavailable'
+                    url.searchParams.set('type', 'no-admin-id')
+                    return NextResponse.redirect(url)
+                }
+
                 // Team leader with no/expired subscription should see service unavailable page
                 if (!hasActiveSubscription && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
                     const url = request.nextUrl.clone()
@@ -169,6 +181,14 @@ export async function updateSession(request: NextRequest) {
                     }
                 }
             } else {
+                // Regular user with admin_id but no active subscription should see service unavailable
+                if (user.admin_id && !hasActiveSubscription && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
+                    const url = request.nextUrl.clone()
+                    url.pathname = '/service-unavailable'
+                    url.searchParams.set('type', 'admin-no-subscription')
+                    return NextResponse.redirect(url)
+                }
+
                 // Regular user should see service unavailable if not linked to a team
                 if (!profile.team_id && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
                     const url = request.nextUrl.clone()
