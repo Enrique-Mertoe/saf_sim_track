@@ -155,7 +155,7 @@ export default function SubscriptionPage() {
     return (
         <>
             <Header />
-            <div className="bg-gray-50 pt-16 min-h-screen">
+            <div className="bg-gray-50 max-sm:pt-30 pt-16 min-h-screen">
                 <div className="max-w-4xl mx-auto px-4 py-8">
                     {/* Header */}
                     <div className="text-center mb-8">

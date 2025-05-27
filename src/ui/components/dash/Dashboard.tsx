@@ -39,7 +39,7 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                     initial={false}
                     animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`hidden w-64 bg-red-500 md:block bg-white shadow-md z-30 h-screen fixed`}>
+                    className={`hidden w-64 md:block bg-white shadow-md z-30 h-screen fixed`}>
                     <Sidebar/>
                 </motion.div>
                 {/* Main Content */}
@@ -48,7 +48,7 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                     initial={false}
                     animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`flex-1 w-full md:ml-64 overflow-x-hidden  relative`}>
+                    className={`flex-1 w-full max-sm:pt-30  md:ml-64 overflow-x-hidden  relative`}>
                     <PageTransition>
                         {children}
                     </PageTransition>
