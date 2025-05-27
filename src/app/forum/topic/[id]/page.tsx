@@ -23,11 +23,10 @@ import {
 import useApp from "@/ui/provider/AppProvider";
 
 interface TopicPageProps {
-    params: {
-        id: string;
-    };
+    params: Promise<{ id: string }>
 }
-export default function TopicPage({ params }: TopicPageProps) {
+
+export default async function TopicPage({params}: TopicPageProps) {
     const [topic, setTopic] = useState<ForumTopic | null>(null);
     const [posts, setPosts] = useState<ForumPost[]>([]);
     const [loading, setLoading] = useState(true);
@@ -43,7 +42,7 @@ export default function TopicPage({ params }: TopicPageProps) {
     const {user} = useApp()
     const replyFormRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
-
+    const { id } = await params;
     // Get current user
     useEffect(() => {
         const fetchUser = async () => {
@@ -63,7 +62,7 @@ export default function TopicPage({ params }: TopicPageProps) {
         const fetchTopicAndPosts = async () => {
             setLoading(true);
             try {
-                const result = await forumService.getTopic(params.id, page);
+                const result = await forumService.getTopic(id, page);
                 setTopic(result.topic);
                 setPosts(result.posts);
                 setTotalPages(result.totalPages);
@@ -76,7 +75,7 @@ export default function TopicPage({ params }: TopicPageProps) {
         };
 
         fetchTopicAndPosts();
-    }, [params.id, page]);
+    }, [id, page]);
 
     // Format date
     const formatDate = (dateString: string) => {
@@ -120,12 +119,12 @@ export default function TopicPage({ params }: TopicPageProps) {
 
         try {
             await forumService.createPost({
-                topic_id: params.id,
+                topic_id: id,
                 content: replyContent
             });
 
             // Refresh posts
-            const result = await forumService.getTopic(params.id, page);
+            const result = await forumService.getTopic(id, page);
             setTopic(result.topic);
             setPosts(result.posts);
             setTotalPages(result.totalPages);
@@ -206,7 +205,7 @@ export default function TopicPage({ params }: TopicPageProps) {
                 await forumService.deletePost(id);
 
                 // Refresh posts
-                const result = await forumService.getTopic(params.id, page);
+                const result = await forumService.getTopic(id, page);
                 setPosts(result.posts);
                 setTotalPages(result.totalPages);
                 setTotalPosts(result.totalCount);
