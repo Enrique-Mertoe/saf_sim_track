@@ -746,6 +746,7 @@ export default function UserTable({
                                             <AnimatePresence>
                                                 {activeDropdown === user.id && (
                                                     <motion.div
+                                                        //@ts-ignore
                                                         ref={(el) => (dropdownRefs.current[user.id] = el)}
                                                         className="absolute right-0 mt-1 z-10 w-44 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                                         initial={{ opacity: 0, y: -10 }}

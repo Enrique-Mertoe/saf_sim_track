@@ -236,5 +236,47 @@ export const teamService = {
         }
 
         return query;
+    },
+
+    // Delete a team and all its dependencies
+    async deleteTeam(teamId: string) {
+        const supabase = createSupabaseClient();
+        const { data: currentUser } = await supabase.auth.getUser();
+
+        // Get the user's details including role and id
+        const { data: userDetails } = await supabase
+            .from('users')
+            .select('id, role')
+            .eq('auth_user_id', currentUser.user?.id)
+            .single();
+
+        // If user is admin, ensure they can only delete their own teams
+        if (userDetails?.role === 'admin') {
+            // First check if this team belongs to the admin
+            const { data: team } = await supabase
+                .from('teams')
+                .select('id')
+                .eq('id', teamId)
+                .eq('admin_id', userDetails.id)
+                .single();
+
+            // If team doesn't belong to this admin, return error
+            if (!team) {
+                return { data: null, error: { message: 'Team not found or access denied' } };
+            }
+        }
+
+        // Use a transaction to ensure all operations are atomic
+        // This means either all operations succeed or none do
+        const { data, error } = await supabase.rpc('delete_team_with_dependencies', {
+            team_id_param: teamId
+        });
+
+        if (error) {
+            console.error('Error deleting team:', error);
+            return { data: null, error };
+        }
+
+        return { data, error: null };
     }
 };

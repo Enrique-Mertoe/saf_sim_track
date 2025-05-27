@@ -80,7 +80,7 @@ export default function Edit({ team, onDismiss }: {
                 onDismiss();
             }, 1500);
         } catch (err: any) {
-            alert(err.message);
+            alert.error(err.message);
         } finally {
             setIsLoading(false);
         }

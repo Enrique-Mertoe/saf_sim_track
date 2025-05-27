@@ -60,7 +60,8 @@ export default function ViewTeamDetails({ team, onDismiss }: {
                         <div>
                             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Team Leader</p>
                             <p className="text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-100">
-                                {team.users?.full_name || "Not assigned"}
+                                {//@ts-ignore
+                                    team.users?.full_name || "Not assigned"}
                             </p>
                         </div>
                     </div>

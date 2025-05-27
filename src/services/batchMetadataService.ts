@@ -1,4 +1,4 @@
-import {BatchMetadata, BatchMetadataCreate, BatchMetadataUpdate, User} from "@/models";
+import {BatchMetadata, BatchMetadataCreate, BatchMetadataUpdate, User, UserRole} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
 
 export const batchMetadataService = {
@@ -15,7 +15,7 @@ export const batchMetadataService = {
         }
         
         // Team leaders can see their team's batches
-        if (user.role === 'team_leader') {
+        if (user.role === UserRole.TEAM_LEADER) {
             return supabase
                 .from('batch_metadata')
                 .select('*, team_id(*), created_by_user_id(*)')
@@ -108,7 +108,8 @@ export const batchMetadataService = {
             batchesQuery = supabase
                 .from('batch_metadata')
                 .select('*, team_id(*), created_by_user_id(*)');
-        } else if (user.role === 'team_leader') {
+        } else if (user.role === UserRole.TEAM_LEADER
+        ) {
             batchesQuery = supabase
                 .from('batch_metadata')
                 .select('*, team_id(*), created_by_user_id(*)')

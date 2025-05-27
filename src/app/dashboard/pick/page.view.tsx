@@ -873,7 +873,7 @@ const SerialNumberForm: React.FC = () => {
                                         (totalPages > 0 ?
                                             `Processing PDF (${Math.ceil(pdfProgress / 100 * totalPages)}/${totalPages})` :
                                             "Processing File...")
-                                        : "Upload File"}
+                                        : "Upload"}
                                     onClick={triggerFileUpload}
                                     disabled={!canUploadFile}
                                     icon={isFileProcessing ? '' : <FileText className="mr-1 h-4 w-4"/>}

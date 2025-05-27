@@ -134,7 +134,7 @@ export const simCardService = {
             .single();
 
         if (error) {
-            // console.error('Error fetching SIM card by serial number:', error);
+            console.error('Error fetching SIM card by serial number:', error);
             return null;
         }
 

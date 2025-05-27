@@ -317,6 +317,7 @@ export default function TeamsManagement() {
                                         <AnimatePresence>
                                             {activeDropdown === team.id && (
                                                 <motion.div
+                                                    //@ts-ignore
                                                     ref={(el) => (dropdownRefs.current[team.id] = el)}
                                                     className="absolute right-0 mt-2 top-full z-10 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                                     initial={{ opacity: 0, y: -10 }}
@@ -348,7 +349,7 @@ export default function TeamsManagement() {
                                                                             setTeams(updatedTeams);
                                                                             setFilteredTeams(updatedTeams);
                                                                         } catch (err: any) {
-                                                                            alert(err.message);
+                                                                            alert.error(err.message);
                                                                         }
                                                                     }
                                                                 });
@@ -471,6 +472,7 @@ export default function TeamsManagement() {
                                             <AnimatePresence>
                                                 {activeDropdown === team.id && (
                                                     <motion.div
+                                                        //@ts-ignore
                                                         ref={(el) => (dropdownRefs.current[team.id] = el)}
                                                         className="absolute right-0 mt-1 z-10 w-44 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                                                         initial={{ opacity: 0, y: -10 }}
@@ -502,7 +504,7 @@ export default function TeamsManagement() {
                                                                                 setTeams(updatedTeams);
                                                                                 setFilteredTeams(updatedTeams);
                                                                             } catch (err: any) {
-                                                                                alert(err.message);
+                                                                                alert.error(err.message);
                                                                             }
                                                                         }
                                                                     });

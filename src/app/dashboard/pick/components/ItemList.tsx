@@ -159,6 +159,7 @@ const PaginatedSerialGrid = ({
           {getPageNumbers().map((number, index) => (
             <button
               key={index}
+              //@ts-ignore
               onClick={() => number !== '...' ? goToPage(number) : null}
               className={`px-3 py-1 rounded-md ${
                 number === currentPage 
