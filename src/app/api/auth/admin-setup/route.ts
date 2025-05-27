@@ -7,8 +7,9 @@ import {createSuperClient} from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
     try {
         const data = await request.json();
-        const res = await createUser(data);
+        const res = await createUser(data,false);
         if (res.error) {
+            console.log(res.error)
             return NextResponse.json(
                 makeResponse({
                     error: (res.error as any).message
