@@ -166,6 +166,7 @@ export default function SimulatePage() {
 
             // Create team leaders and teams
             // const createdLeaders = [];
+            //@ts-ignore
             let errorCount = 0;
 
            const createdLeaders = ( (await userService.getUsersByRole(UserRole.TEAM_LEADER)).data || [])
