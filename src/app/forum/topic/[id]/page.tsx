@@ -22,7 +22,12 @@ import {
 } from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 
-export default function TopicPage({params}: { params: { id: string } }) {
+interface TopicPageProps {
+    params: {
+        id: string;
+    };
+}
+export default function TopicPage({ params }: TopicPageProps) {
     const [topic, setTopic] = useState<ForumTopic | null>(null);
     const [posts, setPosts] = useState<ForumPost[]>([]);
     const [loading, setLoading] = useState(true);
