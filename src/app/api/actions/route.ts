@@ -2,25 +2,26 @@ import {makeResponse} from "@/helper";
 import {NextRequest} from "next/server";
 import AdminActions, {Logs} from "@/app/api/actions/admin-actions";
 import {createSuperClient} from "@/lib/supabase/server";
+import Accounts from "@/lib/accounts";
 
 // Profile actions class for handling user profile updates
 class ProfileActions {
-    static async supabase() {
-        return await createSuperClient();
-    }
+    // static async supabase() {
+    //     return await createSuperClient();
+    // }
 
     static async update_id_documents(data: any) {
         try {
-            const supabase = await this.supabase();
+            const supabase = await createSuperClient();
 
             // Get the current user
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user) {
-                return makeResponse({ error: userError?.message || "User not authenticated" });
+            const user = await Accounts.user()
+            if (!user) {
+                return makeResponse({error: "User not authenticated"});
             }
 
             // Update the user's profile with ID document URLs
-            const { error } = await supabase
+            const {data: userData, error} = await supabase
                 .from('users')
                 .update({
                     id_front_url: data.id_front_url,
@@ -30,12 +31,13 @@ class ProfileActions {
                 .eq('id', user.id);
 
             if (error) {
-                return makeResponse({ error: error.message });
+                return makeResponse({error: error.message});
             }
+            await Accounts.update(user)
 
-            return makeResponse({ ok: true, message: "ID documents updated successfully" });
+            return makeResponse({ok: true, message: "ID documents updated successfully"});
         } catch (error) {
-            return makeResponse({ error: (error as Error).message });
+            return makeResponse({error: (error as Error).message});
         }
     }
 
@@ -48,7 +50,7 @@ class ProfileActions {
                 throw new Error(`Action '${target}' is not a function`);
             }
         } catch (error) {
-            return makeResponse({ error: (error as Error).message });
+            return makeResponse({error: (error as Error).message});
         }
     }
 }

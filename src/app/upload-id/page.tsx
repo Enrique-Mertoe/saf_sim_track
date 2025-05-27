@@ -24,7 +24,7 @@ export default function UploadIDPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const { user, error } = await authService.getCurrentUser();
+                const {user, error} = await authService.getCurrentUser();
                 if (error) throw error;
                 setUser(user);
             } catch (error) {
@@ -76,32 +76,34 @@ export default function UploadIDPage() {
 
         try {
             const key = generateUUID();
-            
+
             // Upload front ID image
-            const { url: idFrontUrl, error: e1 } = await storageService.uploadIdFrontImage(`team-${key}`, idFrontFile);
+            const {url: idFrontUrl, error: e1} = await storageService.uploadIdFrontImage(`team-${key}`, idFrontFile);
             if (e1) {
                 throw new Error(e1.message);
             }
-            
+
             // Upload back ID image
-            const { url: idBackUrl, error: e2 } = await storageService.uploadIdBackImage(`team-${key}`, idBackFile);
+            const {url: idBackUrl, error: e2} = await storageService.uploadIdBackImage(`team-${key}`, idBackFile);
             if (e2) {
                 throw new Error(e2.message);
             }
 
             // Update user profile with ID URLs
-            const response = await $.post({
-                url: "/api/actions",
-                contentType: $.JSON,
-                data: {
-                    action: "profile",
-                    target: "update_id_documents",
+            const response: any = await new Promise((resolve, reject) => {
+                $.post({
+                    url: "/api/actions",
+                    contentType: $.JSON,
                     data: {
-                        id_front_url: idFrontUrl,
-                        id_back_url: idBackUrl
+                        action: "profile",
+                        target: "update_id_documents",
+                        data: {
+                            id_front_url: idFrontUrl,
+                            id_back_url: idBackUrl
+                        }
                     }
-                }
-            });
+                }).then(resolve).catch(reject);
+            })
 
             if (!response.ok) {
                 throw new Error(response.message || 'Failed to update profile');
@@ -109,7 +111,7 @@ export default function UploadIDPage() {
 
             setSuccess(true);
             setTimeout(() => {
-                router.push('/dashboard');
+                window.location.href = '/dashboard';
             }, 2000);
         } catch (error) {
             console.error('Error uploading ID documents:', error);
@@ -122,31 +124,34 @@ export default function UploadIDPage() {
     return (
         <Dashboard>
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+                <div
+                    className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden md:max-w-2xl">
                     {/* Success overlay */}
                     {success && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
+                            initial={{opacity: 0}}
+                            animate={{opacity: 1}}
                             className="absolute inset-0 bg-white dark:bg-gray-800 z-10 flex flex-col items-center justify-center"
                         >
                             <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                initial={{scale: 0}}
+                                animate={{scale: 1}}
+                                transition={{type: "spring", stiffness: 300, damping: 20}}
                             >
                                 <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
-                                    <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400" />
+                                    <CheckCircle className="h-16 w-16 text-green-600 dark:text-green-400"/>
                                 </div>
                             </motion.div>
-                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-6">ID Documents Uploaded!</h2>
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-6">ID Documents
+                                Uploaded!</h2>
                             <p className="text-gray-600 dark:text-gray-300 mt-2">Redirecting you to the dashboard...</p>
                         </motion.div>
                     )}
 
                     <div className="p-8">
                         <div className="text-center mb-8">
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Upload Your ID Documents</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Upload Your ID
+                                Documents</h1>
                             <p className="mt-2 text-gray-600 dark:text-gray-400">
                                 As a Team Leader, you need to upload your ID documents to continue using the platform.
                             </p>
@@ -155,12 +160,12 @@ export default function UploadIDPage() {
                         {/* Error message */}
                         {error && (
                             <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2 }}
+                                initial={{opacity: 0, y: -10}}
+                                animate={{opacity: 1, y: 0}}
+                                transition={{duration: 0.2}}
                                 className="mb-6 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded-md flex items-start"
                             >
-                                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                                <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5"/>
                                 <span>{error}</span>
                             </motion.div>
                         )}
@@ -190,13 +195,13 @@ export default function UploadIDPage() {
                                                     }}
                                                     className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                                                 >
-                                                    <X size={16} />
+                                                    <X size={16}/>
                                                 </button>
                                             </div>
                                         ) : (
                                             <label
                                                 className="flex flex-col items-center justify-center cursor-pointer py-3">
-                                                <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2" />
+                                                <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2"/>
                                                 <span
                                                     className="text-sm text-gray-500 dark:text-gray-400">Click to upload front of ID</span>
                                                 <input
@@ -235,13 +240,13 @@ export default function UploadIDPage() {
                                                     }}
                                                     className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                                                 >
-                                                    <X size={16} />
+                                                    <X size={16}/>
                                                 </button>
                                             </div>
                                         ) : (
                                             <label
                                                 className="flex flex-col items-center justify-center cursor-pointer py-3">
-                                                <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2" />
+                                                <Upload className="h-10 w-10 text-gray-400 dark:text-gray-500 mb-2"/>
                                                 <span
                                                     className="text-sm text-gray-500 dark:text-gray-400">Click to upload back of ID</span>
                                                 <input
@@ -269,7 +274,7 @@ export default function UploadIDPage() {
                             >
                                 {loading ? (
                                     <>
-                                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                        <Loader2 className="h-5 w-5 mr-2 animate-spin"/>
                                         Uploading...
                                     </>
                                 ) : (

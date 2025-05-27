@@ -58,7 +58,6 @@ export async function updateSession(request: NextRequest) {
     const isFreePath = freePaths.some(path => request.nextUrl.pathname.startsWith(path)) ||
         request.nextUrl.pathname === '/';
     if (isFreePath) {
-        console.log('Free path: ', request.nextUrl.pathname)
         return supabaseResponse
     }
     if (!user) {

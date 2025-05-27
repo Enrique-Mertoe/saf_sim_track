@@ -1,4 +1,6 @@
-import { DateTime } from "luxon";
+import {DateTime} from "luxon";
+import {NextResponse} from "next/server";
+
 type JsonResponse = {
     ok?: boolean;
     error?: string;
@@ -14,13 +16,21 @@ export function makeResponse({
                                  data = {},
                                  ...kwargs
                              }: JsonResponse): JsonResponse {
-    return {
+
+    console.log("id", {
         ok,
         error,
         message,
         data,
         ...kwargs
-    };
+    })
+    return NextResponse.json({
+        ok,
+        error,
+        message,
+        data,
+        ...kwargs
+    });
 }
 
 export const generateUUID = (): string => {
@@ -181,6 +191,6 @@ export function escapeHtml(str: string) {
     }[match] || match));
 }
 
-export function now(){
+export function now() {
     return DateTime.now().setZone('Africa/Nairobi').toISO();
 }

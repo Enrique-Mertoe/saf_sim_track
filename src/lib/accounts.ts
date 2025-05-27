@@ -21,6 +21,23 @@ class Accounts {
         return
     }
 
+    static async update(user: User) {
+        try {
+            if (!user)
+                return
+            const {data: profile} = await (await createServerClient())
+                .from('users')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+            await setSession("session-user", profile);
+
+            return
+        } catch (e: any) {
+            console.log(e)
+        }
+    }
+
     static async user() {
         const user = (await (await createServerClient()).auth.getUser()).data.user
         if (!user)
