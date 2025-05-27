@@ -16,6 +16,7 @@ export interface User {
     staff_type?: StaffType;
     is_active: boolean;
     last_login_at?: string;
+    admin_id?: string;
 }
 
 export interface UserCreate {

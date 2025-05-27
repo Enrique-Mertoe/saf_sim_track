@@ -1,6 +1,7 @@
 import {createServerClient} from '@supabase/ssr'
 import {type NextRequest, NextResponse} from 'next/server'
 import {UserRole} from '@/models/types'
+import Accounts from "@/lib/accounts";
 
 // List of isolated emails that bypass subscription checks
 // All emails should be in lowercase for case-insensitive comparison
@@ -42,9 +43,7 @@ export async function updateSession(request: NextRequest) {
 
     // IMPORTANT: DO NOT REMOVE auth.getUser()
 
-    const {
-        data: {user},
-    } = await supabase.auth.getUser()
+    const user = await Accounts.user()
 
     // Free paths that don't require authentication or subscription checks
     const freePaths = [
@@ -95,11 +94,17 @@ export async function updateSession(request: NextRequest) {
                 return NextResponse.redirect(url)
             }
 
+            function get_subscription_user() {
+                if (user?.role == UserRole.ADMIN) {
+                    return user.id
+                } else return (user?.admin_id || '')
+            }
+
             // Check subscription status
             const {data: subscription} = await supabase
                 .from('subscription_status')
                 .select('*')
-                .eq('user_id', user.id)
+                .eq('user_id', get_subscription_user())
                 .single();
 
             const hasActiveSubscription = subscription && subscription.is_active;
@@ -113,7 +118,7 @@ export async function updateSession(request: NextRequest) {
                         .from('subscriptions')
                         .select('id, expires_at')
                         .eq('user_id', user.id)
-                        .order('expires_at', { ascending: false })
+                        .order('expires_at', {ascending: false})
                         .limit(1);
 
                     const url = request.nextUrl.clone()
@@ -139,8 +144,8 @@ export async function updateSession(request: NextRequest) {
                 }
 
                 // Check if team leader has uploaded ID documents
-                if ((!profile.id_front_url || !profile.id_back_url) && 
-                    !request.nextUrl.pathname.startsWith('/upload-id') && 
+                if ((!profile.id_front_url || !profile.id_back_url) &&
+                    !request.nextUrl.pathname.startsWith('/upload-id') &&
                     !request.nextUrl.pathname.startsWith('/api/')) {
                     const url = request.nextUrl.clone()
                     url.pathname = '/upload-id'
