@@ -113,6 +113,7 @@ export default function SimulatePage() {
 
             // Generate and create 5 users for each team
             let successCount = 0;
+            //@ts-ignore
             let errorCount = 0;
 
             for (const team of teams) {
