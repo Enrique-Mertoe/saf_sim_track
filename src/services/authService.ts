@@ -9,8 +9,11 @@ export const authService = {
         const res = await supabase.auth.signInWithPassword({email, password});
         if (res.error)
             return res
+
         if (res.data.user) {
+            console.log("no error1", res)
             await securityService.updateLastLogin();
+            console.log("no error2", res)
 
             // Create login notification
             await notificationService.createAuthNotification(
@@ -78,8 +81,8 @@ export const authService = {
 
             if (!userData || !userData.email) {
                 console.log('No user found with phone number:', phone, 'Tried formats:', phoneFormats);
-                return { 
-                    error: { message: 'No account found with this phone number' },
+                return {
+                    error: {message: 'No account found with this phone number'},
                     data: null
                 };
             }
@@ -108,7 +111,7 @@ export const authService = {
         } catch (error) {
             console.error('Error in signInWithPhone:', error);
             return {
-                error: { message: 'Failed to sign in with phone number' },
+                error: {message: 'Failed to sign in with phone number'},
                 data: null
             };
         }
@@ -119,7 +122,7 @@ export const authService = {
 
         try {
             // Get current user before signing out to create notification
-            const { user } = await authService.getCurrentUser();
+            const {user} = await authService.getCurrentUser();
 
             // Sign out the user
             const result = await supabase.auth.signOut();
@@ -183,7 +186,7 @@ export const authService = {
         if (!result.error) {
             try {
                 // Find user by email
-                const { data: userData } = await supabase
+                const {data: userData} = await supabase
                     .from('users')
                     .select('id')
                     .eq('email', email)

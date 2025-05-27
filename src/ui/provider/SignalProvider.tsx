@@ -82,10 +82,34 @@ export default function SignalProvider() {
             setModals((prev) => [...prev, modal]);
         });
 
+
+        Signal.on("view-pick-content", (Content, props) => {
+            const id = uuidv4();
+            const modal: ModalEntry = {
+                id,
+                element: (
+                    <ScrollableDialog
+                        id={id}
+
+                        onDismiss={() => setModals((prev) => prev.filter((m) => m.id !== id))}
+                        {...props}
+
+                    >
+                        <Content onDismiss={() => {
+                            setModals((prev) => prev.filter((m) => m.id !== id));
+                        }}/>
+                    </ScrollableDialog>
+                )
+            };
+
+            setModals((prev) => [...prev, modal]);
+        });
+
         return () => {
             Signal.off("create-team");
             Signal.off("edit-team");
             Signal.off("view-team-details");
+            Signal.off("view-pick-content");
         };
     }, []);
 
@@ -143,7 +167,7 @@ const ScrollableDialog = ({id, onDismiss, children, className = "", size = "lg",
                     initial={{opacity: 0, scale: 1.1}}
                     animate={{opacity: 1, scale: 1}}
                     exit={{opacity: 0, scale: 1.1}}
-                    transition={{duration: 0.15}}
+                    transition={{duration: 0.2}}
                     className={
                         cn("bg-white dark:bg-gray-800 max-sm:min-h-full max-sm:rounded-none rounded-xl w-full overflow-hidden",
                             //@ts-ignore

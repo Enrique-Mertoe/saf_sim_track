@@ -1,41 +1,18 @@
 "use client"
-import {useState, useEffect, useCallback} from 'react';
-import {
-    ArrowUp,
-    ArrowDown,
-    Users,
-    CreditCard,
-    Activity,
-    AlertCircle,
-    CheckCircle,
-    RefreshCw,
-    TrendingUp,
-    Calendar
-} from 'lucide-react';
-import {
-    LineChart,
-    Line,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell
-} from 'recharts';
+import {useCallback, useEffect, useState} from 'react';
+import {Activity, Calendar} from 'lucide-react';
+import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {motion} from 'framer-motion';
 import Dashboard from "@/ui/components/dash/Dashboard";
-import {simCardService} from "@/services/simCardService";
 import {SIMStatus} from "@/models";
 import DashQuickActions, {UserStatistics} from './quicks';
 import SimStarts from "@/app/dashboard/SimStarts";
 import Signal from "@/lib/Signal";
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
+import ActivationStatusChart from './components/ActivationStatusChart';
+import TeamPerformanceChart from './components/TeamPerformanceChart';
+import TimeActivityChart from './components/TimeActivityChart';
 
 export default function SafaricomDashboard() {
     const [role, setRole] = useState('admin');
@@ -58,6 +35,7 @@ export default function SafaricomDashboard() {
         quality: string
     }[]>([]);
     const [pieData, setPieData] = useState([]);
+    const [simData, setSimData] = useState<any[]>([]);
 
     // Fetch dashboard data
     const fetchDashboardData = async () => {
@@ -72,9 +50,12 @@ export default function SafaricomDashboard() {
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
             // Fetch SIM card data for last 6 months
-            const {data: simData} = await simService.getAllSimCards(user!);
+            const {data: fetchedSimData} = await simService.getAllSimCards(user!);
 
-            if (simData) {
+            // Store the raw SIM data for use in other charts
+            setSimData(fetchedSimData || []);
+
+            if (fetchedSimData) {
                 // Process monthly sales data
                 const monthlySales = {};
                 const monthlyActivations = {};
@@ -92,7 +73,7 @@ export default function SafaricomDashboard() {
 
                 // Aggregate data by month
                 //@ts-ignore
-                simData.forEach(sim => {
+                fetchedSimData.forEach(sim => {
                     const saleDate = new Date(sim.sale_date);
                     const monthKey = monthNames[saleDate.getMonth()];
 
@@ -120,13 +101,13 @@ export default function SafaricomDashboard() {
                 setSalesData(chartData);
 
                 // Calculate total stats
-                const totalSalesCount = simData.length;
+                const totalSalesCount = fetchedSimData.length;
                 //@ts-ignore
-                const activatedCount = simData.filter(sim => sim.status === SIMStatus.ACTIVATED).length;
+                const activatedCount = fetchedSimData.filter(sim => sim.status === SIMStatus.ACTIVATED).length;
                 //@ts-ignore
-                const pendingCount = simData.filter(sim => sim.status === SIMStatus.PENDING).length;
+                const pendingCount = fetchedSimData.filter(sim => sim.status === SIMStatus.PENDING).length;
                 //@ts-ignore
-                const flaggedCount = simData.filter(sim => sim.status === SIMStatus.FLAGGED).length;
+                const flaggedCount = fetchedSimData.filter(sim => sim.status === SIMStatus.FLAGGED).length;
 
                 // Set pie chart data
                 setPieData([
@@ -147,7 +128,7 @@ export default function SafaricomDashboard() {
                 });
 
                 // Get recent SIM cards
-                const recent = simData
+                const recent = fetchedSimData
                     //@ts-ignore
                     // .sort((a, b) => new Date(a.created_at))
                     .slice(0, 4)
@@ -165,12 +146,12 @@ export default function SafaricomDashboard() {
 
                 // Fetch team performance
                 //@ts-ignore
-                const teams = [...new Set(simData.map(sim => sim.team_id).filter(Boolean))];
+                const teams = [...new Set(fetchedSimData.map(sim => sim.team_id).filter(Boolean))];
                 const teamStats = [];
 
                 for (const teamId of teams) {
                     //@ts-ignore
-                    const teamSims = simData.filter(sim => sim.team_id === teamId.id);
+                    const teamSims = fetchedSimData.filter(sim => sim.team_id === teamId.id);
                     //@ts-ignore
                     const teamName = teamId.name || `Team ${teamId.id.substring(0, 3)}`;
                     const teamSalesCount = teamSims.length;
@@ -311,6 +292,23 @@ export default function SafaricomDashboard() {
                         </motion.div>
 
                         <DashQuickActions/>
+                    </div>
+
+                    {/* Additional Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        {/* Activation Status Pie Chart */}
+                        <ActivationStatusChart data={pieData} loading={loading} />
+
+                        {/* Team Performance Chart */}
+                        <TeamPerformanceChart data={teamPerformance} loading={loading} />
+                    </div>
+
+                    {/* Time Activity Heatmap */}
+                    <div className="mb-8">
+                        <TimeActivityChart 
+                            data={simData || []} 
+                            loading={loading} 
+                        />
                     </div>
                     {/* Bottom Section */}
                     <div className="grid grid-cols-1 gap-6">

@@ -171,6 +171,7 @@ export default function LoginPage() {
             } else {
                 // Use email-based authentication
                 res = await authService.signIn(identifier, password);
+
             }
 
             if (res.error) {
@@ -364,8 +365,10 @@ export default function LoginPage() {
                                 exit={{opacity: 0}}
                                 className="text-center py-8"
                             >
-                                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-800 rounded-full mb-4">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                                <div
+                                    className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-800 rounded-full mb-4">
+                                    <div
+                                        className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                                 </div>
                                 <p className="text-gray-600 dark:text-gray-400">Loading...</p>
                             </motion.div>
@@ -381,11 +384,14 @@ export default function LoginPage() {
                                 exit={{opacity: 0}}
                                 className="text-center py-8"
                             >
-                                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-800 rounded-full mb-4">
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                                <div
+                                    className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-800 rounded-full mb-4">
+                                    <div
+                                        className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                                 </div>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Signing you in{selectedAccount ? ` as ${selectedAccount.fullName || selectedAccount.email}` : ''}...
+                                    Signing you
+                                    in{selectedAccount ? ` as ${selectedAccount.fullName || selectedAccount.email}` : ''}...
                                 </p>
                             </motion.div>
                         )}
@@ -425,7 +431,8 @@ export default function LoginPage() {
                                                 </p>
                                             </div>
                                             {account.hasStoredTokens && (
-                                                <div className="flex items-center text-xs text-green-600 dark:text-green-400">
+                                                <div
+                                                    className="flex items-center text-xs text-green-600 dark:text-green-400">
                                                     <CheckCircle className="h-4 w-4 mr-1"/>
                                                     Quick sign-in
                                                 </div>
@@ -452,7 +459,8 @@ export default function LoginPage() {
                                 exit={{opacity: 0, height: 0}}
                                 className="mb-6"
                             >
-                                <div className="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                <div
+                                    className="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                                     <div className="bg-green-100 dark:bg-green-800 p-2 rounded-full mr-3">
                                         <UserCircle className="h-6 w-6 text-green-600 dark:text-green-400"/>
                                     </div>
@@ -510,7 +518,7 @@ export default function LoginPage() {
                                                     </button>
                                                 </div>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-xs">
-                                                    {signInMethod === 'phone' 
+                                                    {signInMethod === 'phone'
                                                         ? "You can log in with your phone number even if you registered with email"
                                                         : "Use your registered email address to log in"}
                                                 </p>
@@ -521,11 +529,13 @@ export default function LoginPage() {
                                     {/* Email Input - only show for new login with email method */}
                                     {authState === 'newLogin' && signInMethod === 'email' && (
                                         <div>
-                                            <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            <label htmlFor="email"
+                                                   className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 Email Address
                                             </label>
                                             <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <div
+                                                    className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                     <User className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                                                 </div>
                                                 <input
@@ -552,11 +562,13 @@ export default function LoginPage() {
                                     {/* Phone Input - only show for new login with phone method */}
                                     {authState === 'newLogin' && signInMethod === 'phone' && (
                                         <div>
-                                            <label htmlFor="phone" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            <label htmlFor="phone"
+                                                   className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                 Phone Number
                                             </label>
                                             <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <div
+                                                    className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                     <Phone className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                                                 </div>
                                                 <input
@@ -584,11 +596,13 @@ export default function LoginPage() {
 
                                     {/* Password Input */}
                                     <div className={"mt-3"}>
-                                        <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        <label htmlFor="password"
+                                               className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                             {authState === 'passwordRequired' ? 'Enter your password to continue' : 'Password'}
                                         </label>
                                         <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <div
+                                                className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                                             </div>
                                             <input
@@ -608,7 +622,8 @@ export default function LoginPage() {
                                                     onClick={() => setShowPassword(!showPassword)}
                                                     className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                                                 >
-                                                    {showPassword ? <EyeOff className="h-5 w-5"/> : <Eye className="h-5 w-5"/>}
+                                                    {showPassword ? <EyeOff className="h-5 w-5"/> :
+                                                        <Eye className="h-5 w-5"/>}
                                                 </button>
                                             </div>
                                         </div>
@@ -630,12 +645,14 @@ export default function LoginPage() {
                                                     type="checkbox"
                                                     className="h-4 w-4 text-green-600 dark:text-green-500 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded"
                                                 />
-                                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                                <label htmlFor="remember-me"
+                                                       className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                                                     Remember me
                                                 </label>
                                             </div>
                                             <div className="text-sm">
-                                                <a href="/accounts/password-reset" className="font-medium text-green-600 dark:text-green-500 hover:text-green-500 dark:hover:text-green-400">
+                                                <a href="/accounts/password-reset"
+                                                   className="font-medium text-green-600 dark:text-green-500 hover:text-green-500 dark:hover:text-green-400">
                                                     Forgot password?
                                                 </a>
                                             </div>
@@ -685,14 +702,17 @@ export default function LoginPage() {
                     className="mt-6 text-gray-600 text-sm"
                     variants={textVariants}
                 >
-                    Having trouble logging in? <a href="#" className="text-green-600 hover:text-green-700 font-medium">Contact Support</a>
+                    Having trouble logging in? <a href="#" className="text-green-600 hover:text-green-700 font-medium">Contact
+                    Support</a>
                 </motion.div>
 
                 <motion.div
                     className="mt-2 text-gray-600 text-sm"
                     variants={textVariants}
                 >
-                    Don't have an account? <a href="/accounts/register" className="text-green-600 hover:text-green-700 font-medium">Register Now</a>
+                    Don't have an account? <a href="/accounts/register"
+                                              className="text-green-600 hover:text-green-700 font-medium">Register
+                    Now</a>
                 </motion.div>
             </div>
         </>

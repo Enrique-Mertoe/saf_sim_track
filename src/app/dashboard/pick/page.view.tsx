@@ -17,6 +17,7 @@ import * as Papaparse from 'papaparse';
 import {isPicklist, parsePicklistText} from "@/utils/picklistParser";
 import alert from "@/ui/alert";
 import {generateId, SerialNumber, TabType, Team} from "@/app/dashboard/pick/types";
+import Signal from "@/lib/Signal";
 
 // Using shared types from types.ts
 
@@ -97,7 +98,7 @@ const SerialNumberForm: React.FC = () => {
 
         setIsLoadingBatches(true);
         try {
-            const { data, error } = await batchMetadataService.getBatchesWithCounts(user);
+            const {data, error} = await batchMetadataService.getBatchesWithCounts(user);
 
             if (error) {
                 console.error('Error loading batches:', error);
@@ -558,7 +559,7 @@ const SerialNumberForm: React.FC = () => {
 
                 // Store the batch metadata
                 try {
-                    const { data, error } = await batchMetadataService.createBatchMetadata(batchMetadata);
+                    const {data, error} = await batchMetadataService.createBatchMetadata(batchMetadata);
                     if (error) {
                         console.error('Error storing batch metadata:', error);
                         // Continue with the upload even if metadata storage fails
@@ -583,8 +584,8 @@ const SerialNumberForm: React.FC = () => {
             // Prepare the data for upload
             const serialDataToUpload = serialsToUpload.map(ser => {
                 return {
-                    match: SIMStatus.MATCH, 
-                    quality: SIMStatus.NONQUALITY, 
+                    match: SIMStatus.MATCH,
+                    quality: SIMStatus.NONQUALITY,
                     serial_number: ser.value,
                     team_id: selectedTeam,
                     batch_id: batchId,
@@ -594,7 +595,7 @@ const SerialNumberForm: React.FC = () => {
 
             // Upload the serials with progress tracking and error handling
             await simService.createSIMCardBatch(
-                serialDataToUpload, 
+                serialDataToUpload,
                 50, // batch size
                 (progress, uploadedCount, chunk, errors) => {
                     // Update progress indicators
@@ -720,7 +721,7 @@ const SerialNumberForm: React.FC = () => {
         }
 
         try {
-            const { error } = await batchMetadataService.deleteBatchMetadata(batchId);
+            const {error} = await batchMetadataService.deleteBatchMetadata(batchId);
 
             if (error) {
                 console.error('Error deleting batch:', error);
@@ -794,7 +795,8 @@ const SerialNumberForm: React.FC = () => {
                             className="block mb-2 text-lg font-medium text-gray-700 flex items-center"
                         >
                             <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                      clipRule="evenodd"/>
                             </svg>
                             Select Team for Upload
                             {!selectedTeam && !isAnyProcessRunning && serialNumbers.length > 0 && (
@@ -827,7 +829,9 @@ const SerialNumberForm: React.FC = () => {
                             className="block mb-2 text-lg font-medium text-gray-700 flex items-center"
                         >
                             <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                <path fillRule="evenodd"
+                                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                      clipRule="evenodd"/>
                             </svg>
                             Enter Serial Numbers
                         </label>
@@ -882,7 +886,7 @@ const SerialNumberForm: React.FC = () => {
 
                                 {/* Process button - clearer state and better feedback */}
                                 <Button
-                                    className={"!h-8 !rounded-sm"}
+                                    className={`!h-8 !rounded-sm transition-all duration-300`}
                                     isLoading={isProcessing}
                                     text="Process"
                                     onClick={handlePaste}
@@ -890,11 +894,12 @@ const SerialNumberForm: React.FC = () => {
                                     title="Process the pasted serial numbers"
                                 />
                             </div>
-                            <div className="absolute right-1 top-1 font-medium">
+                            <div className="absolute right-1 top-1 p-2 font-medium">
+
                                 <button
                                     onClick={() => {
-                                        const d = dialog.create({
-                                            content: <div className="relative p-2 w-full max-h-full">
+                                        Signal.trigger("view-pick-content", function ({onDismiss}: any) {
+                                            return <div className="relative p-2 w-full max-h-full">
                                                 <div className="relative bg-white  dark:bg-gray-700">
 
                                                     <div
@@ -903,16 +908,17 @@ const SerialNumberForm: React.FC = () => {
                                                             Serial numbers
                                                         </h3>
                                                         <button
-                                                            onClick={() => d.dismiss()}
+
+                                                            onClick={() => onDismiss()}
                                                             type="button"
                                                             className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
                                                             data-modal-hide="default-modal">
                                                             <svg className="w-3 h-3" aria-hidden="true"
-                                                                xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                                viewBox="0 0 14 14">
+                                                                 xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                 viewBox="0 0 14 14">
                                                                 <path stroke="currentColor" strokeLinecap="round"
-                                                                    strokeLinejoin="round" strokeWidth="2"
-                                                                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                                      strokeLinejoin="round" strokeWidth="2"
+                                                                      d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                                                             </svg>
                                                             <span className="sr-only">Close modal</span>
                                                         </button>
@@ -922,13 +928,15 @@ const SerialNumberForm: React.FC = () => {
                                                         {inputValue.split("<br>").join("\n")}
                                                     </div>
                                                 </div>
-                                            </div>,
-                                            size: "lg",
-                                            design: ["scrollable"]
-                                        })
+                                            </div>
+                                        }, {size: "sm"})
+
                                     }}
-                                    disabled={isAnyProcessRunning}
-                                    className={`cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={isAnyProcessRunning || !inputValue.trim()}
+                                    className={`cursor-pointer ${
+                                        inputValue.trim() ?
+                                            'animate-pulse shadow-sm shadow-green-500 ring-1 ring-green-400 ring-opacity-50' : ''
+                                    } hover:bg-gray-500/10 rounded-full p-2 transition-colors ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <Maximize2 size={24}/>
                                 </button>
@@ -948,7 +956,8 @@ const SerialNumberForm: React.FC = () => {
                                 <span className="text-gray-600">{pdfProgress.toFixed(0)}%</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${pdfProgress}%`}}></div>
+                                <div className="bg-blue-600 h-2.5 rounded-full"
+                                     style={{width: `${pdfProgress}%`}}></div>
                             </div>
                         </div>
                     )}
@@ -1018,8 +1027,10 @@ const SerialNumberForm: React.FC = () => {
                         <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-green-100">
                             <div className="flex justify-between items-center gap-2 mb-4">
                                 <h2 className="text-lg font-medium text-gray-700 flex items-center">
-                                    <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor"
+                                         viewBox="0 0 20 20">
+                                        <path
+                                            d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                                     </svg>
                                     Serial Numbers
                                     <span className="ml-2 text-sm text-gray-500">({serialNumbers.length} total)</span>
@@ -1037,9 +1048,9 @@ const SerialNumberForm: React.FC = () => {
                                             rounded-md shadow-sm flex items-center justify-center min-w-[200px]
                                             disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed
                                             transition-colors duration-300"
-                                            title={!selectedTeam ? "Please select a team first" : 
-                                                newValidCount === 0 ? "No valid serial numbers to upload" : 
-                                                `Upload ${newValidCount} serial numbers to the selected team`}
+                                            title={!selectedTeam ? "Please select a team first" :
+                                                newValidCount === 0 ? "No valid serial numbers to upload" :
+                                                    `Upload ${newValidCount} serial numbers to the selected team`}
                                         >
                                             {isUploading ? (
                                                 <>
@@ -1049,10 +1060,11 @@ const SerialNumberForm: React.FC = () => {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <svg className="w-5 h-5 mr-2" fill="currentColor"
+                                                         viewBox="0 0 20 20">
                                                         <path fillRule="evenodd"
-                                                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                                                            clipRule="evenodd"/>
+                                                              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                                                              clipRule="evenodd"/>
                                                     </svg>
                                                     Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''} to {teams.find(t => t.id === selectedTeam)?.name || "Selected Team"}
                                                 </>
@@ -1072,20 +1084,30 @@ const SerialNumberForm: React.FC = () => {
 
                             {/* Status Legend */}
                             <div className="mb-4 flex flex-wrap gap-2 text-xs">
-                                <span className="inline-flex items-center bg-green-50 text-green-600 px-2 py-1 rounded border border-green-200">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Ready to upload: {newValidCount}
+                                <span
+                                    className="inline-flex items-center bg-green-50 text-green-600 px-2 py-1 rounded border border-green-200">
+                                    <span
+                                        className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Ready to upload: {newValidCount}
                                 </span>
-                                <span className="inline-flex items-center bg-yellow-50 text-yellow-600 px-2 py-1 rounded border border-yellow-200">
-                                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span> Already exists: {existingCount}
+                                <span
+                                    className="inline-flex items-center bg-yellow-50 text-yellow-600 px-2 py-1 rounded border border-yellow-200">
+                                    <span
+                                        className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span> Already exists: {existingCount}
                                 </span>
-                                <span className="inline-flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200">
-                                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> Checking: {checkingCount}
+                                <span
+                                    className="inline-flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200">
+                                    <span
+                                        className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> Checking: {checkingCount}
                                 </span>
-                                <span className="inline-flex items-center bg-purple-50 text-purple-600 px-2 py-1 rounded border border-purple-200">
-                                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-1"></span> Uploaded: {uploadedCount}
+                                <span
+                                    className="inline-flex items-center bg-purple-50 text-purple-600 px-2 py-1 rounded border border-purple-200">
+                                    <span
+                                        className="w-2 h-2 bg-purple-500 rounded-full mr-1"></span> Uploaded: {uploadedCount}
                                 </span>
-                                <span className="inline-flex items-center bg-red-50 text-red-600 px-2 py-1 rounded border border-red-200">
-                                    <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span> Invalid: {invalidCount}
+                                <span
+                                    className="inline-flex items-center bg-red-50 text-red-600 px-2 py-1 rounded border border-red-200">
+                                    <span
+                                        className="w-2 h-2 bg-red-500 rounded-full mr-1"></span> Invalid: {invalidCount}
                                 </span>
                             </div>
 
@@ -1110,7 +1132,8 @@ const SerialNumberForm: React.FC = () => {
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-medium text-gray-700 flex items-center">
                             <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                <path
+                                    d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                             </svg>
                             Uploaded Batches
                         </h2>
@@ -1121,13 +1144,16 @@ const SerialNumberForm: React.FC = () => {
                         >
                             {isLoadingBatches ? (
                                 <>
-                                    <span className="inline-block animate-spin h-4 w-4 mr-2 border-2 border-green-600 border-t-transparent rounded-full"></span>
+                                    <span
+                                        className="inline-block animate-spin h-4 w-4 mr-2 border-2 border-green-600 border-t-transparent rounded-full"></span>
                                     Refreshing...
                                 </>
                             ) : (
                                 <>
                                     <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                                        <path fillRule="evenodd"
+                                              d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+                                              clipRule="evenodd"/>
                                     </svg>
                                     Refresh
                                 </>
@@ -1137,13 +1163,17 @@ const SerialNumberForm: React.FC = () => {
 
                     {isLoadingBatches ? (
                         <div className="flex justify-center items-center py-8">
-                            <span className="inline-block animate-spin h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"></span>
+                            <span
+                                className="inline-block animate-spin h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"></span>
                             <span className="ml-2 text-gray-600">Loading batches...</span>
                         </div>
                     ) : uploadedBatches.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
-                            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm0-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="currentColor"
+                                 viewBox="0 0 20 20">
+                                <path fillRule="evenodd"
+                                      d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm0-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+                                      clipRule="evenodd"/>
                             </svg>
                             <p>No batches found. Upload some SIM cards first.</p>
                         </div>
@@ -1184,7 +1214,8 @@ const SerialNumberForm: React.FC = () => {
                                                         </p>
                                                     </div>
                                                     <div className="flex items-center">
-                                                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                                        <span
+                                                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                                             {batch.sim_count} SIM cards
                                                         </span>
                                                         <button
@@ -1192,8 +1223,11 @@ const SerialNumberForm: React.FC = () => {
                                                             className="ml-2 text-red-500 hover:text-red-700"
                                                             title="Delete batch"
                                                         >
-                                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                            <svg className="w-5 h-5" fill="currentColor"
+                                                                 viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd"
+                                                                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                                                      clipRule="evenodd"/>
                                                             </svg>
                                                         </button>
                                                     </div>
@@ -1201,10 +1235,12 @@ const SerialNumberForm: React.FC = () => {
 
                                                 {/* Batch metadata */}
                                                 {(batch.order_number || batch.requisition_number || batch.company_name) && (
-                                                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                    <div
+                                                        className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                                         {batch.order_number && (
                                                             <div className="text-sm">
-                                                                <span className="font-medium text-gray-600">Order #:</span> {batch.order_number}
+                                                                <span
+                                                                    className="font-medium text-gray-600">Order #:</span> {batch.order_number}
                                                             </div>
                                                         )}
                                                         {batch.requisition_number && (
@@ -1214,7 +1250,8 @@ const SerialNumberForm: React.FC = () => {
                                                         )}
                                                         {batch.company_name && (
                                                             <div className="text-sm">
-                                                                <span className="font-medium text-gray-600">Company:</span> {batch.company_name}
+                                                                <span
+                                                                    className="font-medium text-gray-600">Company:</span> {batch.company_name}
                                                             </div>
                                                         )}
                                                         {batch.collection_point && (
@@ -1238,10 +1275,12 @@ const SerialNumberForm: React.FC = () => {
                                                 {/* Lot numbers */}
                                                 {batch.lot_numbers && batch.lot_numbers.length > 0 && (
                                                     <div className="mt-2">
-                                                        <span className="text-sm font-medium text-gray-600">Lot Numbers:</span>
+                                                        <span
+                                                            className="text-sm font-medium text-gray-600">Lot Numbers:</span>
                                                         <div className="flex flex-wrap gap-1 mt-1">
                                                             {batch.lot_numbers.map((lot: string, index: number) => (
-                                                                <span key={index} className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                                                                <span key={index}
+                                                                      className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
                                                                     {lot}
                                                                 </span>
                                                             ))}
@@ -1254,12 +1293,14 @@ const SerialNumberForm: React.FC = () => {
                                                     <div className="mt-2 flex flex-wrap gap-4">
                                                         {batch.item_description && (
                                                             <div className="text-sm">
-                                                                <span className="font-medium text-gray-600">Description:</span> {batch.item_description}
+                                                                <span
+                                                                    className="font-medium text-gray-600">Description:</span> {batch.item_description}
                                                             </div>
                                                         )}
                                                         {batch.quantity && (
                                                             <div className="text-sm">
-                                                                <span className="font-medium text-gray-600">Quantity:</span> {batch.quantity}
+                                                                <span
+                                                                    className="font-medium text-gray-600">Quantity:</span> {batch.quantity}
                                                             </div>
                                                         )}
                                                     </div>

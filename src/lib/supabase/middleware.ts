@@ -104,12 +104,14 @@ export async function updateSession(request: NextRequest) {
                 }
             }
 
+
             // Check subscription status
             const {data: subscription} = await supabase
                 .from('subscription_status')
                 .select('*')
                 .eq('user_id', get_subscription_user())
                 .single();
+            // console.log("subscription: ", subscription)
 
             const hasActiveSubscription = subscription && subscription.is_active;
 
