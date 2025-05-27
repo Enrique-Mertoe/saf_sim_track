@@ -698,7 +698,8 @@ export default function OnboardStaff({user, onClose}: {
                 requested_by_id: user?.id ?? '',
                 team_id: user?.team_id,
                 role: UserRole.STAFF,
-                staff_type: formData.staffRole as StaffType
+                staff_type: formData.staffRole as StaffType,
+                admin_id: user.admin_id || ''
             });
 
             if (error) throw error;
@@ -745,8 +746,9 @@ export default function OnboardStaff({user, onClose}: {
         <div className="space-y-8">
             {/* Header */}
             <div className="text-center pb-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
-                    <Users className="w-8 h-8 text-white" />
+                <div
+                    className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+                    <Users className="w-8 h-8 text-white"/>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Staff Information</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">Enter the basic details for the new team member</p>
@@ -839,8 +841,9 @@ export default function OnboardStaff({user, onClose}: {
         <div className="space-y-8">
             {/* Header */}
             <div className="text-center pb-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4 shadow-lg">
-                    <Shield className="w-8 h-8 text-white" />
+                <div
+                    className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-4 shadow-lg">
+                    <Shield className="w-8 h-8 text-white"/>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Identity Verification</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">Upload clear photos of both sides of the ID</p>
@@ -861,9 +864,14 @@ export default function OnboardStaff({user, onClose}: {
                                 alt="ID Front Preview"
                                 className="w-full h-56 object-cover rounded-2xl border-4 border-gray-200 dark:border-gray-600 shadow-lg"
                             />
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                            <div
+                                className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
                                 <button
-                                    onClick={() => setFormData({...formData, idFrontImage: null, idFrontImageURL: null})}
+                                    onClick={() => setFormData({
+                                        ...formData,
+                                        idFrontImage: null,
+                                        idFrontImageURL: null
+                                    })}
                                     className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200"
                                 >
                                     <X size={20}/>
@@ -905,7 +913,8 @@ export default function OnboardStaff({user, onClose}: {
                                 alt="ID Back Preview"
                                 className="w-full h-56 object-cover rounded-2xl border-4 border-gray-200 dark:border-gray-600 shadow-lg"
                             />
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
+                            <div
+                                className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-2xl transition-all duration-200 flex items-center justify-center">
                                 <button
                                     onClick={() => setFormData({...formData, idBackImage: null, idBackImageURL: null})}
                                     className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200"
@@ -938,7 +947,8 @@ export default function OnboardStaff({user, onClose}: {
             </div>
 
             {/* Guidelines */}
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-800">
+            <div
+                className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 p-6 rounded-2xl border border-blue-200 dark:border-blue-800">
                 <div className="flex items-start space-x-4">
                     <div className="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-lg">
                         <Info size={24} className="text-blue-600 dark:text-blue-400"/>
@@ -973,15 +983,17 @@ export default function OnboardStaff({user, onClose}: {
         <div className="space-y-8">
             {/* Header */}
             <div className="text-center pb-2">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4 shadow-lg">
-                    <Eye className="w-8 h-8 text-white" />
+                <div
+                    className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl mb-4 shadow-lg">
+                    <Eye className="w-8 h-8 text-white"/>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Review & Submit</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">Please review all information before submitting</p>
             </div>
 
             {/* Review Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div
+                className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div className="bg-gradient-to-r from-green-500 to-purple-600 p-6">
                     <h3 className="text-xl font-bold text-white">Staff Information Summary</h3>
                 </div>
@@ -990,15 +1002,18 @@ export default function OnboardStaff({user, onClose}: {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-6">
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Full Name</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Full
+                                    Name</p>
                                 <p className="text-lg font-semibold text-gray-900 dark:text-white mt-1">{formData.fullName}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">ID Number</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">ID
+                                    Number</p>
                                 <p className="text-lg font-semibold text-gray-900 dark:text-white mt-1">{formData.idNumber}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Phone Number</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Phone
+                                    Number</p>
                                 <p className="text-lg font-semibold text-gray-900 dark:text-white mt-1">{formData.phoneNumber}</p>
                             </div>
                         </div>
@@ -1009,11 +1024,13 @@ export default function OnboardStaff({user, onClose}: {
                                 <p className="text-lg font-semibold text-gray-900 dark:text-white mt-1">{formData.email}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Staff Role</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Staff
+                                    Role</p>
                                 <p className="text-lg font-semibold text-gray-900 dark:text-white mt-1 capitalize">{formData.staffRole.replace('_', ' ')}</p>
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Team Leader</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Team
+                                    Leader</p>
                                 <p className="text-lg font-semibold text-gray-900 dark:text-white mt-1">{user?.full_name || 'Current user'}</p>
                             </div>
                         </div>
@@ -1023,7 +1040,8 @@ export default function OnboardStaff({user, onClose}: {
                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">ID Documents</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">ID Front</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">ID
+                                    Front</p>
                                 <img
                                     src={formData.idFrontImageURL || ''}
                                     alt="ID Front"
@@ -1031,7 +1049,8 @@ export default function OnboardStaff({user, onClose}: {
                                 />
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">ID Back</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">ID
+                                    Back</p>
                                 <img
                                     src={formData.idBackImageURL || ''}
                                     alt="ID Back"
@@ -1044,13 +1063,15 @@ export default function OnboardStaff({user, onClose}: {
             </div>
 
             {/* Notice */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-6 rounded-2xl border border-amber-200 dark:border-amber-800">
+            <div
+                className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-6 rounded-2xl border border-amber-200 dark:border-amber-800">
                 <div className="flex items-start space-x-4">
                     <div className="bg-amber-100 dark:bg-amber-900/50 p-2 rounded-lg">
                         <Info size={24} className="text-amber-600 dark:text-amber-400"/>
                     </div>
                     <div className="text-amber-800 dark:text-amber-200">
-                        <p className="font-medium">Your request will be sent to an administrator for approval. You'll be notified once the request is approved or rejected.</p>
+                        <p className="font-medium">Your request will be sent to an administrator for approval. You'll be
+                            notified once the request is approved or rejected.</p>
                     </div>
                 </div>
             </div>
@@ -1059,18 +1080,21 @@ export default function OnboardStaff({user, onClose}: {
 
     const renderSuccess = () => (
         <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full mb-8 shadow-2xl">
+            <div
+                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full mb-8 shadow-2xl">
                 <Check size={48} className="text-white"/>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Request Submitted Successfully!</h2>
             <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                Your request to onboard <span className="font-semibold text-green-600 dark:text-green-400">{formData.fullName}</span> has been submitted. An administrator will review it shortly.
+                Your request to onboard <span
+                className="font-semibold text-green-600 dark:text-green-400">{formData.fullName}</span> has been
+                submitted. An administrator will review it shortly.
             </p>
             <button
                 onClick={handleNewRequest}
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-600 to-purple-600 hover:from-green-700 hover:to-purple-700 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200"
             >
-                <UserPlus className="mr-2" size={20} />
+                <UserPlus className="mr-2" size={20}/>
                 Submit Another Request
             </button>
         </div>
@@ -1080,9 +1104,9 @@ export default function OnboardStaff({user, onClose}: {
         <div className="flex items-center justify-center mb-12">
             <div className="flex items-center space-x-4">
                 {[
-                    { num: 1, icon: Users, label: "Details" },
-                    { num: 2, icon: Shield, label: "Documents" },
-                    { num: 3, icon: Eye, label: "Review" }
+                    {num: 1, icon: Users, label: "Details"},
+                    {num: 2, icon: Shield, label: "Documents"},
+                    {num: 3, icon: Eye, label: "Review"}
                 ].map((s, index) => (
                     <div key={s.num} className="flex items-center">
                         <div className="flex flex-col items-center">
@@ -1093,7 +1117,7 @@ export default function OnboardStaff({user, onClose}: {
                                         : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                                 }`}
                             >
-                                <s.icon size={24} />
+                                <s.icon size={24}/>
                             </div>
                             <p className={`text-sm font-medium mt-2 ${
                                 step >= s.num
@@ -1119,7 +1143,8 @@ export default function OnboardStaff({user, onClose}: {
     );
 
     return (
-        <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div
+            className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Header */}
             <div className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1130,14 +1155,16 @@ export default function OnboardStaff({user, onClose}: {
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Staff Onboarding</h1>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Add new team members to your organization</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">Add new team members to your
+                                    organization</p>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
                             className="p-3 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200 group"
                         >
-                            <X size={20} className="text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white"/>
+                            <X size={20}
+                               className="text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-white"/>
                         </button>
                     </div>
                 </div>
@@ -1162,7 +1189,8 @@ export default function OnboardStaff({user, onClose}: {
                             </div>
                         )}
 
-                        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 lg:p-12">
+                        <div
+                            className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 lg:p-12">
                             {step === 1 && renderStep1()}
                             {step === 2 && renderStep2()}
                             {step === 3 && renderStep3()}
@@ -1200,7 +1228,8 @@ export default function OnboardStaff({user, onClose}: {
                                 >
                                     {loading ? (
                                         <>
-                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                                            <div
+                                                className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                                             Submitting...
                                         </>
                                     ) : (

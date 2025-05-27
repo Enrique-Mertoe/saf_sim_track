@@ -38,6 +38,7 @@ export interface OnboardingRequestCreate {
     request_type: "ONBOARDING" | "DELETION";
     team_id?: string;
     staff_type?: StaffType;
+    admin_id:string;
 }
 
 export interface OnboardingRequestUpdate {
