@@ -318,9 +318,6 @@ const SerialNumberForm: React.FC = () => {
                 // Continue with empty array - we'll check existence individually later
             }
 
-            // Process serials in batches for better performance
-            const batchSize = 100;
-            let processedCount = 0;
 
             // Deduplicate serials first
             const uniqueSerials = [...new Set(serialsToParse)];
@@ -351,12 +348,12 @@ const SerialNumberForm: React.FC = () => {
 
             // Show user feedback about duplicates if any were removed
             if (uniqueSerials.length < serialsToParse.length) {
-                toast.info(`Removed ${serialsToParse.length - uniqueSerials.length} duplicate serial numbers`);
+                toast.success(`Removed ${serialsToParse.length - uniqueSerials.length} duplicate serial numbers`);
             }
 
             // Show user feedback about invalid serials if any were filtered out
             if (validSerials.length < uniqueSerials.length) {
-                toast.info(`Filtered out ${uniqueSerials.length - validSerials.length} invalid serial numbers`);
+                toast.success(`Filtered out ${uniqueSerials.length - validSerials.length} invalid serial numbers`);
             }
 
             return newSerials.length;
