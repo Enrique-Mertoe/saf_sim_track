@@ -2,8 +2,8 @@
  * Service for checking and enforcing policies
  */
 
+import {User} from '@/models';
 import {Policy, PolicyFactory} from '@/models/policies';
-import {User} from '@/models/user';
 
 /**
  * Service for checking and enforcing policies
