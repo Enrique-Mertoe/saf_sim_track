@@ -558,9 +558,9 @@
 "use client"
 import {ChangeEvent, useRef, useState} from "react";
 import {ArrowLeft, Check, Eye, Info, Shield, Upload, UserPlus, Users, X} from "lucide-react";
-import {onboardingService, storageService} from "@/services";
+import {logService, notificationService, onboardingService, storageService} from "@/services";
 import {generateUUID} from "@/helper";
-import {StaffType, User, UserRole} from "@/models";
+import {ActivityLogCreate, NotificationType, StaffType, User, UserRole} from "@/models";
 
 type Closure = () => void;
 
@@ -703,6 +703,36 @@ export default function OnboardStaff({user, onClose}: {
             });
 
             if (error) throw error;
+
+            // Create notification for admin
+            if (user?.admin_id) {
+                await notificationService.createNotification({
+                    user_id: user.admin_id,
+                    title: "New Onboarding Request",
+                    message: `${user.full_name} has submitted an onboarding request for ${formData.fullName}`,
+                    type: NotificationType.SYSTEM,
+                    metadata: {
+                        request_id: error?.data?.id || '',
+                        requester_id: user.id,
+                        requester_name: user.full_name,
+                        staff_name: formData.fullName
+                    }
+                });
+            }
+
+            // Create activity log
+            const log_data: ActivityLogCreate = {
+                user_id: user.id,
+                action_type: 'ONBOARDING_REQUESTED',
+                details: {
+                    staff_name: formData.fullName,
+                    staff_id_number: formData.idNumber,
+                    staff_phone: formData.phoneNumber,
+                    staff_email: formData.email
+                },
+                is_offline_action: false
+            };
+            await logService.createLog([log_data]);
 
             setSuccess(true);
             resetForm();

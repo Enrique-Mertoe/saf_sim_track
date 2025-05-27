@@ -10,6 +10,7 @@ import {onboardingService, userService} from "@/services";
 import OnBoardTable from "@/app/dashboard/users/components/OnBoardTable";
 import useApp from "@/ui/provider/AppProvider";
 import Signal from "@/lib/Signal";
+import {useSupabaseSignal} from "@/lib/supabase/event";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -23,6 +24,12 @@ export default function UsersPage() {
         status: '',
         search: '',
     });
+
+    // Setup Supabase realtime for users
+    const usersSignal = useSupabaseSignal<User>('users', {autoConnect: true});
+
+    // Setup Supabase realtime for onboarding requests
+    const onboardingSignal = useSupabaseSignal<OnboardingRequest>('onboarding_requests', {autoConnect: true});
 
     // Get current user's role
     const currentUserRole = user?.role || '';
@@ -136,6 +143,78 @@ export default function UsersPage() {
             Signal.off("fetchOnboard")
         }
     }, [fetchOnboard, fetchUsers]);
+
+    // Setup realtime updates for users
+    useEffect(() => {
+        if (!usersSignal || !user) return;
+
+        // Handle new users
+        const handleInsert = (payload) => {
+            setUsers(prev => [payload.new, ...prev]);
+        };
+
+        // Handle updated users
+        const handleUpdate = (payload) => {
+            setUsers(prev =>
+                prev.map(u => u.id === payload.new.id ? payload.new : u)
+            );
+        };
+
+        // Handle deleted users
+        const handleDelete = (payload) => {
+            setUsers(prev =>
+                prev.filter(u => u.id !== payload.old.id)
+            );
+        };
+
+        // Subscribe to events
+        usersSignal.onInsert(handleInsert);
+        usersSignal.onUpdate(handleUpdate);
+        usersSignal.onDelete(handleDelete);
+
+        // Cleanup
+        return () => {
+            usersSignal.off('INSERT', handleInsert);
+            usersSignal.off('UPDATE', handleUpdate);
+            usersSignal.off('DELETE', handleDelete);
+        };
+    }, [usersSignal, user]);
+
+    // Setup realtime updates for onboarding requests
+    useEffect(() => {
+        if (!onboardingSignal || !user) return;
+
+        // Handle new onboarding requests
+        const handleInsert = (payload) => {
+            setRequests(prev => [payload.new, ...prev]);
+        };
+
+        // Handle updated onboarding requests
+        const handleUpdate = (payload) => {
+            setRequests(prev =>
+                prev.map(r => r.id === payload.new.id ? payload.new : r)
+            );
+        };
+
+        // Handle deleted onboarding requests
+        const handleDelete = (payload) => {
+            setRequests(prev =>
+                prev.filter(r => r.id !== payload.old.id)
+            );
+        };
+
+        // Subscribe to events
+        onboardingSignal.onInsert(handleInsert);
+        onboardingSignal.onUpdate(handleUpdate);
+        onboardingSignal.onDelete(handleDelete);
+
+        // Cleanup
+        return () => {
+            onboardingSignal.off('INSERT', handleInsert);
+            onboardingSignal.off('UPDATE', handleUpdate);
+            onboardingSignal.off('DELETE', handleDelete);
+        };
+    }, [onboardingSignal, user]);
 
     const handleFilterChange = (newFilters: any) => {
         setFilters({...filters, ...newFilters});

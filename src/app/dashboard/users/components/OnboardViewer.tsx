@@ -1,8 +1,15 @@
 import {useEffect, useRef, useState} from 'react';
 import {AlertTriangle, ArrowLeft, Briefcase, CheckCircle, CreditCard, User, X} from 'lucide-react';
 import {AnimatePresence, motion} from 'framer-motion';
-import {logService, onboardingService, storageService} from "@/services";
-import {ActivityLogCreate, OnboardingRequest, OnboardingRequestStatus, User as User1, UserRole} from "@/models";
+import {logService, notificationService, onboardingService, storageService} from "@/services";
+import {
+    ActivityLogCreate,
+    NotificationType,
+    OnboardingRequest,
+    OnboardingRequestStatus,
+    User as User1,
+    UserRole
+} from "@/models";
 import {useDialog} from "@/app/_providers/dialog";
 import {toast} from "react-hot-toast";
 import {$} from "@/lib/request";
@@ -184,6 +191,23 @@ export default function RequestDetailViewer({request, user, onClose}: {
                         const {error: error_log} = await logService.createLog([log_data])
                         if (error_log)
                             reject(error_log.message)
+
+                        // Create notification for team leader
+                        if (request.requested_by_id) {
+                            await notificationService.createNotification({
+                                user_id: request.requested_by_id,
+                                title: "Onboarding Request Approved",
+                                message: `Your onboarding request for ${request.full_name} has been approved`,
+                                type: NotificationType.USER,
+                                metadata: {
+                                    request_id: request.id,
+                                    approver_id: user.id,
+                                    approver_name: user.full_name,
+                                    staff_name: request.full_name
+                                }
+                            });
+                        }
+
                         resolve(res.data)
 
                     }).catch(err => {
