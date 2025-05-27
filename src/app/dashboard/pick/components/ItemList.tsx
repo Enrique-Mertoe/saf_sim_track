@@ -1,7 +1,8 @@
-import { useState, useEffect, SetStateAction} from 'react';
+import {useEffect, useState} from 'react';
 import {AnimatePresence} from 'framer-motion';
 import {ChevronLeft, ChevronRight} from 'lucide-react';
 import {SerialItem} from "@/app/dashboard/pick/components/SerialItem";
+import {PaginatedSerialGridProps, SerialNumber} from "@/app/dashboard/pick/types";
 
 const PaginatedSerialGrid = ({
                                serialNumbers,
@@ -12,7 +13,7 @@ const PaginatedSerialGrid = ({
                                onCheckComplete,
                                onUploadComplete,
                                updateSerialStatus
-                             }: any) => {
+                             }: PaginatedSerialGridProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9); // 3x3 grid by default
 
@@ -37,14 +38,14 @@ const PaginatedSerialGrid = ({
     }
   };
 
-  const goToPage = (pageNumber: any) => {
+  const goToPage = (pageNumber: number) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
 
   // Handle items per page change
-  const handleItemsPerPageChange = (e:any) => {
+  const handleItemsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newItemsPerPage = parseInt(e.target.value);
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1); // Reset to first page when changing items per page
@@ -110,7 +111,7 @@ const PaginatedSerialGrid = ({
       {/* Display SerialItems grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         <AnimatePresence>
-          {currentItems.map((serial:any) => (
+          {currentItems.map((serial: SerialNumber) => (
             <SerialItem
               key={serial.id}
               serial={serial}

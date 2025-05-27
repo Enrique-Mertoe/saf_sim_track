@@ -48,7 +48,7 @@ const Dashboard: React.FC<{ children: React.ReactNode }> = ({children}) => {
                     initial={false}
                     animate={'expanded'}
                     transition={{type: 'spring', damping: 20}}
-                    className={`flex-1 w-full max-sm:pt-30  md:ml-64 overflow-x-hidden  relative`}>
+                    className={`flex-1 w-full max-sm:pt-14  md:ml-64 overflow-x-hidden  relative`}>
                     <PageTransition>
                         {children}
                     </PageTransition>

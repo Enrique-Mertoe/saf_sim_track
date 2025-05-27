@@ -4,8 +4,8 @@ import {AnimatePresence, motion} from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-import {SIMCard, SIMCardCreate, SIMStatus, Team as Team1, User} from "@/models";
-import {teamService} from "@/services";
+import {BatchMetadataCreate, SIMCard, SIMCardCreate, SIMStatus} from "@/models";
+import {batchMetadataService, teamService} from "@/services";
 import {toast} from "react-hot-toast";
 import Progress from "@/ui/components/MaterialProgress";
 import useApp from "@/ui/provider/AppProvider";
@@ -14,33 +14,15 @@ import {useDialog} from "@/app/_providers/dialog";
 import PaginatedSerialGrid from "@/app/dashboard/pick/components/ItemList";
 import * as mammoth from 'mammoth';
 import * as Papaparse from 'papaparse';
+import {isPicklist, parsePicklistText} from "@/utils/picklistParser";
 import alert from "@/ui/alert";
+import {generateId, SerialNumber, TabType, Team} from "@/app/dashboard/pick/types";
 
-// Define TypeScript interfaces
-interface SerialNumber {
-    id: string; // Unique identifier for each serial
-    value: string;
-    isValid: boolean;
-    isChecking: boolean;
-    checkError: string | null;
-    exists: boolean;
-    isUploading: boolean;
-    isUploaded: boolean;
-    uploadError: string | null;
-}
-
-type Team = Team1 & {
-    users?: User,
-    leader: string
-}
-
-// Generate a unique ID
-const generateId = (): string => {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2);
-};
+// Using shared types from types.ts
 
 const SerialNumberForm: React.FC = () => {
     const {user} = useApp()
+    const [activeTab, setActiveTab] = useState<TabType>('upload');
     const [inputValue, setInputValue] = useState<string>('');
     const [serialNumbers, setSerialNumbers] = useState<SerialNumber[]>([]);
     const [globalError, setGlobalError] = useState<string | null>(null);
@@ -59,6 +41,8 @@ const SerialNumberForm: React.FC = () => {
     const [isPdfInitializing, setIsPdfInitializing] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
     const [pdfProgress, setPdfProgress] = useState(0);
+    const [uploadedBatches, setUploadedBatches] = useState<any[]>([]);
+    const [isLoadingBatches, setIsLoadingBatches] = useState<boolean>(false);
 
     // Initialize PDF.js when needed
     const initializePdfJs = async () => {
@@ -99,6 +83,35 @@ const SerialNumberForm: React.FC = () => {
 
         fetchTeams().then()
     }, []);
+
+    // Load uploaded batches when the view tab is selected
+    useEffect(() => {
+        if (activeTab === 'view' && user) {
+            loadUploadedBatches();
+        }
+    }, [activeTab, user]);
+
+    // Function to load uploaded batches
+    const loadUploadedBatches = async () => {
+        if (!user) return;
+
+        setIsLoadingBatches(true);
+        try {
+            const { data, error } = await batchMetadataService.getBatchesWithCounts(user);
+
+            if (error) {
+                console.error('Error loading batches:', error);
+                setGlobalError('Failed to load uploaded batches. Please try again.');
+            } else if (data) {
+                setUploadedBatches(data);
+            }
+        } catch (err) {
+            console.error('Exception loading batches:', err);
+            setGlobalError('An unexpected error occurred while loading batches.');
+        } finally {
+            setIsLoadingBatches(false);
+        }
+    };
 
     const normalizeText = (text: string) => {
         // Remove excessive whitespace and normalize line breaks
@@ -278,44 +291,80 @@ const SerialNumberForm: React.FC = () => {
     };
 
     const process = async () => {
-        // Split by whitespace and filter out empty strings
-        const serialsToParse = inputValue.split(/\s+/).filter(Boolean);
+        try {
+            // Split by whitespace and filter out empty strings
+            // Improved regex to handle various separators (spaces, commas, newlines)
+            const serialsToParse = inputValue
+                .split(/[\s,;]+/)
+                .filter(Boolean)
+                .map(s => s.trim());
 
-        if (serialsToParse.length === 0) {
-            throw new Error('No valid serial numbers found');
-        }
+            if (serialsToParse.length === 0) {
+                throw new Error('No valid serial numbers found');
+            }
 
-        // Reset the input field
-        setInputValue('');
-        // eslint-disable-next-line prefer-const
-        let {data, error: simError} = await simService.getAllSimCards(user!)
-        if (!data || simError)
-            data = []
-        const simdataMapa = data.map((data: SIMCard) => data.serial_number)
+            // Reset the input field
+            setInputValue('');
 
-        // Add all serials to the grid immediately, then check each individually
-        const newSerials: SerialNumber[] = serialsToParse
-            .map(serial => serial.trim())
-            .filter(serial => serial.length >= 16 && !isNaN(Number(serial)))
-            .map(serial => ({
+            // Fetch existing SIM cards more efficiently with error handling
+            let existingSerials: string[] = [];
+            try {
+                const {data, error: simError} = await simService.getAllSimCards(user!);
+                if (data && !simError) {
+                    existingSerials = data.map((data: SIMCard) => data.serial_number);
+                }
+            } catch (err) {
+                console.error('Error fetching existing SIM cards:', err);
+                // Continue with empty array - we'll check existence individually later
+            }
+
+            // Process serials in batches for better performance
+            const batchSize = 100;
+            let processedCount = 0;
+
+            // Deduplicate serials first
+            const uniqueSerials = [...new Set(serialsToParse)];
+
+            // Pre-filter obviously invalid serials
+            const validSerials = uniqueSerials
+                .filter(serial => serial.length >= 16 && !isNaN(Number(serial)));
+
+            if (validSerials.length === 0) {
+                throw new Error('No valid serial numbers found. Serial numbers must be at least 16 digits and contain only numbers.');
+            }
+
+            // Create serial objects with initial validation
+            const newSerials: SerialNumber[] = validSerials.map(serial => ({
                 id: generateId(),
                 value: serial,
-                isValid: !isNaN(Number(serial)),
+                isValid: true,
                 isChecking: false,
                 checkError: null,
-                exists: simdataMapa.includes(serial),
+                exists: existingSerials.includes(serial),
                 isUploading: false,
                 isUploaded: false,
                 uploadError: null
             }));
 
-        if (newSerials.length === 0) {
-            throw new Error('All serial numbers were too short (less than 16 characters)');
-        }
+            setCheckingCount(newSerials.length);
+            setSerialNumbers(prev => [...prev, ...newSerials]);
 
-        setCheckingCount(newSerials.length);
-        setSerialNumbers(prev => [...prev, ...newSerials]);
-        return newSerials.length;
+            // Show user feedback about duplicates if any were removed
+            if (uniqueSerials.length < serialsToParse.length) {
+                toast.info(`Removed ${serialsToParse.length - uniqueSerials.length} duplicate serial numbers`);
+            }
+
+            // Show user feedback about invalid serials if any were filtered out
+            if (validSerials.length < uniqueSerials.length) {
+                toast.info(`Filtered out ${uniqueSerials.length - validSerials.length} invalid serial numbers`);
+            }
+
+            return newSerials.length;
+        } catch (error) {
+            // More graceful error handling
+            console.error('Error in process function:', error);
+            throw error; // Re-throw to be handled by the caller
+        }
     };
 
     const handlePaste = async () => {
@@ -449,62 +498,165 @@ const SerialNumberForm: React.FC = () => {
     };
 
     const uploadAllSerials = async () => {
-        if (!selectedTeam) {
-            toast.error("Select team")
-            return setGlobalError("Select Team")
-        }
-        // Filter only valid, non-existing, non-uploaded, and not-checking serials
-        const serialsToUpload = serialNumbers
-            .filter(serial =>
-                serial.isValid &&
-                !serial.exists &&
-                !serial.isUploaded &&
-                !serial.isChecking &&
-                !serial.isUploading);
-
-        if (serialsToUpload.length === 0) {
-            setGlobalError('No valid new serial numbers to upload');
-            return;
-        }
-
-        setGlobalError(null);
-        setUploadMessage(`Starting upload of ${serialsToUpload.length} serials to ${teams.find(t => t.id === selectedTeam)?.name}...`);
-        setIsUploading(true);
-        setUploadingCount(serialsToUpload.length);
-        const batchId = `BATCH-${generateId()}`
-
-        // Mark all serials as uploading
-        await simService.createSIMCardBatch(serialsToUpload.map(ser => {
-            const ser_data: SIMCardCreate = {
-                match: SIMStatus.MATCH, quality: SIMStatus.NONQUALITY, serial_number: ser.value,
-                team_id: selectedTeam,
-                batch_id: batchId,
-                registered_by_user_id: user!.id
+        try {
+            // Validate team selection with better error message
+            if (!selectedTeam) {
+                toast.error("Please select a team before uploading");
+                setGlobalError("You must select a team before uploading serial numbers");
+                return;
             }
-            updateSerialStatus(ser.id, {
-                isUploading: true,
-                isUploaded: false,
-                exists: true,
-                uploadError: null
-            })
-            return ser_data
-        }), 50, (p, v, chunk, errors) => {
-            setcurrentPercentage(p)
-            setSofar(v)
-            const all = chunk.map(s => s.serial_number)
+
+            // Get the selected team name for better user feedback
+            const selectedTeamName = teams.find(t => t.id === selectedTeam)?.name || "Selected Team";
+
+            // Filter only valid, non-existing, non-uploaded, and not-checking serials
+            const serialsToUpload = serialNumbers
+                .filter(serial =>
+                    serial.isValid &&
+                    !serial.exists &&
+                    !serial.isUploaded &&
+                    !serial.isChecking &&
+                    !serial.isUploading);
+
+            // Handle case where there are no valid serials to upload with better error message
+            if (serialsToUpload.length === 0) {
+                const invalidCount = serialNumbers.filter(s => !s.isValid).length;
+                const existingCount = serialNumbers.filter(s => s.exists).length;
+                const checkingCount = serialNumbers.filter(s => s.isChecking).length;
+
+                let errorMessage = 'No valid new serial numbers to upload.';
+                if (invalidCount > 0) {
+                    errorMessage += ` ${invalidCount} invalid serial(s).`;
+                }
+                if (existingCount > 0) {
+                    errorMessage += ` ${existingCount} already exist.`;
+                }
+                if (checkingCount > 0) {
+                    errorMessage += ` ${checkingCount} still being checked.`;
+                }
+
+                toast.error(errorMessage);
+                setGlobalError(errorMessage);
+                return;
+            }
+
+            // Clear previous errors and set upload message
+            setGlobalError(null);
+            setUploadMessage(`Starting upload of ${serialsToUpload.length} serials to ${selectedTeamName}...`);
+            setIsUploading(true);
+            setUploadingCount(serialsToUpload.length);
+
+            // Create a unique batch ID for this upload
+            const batchId = `BATCH-${generateId()}`;
+
+            // Check if the input text is a picklist and extract metadata if it is
+            let batchMetadata: BatchMetadataCreate | null = null;
+            if (isPicklist(inputValue)) {
+                batchMetadata = parsePicklistText(
+                    inputValue,
+                    batchId,
+                    selectedTeam,
+                    user!.id
+                );
+
+                // Store the batch metadata
+                try {
+                    const { data, error } = await batchMetadataService.createBatchMetadata(batchMetadata);
+                    if (error) {
+                        console.error('Error storing batch metadata:', error);
+                        // Continue with the upload even if metadata storage fails
+                    } else {
+                        toast.success('Picklist metadata extracted and stored successfully');
+                    }
+                } catch (err) {
+                    console.error('Exception storing batch metadata:', err);
+                    // Continue with the upload even if metadata storage fails
+                }
+            }
+
+            // Mark all serials as uploading before starting the upload
             serialsToUpload.forEach(serial => {
-                if (all.includes(serial.value)) {
+                updateSerialStatus(serial.id, {
+                    isUploading: true,
+                    isUploaded: false,
+                    uploadError: null
+                });
+            });
+
+            // Prepare the data for upload
+            const serialDataToUpload = serialsToUpload.map(ser => {
+                return {
+                    match: SIMStatus.MATCH, 
+                    quality: SIMStatus.NONQUALITY, 
+                    serial_number: ser.value,
+                    team_id: selectedTeam,
+                    batch_id: batchId,
+                    registered_by_user_id: user!.id
+                } as SIMCardCreate;
+            });
+
+            // Upload the serials with progress tracking and error handling
+            await simService.createSIMCardBatch(
+                serialDataToUpload, 
+                50, // batch size
+                (progress, uploadedCount, chunk, errors) => {
+                    // Update progress indicators
+                    setcurrentPercentage(progress);
+                    setSofar(uploadedCount);
+
+                    // Get the serial numbers from the current chunk
+                    const uploadedSerialNumbers = chunk.map(s => s.serial_number);
+
+                    // Update status for each serial in the current chunk
+                    serialsToUpload.forEach(serial => {
+                        if (uploadedSerialNumbers.includes(serial.value)) {
+                            updateSerialStatus(serial.id, {
+                                isUploading: false,
+                                isUploaded: true,
+                                exists: true,
+                                uploadError: errors && errors.length > 0 ? errors.join('\n') : null
+                            });
+
+                            // If there were errors for this serial, show a toast
+                            if (errors && errors.length > 0) {
+                                toast.error(`Error uploading ${serial.value}: ${errors.join(', ')}`);
+                            }
+                        }
+                    });
+                }
+            );
+
+            // Show success message with metadata info if available
+            let successMessage = `Successfully uploaded ${serialsToUpload.length} serial numbers to ${selectedTeamName}`;
+            if (batchMetadata) {
+                successMessage += ` with picklist metadata (Order #${batchMetadata.order_number || 'N/A'})`;
+            }
+
+            toast.success(successMessage);
+            setUploadMessage(successMessage);
+
+            // Clear the list after a delay to allow user to see the success status
+            setTimeout(clearAll, 2000);
+        } catch (error) {
+            // Handle any unexpected errors during the upload process
+            console.error('Error uploading serials:', error);
+            const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred during upload';
+            toast.error(`Upload failed: ${errorMessage}`);
+            setGlobalError(`Upload failed: ${errorMessage}`);
+
+            // Reset uploading state for all serials
+            serialNumbers.forEach(serial => {
+                if (serial.isUploading) {
                     updateSerialStatus(serial.id, {
                         isUploading: false,
-                        isUploaded: true,
-                        exists: true,
-                        uploadError: errors ? errors.join('\n') : null
-                    })
+                        uploadError: 'Upload failed due to server error'
+                    });
                 }
-            })
-        });
-        setIsUploading(false);
-        setTimeout(clearAll, 1000)
+            });
+        } finally {
+            // Ensure uploading state is reset regardless of success or failure
+            setIsUploading(false);
+        }
     };
 
     const clearAll = () => {
@@ -556,260 +708,577 @@ const SerialNumberForm: React.FC = () => {
     // Check if any process is running
     const isAnyProcessRunning = isProcessing || isUploading || isFileProcessing || isPdfInitializing;
 
+    // More specific button states for better UX
+    const canProcessInput = !isAnyProcessRunning && inputValue.trim().length > 0;
+    const canUploadFile = !isAnyProcessRunning || (isFileProcessing && !isPdfInitializing);
+    const canUploadSerials = !isAnyProcessRunning && newValidCount > 0 && selectedTeam !== '';
+    const canClearAll = !isAnyProcessRunning && serialNumbers.length > 0;
+
+    // Function to delete a batch
+    const deleteBatch = async (batchId: string) => {
+        if (!user) return;
+
+        if (!confirm('Are you sure you want to delete this batch? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const { error } = await batchMetadataService.deleteBatchMetadata(batchId);
+
+            if (error) {
+                console.error('Error deleting batch:', error);
+                toast.error('Failed to delete batch. Please try again.');
+            } else {
+                toast.success('Batch deleted successfully');
+                // Reload the batches
+                loadUploadedBatches();
+            }
+        } catch (err) {
+            console.error('Exception deleting batch:', err);
+            toast.error('An unexpected error occurred while deleting the batch.');
+        }
+    };
+
+    // Function to format date
+    const formatDate = (dateString: string) => {
+        if (!dateString) return 'N/A';
+
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (err) {
+            return dateString;
+        }
+    };
+
     return (
         <div className="w-full mx-auto p-6">
-            <h1 className="text-3xl font-bold text-center mb-8 text-green-700">
-                Safaricom SIM Serial Upload
+            <h1 className="text-3xl font-bold text-center mb-4 text-green-700">
+                Safaricom SIM Management
             </h1>
 
-            {/* Team Selection */}
-            <div className="mb-6">
-                <label
-                    htmlFor="team-select"
-                    className="block mb-2 text-lg font-medium text-gray-700"
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 mb-6">
+                <button
+                    className={`py-2 px-4 font-medium text-sm focus:outline-none ${
+                        activeTab === 'upload'
+                            ? 'text-green-600 border-b-2 border-green-500'
+                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    onClick={() => setActiveTab('upload')}
                 >
-                    Select Team
-                </label>
-                <MaterialSelect
-                    valueKey={"id"}
-                    displayKey={"name,leader"}
-                    value={selectedTeam}
-                    animation={"slide"}
-                    onChange={handleTeamChange}
-                    options={teams}
-                    disabled={isAnyProcessRunning}
-                />
+                    Upload SIM Cards
+                </button>
+                <button
+                    className={`py-2 px-4 font-medium text-sm focus:outline-none ${
+                        activeTab === 'view'
+                            ? 'text-green-600 border-b-2 border-green-500'
+                            : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                    onClick={() => setActiveTab('view')}
+                >
+                    View Uploaded Batches
+                </button>
             </div>
 
-            {/* Input Section */}
-            <div className="mb-8">
-                <label
-                    htmlFor="serial-input"
-                    className="block mb-2 text-lg font-medium text-gray-700"
-                >
-                    Paste Your Serial Numbers
-                </label>
-
-                <div className="flex relative">
-                    <textarea
-                        id="serial-input"
-                        value={inputValue}
-                        onChange={handleInputChange}
-                        placeholder="Paste serial numbers separated by spaces or new lines (numbers less than 16 digits will be skipped)..."
-                        className="w-full h-32 p-4 border-2 scrollbar-thin scrollbar-track-rounded-full border-green-300 rounded-lg
-                            focus:ring-green-500 focus:border-green-500 transition-all duration-300
-                            placeholder-gray-400 text-sm font-mono outline-0"
-                        disabled={isAnyProcessRunning}
-                    />
-                    <div className="absolute right-4 bottom-4 font-medium flex gap-2">
-                        {/* Hidden file input */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".pdf,.txt,.csv,.doc,.docx"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                        />
-
-                        {/* File upload button */}
-                        <Button
-                            className={"!h-8  !rounded-sm flex items-center"}
-                            isLoading={isFileProcessing}
-                            text={isFileProcessing ?
-                                (totalPages > 0 ?
-                                    `Processing PDF (${Math.ceil(pdfProgress / 100 * totalPages)}/${totalPages})` :
-                                    "Processing File...")
-                                : "Upload"}
-                            onClick={triggerFileUpload}
-                            disabled={isAnyProcessRunning && !isFileProcessing}
-                            icon={isFileProcessing ? '' : <FileText className="mr-1 h-4 w-4"/>}
-                        />
-
-                        {/* Process button */}
-                        <Button
-                            className={"!h-8 !rounded-sm"}
-                            isLoading={isProcessing}
-                            text="Process"
-                            onClick={handlePaste}
-                            disabled={isAnyProcessRunning || !inputValue.trim()}
-                        />
-                    </div>
-                    <div className="absolute right-1 top-1 font-medium">
-                        <button
-                            onClick={() => {
-                                const d = dialog.create({
-                                    content: <div className="relative p-2 w-full max-h-full">
-                                        <div className="relative bg-white  dark:bg-gray-700">
-
-                                            <div
-                                                className="flex items-center justify-between p-2 border-b rounded-t dark:border-gray-600 border-gray-200">
-                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                                    Serial numbers
-                                                </h3>
-                                                <button
-                                                    onClick={() => d.dismiss()}
-                                                    type="button"
-                                                    className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-                                                    data-modal-hide="default-modal">
-                                                    <svg className="w-3 h-3" aria-hidden="true"
-                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                         viewBox="0 0 14 14">
-                                                        <path stroke="currentColor" strokeLinecap="round"
-                                                              strokeLinejoin="round" strokeWidth="2"
-                                                              d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                                    </svg>
-                                                    <span className="sr-only">Close modal</span>
-                                                </button>
-                                            </div>
-
-                                            <div className="p-4 md:p-5 space-y-4">
-                                                {inputValue.split("<br>").join("\n")}
-                                            </div>
-                                        </div>
-                                    </div>,
-                                    size: "lg",
-                                    design: ["scrollable"]
-                                })
-                            }}
-                            disabled={isAnyProcessRunning}
-                            className={`cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+            {/* Upload Tab Content */}
+            {activeTab === 'upload' && (
+                <>
+                    {/* Team Selection - Enhanced with better visual prominence */}
+                    <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                        <label
+                            htmlFor="team-select"
+                            className="block mb-2 text-lg font-medium text-gray-700 flex items-center"
                         >
-                            <Maximize2 size={24}/>
-                        </button>
-                    </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                    Supported file formats: PDF, TXT, CSV, DOC, DOCX
-                </p>
-            </div>
-
-            {/* PDF Processing Progress */}
-            {isFileProcessing && totalPages > 0 && (
-                <div className="py-4 mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                        <span
-                            className="text-gray-600">Extracting PDF text... {totalPages > 0 ? `(Page ${Math.ceil(pdfProgress / 100 * totalPages)} of ${totalPages})` : ''}</span>
-                        <span className="text-gray-600">{pdfProgress.toFixed(0)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${pdfProgress}%`}}></div>
-                    </div>
-                </div>
-            )}
-
-            <Progress
-                progress={currentPercentage}
-                current={uploadedSofar}
-                total={serialNumbers.length}
-            />
-
-            {/* Status messages */}
-            <AnimatePresence>
-                {uploadMessage && (
-                    <motion.div
-                        initial={{opacity: 0, y: -10}}
-                        animate={{opacity: 1, y: 0}}
-                        exit={{opacity: 0}}
-                        className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700"
-                    >
-                        {uploadMessage}
-                    </motion.div>
-                )}
-
-                {globalError && (
-                    <motion.div
-                        initial={{opacity: 0, y: -10}}
-                        animate={{opacity: 1, y: 0}}
-                        exit={{opacity: 0}}
-                        className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700"
-                    >
-                        {globalError}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Stats Section */}
-            {serialNumbers.length > 0 && (
-                <motion.div
-                    initial={{opacity: 0}}
-                    animate={{opacity: 1}}
-                    className="mb-6 bg-gray-50 p-4 rounded-lg shadow-sm"
-                >
-                    <h2 className="text-lg font-medium text-gray-700 mb-2">Summary</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                            <div className="text-2xl font-bold text-gray-800">{totalCount}</div>
-                            <div className="text-sm text-gray-500">Total Numbers</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm">
-                            <div className="text-2xl font-bold text-blue-600">{checkingCount}</div>
-                            <div className="text-sm text-gray-500">Checking</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border border-green-200 shadow-sm">
-                            <div className="text-2xl font-bold text-green-600">{newValidCount}</div>
-                            <div className="text-sm text-gray-500">Ready to Upload</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border border-purple-200 shadow-sm">
-                            <div className="text-2xl font-bold text-purple-600">{uploadingCount}</div>
-                            <div className="text-sm text-gray-500">Uploading</div>
-                        </div>
-                    </div>
-                </motion.div>
-            )}
-
-            {/* Serial Numbers Grid */}
-            {serialNumbers.length > 0 && (
-                <div className="mb-6">
-                    <div className="flex justify-between items-center gap-2 mb-4">
-                        <h2 className="text-lg font-medium text-gray-700">Serial Numbers</h2>
-                        {/* Action Buttons */}
-                        {serialNumbers.length > 0 && (
-                            <motion.button
-                                whileHover={{scale: 1.05}}
-                                whileTap={{scale: 0.95}}
-                                onClick={uploadAllSerials}
-                                disabled={newValidCount === 0 || isAnyProcessRunning}
-                                className="text-green-600 hover:text-green-700 ms-auto px-4 py-2 font-medium
-                            flex items-center justify-center min-w-[200px]
-                            disabled:text-gray-400 disabled:cursor-not-allowed
-                            transition-colors duration-300"
-                            >
-                                {isUploading ? (
-                                    <>
-                                        <span
-                                            className="inline-block animate-spin h-4 w-4 mr-2 border-2 border-green-600 border-t-transparent rounded-full"></span>
-                                        Uploading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd"
-                                                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
-                                                  clipRule="evenodd"/>
-                                        </svg>
-                                        Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''} to {teams.find(t => t.id === selectedTeam)?.name}
-                                    </>
-                                )}
-                            </motion.button>
+                            <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                            </svg>
+                            Select Team for Upload
+                            {!selectedTeam && !isAnyProcessRunning && serialNumbers.length > 0 && (
+                                <span className="ml-2 text-sm text-red-500 animate-pulse">
+                                    (Required for upload)
+                                </span>
+                            )}
+                        </label>
+                        <MaterialSelect
+                            valueKey={"id"}
+                            displayKey={"name,leader"}
+                            value={selectedTeam}
+                            animation={"slide"}
+                            onChange={handleTeamChange}
+                            options={teams}
+                            disabled={isAnyProcessRunning}
+                            className={!selectedTeam && !isAnyProcessRunning && serialNumbers.length > 0 ? "border-red-300 focus:border-red-500" : ""}
+                        />
+                        {selectedTeam && (
+                            <p className="mt-2 text-sm text-green-600">
+                                Selected team: {teams.find(t => t.id === selectedTeam)?.name || "Unknown Team"}
+                            </p>
                         )}
-                        <button
-                            onClick={clearAll}
-                            disabled={isAnyProcessRunning}
-                            className={`text-sm text-red-600 hover:text-red-800 ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    </div>
+
+                    {/* Input Section - Enhanced with better guidance */}
+                    <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                        <label
+                            htmlFor="serial-input"
+                            className="block mb-2 text-lg font-medium text-gray-700 flex items-center"
                         >
-                            Clear All
+                            <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                            </svg>
+                            Enter Serial Numbers
+                        </label>
+
+                        <div className="mb-2 text-sm text-gray-600 flex flex-wrap gap-2">
+                            <span className="inline-flex items-center bg-gray-100 px-2 py-1 rounded">
+                                <span className="font-medium mr-1">Format:</span> 16+ digit numbers
+                            </span>
+                            <span className="inline-flex items-center bg-gray-100 px-2 py-1 rounded">
+                                <span className="font-medium mr-1">Separators:</span> spaces, commas, new lines
+                            </span>
+                            <span className="inline-flex items-center bg-gray-100 px-2 py-1 rounded">
+                                <span className="font-medium mr-1">Or:</span> upload a file
+                            </span>
+                        </div>
+
+                        <div className="flex relative">
+                            <textarea
+                                id="serial-input"
+                                value={inputValue}
+                                onChange={handleInputChange}
+                                placeholder="Paste or type serial numbers here..."
+                                className="w-full h-32 p-4 border-2 scrollbar-thin scrollbar-track-rounded-full border-green-300 rounded-lg
+                                    focus:ring-green-500 focus:border-green-500 transition-all duration-300
+                                    placeholder-gray-400 text-sm font-mono outline-0"
+                                disabled={isAnyProcessRunning}
+                            />
+                            <div className="absolute right-4 bottom-4 font-medium flex gap-2">
+                                {/* Hidden file input */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".pdf,.txt,.csv,.doc,.docx"
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                />
+
+                                {/* File upload button - clearer state and better feedback */}
+                                <Button
+                                    className={"!h-8 !rounded-sm flex items-center"}
+                                    isLoading={isFileProcessing}
+                                    text={isFileProcessing ?
+                                        (totalPages > 0 ?
+                                            `Processing PDF (${Math.ceil(pdfProgress / 100 * totalPages)}/${totalPages})` :
+                                            "Processing File...")
+                                        : "Upload File"}
+                                    onClick={triggerFileUpload}
+                                    disabled={!canUploadFile}
+                                    icon={isFileProcessing ? '' : <FileText className="mr-1 h-4 w-4"/>}
+                                    title="Upload a file containing serial numbers"
+                                />
+
+                                {/* Process button - clearer state and better feedback */}
+                                <Button
+                                    className={"!h-8 !rounded-sm"}
+                                    isLoading={isProcessing}
+                                    text="Process"
+                                    onClick={handlePaste}
+                                    disabled={!canProcessInput}
+                                    title="Process the pasted serial numbers"
+                                />
+                            </div>
+                            <div className="absolute right-1 top-1 font-medium">
+                                <button
+                                    onClick={() => {
+                                        const d = dialog.create({
+                                            content: <div className="relative p-2 w-full max-h-full">
+                                                <div className="relative bg-white  dark:bg-gray-700">
+
+                                                    <div
+                                                        className="flex items-center justify-between p-2 border-b rounded-t dark:border-gray-600 border-gray-200">
+                                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                                                            Serial numbers
+                                                        </h3>
+                                                        <button
+                                                            onClick={() => d.dismiss()}
+                                                            type="button"
+                                                            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                                                            data-modal-hide="default-modal">
+                                                            <svg className="w-3 h-3" aria-hidden="true"
+                                                                xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                viewBox="0 0 14 14">
+                                                                <path stroke="currentColor" strokeLinecap="round"
+                                                                    strokeLinejoin="round" strokeWidth="2"
+                                                                    d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                                                            </svg>
+                                                            <span className="sr-only">Close modal</span>
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="p-4 md:p-5 space-y-4">
+                                                        {inputValue.split("<br>").join("\n")}
+                                                    </div>
+                                                </div>
+                                            </div>,
+                                            size: "lg",
+                                            design: ["scrollable"]
+                                        })
+                                    }}
+                                    disabled={isAnyProcessRunning}
+                                    className={`cursor-pointer hover:bg-gray-500/10 rounded-full p-2 transition-colors ${isAnyProcessRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                >
+                                    <Maximize2 size={24}/>
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Supported file formats: PDF, TXT, CSV, DOC, DOCX
+                        </p>
+                    </div>
+
+                    {/* PDF Processing Progress */}
+                    {isFileProcessing && totalPages > 0 && (
+                        <div className="py-4 mb-6">
+                            <div className="flex justify-between items-center mb-2">
+                                <span
+                                    className="text-gray-600">Extracting PDF text... {totalPages > 0 ? `(Page ${Math.ceil(pdfProgress / 100 * totalPages)} of ${totalPages})` : ''}</span>
+                                <span className="text-gray-600">{pdfProgress.toFixed(0)}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                <div className="bg-blue-600 h-2.5 rounded-full" style={{width: `${pdfProgress}%`}}></div>
+                            </div>
+                        </div>
+                    )}
+
+                    <Progress
+                        progress={currentPercentage}
+                        current={uploadedSofar}
+                        total={serialNumbers.length}
+                    />
+
+                    {/* Status messages */}
+                    <AnimatePresence>
+                        {uploadMessage && (
+                            <motion.div
+                                initial={{opacity: 0, y: -10}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0}}
+                                className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700"
+                            >
+                                {uploadMessage}
+                            </motion.div>
+                        )}
+
+                        {globalError && (
+                            <motion.div
+                                initial={{opacity: 0, y: -10}}
+                                animate={{opacity: 1, y: 0}}
+                                exit={{opacity: 0}}
+                                className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 text-red-700"
+                            >
+                                {globalError}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Stats Section */}
+                    {serialNumbers.length > 0 && (
+                        <motion.div
+                            initial={{opacity: 0}}
+                            animate={{opacity: 1}}
+                            className="mb-6 bg-gray-50 p-4 rounded-lg shadow-sm"
+                        >
+                            <h2 className="text-lg font-medium text-gray-700 mb-2">Summary</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                                    <div className="text-2xl font-bold text-gray-800">{totalCount}</div>
+                                    <div className="text-sm text-gray-500">Total Numbers</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm">
+                                    <div className="text-2xl font-bold text-blue-600">{checkingCount}</div>
+                                    <div className="text-sm text-gray-500">Checking</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-green-200 shadow-sm">
+                                    <div className="text-2xl font-bold text-green-600">{newValidCount}</div>
+                                    <div className="text-sm text-gray-500">Ready to Upload</div>
+                                </div>
+                                <div className="bg-white p-3 rounded-lg border border-purple-200 shadow-sm">
+                                    <div className="text-2xl font-bold text-purple-600">{uploadingCount}</div>
+                                    <div className="text-sm text-gray-500">Uploading</div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Serial Numbers Grid - Enhanced with better visual organization */}
+                    {serialNumbers.length > 0 && (
+                        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                            <div className="flex justify-between items-center gap-2 mb-4">
+                                <h2 className="text-lg font-medium text-gray-700 flex items-center">
+                                    <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                    Serial Numbers
+                                    <span className="ml-2 text-sm text-gray-500">({serialNumbers.length} total)</span>
+                                </h2>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-2">
+                                    {serialNumbers.length > 0 && (
+                                        <motion.button
+                                            whileHover={{scale: 1.02}}
+                                            whileTap={{scale: 0.98}}
+                                            onClick={uploadAllSerials}
+                                            disabled={!canUploadSerials}
+                                            className="bg-green-600 hover:bg-green-700 text-white ms-auto px-4 py-2 font-medium
+                                            rounded-md shadow-sm flex items-center justify-center min-w-[200px]
+                                            disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed
+                                            transition-colors duration-300"
+                                            title={!selectedTeam ? "Please select a team first" : 
+                                                newValidCount === 0 ? "No valid serial numbers to upload" : 
+                                                `Upload ${newValidCount} serial numbers to the selected team`}
+                                        >
+                                            {isUploading ? (
+                                                <>
+                                                    <span
+                                                        className="inline-block animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>
+                                                    Uploading...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd"
+                                                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                                                            clipRule="evenodd"/>
+                                                    </svg>
+                                                    Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''} to {teams.find(t => t.id === selectedTeam)?.name || "Selected Team"}
+                                                </>
+                                            )}
+                                        </motion.button>
+                                    )}
+                                    <button
+                                        onClick={clearAll}
+                                        disabled={!canClearAll}
+                                        className={`text-sm bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-md ${!canClearAll ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        title="Clear all serial numbers"
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Status Legend */}
+                            <div className="mb-4 flex flex-wrap gap-2 text-xs">
+                                <span className="inline-flex items-center bg-green-50 text-green-600 px-2 py-1 rounded border border-green-200">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Ready to upload: {newValidCount}
+                                </span>
+                                <span className="inline-flex items-center bg-yellow-50 text-yellow-600 px-2 py-1 rounded border border-yellow-200">
+                                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span> Already exists: {existingCount}
+                                </span>
+                                <span className="inline-flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200">
+                                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> Checking: {checkingCount}
+                                </span>
+                                <span className="inline-flex items-center bg-purple-50 text-purple-600 px-2 py-1 rounded border border-purple-200">
+                                    <span className="w-2 h-2 bg-purple-500 rounded-full mr-1"></span> Uploaded: {uploadedCount}
+                                </span>
+                                <span className="inline-flex items-center bg-red-50 text-red-600 px-2 py-1 rounded border border-red-200">
+                                    <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span> Invalid: {invalidCount}
+                                </span>
+                            </div>
+
+                            <PaginatedSerialGrid
+                                serialNumbers={serialNumbers}
+                                editSerial={editSerial}
+                                removeSerial={removeSerial}
+                                selectedTeam={selectedTeam}
+                                teams={teams}
+                                onCheckComplete={handleCheckComplete}
+                                onUploadComplete={handleUploadComplete}
+                                updateSerialStatus={updateSerialStatus}
+                            />
+                        </div>
+                    )}
+                </>
+            )}
+
+            {/* View Tab Content */}
+            {activeTab === 'view' && (
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-lg font-medium text-gray-700 flex items-center">
+                            <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                            Uploaded Batches
+                        </h2>
+                        <button
+                            onClick={loadUploadedBatches}
+                            className="text-sm bg-green-50 text-green-600 hover:bg-green-100 px-3 py-2 rounded-md flex items-center"
+                            disabled={isLoadingBatches}
+                        >
+                            {isLoadingBatches ? (
+                                <>
+                                    <span className="inline-block animate-spin h-4 w-4 mr-2 border-2 border-green-600 border-t-transparent rounded-full"></span>
+                                    Refreshing...
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                                    </svg>
+                                    Refresh
+                                </>
+                            )}
                         </button>
                     </div>
-                    <PaginatedSerialGrid
-                        serialNumbers={serialNumbers}
-                        editSerial={editSerial}
-                        removeSerial={removeSerial}
-                        selectedTeam={selectedTeam}
-                        teams={teams}
-                        onCheckComplete={handleCheckComplete}
-                        onUploadComplete={handleUploadComplete}
-                        updateSerialStatus={updateSerialStatus}
-                    />
+
+                    {isLoadingBatches ? (
+                        <div className="flex justify-center items-center py-8">
+                            <span className="inline-block animate-spin h-8 w-8 border-4 border-green-600 border-t-transparent rounded-full"></span>
+                            <span className="ml-2 text-gray-600">Loading batches...</span>
+                        </div>
+                    ) : uploadedBatches.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm0-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <p>No batches found. Upload some SIM cards first.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {/* Group batches by team */}
+                            {Object.entries(
+                                uploadedBatches.reduce((groups: any, batch: any) => {
+                                    const teamId = batch.team_id?.id || 'unknown';
+                                    const teamName = batch.team_id?.name || 'Unknown Team';
+
+                                    if (!groups[teamId]) {
+                                        groups[teamId] = {
+                                            name: teamName,
+                                            batches: []
+                                        };
+                                    }
+
+                                    groups[teamId].batches.push(batch);
+                                    return groups;
+                                }, {})
+                            ).map(([teamId, team]: [string, any]) => (
+                                <div key={teamId} className="border border-gray-200 rounded-lg overflow-hidden">
+                                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                        <h3 className="text-lg font-medium text-gray-700">{team.name}</h3>
+                                    </div>
+
+                                    <div className="divide-y divide-gray-200">
+                                        {team.batches.map((batch: any) => (
+                                            <div key={batch.id} className="p-4 hover:bg-gray-50">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h4 className="text-md font-medium text-gray-800">
+                                                            Batch ID: {batch.batch_id}
+                                                        </h4>
+                                                        <p className="text-sm text-gray-500">
+                                                            Created: {formatDate(batch.created_at)}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center">
+                                                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                                            {batch.sim_count} SIM cards
+                                                        </span>
+                                                        <button
+                                                            onClick={() => deleteBatch(batch.id)}
+                                                            className="ml-2 text-red-500 hover:text-red-700"
+                                                            title="Delete batch"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Batch metadata */}
+                                                {(batch.order_number || batch.requisition_number || batch.company_name) && (
+                                                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                        {batch.order_number && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Order #:</span> {batch.order_number}
+                                                            </div>
+                                                        )}
+                                                        {batch.requisition_number && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Requisition #:</span> {batch.requisition_number}
+                                                            </div>
+                                                        )}
+                                                        {batch.company_name && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Company:</span> {batch.company_name}
+                                                            </div>
+                                                        )}
+                                                        {batch.collection_point && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Collection Point:</span> {batch.collection_point}
+                                                            </div>
+                                                        )}
+                                                        {batch.move_order_number && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Move Order #:</span> {batch.move_order_number}
+                                                            </div>
+                                                        )}
+                                                        {batch.date_created && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Date Created:</span> {batch.date_created}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Lot numbers */}
+                                                {batch.lot_numbers && batch.lot_numbers.length > 0 && (
+                                                    <div className="mt-2">
+                                                        <span className="text-sm font-medium text-gray-600">Lot Numbers:</span>
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {batch.lot_numbers.map((lot: string, index: number) => (
+                                                                <span key={index} className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
+                                                                    {lot}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Item description and quantity */}
+                                                {(batch.item_description || batch.quantity) && (
+                                                    <div className="mt-2 flex flex-wrap gap-4">
+                                                        {batch.item_description && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Description:</span> {batch.item_description}
+                                                            </div>
+                                                        )}
+                                                        {batch.quantity && (
+                                                            <div className="text-sm">
+                                                                <span className="font-medium text-gray-600">Quantity:</span> {batch.quantity}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Created by */}
+                                                <div className="mt-2 text-xs text-gray-500">
+                                                    Created by: {batch.created_by_user_id?.full_name || 'Unknown User'}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 

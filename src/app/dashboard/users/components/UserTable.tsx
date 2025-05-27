@@ -1,8 +1,8 @@
-import {useState, useEffect, useRef, useMemo} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {User, UserStatus, UserUpdate} from "@/models";
 import {formatDate} from "@/helper";
-import {Eye, Edit, Trash2, CheckCircle, XCircle, Loader2, Undo, X, Search} from "lucide-react";
-import {motion, AnimatePresence} from "framer-motion";
+import {CheckCircle, Edit, Eye, Loader2, MoreHorizontal, Search, Trash2, Undo, X} from "lucide-react";
+import {AnimatePresence, motion} from "framer-motion";
 import toast from "react-hot-toast";
 import {userService} from "@/services";
 import {useDialog} from "@/app/_providers/dialog";
@@ -34,6 +34,11 @@ export default function UserTable({
     const [successMessage, setSuccessMessage] = useState("");
     const [localUsers, setLocalUsers] = useState<User[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>("");
+    const [isMobileView, setIsMobileView] = useState(false);
+    const [visibleUsers, setVisibleUsers] = useState<number>(10);
+    const [hasMore, setHasMore] = useState(true);
+    const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+    const dropdownRefs = useRef<{[key: string]: HTMLDivElement | null}>({}); 
 
     // Initialize local users state from props
     useEffect(() => {
@@ -66,6 +71,50 @@ export default function UserTable({
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
+
+    // Check screen size and set mobile view
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsMobileView(window.innerWidth < 768); // 768px is a common breakpoint for mobile
+        };
+
+        // Initial check
+        checkScreenSize();
+
+        // Add event listener for window resize
+        window.addEventListener('resize', checkScreenSize);
+
+        // Cleanup
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
+
+    // Update visible users for mobile view
+    useEffect(() => {
+        setHasMore(filteredUsers.length > visibleUsers);
+    }, [filteredUsers, visibleUsers]);
+
+    const loadMoreUsers = () => {
+        setVisibleUsers(prev => Math.min(prev + 10, filteredUsers.length));
+    };
+
+    // Toggle dropdown for mobile view
+    const toggleDropdown = (userId: string) => {
+        setActiveDropdown(activeDropdown === userId ? null : userId);
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (activeDropdown && !dropdownRefs.current[activeDropdown]?.contains(event.target as Node)) {
+                setActiveDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);
 
     // Handle undo timer countdown
     useEffect(() => {
@@ -513,16 +562,15 @@ export default function UserTable({
     };
 
     return (
-
         <div
-            className="w-full bg-white dark:bg-gray-800  rounded-lg relative"
+            className="w-full bg-white dark:bg-gray-800 rounded-lg relative"
             ref={tableRef}
         >
             {/* Search Bar */}
             <div
                 className="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-20">
                 <div className="relative max-w-md mx-auto sm:max-w-full transition-all duration-200">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
                     </div>
                     <input
@@ -535,136 +583,279 @@ export default function UserTable({
                 </div>
             </div>
 
-            <div className="w-full">
-                <div className="py-2 align-middle px-4">
-                    <div className="shadow-sm border-b border-gray-200 dark:border-gray-700 rounded-lg">
-                        <div className="overflow-x-auto">
-                            <table
-                                className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed md:table-auto">
-                            <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
-                                <tr>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >
-                                        Name
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >
-                                        ID Number
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >
-                                        Role
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                    >
-                                        Last Login
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider bg-gray-50 dark:bg-gray-800 transition-colors duration-200"
-                                    >
-                                        Actions
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody
-                                    className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredUsers.length === 0 ? (
+            {/* Desktop View - Table */}
+            {!isMobileView && (
+                <div className="w-full">
+                    <div className="py-2 align-middle px-4">
+                        <div className="shadow-sm border-b border-gray-200 dark:border-gray-700 rounded-lg">
+                            <div className="overflow-x-auto">
+                                <table
+                                    className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed md:table-auto">
+                                <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
                                     <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                                         >
-                                            {searchTerm
-                                                ? "No matching users found"
-                                                : "No users found"}
-                                        </td>
+                                            Name
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            ID Number
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Role
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                        >
+                                            Last Login
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider bg-gray-50 dark:bg-gray-800 transition-colors duration-200"
+                                        >
+                                            Actions
+                                        </th>
                                     </tr>
-                                ) : (
-                                    filteredUsers.map((user) => (
-                                        <tr
-                                            key={user.id}
-                                            className="hover:bg-gray-50 dark:hover:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-800/50"
-                                        >
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center">
-                                                    <div>
-                                                        <div
-                                                            className="text-sm font-medium text-gray-900 dark:text-white">
-                                                            {user.full_name}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                <span
-                                    className={`px-2 py-1 rounded-full ${
-                                        user.status === "ACTIVE"
-                                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                            : user.status === "SUSPENDED"
-                                                ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                    }`}
-                                >
-                                  {user.status}
-                                </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                                {user.id_number}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                          <span
-                              className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                            {user.role}
-                          </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                                {user.last_login_at
-                                                    ? formatDate(user.last_login_at)
-                                                    : "Never"}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                                <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                                                    <button
-                                                        onClick={() => handleViewUser(user)}
-                                                        className="inline-flex items-center px-2 py-1 text-sm rounded-md text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200"
-                                                    >
-                                                        <Eye size={16} className="mr-1"/>
-                                                        View
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEditUser(user)}
-                                                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
-                                                    >
-                                                        <Edit size={16} className="mr-1"/>
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteClick(user)}
-                                                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center"
-                                                    >
-                                                        <Trash2 size={16} className="mr-1"/>
-                                                        Delete
-                                                    </button>
-                                                </div>
+                                    </thead>
+                                    <tbody
+                                        className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                    {filteredUsers.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan={6}
+                                                className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                                            >
+                                                {searchTerm
+                                                    ? "No matching users found"
+                                                    : "No users found"}
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                                </tbody>
-                            </table>
+                                    ) : (
+                                        filteredUsers.map((user) => (
+                                            <tr
+                                                key={user.id}
+                                                className="hover:bg-gray-50 dark:hover:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-800/50"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center">
+                                                        <div>
+                                                            <div
+                                                                className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                {user.full_name}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    <span
+                                        className={`px-2 py-1 rounded-full ${
+                                            user.status === "ACTIVE"
+                                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                                : user.status === "SUSPENDED"
+                                                    ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                        }`}
+                                    >
+                                      {user.status}
+                                    </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                    {user.id_number}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              <span
+                                  className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                {user.role}
+                              </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                                    {user.last_login_at
+                                                        ? formatDate(user.last_login_at)
+                                                        : "Never"}
+                                                </td>
+                                                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
+                                                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                                        <button
+                                                            onClick={() => handleViewUser(user)}
+                                                            className="inline-flex items-center px-2 py-1 text-sm rounded-md text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200"
+                                                        >
+                                                            <Eye size={16} className="mr-1"/>
+                                                            View
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEditUser(user)}
+                                                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
+                                                        >
+                                                            <Edit size={16} className="mr-1"/>
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteClick(user)}
+                                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center"
+                                                        >
+                                                            <Trash2 size={16} className="mr-1"/>
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Mobile View - Card Layout */}
+            {isMobileView && (
+                <div className="space-y-2 px-4 py-2">
+                    {filteredUsers.length === 0 ? (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border border-gray-200 dark:border-gray-700">
+                            <p className="text-gray-500 dark:text-gray-400">
+                                {searchTerm ? "No matching users found" : "No users found"}
+                            </p>
+                        </div>
+                    ) : (
+                        <>
+                            {filteredUsers.slice(0, visibleUsers).map((user) => (
+                                <div 
+                                    key={user.id} 
+                                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                >
+                                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                        <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{user.full_name}</h3>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => toggleDropdown(user.id)}
+                                                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
+                                            >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </button>
+
+                                            <AnimatePresence>
+                                                {activeDropdown === user.id && (
+                                                    <motion.div
+                                                        ref={(el) => (dropdownRefs.current[user.id] = el)}
+                                                        className="absolute right-0 mt-1 z-10 w-44 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                                        initial={{ opacity: 0, y: -10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -10 }}
+                                                        transition={{ duration: 0.2 }}
+                                                    >
+                                                        <div className="py-1">
+                                                            <button
+                                                                onClick={() => {
+                                                                    handleViewUser(user);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                                className="flex items-center w-full px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                            >
+                                                                <Eye className="h-3 w-3 mr-1 text-indigo-500 dark:text-indigo-400" />
+                                                                View Details
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    handleEditUser(user);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                                className="flex items-center w-full px-3 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                            >
+                                                                <Edit className="h-3 w-3 mr-1" />
+                                                                Edit User
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    handleDeleteClick(user);
+                                                                    setActiveDropdown(null);
+                                                                }}
+                                                                className="flex items-center w-full px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                            >
+                                                                <Trash2 className="h-3 w-3 mr-1" />
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-3 py-2 space-y-1">
+                                        <div className="flex flex-wrap items-center text-xs">
+                                            <div className="flex items-center mr-3">
+                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    user.status === "ACTIVE"
+                                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                                        : user.status === "SUSPENDED"
+                                                            ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                                }`}>
+                                                    {user.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                                    {user.role}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center text-xs">
+                                            <span className="text-gray-700 dark:text-gray-300 font-medium">ID:</span>
+                                            <span className="ml-1 text-gray-600 dark:text-gray-400">{user.id_number}</span>
+                                        </div>
+
+                                        <div className="flex items-center text-xs">
+                                            <span className="text-gray-700 dark:text-gray-300 font-medium">Email:</span>
+                                            <span className="ml-1 text-gray-600 dark:text-gray-400 truncate">{user.email}</span>
+                                        </div>
+
+                                        <div className="flex items-center text-xs">
+                                            <span className="text-gray-700 dark:text-gray-300 font-medium">Last Login:</span>
+                                            <span className="ml-1 text-gray-600 dark:text-gray-400">
+                                                {user.last_login_at ? formatDate(user.last_login_at) : "Never"}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-3 py-1 bg-gray-50 dark:bg-gray-700 flex justify-end">
+                                        <button
+                                            onClick={() => handleViewUser(user)}
+                                            className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center"
+                                        >
+                                            <Eye className="h-3 w-3 mr-1" />
+                                            Details
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Load More Button */}
+                            {hasMore && (
+                                <div className="flex justify-center mt-3">
+                                    <button
+                                        onClick={loadMoreUsers}
+                                        className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+                                    >
+                                        Load More
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            )}
 
 
             {/* Success Modal */}

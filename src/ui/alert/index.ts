@@ -13,4 +13,5 @@ const alert: AlertContextType = {
     INFO: ConfirmType.INFO,
     SUCCESS: ConfirmType.SUCCESS,
 }
+
 export default alert;

@@ -10,3 +10,4 @@ export * from './securityService';
 export * from './logService';
 export * from './notificationService';
 export * from './sessionService';
+export * from './batchMetadataService';

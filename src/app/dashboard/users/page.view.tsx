@@ -195,176 +195,179 @@ export default function UsersPage() {
     return (
         <Dashboard>
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-                    {/* Enhanced Header */}
-                    <div className="mb-6 sm:mb-8">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                            {contextInfo.title}
-                                        </h1>
-                                    </div>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base mb-3">
+                <div className="p-3 sm:p-4 max-w-7xl mx-auto">
+                    <div
+                        className="relative bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 overflow-hidden">
+                        {/* Animated background pattern */}
+                        <div
+                            className="absolute inset-0 bg-gradient-to-br from-violet-50 via-cyan-50 to-emerald-50 dark:from-violet-950/20 dark:via-cyan-950/20 dark:to-emerald-950/20 opacity-60"></div>
+                        <div
+                            className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-400/10 to-transparent rounded-full transform translate-x-16 -translate-y-16"></div>
+
+                        <div
+                            className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-start gap-3">
+                                {/* Glass morphism icon container */}
+                                <div
+                                    className="relative w-12 h-12 bg-white/20 dark:bg-gray-700/30 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30 dark:border-gray-600/30 shadow-lg">
+                                    <div
+                                        className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl"></div>
+                                    <svg
+                                        className="w-6 h-6 text-blue-600 dark:text-blue-400 relative z-10"
+                                        fill="currentColor" viewBox="0 0 20 20">
+                                        <path
+                                            d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                    </svg>
+                                    {/* Pulse animation ring */}
+                                    <div
+                                        className="absolute inset-0 rounded-2xl border-2 border-blue-400/30 animate-ping"></div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
+                                        <div
+                                            className="inline-flex items-center py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
+                                            <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd"
+                                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                      clipRule="evenodd"/>
+                                            </svg>
+                                            {contextInfo.stats}
+                                        </div>
+                                    </p>
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                         {contextInfo.description}
                                     </p>
-                                    <div className="inline-flex items-center px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
-                                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                        {contextInfo.stats}
-                                    </div>
                                 </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2 justify-end">
+                                {/* Modern Quick stats for admins */}
+                                {currentUserRole === UserRole.ADMIN && (
+                                    <div className="flex gap-4">
+                                        <div className="group relative">
+                                            <div
+                                                className="bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm rounded-xl p-2 border border-white/60 dark:border-gray-600/60 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                                                <div className="text-center">
+                                                    <div
+                                                        className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                                                        {users.filter(u => u.status === UserStatus.ACTIVE).length}
+                                                    </div>
+                                                    <div
+                                                        className="text-xs text-gray-600 dark:text-gray-400 font-medium uppercase tracking-wide">Active
+                                                    </div>
+                                                </div>
+                                                {/* Hover indicator */}
+                                                <div
+                                                    className="absolute inset-0 rounded-xl bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                            </div>
+                                        </div>
+
+
+
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Compact Tabs */}
+                    <div className="my-4">
+                        <div
+                            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1.5">
+                            <div className="flex gap-1.5">
+                                <button
+                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 transform hover:scale-105 ${
+                                        activeTab === "users"
+                                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/25"
+                                            : "bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    }`}
+                                    onClick={() => setActiveTab("users")}
+                                >
+                                    <span className="flex items-center justify-center sm:justify-start">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-0 sm:mr-1.5"
+                                             viewBox="0 0 20 20" fill="currentColor">
+                                            <path
+                                                d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                        </svg>
+                                        <span className="hidden sm:inline">Users</span>
+                                    </span>
+                                </button>
+                                <button
+                                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 transform hover:scale-105 relative ${
+                                        activeTab === "requests"
+                                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md shadow-green-500/25"
+                                            : "bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    }`}
+                                    onClick={() => setActiveTab("requests")}
+                                >
+                                    <span className="flex items-center justify-center sm:justify-start">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-0 sm:mr-1.5"
+                                             viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd"
+                                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                                  clipRule="evenodd"/>
+                                        </svg>
+                                        <span className="hidden sm:inline">Requests</span>
+                                    </span>
+                                    {requests.filter(r => r.status === OnboardingRequestStatus.PENDING).length > 0 && (
+                                        <span
+                                            className="absolute -top-0.5 -right-0.5 bg-red-500 text-white rounded-full w-4 h-4 text-xs font-bold flex items-center justify-center animate-bounce">
+                                            {requests.filter(r => r.status === OnboardingRequestStatus.PENDING).length}
+                                        </span>
+                                    )}
+                                </button>
 
                                 {/* Action Button */}
                                 {(currentUserRole === UserRole.ADMIN || currentUserRole === UserRole.TEAM_LEADER) && (
-                                    <div className="flex-shrink-0">
-                                        <CreateUserButton />
+                                    <div className="flex-shrink-0 ms-auto">
+                                        <CreateUserButton/>
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Enhanced Tabs */}
-                    <div className="mb-6 sm:mb-8">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-2">
-                            <div className="flex gap-2">
-                                <button
-                                    className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 ${
-                                        activeTab === "users"
-                                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25"
-                                            : "bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    }`}
-                                    onClick={() => setActiveTab("users")}
-                                >
-                                    <span className="flex items-center justify-center sm:justify-start">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-0 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                        </svg>
-                                        <span className="hidden sm:inline">Users</span>
-                                    </span>
-                                </button>
-                                <button
-                                    className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 relative ${
-                                        activeTab === "requests"
-                                            ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/25"
-                                            : "bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    }`}
-                                    onClick={() => setActiveTab("requests")}
-                                >
-                                    <span className="flex items-center justify-center sm:justify-start">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-0 sm:mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="hidden sm:inline">Requests</span>
-                                    </span>
-                                    {requests.filter(r => r.status === OnboardingRequestStatus.PENDING).length > 0 && (
-                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center animate-bounce">
-                                            {requests.filter(r => r.status === OnboardingRequestStatus.PENDING).length}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Loading state */}
                     {loading ? (
-                        <div className="flex flex-col justify-center items-center h-64 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+                        <div
+                            className="flex flex-col justify-center items-center h-48 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                             <div className="relative">
-                                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500 mb-4"></div>
-                                <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border-2 border-green-300 opacity-20"></div>
+                                <div
+                                    className="animate-spin rounded-full h-12 w-12 border-t-3 border-b-3 border-green-500 mb-3"></div>
+                                <div
+                                    className="absolute inset-0 animate-ping rounded-full h-12 w-12 border-2 border-green-300 opacity-20"></div>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Loading data...</p>
-                            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Please wait a moment</p>
+                            <p className="text-gray-600 dark:text-gray-300 font-medium">Loading data...</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">Please wait a moment</p>
                         </div>
                     ) : (
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {activeTab === "users" ? (
                                 <>
-                                    {/* Conditional Filters - Only show for admins */}
+                                    {/* Compact Filters - Only show for admins */}
                                     {currentUserRole === UserRole.ADMIN && (
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-                                                </svg>
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Filter Users</h3>
-                                            </div>
-                                            <UserFilters
-                                                filters={filters}
-                                                onFilterChange={handleFilterChange}
-                                                availableFilters={getAvailableFilters()}
-                                            />
-                                        </div>
+                                        <UserFilters
+                                            filters={filters}
+                                            onFilterChange={handleFilterChange}
+                                            availableFilters={getAvailableFilters()}
+                                        />
                                     )}
 
-                                    {/* Search for Team Leaders and Regular Users */}
+                                    {/* Compact Search for Team Leaders and Regular Users */}
                                     {currentUserRole !== UserRole.ADMIN && (
-                                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                                </svg>
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {currentUserRole === UserRole.TEAM_LEADER ? "Search Team Members" : "Search Your Profile"}
-                                                </h3>
-                                            </div>
-                                            <UserFilters
-                                                filters={filters}
-                                                onFilterChange={handleFilterChange}
-                                                availableFilters={getAvailableFilters()}
-                                            />
-                                        </div>
+                                        <UserFilters
+                                            filters={filters}
+                                            onFilterChange={handleFilterChange}
+                                            availableFilters={getAvailableFilters()}
+                                        />
                                     )}
 
-                                    {/* Enhanced User count summary */}
-                                    <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-4 sm:p-6">
-                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                                                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p className="text-gray-900 dark:text-white font-semibold text-lg">
-                                                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{filteredUsers.length}</span>
-                                                        {filteredUsers.length === 1 ? ' user' : ' users'}
-                                                    </p>
-                                                    <p className="text-gray-600 dark:text-gray-300 text-sm">
-                                                        {filters.role || filters.team || filters.status || filters.search ? 'Matching your filters' :
-                                                            currentUserRole === UserRole.TEAM_LEADER ? 'In your team' :
-                                                                currentUserRole === UserRole.ADMIN ? 'Total system users' : 'Your profile'}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Quick stats for admins */}
-                                            {currentUserRole === UserRole.ADMIN && (
-                                                <div className="flex gap-4 text-sm">
-                                                    <div className="text-center">
-                                                        <div className="font-bold text-green-600 dark:text-green-400">
-                                                            {users.filter(u => u.status === UserStatus.ACTIVE).length}
-                                                        </div>
-                                                        <div className="text-gray-600 dark:text-gray-400">Active</div>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <div className="font-bold text-yellow-600 dark:text-yellow-400">
-                                                            {users.filter(u => u.status === UserStatus.PENDING_APPROVAL).length}
-                                                        </div>
-                                                        <div className="text-gray-600 dark:text-gray-400">Pending</div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
 
                                     {/* Users Table */}
-                                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                    <div
+                                        className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                                         <UserTable
                                             users={filteredUsers}
                                             onStatusChange={handleStatusChange}
@@ -373,11 +376,14 @@ export default function UsersPage() {
                                     </div>
                                 </>
                             ) : (
-                                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <div
+                                    className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                                     <OnBoardTable
                                         requests={requests}
-                                        onStatusChange={() => {}}
-                                        onDeleteUser={() => {}}
+                                        onStatusChange={() => {
+                                        }}
+                                        onDeleteUser={() => {
+                                        }}
                                     />
                                 </div>
                             )}

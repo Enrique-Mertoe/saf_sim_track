@@ -134,7 +134,7 @@ export default function Create({onDismiss}: {
     }, [dropdownOpen])
 
     return (
-        <div className="bg-white  dark:bg-gray-800 rounded-xl p-6 w-full relative">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 w-full relative">
             {/* Success overlay */}
             <AnimatePresence>
                 {isSuccess && (
@@ -145,10 +145,10 @@ export default function Create({onDismiss}: {
                         exit={{opacity: 0}}
                     >
                         <div className="flex flex-col items-center">
-                            <div className="bg-green-100 dark:bg-green-700 p-3 rounded-full">
-                                <Check className="text-green-600 dark:text-green-300 h-8 w-8"/>
+                            <div className="bg-green-100 dark:bg-green-700 p-2 sm:p-3 rounded-full">
+                                <Check className="text-green-600 dark:text-green-300 h-6 w-6 sm:h-8 sm:w-8"/>
                             </div>
-                            <h3 className="mt-4 text-lg font-medium text-green-800 dark:text-green-200">Team Created
+                            <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-medium text-green-800 dark:text-green-200">Team Created
                                 Successfully!</h3>
                         </div>
                     </motion.div>
@@ -156,12 +156,12 @@ export default function Create({onDismiss}: {
             </AnimatePresence>
 
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <div className="flex items-center">
-                    <div className="bg-green-100 dark:bg-green-700 p-2 rounded-lg mr-3">
-                        <Users className="h-5 w-5 text-green-600 dark:text-green-300"/>
+                    <div className="bg-green-100 dark:bg-green-700 p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-300"/>
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Create New Team</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-100">Create New Team</h2>
                 </div>
                 <motion.button
                     onClick={onDismiss}
@@ -169,16 +169,16 @@ export default function Create({onDismiss}: {
                     whileHover={{scale: 1.1}}
                     whileTap={{scale: 0.95}}
                 >
-                    <X className="h-5 w-5 text-gray-500 dark:text-gray-400"/>
+                    <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 dark:text-gray-400"/>
                 </motion.button>
             </div>
 
             {/* Form */}
-            <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+            <div className="space-y-4 sm:space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2">
                     {/* Team Name */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Team Name</label>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team Name</label>
                         <div
                             className={`relative border ${
                                 focusedField === 'name'
@@ -193,7 +193,7 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('name')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
+                                className="block w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 text-sm"
                                 placeholder="Enter team name"
                                 required
                             />
@@ -201,7 +201,7 @@ export default function Create({onDismiss}: {
                     </div>
                     {/* Team Territory */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Team
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team
                             Territory</label>
                         <div
                             className={`relative border ${
@@ -217,17 +217,17 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('territory')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
+                                className="block w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 text-sm"
                                 placeholder="Enter team territory"
                                 required
                             />
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2">
                     {/* Van number */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Van number
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Van number
                             plate</label>
                         <div
                             className={`relative border ${
@@ -243,7 +243,7 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('van_number_plate')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
+                                className="block w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 text-sm"
                                 placeholder="Enter Van Number Plate"
                                 required
                             />
@@ -251,7 +251,7 @@ export default function Create({onDismiss}: {
                     </div>
                     {/* Van location */}
                     <div className="space-y-1">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Van
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Van
                             Location</label>
                         <div
                             className={`relative border ${
@@ -267,7 +267,7 @@ export default function Create({onDismiss}: {
                                 onChange={handleInputChange}
                                 onFocus={() => setFocusedField('van_location')}
                                 onBlur={() => setFocusedField(null)}
-                                className="block w-full px-4 py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100"
+                                className="block w-full px-3 py-2 sm:px-4 sm:py-3 rounded-lg focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 text-sm"
                                 placeholder="Enter Van Location"
                                 required
                             />
@@ -276,7 +276,7 @@ export default function Create({onDismiss}: {
                 </div>
                 {/* Team Leader Custom Dropdown */}
                 <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Team Leader</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team Leader</label>
                     <div className="relative">
                         <button
                             //@ts-ignore
@@ -294,7 +294,7 @@ export default function Create({onDismiss}: {
                                 }
                                 setDropdownOpen(!dropdownOpen);
                             }}
-                            className={`flex items-center justify-between w-full px-4 py-3 border ${
+                            className={`flex items-center justify-between w-full px-3 py-2 sm:px-4 sm:py-3 border ${
                                 focusedField === 'leader'
                                     ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
                                     : 'border-gray-300 dark:border-gray-600'
@@ -303,14 +303,14 @@ export default function Create({onDismiss}: {
                             onBlur={() => setTimeout(() => setFocusedField(null), 100)}
                         >
                             <div className="flex items-center">
-                                <UserCircle className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                <UserCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                 <span
-                                    className={formData.leader_id ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}>
+                                    className={`text-sm ${formData.leader_id ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}`}>
                 {getSelectedLeaderName()}
               </span>
                             </div>
                             <ChevronDown
-                                className={`h-5 w-5 text-gray-400 dark:text-gray-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                                className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
                             />
                         </button>
 
@@ -330,13 +330,13 @@ export default function Create({onDismiss}: {
                                     transition={{duration: 0.2}}
                                 >
                                     {isTeamLoading ? (
-                                        <div className="flex flex-col items-center justify-center py-8">
+                                        <div className="flex flex-col items-center justify-center py-4 sm:py-8">
                                             <motion.div
-                                                className="rounded-full h-8 w-8 border-b-2 border-green-500 dark:border-green-400"
+                                                className="rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-green-500 dark:border-green-400"
                                                 animate={{rotate: 360}}
                                                 transition={{repeat: Infinity, duration: 1, ease: "linear"}}
                                             ></motion.div>
-                                            <p className="mt-3 text-gray-500 dark:text-gray-400 text-sm font-medium">Loading
+                                            <p className="mt-2 sm:mt-3 text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">Loading
                                                 team leaders...</p>
                                         </div>
                                     ) : leaders.length > 0 ? (
@@ -345,7 +345,7 @@ export default function Create({onDismiss}: {
                                                 key={leader.id}
                                                 onClick={() => selectLeader(leader.id, leader.full_name)}
                                                 className={`
-                        flex items-center px-4 py-3 cursor-pointer transition-all
+                        flex items-center px-3 py-2 sm:px-4 sm:py-3 cursor-pointer transition-all
                         ${formData.leader_id === leader.id
                                                     ? "bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50"
                                                     : "hover:bg-gray-50 dark:hover:bg-gray-700/50"}
@@ -355,9 +355,9 @@ export default function Create({onDismiss}: {
                                             >
                                                 <div className="flex items-center flex-1">
                                                     <UserCircle
-                                                        className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                                        className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                                     <span
-                                                        className="block truncate text-gray-800 dark:text-gray-200">{leader.full_name}</span>
+                                                        className="block truncate text-xs sm:text-sm text-gray-800 dark:text-gray-200">{leader.full_name}</span>
                                                 </div>
                                                 {formData.leader_id === leader.id && (
                                                     <motion.div
@@ -365,18 +365,18 @@ export default function Create({onDismiss}: {
                                                         initial={{opacity: 0, scale: 0.8}}
                                                         animate={{opacity: 1, scale: 1}}
                                                     >
-                                                        <Check className="h-5 w-5 text-green-600 dark:text-green-400"/>
+                                                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400"/>
                                                     </motion.div>
                                                 )}
                                             </motion.div>
                                         ))
                                     ) : ''}
 
-                                    <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="mb-3 p-2 rounded-full bg-gray-100 dark:bg-gray-700">
-                                            <UserCircle className="h-6 w-6 text-gray-400 dark:text-gray-500"/>
+                                    <div className="flex flex-col items-center justify-center py-4 sm:py-8">
+                                        <div className="mb-2 sm:mb-3 p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                                            <UserCircle className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 dark:text-gray-500"/>
                                         </div>
-                                        <p className="mb-4 text-gray-500 dark:text-gray-400 text-sm font-medium">No
+                                        <p className="mb-3 sm:mb-4 text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">No
                                             team leaders available</p>
                                         <motion.button
                                             onClick={() => {
@@ -387,7 +387,7 @@ export default function Create({onDismiss}: {
                                                 });
                                             }}
                                             type="button"
-                                            className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-sm shadow hover:bg-green-700 dark:hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                                            className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-green-600 dark:bg-green-700 text-white rounded-sm shadow hover:bg-green-700 dark:hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                                             whileHover={{scale: 1.05}}
                                             whileTap={{scale: 0.95}}
                                         >
@@ -402,7 +402,7 @@ export default function Create({onDismiss}: {
 
                 {/* Region Custom Dropdown */}
                 <div className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Region</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Region</label>
                     <div className="relative">
                         <button
                             //@ts-ignore
@@ -420,7 +420,7 @@ export default function Create({onDismiss}: {
                                 }
                                 setRegionDropdownOpen(!regionDropdownOpen);
                             }}
-                            className={`flex items-center justify-between w-full px-4 py-3 border ${
+                            className={`flex items-center justify-between w-full px-3 py-2 sm:px-4 sm:py-3 border ${
                                 focusedField === 'region'
                                     ? 'border-green-500 dark:border-green-400 ring-1 ring-green-500 dark:ring-green-400'
                                     : 'border-gray-300 dark:border-gray-600'
@@ -429,14 +429,14 @@ export default function Create({onDismiss}: {
                             onBlur={() => setTimeout(() => setFocusedField(null), 100)}
                         >
                             <div className="flex items-center">
-                                <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                 <span
-                                    className={formData.region ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}>
+                                    className={`text-sm ${formData.region ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}`}>
                 {formData.region || "Select a region"}
               </span>
                             </div>
                             <ChevronDown
-                                className={`h-5 w-5 text-gray-400 dark:text-gray-500 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
+                                className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 transition-transform ${regionDropdownOpen ? 'rotate-180' : ''}`}
                             />
                         </button>
 
@@ -460,20 +460,20 @@ export default function Create({onDismiss}: {
                                         <motion.div
                                             key={region}
                                             onClick={() => selectRegion(region)}
-                                            className="flex items-center px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                                            className="flex items-center px-3 py-2 sm:px-4 sm:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                                             whileHover={{backgroundColor: formData.region === region ? "#dcfce7" : "#f9fafb"}}
                                             whileTap={{scale: 0.98}}
                                         >
-                                            <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500 mr-2"/>
+                                            <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                             <span
-                                                className="block truncate text-gray-800 dark:text-gray-200">{region}</span>
+                                                className="block truncate text-xs sm:text-sm text-gray-800 dark:text-gray-200">{region}</span>
                                             {formData.region === region && (
                                                 <motion.div
                                                     initial={{opacity: 0, scale: 0.8}}
                                                     animate={{opacity: 1, scale: 1}}
                                                 >
                                                     <Check
-                                                        className="h-5 w-5 text-green-600 dark:text-green-400 ml-auto"/>
+                                                        className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400 ml-auto"/>
                                                 </motion.div>
                                             )}
                                         </motion.div>
@@ -486,10 +486,10 @@ export default function Create({onDismiss}: {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex justify-end space-x-3">
+            <div className="mt-6 sm:mt-8 flex justify-end space-x-2 sm:space-x-3">
                 <motion.button
                     onClick={onDismiss}
-                    className="px-5 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="px-3 py-1.5 sm:px-5 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     whileHover={{scale: 1.02}}
                     whileTap={{scale: 0.98}}
                 >
@@ -498,7 +498,7 @@ export default function Create({onDismiss}: {
                 <motion.button
                     onClick={handleCreateTeam}
                     disabled={!isFormValid || isLoading}
-                    className={`px-5 py-2 rounded-lg text-sm font-medium flex items-center justify-center min-w-24 transition-all duration-300 ${
+                    className={`px-3 py-1.5 sm:px-5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center min-w-16 sm:min-w-24 transition-all duration-300 ${
                         isFormValid
                             ? 'bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-600'
                             : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
@@ -511,7 +511,7 @@ export default function Create({onDismiss}: {
                             animate={{rotate: 360}}
                             transition={{repeat: Infinity, duration: 1, ease: "linear"}}
                         >
-                            <Loader2 className="h-4 w-4 mr-1"/>
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1"/>
                         </motion.div>
                     ) : (
                         <>Create Team</>

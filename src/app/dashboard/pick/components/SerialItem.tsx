@@ -1,24 +1,8 @@
 import React, {ChangeEvent, useEffect, useState} from "react";
 import simService from "@/services/simService";
-import {Team as Team1, User} from "@/models";
 import {motion} from "framer-motion";
+import {SerialItemProps} from "@/app/dashboard/pick/types";
 
-interface SerialNumber {
-    id: string; // Unique identifier for each serial
-    value: string;
-    isValid: boolean;
-    isChecking: boolean;
-    checkError: string | null;
-    exists: boolean;
-    isUploading: boolean;
-    isUploaded: boolean;
-    uploadError: string | null;
-}
-
-type Team = Team1 & {
-    users?: User,
-    leader: string
-}
 export const SerialItem = ({
                         serial,
                         editSerial,
@@ -28,16 +12,7 @@ export const SerialItem = ({
                         onCheckComplete,
                         onUploadComplete,
                         updateSerialStatus
-                    }: {
-    serial: SerialNumber;
-    editSerial: (id: string, value: string) => void;
-    removeSerial: (id: string) => void;
-    selectedTeam: string;
-    teams: Team[];
-    onCheckComplete: () => void;
-    onUploadComplete: (success: boolean) => void;
-    updateSerialStatus: (id: string, updates: Partial<SerialNumber>) => void;
-}) => {
+                    }: SerialItemProps) => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
 
     // Check if a serial exists in the database
@@ -85,8 +60,9 @@ export const SerialItem = ({
             }
         };
 
-        // checkSerialExistence();
-    }, [serial.id, serial.value, serial.isValid, serial.isChecking]);
+        // Uncommented to ensure serial existence checking works properly
+        checkSerialExistence();
+    }, [serial.id, serial.value, serial.isValid, serial.isChecking, onCheckComplete, updateSerialStatus]);
 
     // Handle serial upload
 
