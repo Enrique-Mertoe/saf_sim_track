@@ -1,6 +1,5 @@
 // import {createSupabaseClient} from "@/lib/supabase";
-import {UserCreate, UserRole, UserUpdate} from "@/models";
-import {createServerSupabaseClient} from "@/lib/server-supabase";
+import {UserRole, UserUpdate} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
 
 export const userService = {
@@ -51,58 +50,6 @@ export const userService = {
             .eq('email', email)
             .single();
     },
-    // Create a new user (server-side only)
-    async createUser(userData: UserCreate) {
-        const serverSupabase = createServerSupabaseClient();
-
-        try {
-            // First create the auth user
-            const {data: authData, error: authError} = await serverSupabase.auth.admin.createUser({
-                email: userData.email,
-                password: userData.password,
-                email_confirm: true,
-            });
-            if (authError) {
-                return {data: null, error: authError};
-            }
-            try {
-                // Then create the profile record
-                const {data, error} = await serverSupabase
-                    .from('users')
-                    .insert({
-                        id: authData.user.id,
-                        auth_user_id: authData.user.id,
-                        email: userData.email,
-                        full_name: userData.full_name,
-                        id_number: userData.id_number,
-                        id_front_url: userData.id_front_url,
-                        id_back_url: userData.id_back_url,
-                        phone_number: userData.phone_number,
-                        mobigo_number: userData.mobigo_number,
-                        role: userData.role,
-                        team_id: userData.team_id,
-                        staff_type: userData.staff_type,
-                    })
-                    .select()
-                    .single();
-
-                if (error) {
-                    // If profile creation fails, delete the auth user to maintain consistency
-                    await serverSupabase.auth.admin.deleteUser(authData.user.id);
-                    return {data: null, error};
-                }
-
-                return {data, error: null};
-            } catch (profileError) {
-                // Clean up auth user if any exception occurs during profile creation
-                await serverSupabase.auth.admin.deleteUser(authData.user.id);
-                return {data: null, error: profileError};
-            }
-        } catch (error) {
-            return {data: null, error};
-        }
-    },
-
     // Update an existing user
     async updateUser(userId: string, userData: UserUpdate) {
         const supabase = createSupabaseClient();

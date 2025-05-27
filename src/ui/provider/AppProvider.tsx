@@ -7,6 +7,7 @@ import {Loader2} from "lucide-react";
 import {useNavigationStore} from "@/lib/nav-store";
 import {$} from "@/lib/request";
 import {toast} from "react-hot-toast";
+import SignalProvider from "@/ui/provider/SignalProvider";
 
 interface AppContextType {
     user: User | null,
@@ -74,6 +75,7 @@ export const AppProvider: React.FC<{
                 {pageLoading && <LoadingOverlay props={{pageLoading}}/>}
             </AnimatePresence>
             {children}
+            <SignalProvider/>
         </AppContext.Provider>
     )
 }
@@ -132,6 +134,7 @@ const LoadingOverlay = ({props}: {
                     />
                 </div>
             </motion.div>
+
         </div>
     );
 };

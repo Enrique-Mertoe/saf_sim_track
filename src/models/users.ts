@@ -29,6 +29,7 @@ export interface UserCreate {
     mobigo_number?: string;
     role: UserRole;
     team_id?: string;
+    admin_id: string;
     status: UserStatus;
     staff_type?: StaffType;
 }

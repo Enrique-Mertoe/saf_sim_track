@@ -2,12 +2,11 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {teamService} from "@/services/teamService";
 import {Team as Team1, TeamUpdate, User, UserRole} from "@/models";
-import Link from "next/link";
 import {useDialog} from "@/app/_providers/dialog";
-import Create from "@/app/dashboard/team/create";
 import useApp from "@/ui/provider/AppProvider";
 import {userService} from "@/services";
 import alert from "@/ui/alert";
+import Signal from "@/lib/Signal";
 
 type Team = Team1 & {
     users: User
@@ -118,14 +117,13 @@ export default function TeamsManagement() {
     };
 
 
+    const [showDialog, setShowDialog] = useState(false);
+
     const cr = useCallback(() => {
-        const d = dialog.create({
-            content: <Create onDismiss={() => d.dismiss()}/>,
-            size: "lg",
-            design: ["md-down"],
-            radius:'xl'
-        });
-    }, [dialog])
+        // setShowDialog(true);
+        Signal.trigger("create-team")
+    }, []);
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -154,7 +152,9 @@ export default function TeamsManagement() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Team Management</h1>
                 <button
-                    onClick={cr}
+                    onClick={()=>{
+                        Signal.trigger("create-team")
+                    }}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
                     Add New Team
@@ -348,6 +348,8 @@ const EditTeam = function ({data, leaders, onClose, handleUpdateTeam}: any) {
                     Update Team
                 </button>
             </div>
+
+
         </div>
     )
 }

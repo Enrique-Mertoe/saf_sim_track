@@ -1,5 +1,5 @@
-import {useState, useEffect, useRef} from "react";
-import {Check, ChevronDown, Users, Globe, UserCircle, Loader2, X} from "lucide-react";
+import {useEffect, useRef, useState} from "react";
+import {Check, ChevronDown, Globe, Loader2, UserCircle, Users, X} from "lucide-react";
 import {teamService, userService} from "@/services";
 import {TeamCreate, User, UserRole} from "@/models";
 import {useDialog} from "@/app/_providers/dialog";
@@ -28,7 +28,7 @@ export default function Create({onDismiss}: {
     const [regionDropdownPosition, setRegionDropdownPosition] = useState("bottom");
     const [focusedField, setFocusedField] = useState<string | null>(null);
 
-    const regions = ["North America", "Europe", "Asia Pacific", "Latin America", "Africa", "Middle East"];
+    const regions = ["Northern", "Western", "Central", "Eastern", "Coastal"];
     const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
 
     const leaderButtonRef = useRef<HTMLElement | null>(null);
@@ -134,7 +134,7 @@ export default function Create({onDismiss}: {
     }, [dropdownOpen])
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full relative">
+        <div className="bg-white  dark:bg-gray-800 rounded-xl p-6 w-full relative">
             {/* Success overlay */}
             <AnimatePresence>
                 {isSuccess && (
@@ -370,30 +370,30 @@ export default function Create({onDismiss}: {
                                                 )}
                                             </motion.div>
                                         ))
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-8">
-                                            <div className="mb-3 p-2 rounded-full bg-gray-100 dark:bg-gray-700">
-                                                <UserCircle className="h-6 w-6 text-gray-400 dark:text-gray-500"/>
-                                            </div>
-                                            <p className="mb-4 text-gray-500 dark:text-gray-400 text-sm font-medium">No
-                                                team leaders available</p>
-                                            <motion.button
-                                                onClick={() => {
-                                                    const d = dialog.create({
-                                                        content: <CreateUserModal onClose={() => d.dismiss()}/>,
-                                                        size: "lg",
-                                                        cancelable: false
-                                                    });
-                                                }}
-                                                type="button"
-                                                className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-lg shadow hover:bg-green-700 dark:hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
-                                                whileHover={{scale: 1.05}}
-                                                whileTap={{scale: 0.95}}
-                                            >
-                                                Create Team Leader
-                                            </motion.button>
+                                    ) : ''}
+
+                                    <div className="flex flex-col items-center justify-center py-8">
+                                        <div className="mb-3 p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                                            <UserCircle className="h-6 w-6 text-gray-400 dark:text-gray-500"/>
                                         </div>
-                                    )}
+                                        <p className="mb-4 text-gray-500 dark:text-gray-400 text-sm font-medium">No
+                                            team leaders available</p>
+                                        <motion.button
+                                            onClick={() => {
+                                                const d = dialog.create({
+                                                    content: <CreateUserModal onClose={() => d.dismiss()}/>,
+                                                    size: "lg",
+                                                    cancelable: false
+                                                });
+                                            }}
+                                            type="button"
+                                            className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-sm shadow hover:bg-green-700 dark:hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                                            whileHover={{scale: 1.05}}
+                                            whileTap={{scale: 0.95}}
+                                        >
+                                            Add team leaders
+                                        </motion.button>
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
