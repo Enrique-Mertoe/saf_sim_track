@@ -458,7 +458,7 @@ const TeamLeaderDashboardView = () => {
                                     }`}
                                 >
                                     <tab.icon className="w-4 h-4"/>
-                                    {tab.name}
+                                    {tab.name }
                                 </button>
                             ))}
                         </nav>
