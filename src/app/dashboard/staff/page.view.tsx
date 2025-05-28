@@ -712,6 +712,7 @@ export default function OnboardStaff({user, onClose}: {
                     message: `${user.full_name} has submitted an onboarding request for ${formData.fullName}`,
                     type: NotificationType.SYSTEM,
                     metadata: {
+                        //@ts-ignore
                         request_id: error?.data?.id || '',
                         requester_id: user.id,
                         requester_name: user.full_name,

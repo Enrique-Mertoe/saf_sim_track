@@ -1,5 +1,5 @@
-import { createSupabaseClient } from "@/lib/supabase/client";
-import { Notification, NotificationCreate, NotificationType } from "@/models";
+import {createSupabaseClient} from "@/lib/supabase/client";
+import {Notification, NotificationCreate, NotificationType} from "@/models";
 
 export const notificationService = {
   /**
@@ -22,6 +22,7 @@ export const notificationService = {
       })
       .select()
       .single();
+    console.log("nerror",error)
     
     return { data, error };
   },

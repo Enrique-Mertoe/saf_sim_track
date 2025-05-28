@@ -149,19 +149,19 @@ export default function UsersPage() {
         if (!usersSignal || !user) return;
 
         // Handle new users
-        const handleInsert = (payload) => {
+        const handleInsert = (payload:any) => {
             setUsers(prev => [payload.new, ...prev]);
         };
 
         // Handle updated users
-        const handleUpdate = (payload) => {
+        const handleUpdate = (payload:any) => {
             setUsers(prev =>
                 prev.map(u => u.id === payload.new.id ? payload.new : u)
             );
         };
 
         // Handle deleted users
-        const handleDelete = (payload) => {
+        const handleDelete = (payload:any) => {
             setUsers(prev =>
                 prev.filter(u => u.id !== payload.old.id)
             );
@@ -185,19 +185,19 @@ export default function UsersPage() {
         if (!onboardingSignal || !user) return;
 
         // Handle new onboarding requests
-        const handleInsert = (payload) => {
+        const handleInsert = (payload:any) => {
             setRequests(prev => [payload.new, ...prev]);
         };
 
         // Handle updated onboarding requests
-        const handleUpdate = (payload) => {
+        const handleUpdate = (payload:any) => {
             setRequests(prev =>
                 prev.map(r => r.id === payload.new.id ? payload.new : r)
             );
         };
 
         // Handle deleted onboarding requests
-        const handleDelete = (payload) => {
+        const handleDelete = (payload:any) => {
             setRequests(prev =>
                 prev.filter(r => r.id !== payload.old.id)
             );
