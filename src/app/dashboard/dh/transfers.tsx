@@ -1,6 +1,5 @@
 "use client"
 import React, {useEffect, useState} from 'react';
-import Dashboard from "@/ui/components/dash/Dashboard";
 import {simCardTransferService, teamService} from "@/services";
 import useApp from "@/ui/provider/AppProvider";
 import {SimCardTransfer, Team, TransferStatus} from "@/models";
@@ -302,7 +301,7 @@ const AdminTransfersPage = () => {
     };
 
     return (
-        <Dashboard>
+        <>
             <div className="min-h-screen bg-gray-50 p-6">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
@@ -489,7 +488,7 @@ const AdminTransfersPage = () => {
                     </div>
                 </div>
             )}
-        </Dashboard>
+        </>
     );
 };
 
