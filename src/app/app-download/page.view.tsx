@@ -2,7 +2,6 @@
 
 import {useEffect, useState} from 'react';
 import {motion} from 'framer-motion';
-import {getAppDownloadUrl} from '@/services/storageService';
 import Link from 'next/link';
 
 export default function AppDownloadPage() {
@@ -14,8 +13,8 @@ export default function AppDownloadPage() {
     async function fetchDownloadUrl() {
       try {
         setIsLoading(true);
-        const url = await getAppDownloadUrl();
-        setDownloadUrl(url);
+        // const url = await getAppDownloadUrl();
+        setDownloadUrl("https://aukjtuadtfpmlcfqusaa.supabase.co/storage/v1/object/public/sim-management/apps/ssm.apk");
       } catch (err) {
         setError('Failed to get download link. Please try again later.');
         console.error('Error fetching app download URL:', err);
