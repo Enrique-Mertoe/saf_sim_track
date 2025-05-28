@@ -167,7 +167,7 @@ export const simCardService = {
             .from('sim_cards')
             .select('*')
             .eq('team_id', teamId)
-            .order('sale_date', {ascending: false});
+            .order('registered_on', {ascending: false});
 
         if (error) {
             console.error('Error fetching SIM cards by team ID:', error);

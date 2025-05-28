@@ -19,23 +19,6 @@ const TeamLeaderDashboardView = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // StatCard component for displaying statistics
-    // const StatCard = ({ title, value, subtitle, icon: Icon, color = "blue" }) => (
-    //     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-    //         <div className="flex items-center justify-between">
-    //             <div>
-    //                 <p className="text-sm font-medium text-gray-600">{title}</p>
-    //                 <p className={`text-2xl font-bold text-${color}-600`}>{value}</p>
-    //                 {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-    //             </div>
-    //             <div className={`p-3 bg-${color}-100 rounded-full`}>
-    //                 <Icon className={`w-6 h-6 text-${color}-600`} />
-    //             </div>
-    //         </div>
-    //     </div>
-    // );
-
     // State for real data
     const [simCards, setSimCards] = useState([]);
     const [fixedCards, setFixedCards] = useState([]);
@@ -95,6 +78,7 @@ const TeamLeaderDashboardView = () => {
             try {
                 setIsLoading(true);
                 const data = await simService.getSIMCardsByTeamId(user.team_id);
+                console.log("reg", data.filter(e => e.assigned_to_user_id != null).map(e => e.status))
                 add(data)
             } catch {
                 console.error('Error fetching team data:', error);
@@ -119,7 +103,7 @@ const TeamLeaderDashboardView = () => {
                     status: payload.new.status,
                     assignedTo: payload.new.assigned_to_name || '',
                     assignedToId: payload.new.assigned_to_user_id || '',
-                    registeredOn: payload.new.registered_on ? payload.new.registered_on.split('T')[0] : '',
+                    registered_on: payload.new.registered_on ? payload.new.registered_on.split('T')[0] : '',
                     registeredBy: payload.new.registered_by_name || '',
                     customerName: payload.new.customer_name || '',
                     customerPhone: payload.new.customer_phone || '',
@@ -140,7 +124,7 @@ const TeamLeaderDashboardView = () => {
                     status: payload.new.status,
                     assignedTo: payload.new.assigned_to_name || '',
                     assignedToId: payload.new.assigned_to_user_id || '',
-                    registeredOn: payload.new.registered_on ? payload.new.registered_on.split('T')[0] : '',
+                    registered_on: payload.new.registered_on ? payload.new.registered_on.split('T')[0] : '',
                     registeredBy: payload.new.registered_by_name || '',
                     customerName: payload.new.customer_name || '',
                     customerPhone: payload.new.customer_phone || '',
@@ -185,8 +169,8 @@ const TeamLeaderDashboardView = () => {
 
         if (viewMode === 'daily') {
             filtered = simCards.filter(sim =>
-                sim.registeredOn === selectedDate ||
-                (sim.status === SIMStatus.REGISTERED && sim.registeredOn === selectedDate)
+                sim.registered_on === selectedDate ||
+                (sim.status === SIMStatus.REGISTERED && sim.registered_on === selectedDate)
             );
         } else if (viewMode === 'weekly') {
             const weekStart = new Date(selectedDate);
@@ -195,8 +179,8 @@ const TeamLeaderDashboardView = () => {
             weekEnd.setDate(weekEnd.getDate() + 6);
 
             filtered = simCards.filter(sim => {
-                if (!sim.registeredOn) return false;
-                const regDate = new Date(sim.registeredOn);
+                if (!sim.registered_on) return false;
+                const regDate = new Date(sim.registered_on);
                 return regDate >= weekStart && regDate <= weekEnd;
             });
         }
@@ -230,11 +214,12 @@ const TeamLeaderDashboardView = () => {
 
         const totalAllocated = simCards.length;
         const registered = simCards.filter(sim => sim.status === SIMStatus.REGISTERED).length;
+
         const assigned = simCards.filter(sim => sim.status === SIMStatus.ASSIGNED || sim.assigned_to_user_id != null).length;
         const unassigned = totalAllocated - assigned
 
         const dailyRegistered = simCards.filter(sim =>
-            sim.status === SIMStatus.REGISTERED && sim.registeredOn === selectedDate
+            sim.status === SIMStatus.REGISTERED && sim.registered_on === selectedDate
         ).length;
 
         return {
@@ -474,7 +459,7 @@ const TeamLeaderDashboardView = () => {
                                                         <div className="text-right">
                                                             <p className="text-sm font-medium text-green-600">Registered
                                                                 by {sim.registeredBy}</p>
-                                                            <p className="text-xs text-gray-500">{sim.registeredOn}</p>
+                                                            <p className="text-xs text-gray-500">{sim.registered_on}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -495,7 +480,7 @@ const TeamLeaderDashboardView = () => {
                                                 const staffRegistrations = simCards.filter(sim =>
                                                     sim.assignedToId === staff.id &&
                                                     sim.status === SIMStatus.REGISTERED &&
-                                                    sim.registeredOn === selectedDate
+                                                    sim.registered_on === selectedDate
                                                 ).length;
 
                                                 return (
@@ -558,7 +543,7 @@ const TeamLeaderDashboardView = () => {
                               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             Registered
                           </span>
-                                                    <p className="text-xs text-gray-500 mt-1">{sim.registeredOn}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">{sim.registered_on}</p>
                                                 </div>
                                             </div>
                                         </div>
