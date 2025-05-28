@@ -137,7 +137,7 @@ export default function SafaricomDashboard() {
                         id: sim.id,
                         serial: sim.serial_number,
                         date: new Date(sim.created_at).toISOString().split('T')[0],
-                        staff: sim.sold_by_user_id.full_name,
+                        staff: sim.sold_by_user_id?.full_name || "Not sold",
                         leader: sim.team_id.leader_id.full_name,
                         quality: sim.quality
                     }));

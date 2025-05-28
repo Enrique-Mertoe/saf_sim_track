@@ -68,6 +68,7 @@ const RegisteredSimCards = () => {
         try {
             const {data, error} = await teamService.getAllTeams();
             if (error) throw error;
+            //@ts-ignore
             setTeams(data);
         } catch (err) {
             console.log(err)

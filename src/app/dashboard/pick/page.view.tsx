@@ -43,8 +43,8 @@ const SerialNumberForm: React.FC = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [pdfProgress, setPdfProgress] = useState(0);
     const [uploadedBatches, setUploadedBatches] = useState<any[]>([]);
+    const [batchMetadata, setBatchMetadata] = useState<BatchMetadataCreate | null>(null);
     const [isLoadingBatches, setIsLoadingBatches] = useState<boolean>(false);
-
     // Initialize PDF.js when needed
     const initializePdfJs = async () => {
         if (pdfjsLib) return pdfjsLib;
@@ -303,6 +303,15 @@ const SerialNumberForm: React.FC = () => {
             if (serialsToParse.length === 0) {
                 throw new Error('No valid serial numbers found');
             }
+            if (isPicklist(inputValue)) {
+                const metadata = parsePicklistText(
+                    inputValue,
+                    'null',
+                    '',
+                    user!.id
+                );
+                setBatchMetadata(metadata)
+            }
 
             // Reset the input field
             setInputValue('');
@@ -547,27 +556,17 @@ const SerialNumberForm: React.FC = () => {
             // Create a unique batch ID for this upload
             const batchId = `BATCH-${generateId()}`;
 
-            // Check if the input text is a picklist and extract metadata if it is
-            let batchMetadata: BatchMetadataCreate | null = null;
-            if (isPicklist(inputValue)) {
-                batchMetadata = parsePicklistText(
-                    inputValue,
-                    batchId,
-                    selectedTeam,
-                    user!.id
-                );
+            if (batchMetadata) {
+                const metadata: BatchMetadataCreate = {...batchMetadata, batch_id: batchId, team_id: selectedTeam};
 
-                // Store the batch metadata
                 try {
-                    const {data, error} = await batchMetadataService.createBatchMetadata(batchMetadata);
+                    const {data, error} = await batchMetadataService.createBatchMetadata(metadata);
                     if (error) {
                         console.error('Error storing batch metadata:', error);
-                        // Continue with the upload even if metadata storage fails
-                    } else {
-                        toast.success('Picklist metadata extracted and stored successfully');
+                        throw error
                     }
                 } catch (err) {
-                    console.error('Exception storing batch metadata:', err);
+                    throw new Error('Exception storing batch metadata:');
                     // Continue with the upload even if metadata storage fails
                 }
             }

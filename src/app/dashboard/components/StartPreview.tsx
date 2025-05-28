@@ -3,13 +3,12 @@ import {useDialog} from "@/app/_providers/dialog";
 import {BarChart, Calendar, X} from "lucide-react";
 import ReportDateRangeTemplate, {DateSelection} from "@/ui/components/ReportDateModal";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-import {SIMCard, SIMStatus, Team as Team1, User} from "@/models";
+import {SIMCard, Team as Team1, User} from "@/models";
 import {teamService} from "@/services";
 import alert from "@/ui/alert";
 import TeamList from "@/ui/components/user/TeamList";
 import {useActivity} from "@/app/dashboard/leader-console/components/ActivityCombat";
 import {createSupabaseClient} from "@/lib/supabase/client";
-import _ from "lodash";
 import TeamPerformanceChart from "@/app/dashboard/TeamPerformanceChart";
 import ConsolidatedStatsCard from "@/app/dashboard/ConsolidatedStatsCard";
 
@@ -44,7 +43,7 @@ export default function StartPreview({
             const {data, error} = await teamService.getAllTeams();
             if (error)
                 return alert.error(error.message);
-
+//@ts-ignore
             setTeams((data as TeamType[])?.map(team => {
                 team.leader = team.users?.full_name ?? 'No leader';
                 return team;

@@ -123,6 +123,7 @@ export default function SimStats({refreshing = false}) {
             if (teamsError) throw teamsError;
 
             setSimCards(data as SimAdapter[]);
+            //@ts-ignore
             setTeams(teamsData as Team[]);
 
             // Apply date filter if set

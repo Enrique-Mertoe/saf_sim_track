@@ -5,25 +5,59 @@ export const teamService = {
     // Get all teams
     async getAllTeams(userDetails: User | undefined = undefined) {
         const supabase = createSupabaseClient();
+
         if (!userDetails) {
             const {data: currentUser} = await supabase.auth.getUser();
 
-            // Get the user's details including role
             const {data: userDetails1} = await supabase
                 .from('users')
                 .select('id, role')
                 .eq('auth_user_id', currentUser.user?.id)
                 .single();
-            if (userDetails1) { // @ts-ignore
-                userDetails = userDetails1;
+
+            if (userDetails1) {
+                userDetails = userDetails1 as User;
             }
         }
 
+        // Base query
         let query = supabase
             .from('teams')
             .select('*, users!leader_id(*)');
 
-        // If user is admin, only fetch teams associated with this admin
+        // Filter for admin-specific teams
+        if (userDetails?.role === 'admin') {
+            query = query.eq('admin_id', userDetails.id);
+        }
+
+        return query.order('name');
+    },
+    async getAllTeamsWithMetadata(userDetails: User | undefined = undefined, metadata: boolean | undefined = undefined) {
+        const supabase = createSupabaseClient();
+
+        if (!userDetails) {
+            const {data: currentUser} = await supabase.auth.getUser();
+
+            const {data: userDetails1} = await supabase
+                .from('users')
+                .select('id, role')
+                .eq('auth_user_id', currentUser.user?.id)
+                .single();
+
+            if (userDetails1) {
+                userDetails = userDetails1 as User;
+            }
+        }
+
+        // Base query
+        let query = supabase
+            .from('teams')
+            .select(metadata
+                ? '*, user:users!leader_id(*), batches:batch_metadata!team_id(*)'
+                : '*, users!leader_id(*)'
+            );
+
+        // Filter for admin-specific teams
         if (userDetails?.role === 'admin') {
             query = query.eq('admin_id', userDetails.id);
         }
