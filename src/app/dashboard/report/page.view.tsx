@@ -1,12 +1,12 @@
 "use client"
 // src/pages/Reports/index.tsx
-import React, {useState, useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import {motion} from 'framer-motion';
-import {FiUploadCloud, FiCheck, FiFileText} from 'react-icons/fi';
-import {ToastContainer, toast} from 'react-toastify';
+import {FiCheck, FiFileText, FiUploadCloud} from 'react-icons/fi';
+import {toast, ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import {Report, ProcessedReport, ValidationError} from './types';
+import {ProcessedReport, Report, ValidationError} from './types';
 import {parseReport, validateReport} from './utils/reportParser';
 import {processReport} from './utils/reportProcessor';
 import {generateTeamReports} from './utils/reportGenerator';
@@ -28,6 +28,42 @@ const Reports: React.FC = () => {
     const [processedReport, setProcessedReport] = useState<ProcessedReport | null>(null);
     const [activeStep, setActiveStep] = useState<number>(1);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Date filtering state
+    const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('monthly');
+    const [startDate, setStartDate] = useState<string>('');
+    const [endDate, setEndDate] = useState<string>('');
+
+    // Set default dates based on current date
+    React.useEffect(() => {
+        const today = new Date();
+        const endDateStr = today.toISOString().split('T')[0];
+
+        let startDateObj = new Date(today);
+
+        // Set default date range based on filter type
+        switch (filterType) {
+            case 'daily':
+                // Default to today
+                setStartDate(endDateStr);
+                break;
+            case 'weekly':
+                // Default to last 7 days
+                startDateObj.setDate(today.getDate() - 7);
+                setStartDate(startDateObj.toISOString().split('T')[0]);
+                break;
+            case 'monthly':
+                // Default to last 30 days
+                startDateObj.setDate(today.getDate() - 30);
+                setStartDate(startDateObj.toISOString().split('T')[0]);
+                break;
+            case 'custom':
+                // Don't change dates for custom
+                break;
+        }
+
+        setEndDate(endDateStr);
+    }, [filterType]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         try {
@@ -102,10 +138,16 @@ const Reports: React.FC = () => {
                 });
             }, 200);
 
-            // Process the report - this would call your API
-            const processed = await processReport(reportData, user!, (progress) => {
-                setProcessingProgress(progress);
-            });
+            // Process the report with date filtering
+            const processed = await processReport(
+                reportData, 
+                user!, 
+                (progress) => {
+                    setProcessingProgress(progress);
+                },
+                startDate,
+                endDate
+            );
 
             clearInterval(processTimer);
             setProcessingProgress(100);
@@ -164,7 +206,7 @@ const Reports: React.FC = () => {
 
     return (
         <Dashboard>
-            
+
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -245,6 +287,12 @@ const Reports: React.FC = () => {
                                 processingProgress={processingProgress}
                                 handleProcessReport={handleProcessReport}
                                 onBack={() => setActiveStep(1)}
+                                filterType={filterType}
+                                setFilterType={setFilterType}
+                                startDate={startDate}
+                                setStartDate={setStartDate}
+                                endDate={endDate}
+                                setEndDate={setEndDate}
                             />
                         )}
 

@@ -1,6 +1,6 @@
 // src/pages/Reports/utils/reportGenerator.ts
 import ExcelJS from 'exceljs';
-import {ProcessedReport, ProcessedRecord, TeamReport} from '../types';
+import {ProcessedRecord, ProcessedReport, TeamReport} from '../types';
 
 /**
  * Generate Excel reports from processed data with enhanced formatting using ExcelJS
@@ -124,7 +124,7 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
             tabColor: {argb: 'FF92D050'}
         }
     });
-    // populatePerformanceWorksheet(performanceSheet,teamReport, headerStyle);
+    populatePerformanceWorksheet(performanceSheet, headerStyle, processedReport);
 
     // Generate the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
@@ -463,7 +463,8 @@ const populateSummaryWorksheet = async (
  */
 const populatePerformanceWorksheet = (
     worksheet: ExcelJS.Worksheet,
-    headerStyle: any
+    headerStyle: any,
+    processedReport: ProcessedReport
 ): void => {
     // Define performance columns
     const columns = [
@@ -546,14 +547,41 @@ const populatePerformanceWorksheet = (
         fgColor: {argb: 'FFFF99FF'} // Pink
     };
 
-    // Add team performance data (as in your Python example)
-    const performanceData = [
-        ['Amos team', 684, 634, 92.6900584, 542, 503, 92.8044280, 1382, 1228, 88.8567294, 'Improve'],
-        ['Brian team', 341, 317, 92.9618768, 428, 400, 93.4579439, 1096, 985, 89.8722628, 'Improve'],
-        ['Calvine team', 717, 685, 95.5369596, 650, 602, 92.6153846, 1307, 1221, 93.4200459, 'Well done'],
-        ['Emmanuel team', 611, 582, 95.2536825, 479, 415, 86.6388309, 995, 941, 94.5728643, 'Well done'],
-        ['Kemei team', 718, 697, 97.0752089, 677, 634, 93.6484904, 1684, 1552, 92.1615202, 'Improve']
-    ];
+    // Generate performance data from the processed report
+    const teamReports = processedReport.teamReports.filter(team => team.teamName !== 'Unknown');
+
+    // Skip if no team data
+    if (teamReports.length === 0) {
+        worksheet.addRow(['No team data available']);
+        return;
+    }
+
+    // Calculate performance metrics for each team
+    const performanceData = teamReports.map(team => {
+        const totalActivation = team.matchedCount;
+        const quality = team.qualityCount;
+        const percentagePerformance = totalActivation > 0 
+            ? (quality / totalActivation) * 100 
+            : 0;
+
+        // For simplicity, we'll use the same values for all three periods
+        // In a real implementation, you would calculate these based on date ranges
+        const comment = percentagePerformance >= 90 ? 'Well done' : 'Improve';
+
+        return [
+            team.teamName,
+            totalActivation,
+            quality,
+            percentagePerformance,
+            totalActivation,
+            quality,
+            percentagePerformance,
+            totalActivation,
+            quality,
+            percentagePerformance,
+            comment
+        ];
+    });
 
     // Add data rows
     performanceData.forEach((rowData) => {
@@ -644,14 +672,21 @@ const populatePerformanceWorksheet = (
     };
     worksheet.mergeCells(10, 2, 10, 4);
 
-    // Add monthly performance data
-    const monthlyData = [
-        ['Amos team', 2608, 2365, 90.6825153],
-        ['Brian team', 1865, 1702, 91.2600536],
-        ['Calvine team', 2674, 2508, 93.7920718],
-        ['Emmanuel team', 2085, 1938, 92.9496403],
-        ['Kemei team', 3079, 2883, 93.6342969]
-    ];
+    // Generate monthly performance data from the processed report
+    const monthlyData = teamReports.map(team => {
+        const totalActivation = team.matchedCount;
+        const quality = team.qualityCount;
+        const percentagePerformance = totalActivation > 0 
+            ? (quality / totalActivation) * 100 
+            : 0;
+
+        return [
+            team.teamName,
+            totalActivation,
+            quality,
+            percentagePerformance
+        ];
+    });
 
     // Add monthly data rows
     monthlyData.forEach((rowData) => {

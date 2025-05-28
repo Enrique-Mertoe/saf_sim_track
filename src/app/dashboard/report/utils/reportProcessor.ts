@@ -1,4 +1,3 @@
-
 import {DatabaseRecord, ProcessedRecord, ProcessedReport, Report, SafaricomRecord, TeamReport} from '../types';
 import simService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
@@ -9,12 +8,27 @@ type SimAdapter = SIMCard & {
     sold_by_user_id: User;
     qualityStatus: string;
 }
-const fetchSimCardDataFromDatabase = async (simSerialNumbers: string[], user: User): Promise<DatabaseRecord[]> => {
-    const {data, error} = await simService.getAllSimCards(user);
-    if (error)
-        return []
+const fetchSimCardDataFromDatabase = async (
+    simSerialNumbers: string[], 
+    user: User,
+    startDate?: string,
+    endDate?: string
+): Promise<DatabaseRecord[]> => {
+    let simData;
 
-    return (data as SimAdapter[]).filter(sim => simSerialNumbers.includes(sim.serial_number))
+    // If date range is provided, use getSimCardsByDateRange
+    if (startDate && endDate) {
+        const {data, error} = await simService.getSimCardsByDateRange(startDate, endDate);
+        if (error) return [];
+        simData = data;
+    } else {
+        // Otherwise use getAllSimCards
+        const {data, error} = await simService.getAllSimCards(user);
+        if (error) return [];
+        simData = data;
+    }
+
+    return (simData as SimAdapter[]).filter(sim => simSerialNumbers.includes(sim.serial_number))
         .map((serNum) => ({
             simSerialNumber: serNum.serial_number,
             simId: serNum.id,
@@ -35,9 +49,16 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
         const record = databaseRecords[i];
         const sourceRecord = recordMap.get(record.simSerialNumber);
         if (!sourceRecord) continue;
+
+        // Determine quality status
+        const isQuality = sourceRecord.quality === "Y" && parseFloat(sourceRecord.topUpAmount.toString()) >= 50;
+        const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
+
+        // Update SIM card status - change from REGISTERED to ACTIVATED if it's a match
         await simService.updateSIMCard(record.simId, {
             match: SIMStatus.MATCH,
-            quality: sourceRecord.quality == "N" ? SIMStatus.NONQUALITY : SIMStatus.QUALITY,
+            quality: qualityStatus,
+            status: SIMStatus.ACTIVATED // Update status from REGISTERED to ACTIVATED
         });
 
         const progress = 21 + Math.floor((i / totalRecords) * progressRange);
@@ -51,7 +72,9 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
 export const processReport = async (
     report: Report,
     user: User,
-    progressCallback: (progress: number) => void
+    progressCallback: (progress: number) => void,
+    startDate?: string,
+    endDate?: string
 ): Promise<ProcessedReport> => {
     // Extract all SIM serial numbers for batch lookup
     const simSerialNumbers = report.records.map(record => record.simSerialNumber);
@@ -60,7 +83,7 @@ export const processReport = async (
     progressCallback(20);
 
     // Fetch matching records from a database
-    const databaseRecords = await fetchSimCardDataFromDatabase(simSerialNumbers, user);
+    const databaseRecords = await fetchSimCardDataFromDatabase(simSerialNumbers, user, startDate, endDate);
 
 
     const simDataMap = new Map<string, DatabaseRecord>();

@@ -1,8 +1,8 @@
 // src/pages/Reports/components/ProcessingSection.tsx
 import React from 'react';
-import { motion } from 'framer-motion';
-import { FiCpu, FiArrowLeft } from 'react-icons/fi';
-import { Report } from '../types';
+import {motion} from 'framer-motion';
+import {FiArrowLeft, FiCalendar, FiCpu} from 'react-icons/fi';
+import {Report} from '../types';
 
 interface ProcessingSectionProps {
   reportData: Report;
@@ -10,6 +10,12 @@ interface ProcessingSectionProps {
   processingProgress: number;
   handleProcessReport: () => void;
   onBack: () => void;
+  filterType: 'daily' | 'weekly' | 'monthly' | 'custom';
+  setFilterType: (type: 'daily' | 'weekly' | 'monthly' | 'custom') => void;
+  startDate: string;
+  setStartDate: (date: string) => void;
+  endDate: string;
+  setEndDate: (date: string) => void;
 }
 
 const ProcessingSection: React.FC<ProcessingSectionProps> = ({
@@ -18,9 +24,15 @@ const ProcessingSection: React.FC<ProcessingSectionProps> = ({
   processingProgress,
   handleProcessReport,
   onBack,
+  filterType,
+  setFilterType,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate
 }) => {
   return (
-      
+
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -44,10 +56,90 @@ const ProcessingSection: React.FC<ProcessingSectionProps> = ({
         </div>
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
           <p className="text-sm text-gray-500 dark:text-gray-400">Date Range</p>
-          <p className="text-xl font-semibold dark:text-white">
-          {/*{reportData.dateRange.start} - {reportData.dateRange.end}*/}
-          </p>
+          <div className="flex items-center space-x-2 mt-1">
+            <span className="text-sm font-semibold dark:text-white">{startDate}</span>
+            <span className="text-sm dark:text-white">to</span>
+            <span className="text-sm font-semibold dark:text-white">{endDate}</span>
+          </div>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <h4 className="text-sm font-medium text-gray-600 mb-2 flex items-center">
+          <FiCalendar className="mr-2" />
+          Filter Options
+        </h4>
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          <button
+            onClick={() => setFilterType('daily')}
+            className={`px-4 py-2 text-sm rounded-md transition-colors ${
+              filterType === 'daily'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            Daily
+          </button>
+          <button
+            onClick={() => setFilterType('weekly')}
+            className={`px-4 py-2 text-sm rounded-md transition-colors ${
+              filterType === 'weekly'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            Weekly
+          </button>
+          <button
+            onClick={() => setFilterType('monthly')}
+            className={`px-4 py-2 text-sm rounded-md transition-colors ${
+              filterType === 'monthly'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setFilterType('custom')}
+            className={`px-4 py-2 text-sm rounded-md transition-colors ${
+              filterType === 'custom'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            Custom
+          </button>
+        </div>
+
+        {filterType === 'custom' && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Start Date
+              </label>
+              <input
+                type="date"
+                id="start-date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                id="end-date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mb-6">

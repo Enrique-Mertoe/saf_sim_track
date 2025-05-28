@@ -230,7 +230,7 @@ const TeamLeaderDashboardView = () => {
         const totalAllocated = simCards.length;
         const registered = simCards.filter(sim => sim.status === SIMStatus.REGISTERED).length;
         const assigned = simCards.filter(sim => sim.status === SIMStatus.ASSIGNED).length;
-        const unassigned = simCards.filter(sim => sim.status === SIMStatus.UNASSIGNED).length;
+        const unassigned = simCards.filter(sim => sim.status === SIMStatus.PENDING).length;
 
         const dailyRegistered = simCards.filter(sim =>
             sim.status === SIMStatus.REGISTERED && sim.registeredOn === selectedDate
