@@ -13,20 +13,12 @@ import {
     XCircle
 } from 'lucide-react';
 import {createSupabaseClient} from "@/lib/supabase/client";
-import {SIMCard, User, UserRole} from "@/models";
+import {SIMCard, SIMStatus, User, UserRole} from "@/models";
 import alert from "@/ui/alert";
 import useApp from "@/ui/provider/AppProvider";
 import {now} from "@/helper";
 import {useDialog} from "@/app/_providers/dialog";
 import MaterialSelect from "@/ui/components/MaterialSelect";
-
-// Enums
-const SIMStatus = {
-    ACTIVE: "ACTIVE",
-    INACTIVE: "INACTIVE",
-    PENDING: "PENDING",
-    SOLD: "SOLD",
-};
 
 const supabase = createSupabaseClient();
 
@@ -94,7 +86,7 @@ const SimManagementPage = () => {
     const stats = useMemo(() => {
         const assigned = simCards.filter(sim => sim.assigned_to_user_id !== null);
         const unassigned = simCards.filter(sim => sim.assigned_to_user_id === null);
-        const sold = simCards.filter(sim => sim.status === SIMStatus.SOLD);
+        const sold = simCards.filter(sim => sim.status === SIMStatus.REGISTERED);
 
         return {
             total: simCards.length,
@@ -253,8 +245,13 @@ const SimManagementPage = () => {
         setRangeSelection({start: "", end: ""});
         setSearchTerm("");
     };
+    const on = (v: any) => {
+        setSelectedMember(v)
+    }
 
-    function showDialog() {
+    const showDialog = () => {
+        let localSelectedMember = ''; // Local state for the dialog
+
         const d = dialog.create({
             content: <>
                 <div className="bg-white rounded-lg p-6 w-full">
@@ -267,7 +264,11 @@ const SimManagementPage = () => {
                         options={staffMembers}
                         valueKey={"id"}
                         displayKey={"full_name"}
-                        onChange={v => setSelectedMember(v)}
+                        onChange={v => {
+                            localSelectedMember = v; // Update local variable
+                            // Update the button state by re-creating or force update
+                            console.log("Selected member:", v); // For debugging
+                        }}
                     />
                     <div className="flex space-x-3">
                         <button
@@ -281,8 +282,37 @@ const SimManagementPage = () => {
                             Cancel
                         </button>
                         <button
-                            onClick={handleAssign}
-                            disabled={!selectedMember || isAssigning}
+                            onClick={async () => {
+                                if (!localSelectedMember || selectedSims.length === 0) {
+                                    alert.info("Please select both staff member and SIM cards");
+                                    return;
+                                }
+
+                                setIsAssigning(true);
+                                try {
+                                    const {error} = await supabase
+                                        .from('sim_cards')
+                                        .update({
+                                            assigned_to_user_id: localSelectedMember,
+                                            status:SIMStatus.ASSIGNED,// Use local variable
+                                            assigned_on: now()
+                                        })
+                                        .in('id', selectedSims);
+
+                                    if (error) throw error;
+
+                                    alert.success(`Successfully assigned ${selectedSims.length} SIM cards`);
+                                    setSelectedSims([]);
+                                    setSelectedMember('');
+                                    d.dismiss();
+                                    fetchData(); // Refresh data
+                                } catch (error) {
+                                    console.error("Error assigning SIMs:", error);
+                                    alert.error("Failed to assign SIM cards. Please try again.");
+                                } finally {
+                                    setIsAssigning(false);
+                                }
+                            }}
                             className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
                         >
                             {isAssigning ? (
@@ -297,10 +327,8 @@ const SimManagementPage = () => {
                     </div>
                 </div>
             </>
-
         })
     }
-
 
     if (isLoading) {
         return (
@@ -456,7 +484,7 @@ const SimManagementPage = () => {
                                 <h2 className="text-lg font-semibold text-gray-900">Unassigned SIMs</h2>
                                 {selectedSims.length > 0 && (
                                     <button
-                                        onClick={() => showDialog()}
+                                        onClick={showDialog}
                                         className="flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                     >
                                         <UserPlus className="h-4 w-4 mr-1"/>

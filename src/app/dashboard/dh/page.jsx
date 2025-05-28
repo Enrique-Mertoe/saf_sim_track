@@ -103,6 +103,7 @@ const TeamLeaderDashboardView = () => {
                 setIsLoading(false);
             }
         }
+
         fetchSimCards();
     }, [user]);
     // Setup realtime updates for SIM cards
@@ -229,8 +230,8 @@ const TeamLeaderDashboardView = () => {
 
         const totalAllocated = simCards.length;
         const registered = simCards.filter(sim => sim.status === SIMStatus.REGISTERED).length;
-        const assigned = simCards.filter(sim => sim.status === SIMStatus.ASSIGNED).length;
-        const unassigned = simCards.filter(sim => sim.status === SIMStatus.PENDING).length;
+        const assigned = simCards.filter(sim => sim.status === SIMStatus.ASSIGNED || sim.assigned_to_user_id != null).length;
+        const unassigned = totalAllocated - assigned
 
         const dailyRegistered = simCards.filter(sim =>
             sim.status === SIMStatus.REGISTERED && sim.registeredOn === selectedDate
@@ -285,7 +286,8 @@ const TeamLeaderDashboardView = () => {
                         <div className="flex justify-between items-start">
                             <div>
                                 <h2 className="text-2xl font-bold text-white">Team Performance Dashboard</h2>
-                                <p className="text-indigo-100 dark:text-indigo-200 mt-1">Monitor daily SIM card sales and team performance</p>
+                                <p className="text-indigo-100 dark:text-indigo-200 mt-1">Monitor daily SIM card sales
+                                    and team performance</p>
                             </div>
 
                             {/* Team Info Card */}
@@ -632,7 +634,7 @@ const TeamLeaderDashboardView = () => {
     );
 };
 
-export default function TeamLeaderDashboard(){
+export default function TeamLeaderDashboard() {
     return (
 
         <Dashboard>

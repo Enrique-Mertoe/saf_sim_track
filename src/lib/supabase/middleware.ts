@@ -16,6 +16,16 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
+    // async function mk() {
+    //     const res = await (await createSuperClient()).auth.admin.updateUserById("722d9dc4-9b71-4e4a-a920-31406a1802bc", {
+    //         password: '123456789'
+    //     });
+    //     console.log("res", res)
+    // }
+    //
+    // mk()
+
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
