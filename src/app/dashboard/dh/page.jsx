@@ -565,9 +565,9 @@ const TeamLeaderDashboardView = () => {
                                             <CheckCircle2 className="w-4 h-4 text-green-500"/>
                                             <span className="font-medium text-gray-900 text-sm">{sim.serialNumber}</span>
                                         </div>
-                                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                                        <div className="flex items-center mt-3 pt-3 border-t border-gray-100">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Registered
+                            On:
                         </span>
                                             <span className="text-xs text-gray-500">{sim.registered_on}</span>
                                         </div>
@@ -589,10 +589,6 @@ const TeamLeaderDashboardView = () => {
                                         <div className="flex items-center gap-2 mb-3">
                                             <UserCheck className="w-4 h-4 text-blue-500"/>
                                             <span className="font-medium text-gray-900 text-sm">{sim.serialNumber}</span>
-                                        </div>
-                                        <div className="text-xs text-gray-600 mb-3">
-                                            <span className="font-medium">Assigned to:</span>
-                                            <span className="ml-1">{sim.user?.full_name}</span>
                                         </div>
                                         <div className="flex justify-between items-center pt-3 border-t border-gray-100">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
