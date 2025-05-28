@@ -185,7 +185,7 @@ export default function Sidebar() {
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/dashboard/filemanager', icon: Folder, label: 'FileManager'},
                 {href: '/dashboard/invoices', icon: CreditCard, label: 'Invoices'},
-                {href: '/dashboard/dh/transfers', icon: ArrowLeftRight, label: 'SIM Transfers'},
+                {href: '/dashboard/transfers', icon: ArrowLeftRight, label: 'SIM Transfers'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
