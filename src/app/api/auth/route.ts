@@ -1,9 +1,6 @@
 // app/api/auth/route.ts
 import {NextRequest, NextResponse} from 'next/server';
-import {cookies} from 'next/headers';
-import jwt from 'jsonwebtoken';
-import {flushSession, getSession, removeSession, removeSessionKeys} from "@/lib/session";
-import {adminAuth, adminFirestore as admin} from "@/lib/firebase/admin";
+import {flushSession} from "@/lib/session";
 import {authService} from "@/services";
 import Accounts from "@/lib/accounts";
 
@@ -82,7 +79,6 @@ async function login(data: any) {
 }
 
 
-
 // Update user
 async function recover(request: NextRequest, data: UpdateUserData) {
     try {
@@ -117,72 +113,72 @@ async function updateUser(request: NextRequest, data: UpdateUserData) {
     //
     //     const userId = id || currentUser.id;
 
-        // Start a transaction to update all related tables
-        // await prisma.$transaction(async (tx) => {
-        //     // Update user table
-        //     const updateData: any = {};
-        //
-        //     if (email) updateData.email = email;
-        //     if (password) updateData.password = await bcrypt.hash(password, 10);
-        //     if (fname && lname) updateData.username = `${fname}_${lname}`;
-        //
-        //     if (Object.keys(updateData).length > 0) {
-        //         await tx.user.update({
-        //             where: {id: userId},
-        //             data: updateData
-        //         });
-        //     }
-        //
-        //     // Update detail table
-        //     const detailData: any = {};
-        //
-        //     if (fname) detailData.firstName = fname;
-        //     if (lname) detailData.lastName = lname;
-        //     if (phone) detailData.phone = phone;
-        //
-        //     if (Object.keys(detailData).length > 0) {
-        //         await tx.detail.upsert({
-        //             where: {userId},
-        //             update: detailData,
-        //             create: {
-        //                 ...detailData,
-        //                 userId
-        //             }
-        //         });
-        //     }
-        //
-        //     // Update system user table
-        //     const systemUserData: any = {};
-        //
-        //     if (role) systemUserData.role = role;
-        //     if (phone) systemUserData.phone = phone;
-        //     if (email) systemUserData.email = email;
-        //     if (fname && lname) systemUserData.name = `${fname} ${lname}`;
-        //
-        //     if (Object.keys(systemUserData).length > 0) {
-        //         await tx.systemUser.upsert({
-        //             where: {userId},
-        //             update: systemUserData,
-        //             create: {
-        //                 ...systemUserData,
-        //                 name: systemUserData.name || `${currentUser.detail?.firstName || ''} ${currentUser.detail?.lastName || ''}`,
-        //                 email: systemUserData.email || currentUser.email,
-        //                 phone: systemUserData.phone || '',
-        //                 role: systemUserData.role || 'user',
-        //                 userId
-        //             }
-        //         });
-        //     }
-        // });
+    // Start a transaction to update all related tables
+    // await prisma.$transaction(async (tx) => {
+    //     // Update user table
+    //     const updateData: any = {};
+    //
+    //     if (email) updateData.email = email;
+    //     if (password) updateData.password = await bcrypt.hash(password, 10);
+    //     if (fname && lname) updateData.username = `${fname}_${lname}`;
+    //
+    //     if (Object.keys(updateData).length > 0) {
+    //         await tx.user.update({
+    //             where: {id: userId},
+    //             data: updateData
+    //         });
+    //     }
+    //
+    //     // Update detail table
+    //     const detailData: any = {};
+    //
+    //     if (fname) detailData.firstName = fname;
+    //     if (lname) detailData.lastName = lname;
+    //     if (phone) detailData.phone = phone;
+    //
+    //     if (Object.keys(detailData).length > 0) {
+    //         await tx.detail.upsert({
+    //             where: {userId},
+    //             update: detailData,
+    //             create: {
+    //                 ...detailData,
+    //                 userId
+    //             }
+    //         });
+    //     }
+    //
+    //     // Update system user table
+    //     const systemUserData: any = {};
+    //
+    //     if (role) systemUserData.role = role;
+    //     if (phone) systemUserData.phone = phone;
+    //     if (email) systemUserData.email = email;
+    //     if (fname && lname) systemUserData.name = `${fname} ${lname}`;
+    //
+    //     if (Object.keys(systemUserData).length > 0) {
+    //         await tx.systemUser.upsert({
+    //             where: {userId},
+    //             update: systemUserData,
+    //             create: {
+    //                 ...systemUserData,
+    //                 name: systemUserData.name || `${currentUser.detail?.firstName || ''} ${currentUser.detail?.lastName || ''}`,
+    //                 email: systemUserData.email || currentUser.email,
+    //                 phone: systemUserData.phone || '',
+    //                 role: systemUserData.role || 'user',
+    //                 userId
+    //             }
+    //         });
+    //     }
+    // });
 
-        // Get updated user
-        // const updatedUser = await prisma.user.findUnique({
-        //     where: {id: userId},
-        //     include: {
-        //         detail: true,
-        //         systemUser: true
-        //     }
-        // });
+    // Get updated user
+    // const updatedUser = await prisma.user.findUnique({
+    //     where: {id: userId},
+    //     include: {
+    //         detail: true,
+    //         systemUser: true
+    //     }
+    // });
 
     //     return makeResponse({
     //         ok: true,
@@ -196,7 +192,9 @@ async function updateUser(request: NextRequest, data: UpdateUserData) {
 
 // Logout user
 async function logout() {
-    await removeSessionKeys(["user"])
+    // await removeSessionKeys(["user"])
+    await Accounts.logout()
+    await flushSession()
     return makeResponse({
         ok: true,
         message: 'Logged out successfully'

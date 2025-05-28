@@ -1,5 +1,5 @@
 import {User} from "@/models";
-import {flushSession, getSession, setSession} from "@/lib/session";
+import {getSession, removeSession, setSession} from "@/lib/session";
 import {createServerClient} from "@/lib/supabase/server";
 
 class Accounts {
@@ -51,7 +51,8 @@ class Accounts {
     }
 
     static async logout() {
-        await flushSession()
+        await removeSession("session-user")
+        await (await createServerClient()).auth.signOut()
     }
 }
 

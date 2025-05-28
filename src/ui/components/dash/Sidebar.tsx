@@ -5,6 +5,7 @@ import {usePathname, useRouter} from "next/navigation";
 import Link from 'next/link';
 import {AnimatePresence, motion} from 'framer-motion';
 import {
+    ArrowLeftRight,
     Award,
     ClipboardList,
     Cpu,
@@ -184,12 +185,14 @@ export default function Sidebar() {
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/dashboard/filemanager', icon: Folder, label: 'FileManager'},
                 {href: '/dashboard/invoices', icon: CreditCard, label: 'Invoices'},
+                {href: '/dashboard/dh/transfers', icon: ArrowLeftRight, label: 'SIM Transfers'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.TEAM_LEADER) {
             navItems.push(
                 {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
                 {href: '/dashboard/leader-console', icon: PieChart, label: 'Sim Assignment'},
+                {href: '/dashboard/transfers', icon: ArrowLeftRight, label: 'SIM Transfers'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );
         } else if (user?.role === UserRole.STAFF) {

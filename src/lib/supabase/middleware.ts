@@ -113,6 +113,7 @@ export async function updateSession(request: NextRequest) {
             // console.log("subscription: ", subscription)
 
             const hasActiveSubscription = subscription && subscription.is_active;
+            // Regular user should see service unavailable if not linked to a team
 
             // Handle different scenarios based on user role and subscription status
             if (profile.role === UserRole.ADMIN) {
@@ -145,6 +146,12 @@ export async function updateSession(request: NextRequest) {
                     const url = request.nextUrl.clone()
                     url.pathname = '/service-unavailable'
                     url.searchParams.set('type', 'no-admin-id')
+                    return NextResponse.redirect(url)
+                }
+                if (!user.team_id && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
+                    const url = request.nextUrl.clone()
+                    url.pathname = '/service-unavailable'
+                    url.searchParams.set('type', 'no-team')
                     return NextResponse.redirect(url)
                 }
 
@@ -187,14 +194,6 @@ export async function updateSession(request: NextRequest) {
                     const url = request.nextUrl.clone()
                     url.pathname = '/service-unavailable'
                     url.searchParams.set('type', 'admin-no-subscription')
-                    return NextResponse.redirect(url)
-                }
-
-                // Regular user should see service unavailable if not linked to a team
-                if (!profile.team_id && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
-                    const url = request.nextUrl.clone()
-                    url.pathname = '/service-unavailable'
-                    url.searchParams.set('type', 'no-team')
                     return NextResponse.redirect(url)
                 }
 

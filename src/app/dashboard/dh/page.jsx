@@ -7,6 +7,8 @@ import useApp from "@/ui/provider/AppProvider";
 import {SIMStatus} from "@/models";
 import simService from "@/services/simService";
 import Dashboard from "@/ui/components/dash/Dashboard";
+import {motion} from "framer-motion";
+import {formatDate} from "@/helper";
 
 const TeamLeaderDashboardView = () => {
     const {user} = useApp();
@@ -101,73 +103,8 @@ const TeamLeaderDashboardView = () => {
                 setIsLoading(false);
             }
         }
-
-        // const fetchSimCards = async () => {
-        //     if (!user || !user.team_id) return;
-        //
-        //     try {
-        //         setIsLoading(true);
-        //
-        //         // Calculate date range based on view mode
-        //         let fromDate = selectedDate;
-        //         let toDate = selectedDate;
-        //
-        //         if (viewMode === 'weekly') {
-        //             const weekStart = new Date(selectedDate);
-        //             weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-        //             const weekEnd = new Date(weekStart);
-        //             weekEnd.setDate(weekEnd.getDate() + 6);
-        //
-        //             fromDate = weekStart.toISOString().split('T')[0];
-        //             toDate = weekEnd.toISOString().split('T')[0];
-        //         } else if (viewMode === 'monthly') {
-        //             const monthStart = new Date(selectedDate);
-        //             monthStart.setDate(1);
-        //             const monthEnd = new Date(monthStart);
-        //             monthEnd.setMonth(monthEnd.getMonth() + 1);
-        //             monthEnd.setDate(0);
-        //
-        //             fromDate = monthStart.toISOString().split('T')[0];
-        //             toDate = monthEnd.toISOString().split('T')[0];
-        //         }
-        //
-        //         // Search for SIM cards with filters
-        //         const {data, error} = await simCardService.searchSimCards({
-        //             teamId: user.team_id,
-        //             fromDate,
-        //             toDate,
-        //             pageSize: 100 // Increase if needed
-        //         });
-        //
-        //         if (error) throw error;
-        //
-        //         // Transform data to match the expected format
-        //         const formattedData = data.map(sim => ({
-        //             id: sim.id,
-        //             serialNumber: sim.serial_number,
-        //             status: sim.status,
-        //             assignedTo: sim.assigned_to_name || '',
-        //             assignedToId: sim.assigned_to_user_id || '',
-        //             registeredOn: sim.registered_on ? sim.registered_on.split('T')[0] : '',
-        //             registeredBy: sim.registered_by_name || '',
-        //             customerName: sim.customer_name || '',
-        //             customerPhone: sim.customer_phone || '',
-        //             location: sim.location || '',
-        //             assignedOn: sim.assigned_on ? sim.assigned_on.split('T')[0] : ''
-        //         }));
-        //
-        //         setSimCards(formattedData);
-        //     } catch (error) {
-        //         console.error('Error fetching SIM cards:', error);
-        //         setError('Failed to load SIM card data');
-        //     } finally {
-        //         setIsLoading(false);
-        //     }
-        // };
-
         fetchSimCards();
     }, [user]);
-
     // Setup realtime updates for SIM cards
     useEffect(() => {
         if (!simCardSignal || !user || !user.team_id) return;
@@ -328,15 +265,65 @@ const TeamLeaderDashboardView = () => {
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Team Leader Dashboard</h1>
-                    <p className="text-gray-600">Monitor daily SIM card sales and team performance</p>
-                    {teamData && (
-                        <p className="text-sm text-blue-600 mt-1">
-                            Team: {teamData.name} {teamData.leader && `• Leader: ${teamData.leader.full_name}`}
-                        </p>
-                    )}
-                </div>
+                {/*<div className="mb-8">*/}
+                {/*    <h1 className="text-3xl font-bold text-gray-900">Team Leader Dashboard</h1>*/}
+                {/*    <p className="text-gray-600">Monitor daily SIM card sales and team performance</p>*/}
+                {/*    {teamData && (*/}
+                {/*        <p className="text-sm text-blue-600 mt-1">*/}
+                {/*            Team: {teamData.name} {teamData.leader && `• Leader: ${teamData.leader.full_name}`}*/}
+                {/*        </p>*/}
+                {/*    )}*/}
+                {/*</div>*/}
+                <motion.div
+                    className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-6 mb-8 shadow-lg"
+                    initial={{opacity: 0, scale: 0.96}}
+                    animate={{opacity: 1, scale: 1}}
+                    transition={{duration: 0.5}}
+                >
+                    <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">Team Performance Dashboard</h2>
+                                <p className="text-indigo-100 dark:text-indigo-200 mt-1">Monitor daily SIM card sales and team performance</p>
+                            </div>
+
+                            {/* Team Info Card */}
+                            <div className="bg-white/15 backdrop-blur-sm rounded-lg p-3 text-white">
+                                <h3 className="font-bold text-lg mb-1">{teamData?.name || 'Team'}</h3>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                    <div className="flex items-center">
+                                        <span className="text-indigo-100">Region:</span>
+                                        <span className="ml-1 font-medium">{teamData?.region || 'N/A'}</span>
+                                    </div>
+                                    {teamData?.territory && (
+                                        <div className="flex items-center">
+                                            <span className="text-indigo-100">Territory:</span>
+                                            <span className="ml-1 font-medium">{teamData.territory}</span>
+                                        </div>
+                                    )}
+                                    {teamData?.van_number_plate && (
+                                        <div className="flex items-center">
+                                            <span className="text-indigo-100">Van:</span>
+                                            <span className="ml-1 font-medium">{teamData.van_number_plate}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center">
+                                        <span className="text-indigo-100">Status:</span>
+                                        <span
+                                            className={`ml-1 font-medium ${teamData?.is_active ? 'text-green-300' : 'text-rose-300'}`}>
+                                        {teamData?.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                    </div>
+                                    <div className="flex items-center col-span-2">
+                                        <span className="text-indigo-100">Created:</span>
+                                        <span className="ml-1 font-medium">{formatDate(teamData?.created_at)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
 
                 {/* Date and View Mode Controls */}
                 <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200">

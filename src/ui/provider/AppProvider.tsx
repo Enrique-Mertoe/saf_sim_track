@@ -32,7 +32,7 @@ export const AppProvider: React.FC<{
             contentType: $.JSON
         }).then(async () => {
             await authService.signOut();
-            location.reload();
+            location.href = "/accounts/login";
         }).catch(() => {
             toast.error("unable to logout")
         }).done(() => {

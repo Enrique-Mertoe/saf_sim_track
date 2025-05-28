@@ -1,18 +1,23 @@
 import {createSupabaseClient} from "@/lib/supabase/client";
-import {TeamCreate, TeamUpdate} from "@/models";
+import {TeamCreate, TeamUpdate, User} from "@/models";
 
 export const teamService = {
     // Get all teams
-    async getAllTeams() {
+    async getAllTeams(userDetails: User | undefined = undefined) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        if (!userDetails) {
+            const {data: currentUser} = await supabase.auth.getUser();
 
-        // Get the user's details including role
-        const { data: userDetails } = await supabase
-            .from('users')
-            .select('id, role')
-            .eq('auth_user_id', currentUser.user?.id)
-            .single();
+            // Get the user's details including role
+            const {data: userDetails1} = await supabase
+                .from('users')
+                .select('id, role')
+                .eq('auth_user_id', currentUser.user?.id)
+                .single();
+            if (userDetails1) { // @ts-ignore
+                userDetails = userDetails1;
+            }
+        }
 
         let query = supabase
             .from('teams')
@@ -27,10 +32,10 @@ export const teamService = {
     },
     async count() {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -52,10 +57,10 @@ export const teamService = {
     // Get a single team by ID with leader info
     async getTeamById(teamId: string) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -77,10 +82,10 @@ export const teamService = {
     // Get team hierarchy with team members
     async getTeamHierarchy(teamId: string) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -89,7 +94,7 @@ export const teamService = {
         // If user is admin, ensure they can only fetch their own teams' hierarchy
         if (userDetails?.role === 'admin') {
             // First check if this team belongs to the admin
-            const { data: team } = await supabase
+            const {data: team} = await supabase
                 .from('teams')
                 .select('id')
                 .eq('id', teamId)
@@ -98,7 +103,7 @@ export const teamService = {
 
             // If team doesn't belong to this admin, return empty result
             if (!team) {
-                return { data: null, error: { message: 'Team not found or access denied' } };
+                return {data: null, error: {message: 'Team not found or access denied'}};
             }
         }
 
@@ -109,10 +114,10 @@ export const teamService = {
     // Create a new team
     async createTeam(teamData: TeamCreate) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -136,10 +141,10 @@ export const teamService = {
     // Update an existing team
     async updateTeam(teamId: string, teamData: TeamUpdate) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -161,10 +166,10 @@ export const teamService = {
     // Get team performance metrics
     async getTeamPerformance(teamId: string, period?: string) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -173,7 +178,7 @@ export const teamService = {
         // If user is admin, ensure they can only fetch their own teams' performance
         if (userDetails?.role === 'admin') {
             // First check if this team belongs to the admin
-            const { data: team } = await supabase
+            const {data: team} = await supabase
                 .from('teams')
                 .select('id')
                 .eq('id', teamId)
@@ -182,7 +187,7 @@ export const teamService = {
 
             // If team doesn't belong to this admin, return empty result
             if (!team) {
-                return { data: null, error: { message: 'Team not found or access denied' } };
+                return {data: null, error: {message: 'Team not found or access denied'}};
             }
         }
 
@@ -201,10 +206,10 @@ export const teamService = {
     // Get staff performance within a team
     async getStaffPerformance(teamId: string, period?: string) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -213,7 +218,7 @@ export const teamService = {
         // If user is admin, ensure they can only fetch their own teams' staff performance
         if (userDetails?.role === 'admin') {
             // First check if this team belongs to the admin
-            const { data: team } = await supabase
+            const {data: team} = await supabase
                 .from('teams')
                 .select('id')
                 .eq('id', teamId)
@@ -222,7 +227,7 @@ export const teamService = {
 
             // If team doesn't belong to this admin, return empty result
             if (!team) {
-                return { data: null, error: { message: 'Team not found or access denied' } };
+                return {data: null, error: {message: 'Team not found or access denied'}};
             }
         }
 
@@ -241,10 +246,10 @@ export const teamService = {
     // Delete a team and all its dependencies
     async deleteTeam(teamId: string) {
         const supabase = createSupabaseClient();
-        const { data: currentUser } = await supabase.auth.getUser();
+        const {data: currentUser} = await supabase.auth.getUser();
 
         // Get the user's details including role and id
-        const { data: userDetails } = await supabase
+        const {data: userDetails} = await supabase
             .from('users')
             .select('id, role')
             .eq('auth_user_id', currentUser.user?.id)
@@ -253,7 +258,7 @@ export const teamService = {
         // If user is admin, ensure they can only delete their own teams
         if (userDetails?.role === 'admin') {
             // First check if this team belongs to the admin
-            const { data: team } = await supabase
+            const {data: team} = await supabase
                 .from('teams')
                 .select('id')
                 .eq('id', teamId)
@@ -262,21 +267,21 @@ export const teamService = {
 
             // If team doesn't belong to this admin, return error
             if (!team) {
-                return { data: null, error: { message: 'Team not found or access denied' } };
+                return {data: null, error: {message: 'Team not found or access denied'}};
             }
         }
 
         // Use a transaction to ensure all operations are atomic
         // This means either all operations succeed or none do
-        const { data, error } = await supabase.rpc('delete_team_with_dependencies', {
+        const {data, error} = await supabase.rpc('delete_team_with_dependencies', {
             team_id_param: teamId
         });
 
         if (error) {
             console.error('Error deleting team:', error);
-            return { data: null, error };
+            return {data: null, error};
         }
 
-        return { data, error: null };
+        return {data, error: null};
     }
 };
