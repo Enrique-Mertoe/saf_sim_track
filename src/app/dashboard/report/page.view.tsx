@@ -39,7 +39,7 @@ const Reports: React.FC = () => {
         const today = new Date();
         const endDateStr = today.toISOString().split('T')[0];
 
-        let startDateObj = new Date(today);
+        const startDateObj = new Date(today);
 
         // Set default date range based on filter type
         switch (filterType) {
