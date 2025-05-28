@@ -176,6 +176,22 @@ export const simCardService = {
 
         return data as SIMCard[];
     },
+    getSIMCardsByTeamIdByUserDetails: async (teamId: string): Promise<SIMCard[]> => {
+        const supabase = createSupabaseClient();
+
+        const {data, error} = await supabase
+            .from('sim_cards')
+            .select('* users!assigned_to_user_id(*,full_name),team:team_id(*,leader_id(full_name))')
+            .eq('team_id', teamId)
+            .order('registered_on', {ascending: false});
+
+        if (error) {
+            console.error('Error fetching SIM cards by team ID:', error);
+            return [];
+        }
+//@ts-ignore
+        return data as SIMCard[];
+    },
 
     // Get performance metrics for a staff member
     getStaffPerformanceMetrics: async (userId: string, startDate?: string, endDate?: string): Promise<{
