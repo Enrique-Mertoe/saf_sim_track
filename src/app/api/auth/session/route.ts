@@ -4,8 +4,6 @@ import {getSession, setSession} from "@/lib/session";
 export async function POST(request: NextRequest) {
     try {
         const data = await request.json();
-        return []
-
         if (!data) {
             return NextResponse.json({error: 'data required'}, {status: 401});
         }
