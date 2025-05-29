@@ -16,6 +16,7 @@ export default function ViewTeamDetails({ team, onDismiss }: {
 
     useEffect(() => {
         const fetchTeamMembers = async () => {
+            if (!user) return
             setIsLoading(true);
             try {
                 // Assuming there's an API to get team members by team ID
@@ -30,7 +31,7 @@ export default function ViewTeamDetails({ team, onDismiss }: {
         };
 
         fetchTeamMembers();
-    }, [team.id]);
+    }, [team.id,user]);
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 w-full relative">

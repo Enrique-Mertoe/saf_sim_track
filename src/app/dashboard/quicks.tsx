@@ -10,7 +10,7 @@ import {useRouter} from "next/navigation";
 export default function DashQuickActions() {
     const dialog = useDialog()
     const {user} = useApp();
-     const router = useRouter();
+    const router = useRouter();
     return (
         <div className="">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
@@ -24,23 +24,25 @@ export default function DashQuickActions() {
                             <div className="p-2 bg-green-100 dark:bg-green-800 rounded-full mr-4">
                                 <Users className="h-5 w-5 text-green-600 dark:text-green-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Onboard New User</span>
+                            <span
+                                className="text-sm font-medium text-gray-900 dark:text-gray-100">Onboard New User</span>
                         </div>
                         <ArrowUpRight className="h-4 w-4 text-green-600 dark:text-green-400"/>
                     </button>
                     <button
-                        onClick={()=>router.push("/dashboard/report")}
+                        onClick={() => router.push("/dashboard/report")}
                         className="w-full cursor-pointer flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
                             <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-full mr-4">
                                 <BarChart4 className="h-5 w-5 text-blue-600 dark:text-blue-400"/>
                             </div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Generate Report</span>
+                            <span
+                                className="text-sm font-medium text-gray-900 dark:text-gray-100">Generate Report</span>
                         </div>
                         <ArrowUpRight className="h-4 w-4 text-blue-600 dark:text-blue-400"/>
                     </button>
                     <button
-                          onClick={()=>router.push("/dashboard/team")}
+                        onClick={() => router.push("/dashboard/team")}
                         className="w-full col-span-2 cursor-pointer flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
                             <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-full mr-4">
@@ -89,10 +91,11 @@ export const UserStatistics: FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [animate, setAnimate] = useState<boolean>(false);
     const [cardVisible, setCardVisible] = useState<boolean[]>(Array(4).fill(false));
-    const { user } = useApp();
+    const {user} = useApp();
 
     useEffect(() => {
         const fetchUserStats = async (): Promise<void> => {
+            if (!user) return
             try {
                 setLoading(true);
 
@@ -146,7 +149,7 @@ export const UserStatistics: FC = () => {
             setAnimate(false);
             setCardVisible(Array(4).fill(false));
         };
-    }, []);
+    }, [user]);
 
     // Animation for counting up
     const Counter: FC<CounterProps> = ({end, duration = 2000}) => {
@@ -182,7 +185,8 @@ export const UserStatistics: FC = () => {
         return (
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400"></div>
+                    <div
+                        className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400"></div>
                 </div>
             </div>
         );
@@ -239,7 +243,8 @@ export const UserStatistics: FC = () => {
                         ></div>
                     </div>
                     <div className="flex justify-end mt-1">
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{Math.round(progress)}% of total</span>
+                        <span
+                            className="text-xs text-gray-500 dark:text-gray-400">{Math.round(progress)}% of total</span>
                     </div>
                 </div>
             </div>

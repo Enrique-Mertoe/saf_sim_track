@@ -5,6 +5,7 @@ import {TeamCreate, User, UserRole} from "@/models";
 import {useDialog} from "@/app/_providers/dialog";
 import CreateUserModal from "@/app/dashboard/users/components/CreateUserModal";
 import {AnimatePresence, motion} from "framer-motion";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function Create({onDismiss}: {
     onDismiss: Closure

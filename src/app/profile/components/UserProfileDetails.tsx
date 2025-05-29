@@ -281,7 +281,7 @@ function EditableDetailsForm({ user, onSave }: { user: User; onSave: () => void 
         mobigo_number: formData.mobigo_number || undefined,
         is_active: formData.is_active,
         status: UserStatus.ACTIVE
-      });
+      },user);
 
       if (error) {
         console.error('Error updating user:', error);

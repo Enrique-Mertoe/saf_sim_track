@@ -1,6 +1,7 @@
 import {motion} from "framer-motion";
 import {
-    AlertTriangle, Calendar,
+    AlertTriangle,
+    Calendar,
     CheckCircle,
     ChevronRight,
     CreditCard,
@@ -15,6 +16,7 @@ import {useEffect, useState} from "react";
 import {formatDate} from "@/helper";
 import {userService} from "@/services";
 import simService from "@/services/simService";
+import useApp from "@/ui/provider/AppProvider";
 
 const SIMStatus = {
     ACTIVE: "ACTIVE",
@@ -33,7 +35,7 @@ export default function StaffList({team_id}: {
     const [searchQuery, setSearchQuery] = useState("");
     const [dateRange, setDateRange] = useState<any | undefined>(undefined);
     const [staffSimCounts, setStaffSimCounts] = useState<Record<string, number>>({});
-
+const {user} = useApp()
     const toggleStaffExpand = (staffId: any) => {
         if (expandedStaff === staffId) {
             setExpandedStaff(null);
@@ -43,8 +45,9 @@ export default function StaffList({team_id}: {
     };
     useEffect(() => {
         const loadStaffs = async () => {
+           if (!user) return;
             try {
-                const {data, error} = await userService.getUsersByTeam(team_id);
+                const {data, error} = await userService.getUsersByTeam(team_id,user);
                 setStaffMembers(data as any)
             } finally {
                 setIsLoading(false);
@@ -60,7 +63,7 @@ export default function StaffList({team_id}: {
         }
         loadsims().then()
         loadStaffs().then()
-    }, [team_id]);
+    }, [team_id,user]);
 
     useEffect(() => {
         // Calculate staff SIM counts based on filtered SIM cards

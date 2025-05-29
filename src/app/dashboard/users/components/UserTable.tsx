@@ -6,6 +6,7 @@ import {AnimatePresence, motion} from "framer-motion";
 import toast from "react-hot-toast";
 import {userService} from "@/services";
 import {useDialog} from "@/app/_providers/dialog";
+import useApp from "@/ui/provider/AppProvider";
 
 type UserTableProps = {
     users: User[];
@@ -38,8 +39,8 @@ export default function UserTable({
     const [visibleUsers, setVisibleUsers] = useState<number>(10);
     const [hasMore, setHasMore] = useState(true);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-    const dropdownRefs = useRef<{[key: string]: HTMLDivElement | null}>({}); 
-
+    const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const {user} = useApp()
     // Initialize local users state from props
     useEffect(() => {
         setLocalUsers(users);
@@ -293,7 +294,7 @@ export default function UserTable({
                             User Details
                         </h3>
                         <button
-                            onClick={()=>d.dismiss()}
+                            onClick={() => d.dismiss()}
                             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xl font-bold"
                         >
                             ×
@@ -529,7 +530,7 @@ export default function UserTable({
 
         setIsSubmitting(true);
         try {
-            const response = await userService.updateUser(editUser.id, editFormData);
+            const response = await userService.updateUser(editUser.id, editFormData, user!);
             if (response.data) {
                 // Update local state
                 setLocalUsers(prevUsers =>
@@ -591,7 +592,7 @@ export default function UserTable({
                             <div className="overflow-x-auto">
                                 <table
                                     className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed md:table-auto">
-                                <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
+                                    <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
                                     <tr>
                                         <th
                                             scope="col"
@@ -651,7 +652,8 @@ export default function UserTable({
                                                                 className="text-sm font-medium text-gray-900 dark:text-white">
                                                                 {user.full_name}
                                                             </div>
-                                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            <div
+                                                                className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span
                                         className={`px-2 py-1 rounded-full ${
                                             user.status === "ACTIVE"
@@ -721,7 +723,8 @@ export default function UserTable({
             {isMobileView && (
                 <div className="space-y-2 px-4 py-2">
                     {filteredUsers.length === 0 ? (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border border-gray-200 dark:border-gray-700">
+                        <div
+                            className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border border-gray-200 dark:border-gray-700">
                             <p className="text-gray-500 dark:text-gray-400">
                                 {searchTerm ? "No matching users found" : "No users found"}
                             </p>
@@ -729,18 +732,19 @@ export default function UserTable({
                     ) : (
                         <>
                             {filteredUsers.slice(0, visibleUsers).map((user) => (
-                                <div 
-                                    key={user.id} 
+                                <div
+                                    key={user.id}
                                     className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
                                 >
-                                    <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                    <div
+                                        className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                                         <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">{user.full_name}</h3>
                                         <div className="relative">
                                             <button
                                                 onClick={() => toggleDropdown(user.id)}
                                                 className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none"
                                             >
-                                                <MoreHorizontal className="h-4 w-4" />
+                                                <MoreHorizontal className="h-4 w-4"/>
                                             </button>
 
                                             <AnimatePresence>
@@ -749,10 +753,10 @@ export default function UserTable({
                                                         //@ts-ignore
                                                         ref={(el) => (dropdownRefs.current[user.id] = el)}
                                                         className="absolute right-0 mt-1 z-10 w-44 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                                        initial={{ opacity: 0, y: -10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, y: -10 }}
-                                                        transition={{ duration: 0.2 }}
+                                                        initial={{opacity: 0, y: -10}}
+                                                        animate={{opacity: 1, y: 0}}
+                                                        exit={{opacity: 0, y: -10}}
+                                                        transition={{duration: 0.2}}
                                                     >
                                                         <div className="py-1">
                                                             <button
@@ -762,7 +766,8 @@ export default function UserTable({
                                                                 }}
                                                                 className="flex items-center w-full px-3 py-1 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                             >
-                                                                <Eye className="h-3 w-3 mr-1 text-indigo-500 dark:text-indigo-400" />
+                                                                <Eye
+                                                                    className="h-3 w-3 mr-1 text-indigo-500 dark:text-indigo-400"/>
                                                                 View Details
                                                             </button>
                                                             <button
@@ -772,7 +777,7 @@ export default function UserTable({
                                                                 }}
                                                                 className="flex items-center w-full px-3 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                             >
-                                                                <Edit className="h-3 w-3 mr-1" />
+                                                                <Edit className="h-3 w-3 mr-1"/>
                                                                 Edit User
                                                             </button>
                                                             <button
@@ -782,7 +787,7 @@ export default function UserTable({
                                                                 }}
                                                                 className="flex items-center w-full px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                                                             >
-                                                                <Trash2 className="h-3 w-3 mr-1" />
+                                                                <Trash2 className="h-3 w-3 mr-1"/>
                                                                 Delete
                                                             </button>
                                                         </div>
@@ -795,18 +800,20 @@ export default function UserTable({
                                     <div className="px-3 py-2 space-y-1">
                                         <div className="flex flex-wrap items-center text-xs">
                                             <div className="flex items-center mr-3">
-                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                                                    user.status === "ACTIVE"
-                                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                                        : user.status === "SUSPENDED"
-                                                            ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                                                }`}>
+                                                <span
+                                                    className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                                        user.status === "ACTIVE"
+                                                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                                            : user.status === "SUSPENDED"
+                                                                ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                                    }`}>
                                                     {user.status}
                                                 </span>
                                             </div>
                                             <div className="flex items-center">
-                                                <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                                <span
+                                                    className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
                                                     {user.role}
                                                 </span>
                                             </div>
@@ -814,16 +821,19 @@ export default function UserTable({
 
                                         <div className="flex items-center text-xs">
                                             <span className="text-gray-700 dark:text-gray-300 font-medium">ID:</span>
-                                            <span className="ml-1 text-gray-600 dark:text-gray-400">{user.id_number}</span>
+                                            <span
+                                                className="ml-1 text-gray-600 dark:text-gray-400">{user.id_number}</span>
                                         </div>
 
                                         <div className="flex items-center text-xs">
                                             <span className="text-gray-700 dark:text-gray-300 font-medium">Email:</span>
-                                            <span className="ml-1 text-gray-600 dark:text-gray-400 truncate">{user.email}</span>
+                                            <span
+                                                className="ml-1 text-gray-600 dark:text-gray-400 truncate">{user.email}</span>
                                         </div>
 
                                         <div className="flex items-center text-xs">
-                                            <span className="text-gray-700 dark:text-gray-300 font-medium">Last Login:</span>
+                                            <span
+                                                className="text-gray-700 dark:text-gray-300 font-medium">Last Login:</span>
                                             <span className="ml-1 text-gray-600 dark:text-gray-400">
                                                 {user.last_login_at ? formatDate(user.last_login_at) : "Never"}
                                             </span>
@@ -835,7 +845,7 @@ export default function UserTable({
                                             onClick={() => handleViewUser(user)}
                                             className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center"
                                         >
-                                            <Eye className="h-3 w-3 mr-1" />
+                                            <Eye className="h-3 w-3 mr-1"/>
                                             Details
                                         </button>
                                     </div>

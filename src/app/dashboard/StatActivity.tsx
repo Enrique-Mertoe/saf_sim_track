@@ -332,7 +332,9 @@ function TeamsActivity() {
     // Function to fetch, filter, and map SIM card data for the team
     useEffect(() => {
         async function fetchSims() {
+            if (!user) return;
             try {
+
                 // Fetch SIM cards data for this team
                 const simCards = await simService.getSIMCardsByTeamId(team.id);
 
@@ -429,7 +431,7 @@ function TeamsActivity() {
         }
 
         fetchSims();
-    }, [team.id]);
+    }, [team.id,user]);
 
     const Header = () => (
         <div className="bg-white px-4 py-4 flex items-center justify-between shadow-sm">

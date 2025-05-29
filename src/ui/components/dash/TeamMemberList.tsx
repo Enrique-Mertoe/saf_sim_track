@@ -1,8 +1,9 @@
-import {useState, useEffect} from 'react';
-import {ChevronUp, ChevronDown, Phone, Smartphone, Info, Settings} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {ChevronDown, ChevronUp, Info, Phone, Settings, Smartphone} from 'lucide-react';
 import {userService} from "@/services";
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {SIMStatus, User, UserRole, UserStatus} from "@/models";
+import useApp from "@/ui/provider/AppProvider";
 
 // TeamMember is derived from User with additional display properties
 interface TeamMember extends Partial<User> {
@@ -42,6 +43,7 @@ const TeamMembersPanel = ({teamId}: TeamMembersPanelProps) => {
     const [memberDetails, setMemberDetails] = useState<MemberDetailsMap>({});
     const [loading, setLoading] = useState<boolean>(true);
     const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+    const {user} = useApp()
 
     // Check for dark mode preference
     useEffect(() => {
@@ -61,9 +63,10 @@ const TeamMembersPanel = ({teamId}: TeamMembersPanelProps) => {
     // Fetch team members on component mount
     useEffect(() => {
         const fetchTeamMembers = async () => {
+            if (!user) return
             setLoading(true);
             try {
-                const {data, error} = await userService.getUsersByTeam(teamId);
+                const {data, error} = await userService.getUsersByTeam(teamId,user);
 
                 if (error) throw error;
 
@@ -94,7 +97,7 @@ const TeamMembersPanel = ({teamId}: TeamMembersPanelProps) => {
         if (teamId) {
             fetchTeamMembers();
         }
-    }, [teamId]);
+    }, [teamId,user]);
 
     // Function to toggle staff details and load additional data if needed
     const toggleStaffDetails = async (userId: string) => {
