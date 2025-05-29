@@ -1,72 +1,81 @@
 // import {createSupabaseClient} from "@/lib/supabase";
-import {UserRole, UserUpdate} from "@/models";
+import {User, UserRole, UserUpdate} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
+import {admin_id} from "./helper";
+
 
 export const userService = {
     // Get all users (admins only)
-    async getAllUsers() {
+    async getAllUsers(user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
+            .eq("admin_id", await admin_id(user))
             .order('full_name');
     },
 
 
     // Get users by role
-    async getUsersByRole(role: UserRole) {
+    async getUsersByRole(role: UserRole, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
             .eq('role', role)
+            .eq("admin_id", await admin_id(user))
             .order('full_name');
     },
 
     // Get users by team
-    async getUsersByTeam(teamId: string) {
+    async getUsersByTeam(teamId: string, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
             .eq('team_id', teamId)
+            .eq("admin_id", await admin_id(user))
             .order('full_name');
     },
 
     // Get a single user by ID
-    async getUserById(userId: string) {
+    async getUserById(userId: string, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
             .eq('id', userId)
+            .eq("admin_id", await admin_id(user))
             .single();
     },
-    async getUserByEmail(email: string) {
+    async getUserByEmail(email: string, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
             .eq('email', email)
+            .eq("admin_id", await admin_id(user))
             .single();
     },
 
     // Get a user by phone number
-    async getUserByPhone(phoneNumber: string) {
+    async getUserByPhone(phoneNumber: string, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
             .eq('phone_number', phoneNumber)
+            .eq("admin_id", await admin_id(user))
             .single();
     },
 
     // Get a user by username
-    async getUserByUsername(username: string) {
+    async getUserByUsername(username: string, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .select('*')
+            .eq("admin_id", await admin_id(user))
             .eq('username', username)
             .single();
     },
@@ -76,7 +85,7 @@ export const userService = {
         const supabase = createSupabaseClient();
         let field = '';
 
-        switch(type) {
+        switch (type) {
             case 'email':
                 field = 'email';
                 break;
@@ -88,7 +97,7 @@ export const userService = {
                 break;
         }
 
-        const { data, error } = await supabase
+        const {data, error} = await supabase
             .from('users')
             .select('id')
             .eq(field, value);
@@ -99,23 +108,25 @@ export const userService = {
         };
     },
     // Update an existing user
-    async updateUser(userId: string, userData: UserUpdate) {
+    async updateUser(userId: string, userData: UserUpdate, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .update(userData)
             .eq('id', userId)
+            .eq("admin_id", await admin_id(user))
             .select()
             .single();
     },
 
     // Suspend/unsuspend a user
-    async toggleUserStatus(userId: string, isActive: boolean) {
+    async toggleUserStatus(userId: string, isActive: boolean, user: User) {
         const supabase = createSupabaseClient();
         return supabase
             .from('users')
             .update({is_active: isActive})
-            .eq('id', userId);
+            .eq('id', userId)
+            .eq("admin_id", await admin_id(user));
     },
     async deleteUser(id: string) {
         return {data: {}, error: {}}

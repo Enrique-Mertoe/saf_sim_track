@@ -23,7 +23,7 @@ export default function UserProfilePage() {
 
             setLoading(true);
             try {
-                const {data, error} = await userService.getUserById(currentUser.id);
+                const {data, error} = await userService.getUserById(currentUser.id, currentUser);
                 if (error) {
                     console.error("Error fetching user data:", error);
                     setError("Failed to load user data. Please try again.");

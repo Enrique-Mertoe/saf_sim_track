@@ -309,6 +309,7 @@ function TeamsActivity() {
     const {getParams, goBack} = useActivity();
     const team = getParams()["team"] as Team
     const [currentDate] = useState(new Date().toLocaleDateString());
+    const { user } = useApp();
 
     const [staff, setStaff] = useState<User[]>([]);
     const [simData, setSimData] = useState<{
@@ -390,7 +391,7 @@ function TeamsActivity() {
                 });
 
                 // Fetch staff members and update their performance metrics
-                const {data: staffMembers, error} = await userService.getUsersByTeam(team.id);
+                const {data: staffMembers, error} = await userService.getUsersByTeam(team.id, user);
                 if (error) return
                 const updatedStaff = staffMembers.map(member => {
                     //@ts-ignore

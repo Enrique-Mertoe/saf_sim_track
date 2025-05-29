@@ -27,6 +27,7 @@ export default function Create({onDismiss}: {
     const [dropdownPosition, setDropdownPosition] = useState("bottom");
     const [regionDropdownPosition, setRegionDropdownPosition] = useState("bottom");
     const [focusedField, setFocusedField] = useState<string | null>(null);
+    const { user } = useApp();
 
     const regions = ["Northern", "Western", "Central", "Eastern", "Coastal"];
     const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
@@ -120,8 +121,9 @@ export default function Create({onDismiss}: {
     const dialog = useDialog();
 
     async function loadTeams() {
+        if (!user) return;
 
-        const {data} = await userService.getUsersByRole(UserRole.TEAM_LEADER)
+        const {data} = await userService.getUsersByRole(UserRole.TEAM_LEADER, user)
         // console.log(data)
         setLeaders(data as User[])
         setTeamLoading(false)

@@ -56,7 +56,7 @@ export default function TeamsManagement() {
                 // Fetch member counts for each team
                 const teamsWithCounts = await Promise.all((data || []).map(async (team) => {
                     try {
-                        const { data: members } = await userService.getUsersByTeam(team.id);
+                        const { data: members } = await userService.getUsersByTeam(team.id, user);
                         return {
                             ...team,
                             memberCount: members?.length || 0
@@ -82,7 +82,7 @@ export default function TeamsManagement() {
             setIsLoading(true);
 
             try {
-                const {data, error} = await userService.getUsersByRole(UserRole.TEAM_LEADER);
+                const {data, error} = await userService.getUsersByRole(UserRole.TEAM_LEADER, user);
                 if (error) throw new Error(error.message);
                 setLeaders(data || []);
             } catch (err: any) {

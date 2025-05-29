@@ -46,7 +46,7 @@ export const AppProvider: React.FC<{
     }
 
     async function er() {
-        const {user} = await authService.getCurrentUser();
+        const {user, error} = await authService.getCurrentUser();
         setPageLoading(false)
         setUser(user);
 

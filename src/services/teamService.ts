@@ -1,6 +1,15 @@
 import {createSupabaseClient} from "@/lib/supabase/client";
-import {TeamCreate, TeamUpdate, User} from "@/models";
+import {TeamCreate, TeamUpdate, User, UserRole} from "@/models";
 
+async function admin(supabase:any){
+    const {data: currentUser} = await supabase.auth.getUser();
+    if (currentUser.user?.role === UserRole.ADMIN) {
+        return currentUser.user?.id;
+    }else{
+        return currentUser.user?.admin_id;
+    }
+
+}
 export const teamService = {
     // Get all teams
     async getAllTeams(userDetails: User | undefined = undefined) {

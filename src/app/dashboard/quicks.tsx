@@ -1,4 +1,4 @@
-import {Activity, ArrowUpRight, Smartphone, XCircle, BarChart4, Users, TrendingUp} from "lucide-react";
+import {Activity, ArrowUpRight, BarChart4, TrendingUp, Users} from "lucide-react";
 import {CreateUser} from "@/ui/shortcuts";
 import {useDialog} from "@/app/_providers/dialog";
 import {FC, useEffect, useState} from "react";
@@ -89,6 +89,7 @@ export const UserStatistics: FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [animate, setAnimate] = useState<boolean>(false);
     const [cardVisible, setCardVisible] = useState<boolean[]>(Array(4).fill(false));
+    const { user } = useApp();
 
     useEffect(() => {
         const fetchUserStats = async (): Promise<void> => {
@@ -96,18 +97,18 @@ export const UserStatistics: FC = () => {
                 setLoading(true);
 
                 // Get all users
-                const {data: allUsers, error: allUsersError} = await userService.getAllUsers();
+                const {data: allUsers, error: allUsersError} = await userService.getAllUsers(user);
                 if (allUsersError) throw allUsersError;
 
                 // Get team leaders
                 const {
                     data: teamLeaders,
                     error: teamLeadersError
-                } = await userService.getUsersByRole(UserRole.TEAM_LEADER);
+                } = await userService.getUsersByRole(UserRole.TEAM_LEADER, user);
                 if (teamLeadersError) throw teamLeadersError;
 
                 // Get staff users
-                const {data: staffUsers, error: staffError} = await userService.getUsersByRole(UserRole.STAFF);
+                const {data: staffUsers, error: staffError} = await userService.getUsersByRole(UserRole.STAFF, user);
                 if (staffError) throw staffError;
 
                 // Calculate active users

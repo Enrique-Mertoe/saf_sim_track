@@ -169,7 +169,7 @@ export default function SimulatePage() {
             //@ts-ignore
             const errorCount = 0;
 
-           const createdLeaders = ( (await userService.getUsersByRole(UserRole.TEAM_LEADER)).data || [])
+           const createdLeaders = ( (await userService.getUsersByRole(UserRole.TEAM_LEADER, currentUser)).data || [])
 
             // Create 5 team leaders
             // for (let i = 0; i < 5; i++) {

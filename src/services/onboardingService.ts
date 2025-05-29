@@ -1,9 +1,11 @@
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {OnboardingRequestCreate, OnboardingRequestStatus, OnboardingRequestUpdate} from "@/models";
+import {admin_id} from "@/services/helper";
+
 
 export const onboardingService = {
     // Get all onboarding requests
-    async getAllRequests() {
+    async getAllRequests(user: any) {
         const supabase = createSupabaseClient();
         return supabase
             .from('onboarding_requests')
@@ -13,6 +15,7 @@ export const onboardingService = {
         reviewedBy:reviewed_by_id(full_name,role),
         teams:team_id(*)
       `)
+            .eq("admin_id", await admin_id(user))
             .order('created_at', {ascending: false});
     },
 

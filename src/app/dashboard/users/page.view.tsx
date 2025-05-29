@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {OnboardingRequest, OnboardingRequestStatus, User, UserRole, UserStatus} from "@/models";
 import UserTable from "@/app/dashboard/users/components/UserTable";
 import CreateUserButton from "@/app/dashboard/users/components/CreateUserButton";
@@ -36,7 +36,7 @@ export default function UsersPage() {
 
     // Filter users based on role and filters
     const filteredUsers = useMemo(() => {
-        if (!users.length) return [];
+        if (!users || !users.length) return [];
 
         let result = [...users];
 
@@ -107,32 +107,36 @@ export default function UsersPage() {
         }
     };
 
-    const fetchUsers = useCallback(async () => {
+    const fetchUsers = async () => {
+        if (!user) return;
         try {
-            const {data} = await userService.getAllUsers()
-            setUsers(data as User[]);
+            const {data} = await userService.getAllUsers(user)
+            if (data)
+                setUsers(data as User[]);
         } catch (error) {
             console.error('Error fetching users:', error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
-    const fetchOnboard = useCallback(async () => {
+    const fetchOnboard = async () => {
+        if (!user) return;
         try {
-            const {data} = await onboardingService.getAllRequests();
-            setRequests(data as OnboardingRequest[]);
+            const {data, error} = await onboardingService.getAllRequests(user);
+            if (!error)
+                setRequests(data as OnboardingRequest[]);
         } catch (error) {
             console.error('Error fetching onboarding requests:', error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    };
 
     useEffect(() => {
         fetchUsers().then();
         fetchOnboard().then();
-    }, [fetchOnboard, fetchUsers]);
+    }, [user]);
 
     useEffect(() => {
         Signal.on("fetchOnboard", () => {
@@ -149,19 +153,19 @@ export default function UsersPage() {
         if (!usersSignal || !user) return;
 
         // Handle new users
-        const handleInsert = (payload:any) => {
+        const handleInsert = (payload: any) => {
             setUsers(prev => [payload.new, ...prev]);
         };
 
         // Handle updated users
-        const handleUpdate = (payload:any) => {
+        const handleUpdate = (payload: any) => {
             setUsers(prev =>
                 prev.map(u => u.id === payload.new.id ? payload.new : u)
             );
         };
 
         // Handle deleted users
-        const handleDelete = (payload:any) => {
+        const handleDelete = (payload: any) => {
             setUsers(prev =>
                 prev.filter(u => u.id !== payload.old.id)
             );
@@ -185,19 +189,19 @@ export default function UsersPage() {
         if (!onboardingSignal || !user) return;
 
         // Handle new onboarding requests
-        const handleInsert = (payload:any) => {
+        const handleInsert = (payload: any) => {
             setRequests(prev => [payload.new, ...prev]);
         };
 
         // Handle updated onboarding requests
-        const handleUpdate = (payload:any) => {
+        const handleUpdate = (payload: any) => {
             setRequests(prev =>
                 prev.map(r => r.id === payload.new.id ? payload.new : r)
             );
         };
 
         // Handle deleted onboarding requests
-        const handleDelete = (payload:any) => {
+        const handleDelete = (payload: any) => {
             setRequests(prev =>
                 prev.filter(r => r.id !== payload.old.id)
             );
@@ -303,7 +307,8 @@ export default function UsersPage() {
                                 </div>
 
                                 <div className="space-y-1">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
+                                    <div
+                                        className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
                                         <div
                                             className="inline-flex items-center py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
                                             <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
@@ -313,7 +318,7 @@ export default function UsersPage() {
                                             </svg>
                                             {contextInfo.stats}
                                         </div>
-                                    </p>
+                                    </div>
                                     <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                                         {contextInfo.description}
                                     </p>
@@ -341,7 +346,6 @@ export default function UsersPage() {
                                                     className="absolute inset-0 rounded-xl bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                             </div>
                                         </div>
-
 
 
                                     </div>

@@ -4,6 +4,7 @@ import {teamService, userService} from "@/services";
 import {Team, TeamUpdate, User, UserRole} from "@/models";
 import {AnimatePresence, motion} from "framer-motion";
 import alert from "@/ui/alert";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function Edit({ team, onDismiss }: {
     team: Team;
@@ -27,6 +28,7 @@ export default function Edit({ team, onDismiss }: {
     const [dropdownPosition, setDropdownPosition] = useState("bottom");
     const [regionDropdownPosition, setRegionDropdownPosition] = useState("bottom");
     const [focusedField, setFocusedField] = useState<string | null>(null);
+    const { user } = useApp();
 
     const regions = ["Northern", "Western", "Central", "Eastern", "Coastal"];
     const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
@@ -109,7 +111,9 @@ export default function Edit({ team, onDismiss }: {
     const isFormValid = formData.name && formData.leader_id && formData.region;
 
     async function loadTeams() {
-        const { data } = await userService.getUsersByRole(UserRole.TEAM_LEADER);
+        if (!user) return;
+
+        const { data } = await userService.getUsersByRole(UserRole.TEAM_LEADER, user);
         setLeaders(data as User[]);
         setTeamLoading(false);
     }

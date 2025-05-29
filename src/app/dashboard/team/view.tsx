@@ -3,6 +3,7 @@ import {Calendar, MapPin, Truck, User, Users, X} from "lucide-react";
 import {Team, User as UserType} from "@/models";
 import {motion} from "framer-motion";
 import {userService} from "@/services";
+import useApp from "@/ui/provider/AppProvider";
 
 export default function ViewTeamDetails({ team, onDismiss }: {
     team: Team;
@@ -11,13 +12,14 @@ export default function ViewTeamDetails({ team, onDismiss }: {
     const [teamMembers, setTeamMembers] = useState<UserType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { user } = useApp();
 
     useEffect(() => {
         const fetchTeamMembers = async () => {
             setIsLoading(true);
             try {
                 // Assuming there's an API to get team members by team ID
-                const { data, error } = await userService.getUsersByTeam(team.id);
+                const { data, error } = await userService.getUsersByTeam(team.id, user);
                 if (error) throw new Error(error.message);
                 setTeamMembers(data || []);
             } catch (err: any) {
