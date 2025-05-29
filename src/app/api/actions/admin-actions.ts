@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {User, UserCreate} from "@/models";
+import {User, UserCreate, UserRole} from "@/models";
 import {createSuperClient} from "@/lib/supabase/server";
 import {SendEmailOptions, SendEmailResult} from "@/types/mail.sendgrid";
 import sgMail from '@sendgrid/mail';
@@ -7,12 +7,12 @@ import {join} from "path";
 import {readFileSync} from "node:fs";
 import Accounts from "@/lib/accounts";
 
-export async function createUser(userData: UserCreate, admin = true) {
+export async function createUser(userData: UserCreate, require_admin = true) {
     const serverSupabase = await createSuperClient();
 
     try {
         let current_user: User | undefined = undefined;
-        if (admin) {
+        if (require_admin) {
             current_user = await Accounts.user()
             if (!current_user) {
                 return {data: null, error: "You are not logged in"};
@@ -44,7 +44,7 @@ export async function createUser(userData: UserCreate, admin = true) {
                     role: userData.role,
                     team_id: userData.team_id,
                     staff_type: userData.staff_type,
-                    admin_id: admin ? current_user!.id : null,
+                    admin_id: require_admin ? current_user!.id : null,
                     username: userData.username,
                     is_first_login: userData.is_first_login
                 })
@@ -61,6 +61,54 @@ export async function createUser(userData: UserCreate, admin = true) {
         } catch (profileError) {
             // Clean up auth user if any exception occurs during profile creation
             await serverSupabase.auth.admin.deleteUser(authData.user.id);
+            return {data: null, error: profileError};
+        }
+    } catch (error) {
+        return {data: null, error};
+    }
+}
+
+
+export async function onBoardUser(userData: UserCreate) {
+    const serverSupabase = await createSuperClient();
+
+    try {
+        const current_user = await Accounts.user()
+        if (!current_user) {
+            return {data: null, error: "You are not logged in"};
+        }
+        if (current_user.role !== UserRole.ADMIN) {
+            return {data: null, error: "You are not authorized to onboard users"};
+        }
+
+
+        try {
+            // Then create the profile record
+            const uuid = require('uuid').v4();
+            const {data, error} = await serverSupabase
+                .from('users')
+                .insert({
+                    id: uuid,
+                    auth_user_id: uuid,
+                    email: userData.email,
+                    full_name: userData.full_name,
+                    id_number: userData.id_number,
+                    id_front_url: userData.id_front_url,
+                    id_back_url: userData.id_back_url,
+                    phone_number: userData.phone_number,
+                    mobigo_number: userData.mobigo_number,
+                    role: userData.role,
+                    team_id: userData.team_id,
+                    staff_type: userData.staff_type,
+                    admin_id: current_user.id,
+                    username: userData.username,
+                    is_first_login: userData.is_first_login
+                })
+                .select()
+                .single();
+
+            return {data, error};
+        } catch (profileError) {
             return {data: null, error: profileError};
         }
     } catch (error) {
@@ -124,7 +172,6 @@ export const sendEmail = async ({
 
 async function sendInvite(options: any) {
     const supabase = await createSuperClient();
-    console.log(`${process.env.NEXT_PUBLIC_APP_URL}/accounts/welcome`)
     try {
         const {data, error} = await supabase.auth.admin.generateLink({
             type: 'recovery',
@@ -229,8 +276,11 @@ class AdminActions {
         if (!data.username) {
             data.username = data.email || data.phone_number;
         }
+        if (!data.password) {
+            data.pa
+        }
 
-        const {error} = await createUser(data)
+        const {error} = await onBoardUser(data)
         console.log(error)
         if (error) {
             return makeResponse({error: (error as any).message})
