@@ -830,17 +830,19 @@ export default function OnboardStaff({user, onClose}: {
             // Create request data with metadata about login method
             const requestData = {
                 full_name: formData.fullName,
-                email: formData.email,
+                email: formData.email.trim() || null,
                 id_back_url: idBackURL!,
                 id_front_url: idFrontURL!,
                 id_number: formData.idNumber,
-                phone_number: formData.phoneNumber,
+                phone_number: formData.phoneNumber.trim() || null,
                 request_type: "ONBOARDING",
                 requested_by_id: user?.id ?? '',
                 team_id: user?.team_id,
                 role: UserRole.STAFF,
                 staff_type: formData.staffRole as StaffType,
                 admin_id: user.admin_id || '',
+                username: formData.username.trim() || null,
+                mobigo_number: formData.mobigoNumber.trim() || null,
                 // Include metadata about login method and username
                 // metadata: {
                 //     login_method: formData.loginMethod,
