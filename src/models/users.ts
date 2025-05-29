@@ -17,6 +17,9 @@ export interface User {
     is_active: boolean;
     last_login_at?: string;
     admin_id?: string;
+    username?: string;
+    password?: string;
+    is_first_login?: boolean;
 }
 
 export interface UserCreate {
@@ -33,6 +36,8 @@ export interface UserCreate {
     admin_id: string;
     status: UserStatus;
     staff_type?: StaffType;
+    username?: string;
+    is_first_login?: boolean;
 }
 
 export interface UserUpdate {
@@ -49,4 +54,7 @@ export interface UserUpdate {
     staff_type?: StaffType;
     is_active?: boolean;
     last_login_at?: string;
+    username?: string;
+    password?: string;
+    is_first_login?: boolean;
 }

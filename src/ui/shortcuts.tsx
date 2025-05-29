@@ -8,18 +8,31 @@ import Signal from "@/lib/Signal";
 export const CreateUser = (dialog: any, user: User, {onClose}: {
     onClose?: Closure
 }) => {
-    const onclose = () => {
-        onClose?.();
-        d.dismiss();
+
+    if (user.role === UserRole.ADMIN) {
+        const onclose = () => {
+            onClose?.();
+            d.dismiss();
+        }
+        const d = dialog.create({
+            content: <CreateUserModal onClose={onclose}/>,
+            cancelable: !0,
+            size: "lg",
+            design: ["scrollable"]
+        });
+    } else {
+        showModal({
+            content: e => <OnboardStaff onClose={e} user={user}/>
+        })
     }
 
-    const d = dialog.create({
-        content: user.role === UserRole.ADMIN ? <CreateUserModal onClose={onclose}/> :
-            user.role === UserRole.TEAM_LEADER ? <OnboardStaff onClose={onclose} user={user}/> : <></>,
-        cancelable: !0,
-        size: "lg",
-        design: ["scrollable"]
-    });
+    // const d = dialog.create({
+    //     content: user.role === UserRole.ADMIN ? <CreateUserModal onClose={onclose}/> :
+    //         user.role === UserRole.TEAM_LEADER ? <OnboardStaff onClose={onclose} user={user}/> : <></>,
+    //     cancelable: !0,
+    //     size: "lg",
+    //     design: ["scrollable"]
+    // });
 }
 
 export const ViewRequest = (dialog: any, user: User, request: OnboardingRequest, {onClose}: {
@@ -52,7 +65,7 @@ export function showModal({
                           }: {
     content: (onClose: Closure) => ReactNode;
 } & ModalProps) {
-    Signal.trigger("__modal", function ({onClose}:any) {
+    Signal.trigger("__modal", function ({onClose}: any) {
         return content(onClose);
     }, {size, design});
 }

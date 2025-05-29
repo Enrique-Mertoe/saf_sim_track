@@ -44,7 +44,9 @@ export async function createUser(userData: UserCreate, admin = true) {
                     role: userData.role,
                     team_id: userData.team_id,
                     staff_type: userData.staff_type,
-                    admin_id: admin ? current_user!.id : null
+                    admin_id: admin ? current_user!.id : null,
+                    username: userData.username,
+                    is_first_login: userData.is_first_login
                 })
                 .select()
                 .single();
@@ -211,6 +213,23 @@ function makeResponse(data: { error?: string; [key: string]: any }) {
 
 class AdminActions {
     static async create_user(data: any) {
+        const {error} = await createUser(data)
+        console.log(error)
+        if (error) {
+            return makeResponse({error: (error as any).message})
+        }
+        return makeResponse({ok: true})
+    }
+
+    static async onboard(data: any) {
+        // Ensure is_first_login is set to true for onboarding
+        data.is_first_login = true;
+
+        // If username is not provided, use email or phone
+        if (!data.username) {
+            data.username = data.email || data.phone_number;
+        }
+
         const {error} = await createUser(data)
         console.log(error)
         if (error) {

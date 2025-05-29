@@ -151,6 +151,18 @@ export default function RequestDetailViewer({request, user, onClose}: {
             });
             if (error)
                 throw error
+            // Determine default password based on available identifiers
+            let defaultPassword = '';
+            if (request.email) {
+                defaultPassword = request.email;
+            } else if (request.phone_number) {
+                defaultPassword = request.phone_number;
+            } else if (request.username) {
+                defaultPassword = request.username;
+            } else {
+                defaultPassword = generatePassword();
+            }
+
             const r_data = {
                 full_name: request.full_name,
                 email: request.email,
@@ -162,7 +174,9 @@ export default function RequestDetailViewer({request, user, onClose}: {
                 staff_type: request.staff_type || undefined,
                 id_front_url: request.id_front_url,
                 id_back_url: request.id_back_url,
-                password: generatePassword()
+                password: defaultPassword,
+                username: request.username || request.email || request.phone_number,
+                is_first_login: true
             };
             const addUser = () => {
                 return new Promise((resolve: any, reject: any) => {
@@ -171,7 +185,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
                         contentType: $.JSON,
                         data: {
                             action: "admin",
-                            target: "create_user",
+                            target: "onboard",
                             data: r_data
                         }
                     }).then(async res => {
