@@ -226,7 +226,7 @@ export const staffAuthService = {
   /**
    * Reset password for a staff member
    */
-  async resetPassword(userId: string, currentPassword: string, newPassword: string): Promise<StaffAuthResponse> {
+  async resetPassword(userId: string, newPassword: string): Promise<StaffAuthResponse> {
     try {
       const supabase = await createServerClient();
 
@@ -254,23 +254,23 @@ export const staffAuthService = {
         };
       }
 
-      try {
-        const passwordValid = await argon2.verify(user.password, currentPassword);
-
-        if (!passwordValid) {
-          return {
-            success: false,
-            message: 'Current password is incorrect'
-          };
-        }
-      } catch (verifyError) {
-        console.error('Password verification error:', verifyError);
-        return {
-          success: false,
-          message: 'Password verification failed',
-          error: verifyError
-        };
-      }
+      // try {
+      //   const passwordValid = await argon2.verify(user.password, currentPassword);
+      //
+      //   if (!passwordValid) {
+      //     return {
+      //       success: false,
+      //       message: 'Current password is incorrect'
+      //     };
+      //   }
+      // } catch (verifyError) {
+      //   console.error('Password verification error:', verifyError);
+      //   return {
+      //     success: false,
+      //     message: 'Password verification failed',
+      //     error: verifyError
+      //   };
+      // }
 
       // Hash the new password
       const hashedPassword = await this.hashPassword(newPassword);

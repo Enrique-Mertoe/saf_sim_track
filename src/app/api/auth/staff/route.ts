@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         return await handleLogin(data);
       case 'refresh':
         return await handleRefresh(data);
-      case 'reset_password':
+      case 'update_password':
         return await handleResetPassword(data);
       default:
         return NextResponse.json(
@@ -111,15 +111,15 @@ async function handleRefresh(data: any) {
  * Handle password reset requests
  */
 async function handleResetPassword(data: any) {
-  if (!data || !data.userId || !data.currentPassword || !data.newPassword) {
+  if (!data || !data.userId || !data.newPassword) {
     return NextResponse.json(
       { success: false, message: 'Missing required fields' },
       { status: 400 }
     );
   }
 
-  const { userId, currentPassword, newPassword } = data;
-  const result = await staffAuthService.resetPassword(userId, currentPassword, newPassword);
+  const { userId, newPassword } = data;
+  const result = await staffAuthService.resetPassword(userId, newPassword);
 
   if (!result.success) {
     return NextResponse.json(
