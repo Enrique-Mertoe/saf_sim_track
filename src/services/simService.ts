@@ -1,5 +1,6 @@
 import {SIMCard, SIMCardCreate, SIMCardUpdate, SIMStatus, User, UserRole} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
+import {admin_id} from "@/services/helper";
 
 export const simCardService = {
     getAllSimCards: async (user: User) => {
@@ -8,20 +9,24 @@ export const simCardService = {
             return supabase
                 .from('sim_cards')
                 .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .eq("admin_id", await admin_id(user))
                 .order('sale_date', {ascending: false});
         }
 
         if (user.role === UserRole.STAFF) {
             return supabase
                 .from('sim_cards')
+
                 .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
                 .eq('sold_by_user_id', user.id)
+                .eq("admin_id", await admin_id(user))
                 .order('sale_date', {ascending: false});
         }
         if (user.role === UserRole.TEAM_LEADER) {
             return supabase
                 .from('sim_cards')
                 .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .eq("admin_id", await admin_id(user))
                 .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
                 .order('sale_date', {ascending: false});
         }
@@ -34,7 +39,6 @@ export const simCardService = {
         if (simCardData.sold_by_user_id === '') {
             simCardData.sold_by_user_id = null;
         }
-        console.log("card data", simCardData)
 
         const {data, error} = await supabase
             .from('sim_cards')
@@ -94,13 +98,14 @@ export const simCardService = {
 
 
     // Update an existing SIM card
-    updateSIMCard: async (id: string, updateData: SIMCardUpdate) => {
+    updateSIMCard: async (id: string, updateData: SIMCardUpdate,user: User) => {
         const supabase = createSupabaseClient();
 
         return supabase
             .from('sim_cards')
             .update(updateData)
             .eq('id', id)
+            .eq("admin_id", await admin_id(user))
             .select()
             .single();
     },
@@ -124,13 +129,14 @@ export const simCardService = {
     },
 
     // Get SIM card by serial number
-    getSIMCardBySerialNumber: async (serialNumber: string): Promise<SIMCard | null> => {
+    getSIMCardBySerialNumber: async (serialNumber: string,user: User): Promise<SIMCard | null> => {
         const supabase = createSupabaseClient();
 
         const {data, error} = await supabase
             .from('sim_cards')
             .select('*')
             .eq('serial_number', serialNumber)
+            .eq("admin_id", await admin_id(user))
             .single();
 
         if (error) {
@@ -160,13 +166,14 @@ export const simCardService = {
     },
 
     // Get SIM cards by team ID
-    getSIMCardsByTeamId: async (teamId: string): Promise<SIMCard[]> => {
+    getSIMCardsByTeamId: async (teamId: string,user: User): Promise<SIMCard[]> => {
         const supabase = createSupabaseClient();
 
         const {data, error} = await supabase
             .from('sim_cards')
             .select('*')
             .eq('team_id', teamId)
+            .eq("admin_id", await admin_id(user))
             .order('registered_on', {ascending: false});
 
         if (error) {
@@ -194,7 +201,7 @@ export const simCardService = {
     },
 
     // Get performance metrics for a staff member
-    getStaffPerformanceMetrics: async (userId: string, startDate?: string, endDate?: string): Promise<{
+    getStaffPerformanceMetrics: async (userId: string,user: User, startDate?: string, endDate?: string): Promise<{
         totalSims: number;
         matchedSims: number;
         qualitySims: number;
@@ -205,6 +212,7 @@ export const simCardService = {
         let query = supabase
             .from('sim_cards')
             .select('*')
+            .eq("admin_id", await admin_id(user))
             .eq('sold_by_user_id', userId);
 
         // Add date filters if provided
@@ -251,7 +259,7 @@ export const simCardService = {
     },
 
     // Get performance metrics for a team
-    getTeamPerformanceMetrics: async (teamId: string, startDate?: string, endDate?: string): Promise<{
+    getTeamPerformanceMetrics: async (teamId: string,user: User, startDate?: string, endDate?: string): Promise<{
         totalSims: number;
         matchedSims: number;
         qualitySims: number;
@@ -262,6 +270,7 @@ export const simCardService = {
         let query = supabase
             .from('sim_cards')
             .select('*')
+            .eq("admin_id", await admin_id(user))
             .eq('team_id', teamId);
 
         // Add date filters if provided
@@ -308,7 +317,7 @@ export const simCardService = {
     },
 
     // Get daily performance data for charts (last 30 days by default)
-    getDailyPerformanceData: async (userId: string, days: number = 30): Promise<{
+    getDailyPerformanceData: async (userId: string, days: number = 30,user: User): Promise<{
         date: string;
         sales: number;
         activations: number;
@@ -326,6 +335,7 @@ export const simCardService = {
             .select('*')
             .eq('sold_by_user_id', userId)
             .gte('created_at', startDateStr)
+            .eq("admin_id", await admin_id(user))
             .order('created_at', {ascending: true});
 
         if (error) {
@@ -448,12 +458,13 @@ export const simCardService = {
 
         return data as SIMCard[];
     },
-    getSimCardsByDateRange: async (startDate: string, endDate: string) => {
+    getSimCardsByDateRange: async (startDate: string, endDate: string,user: User) => {
         const supabase = createSupabaseClient();
 
         return supabase
             .from('sim_cards')
             .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+            .eq("admin_id", await admin_id(user))
             .gte('sale_date', startDate)
             .lte('sale_date', endDate)
             .order('sale_date', {ascending: false});

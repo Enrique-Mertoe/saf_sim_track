@@ -25,7 +25,8 @@ export const simCardService = {
         // First get total count for pagination
         let query = supabase
             .from('sim_cards')
-            .select('*', {count: 'exact', head: true});
+
+            .select('*', {count: 'exact', head: true})
 
         if (searchTerm) {
             query = query.ilike('serial_number', `%${searchTerm}%`);
