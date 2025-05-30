@@ -588,7 +588,9 @@ const SerialNumberForm: React.FC = () => {
                     serial_number: ser.value,
                     team_id: selectedTeam,
                     batch_id: batchId,
-                    registered_by_user_id: user!.id
+                    registered_by_user_id: user!.id,
+                    //@ts-ignore
+                    admin_id: user!.id,
                 } as SIMCardCreate;
             });
 

@@ -39,6 +39,8 @@ export default function SafaricomDashboard() {
 
     // Fetch dashboard data
     const fetchDashboardData = async () => {
+        if (!user)
+            return;
         setLoading(true);
         try {
             // Get monthly sales data
