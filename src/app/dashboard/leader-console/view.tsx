@@ -19,6 +19,7 @@ import useApp from "@/ui/provider/AppProvider";
 import {now} from "@/helper";
 import {useDialog} from "@/app/_providers/dialog";
 import MaterialSelect from "@/ui/components/MaterialSelect";
+import {showModal} from "@/ui/shortcuts";
 
 const supabase = createSupabaseClient();
 
@@ -252,82 +253,85 @@ const SimManagementPage = () => {
     const showDialog = () => {
         let localSelectedMember = ''; // Local state for the dialog
 
-        const d = dialog.create({
-            content: <>
-                <div className="bg-white rounded-lg p-6 w-full">
-                    <h3 className="text-lg font-semibold mb-4">Assign SIMs to Team Member</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                        You're about to assign {selectedSims.length} SIM cards.
-                    </p>
-                    <MaterialSelect
-                        className={"mb-4"}
-                        options={staffMembers}
-                        valueKey={"id"}
-                        displayKey={"full_name"}
-                        onChange={v => {
-                            localSelectedMember = v; // Update local variable
-                            // Update the button state by re-creating or force update
-                            console.log("Selected member:", v); // For debugging
-                        }}
-                    />
-                    <div className="flex space-x-3">
-                        <button
-                            onClick={() => {
-                                d.dismiss()
-                                setSelectedMember('');
+        showModal(
+            {
+                size:"md",
+                content: onClose=> <>
+                    <div className="bg-white overflow-y-auto rounded-lg p-6 w-full">
+                        <h3 className="text-lg font-semibold mb-4">Assign SIMs to Team Member</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            You're about to assign {selectedSims.length} SIM cards.
+                        </p>
+                        <MaterialSelect
+                            className={"mb-4"}
+                            options={staffMembers}
+                            valueKey={"id"}
+                            displayKey={"full_name"}
+                            onChange={v => {
+                                localSelectedMember = v; // Update local variable
+                                // Update the button state by re-creating or force update
+                                console.log("Selected member:", v); // For debugging
                             }}
-                            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                            disabled={isAssigning}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={async () => {
-                                if (!localSelectedMember || selectedSims.length === 0) {
-                                    alert.info("Please select both staff member and SIM cards");
-                                    return;
-                                }
-
-                                setIsAssigning(true);
-                                try {
-                                    const {error} = await supabase
-                                        .from('sim_cards')
-                                        .update({
-                                            assigned_to_user_id: localSelectedMember,
-                                            status:SIMStatus.ASSIGNED,// Use local variable
-                                            assigned_on: now()
-                                        })
-                                        .in('id', selectedSims);
-
-                                    if (error) throw error;
-
-                                    alert.success(`Successfully assigned ${selectedSims.length} SIM cards`);
-                                    setSelectedSims([]);
+                        />
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={() => {
+                                    onClose()
                                     setSelectedMember('');
-                                    d.dismiss();
-                                    fetchData(); // Refresh data
-                                } catch (error) {
-                                    console.error("Error assigning SIMs:", error);
-                                    alert.error("Failed to assign SIM cards. Please try again.");
-                                } finally {
-                                    setIsAssigning(false);
-                                }
-                            }}
-                            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
-                        >
-                            {isAssigning ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
-                                    Assigning...
-                                </>
-                            ) : (
-                                'Assign SIMs'
-                            )}
-                        </button>
+                                }}
+                                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                                disabled={isAssigning}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!localSelectedMember || selectedSims.length === 0) {
+                                        alert.info("Please select both staff member and SIM cards");
+                                        return;
+                                    }
+
+                                    setIsAssigning(true);
+                                    try {
+                                        const {error} = await supabase
+                                            .from('sim_cards')
+                                            .update({
+                                                assigned_to_user_id: localSelectedMember,
+                                                status:SIMStatus.ASSIGNED,// Use local variable
+                                                assigned_on: now()
+                                            })
+                                            .in('id', selectedSims);
+
+                                        if (error) throw error;
+
+                                        alert.success(`Successfully assigned ${selectedSims.length} SIM cards`);
+                                        setSelectedSims([]);
+                                        setSelectedMember('');
+                                        onClose()
+                                        fetchData(); // Refresh data
+                                    } catch (error) {
+                                        console.error("Error assigning SIMs:", error);
+                                        alert.error("Failed to assign SIM cards. Please try again.");
+                                    } finally {
+                                        setIsAssigning(false);
+                                    }
+                                }}
+                                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center"
+                            >
+                                {isAssigning ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
+                                        Assigning...
+                                    </>
+                                ) : (
+                                    'Assign SIMs'
+                                )}
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </>
-        })
+                </>
+            }
+        )
     }
 
     if (isLoading) {
