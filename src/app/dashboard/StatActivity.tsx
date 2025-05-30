@@ -336,7 +336,7 @@ function TeamsActivity() {
             try {
 
                 // Fetch SIM cards data for this team
-                const simCards = await simService.getSIMCardsByTeamId(team.id);
+                const simCards = await simService.getSIMCardsByTeamId(team.id,user);
 
                 // Filter and count SIM cards by status
                 const soldSims = simCards.filter(sim => sim.status === SIMStatus.QUALITY);

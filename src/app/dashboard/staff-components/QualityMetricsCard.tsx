@@ -1,16 +1,19 @@
 'use client';
 
-import React, {useState, useEffect} from 'react';
-import {TrendingUp, TrendingDown, Loader2} from 'lucide-react';
+import React, {useEffect, useState} from 'react';
+import {Loader2, TrendingDown, TrendingUp} from 'lucide-react';
 import simCardService from "@/services/simService";
+import {User} from "@/models";
 
 interface QualityMetricsCardProps {
     userId: string;
     days?: number;
+    user:User;
 }
 
 const QualityMetricsCard: React.FC<QualityMetricsCardProps> = ({
                                                                    userId,
+    user,
                                                                    days = 30
                                                                }) => {
     const [loading, setLoading] = useState(true);
@@ -70,6 +73,7 @@ const QualityMetricsCard: React.FC<QualityMetricsCardProps> = ({
                 // Fetch metrics for current period
                 const current = await simCardService.getStaffPerformanceMetrics(
                     userId,
+                    user,
                     startDate,
                     endDate
                 );
@@ -77,6 +81,7 @@ const QualityMetricsCard: React.FC<QualityMetricsCardProps> = ({
                 // Fetch metrics for previous period (for trend comparison)
                 const previous = await simCardService.getStaffPerformanceMetrics(
                     userId,
+                    user,
                     prevStartDate,
                     prevEndDate
                 );

@@ -18,7 +18,7 @@ const fetchSimCardDataFromDatabase = async (
 
     // If date range is provided, use getSimCardsByDateRange
     if (startDate && endDate) {
-        const {data, error} = await simService.getSimCardsByDateRange(startDate, endDate);
+        const {data, error} = await simService.getSimCardsByDateRange(startDate, endDate, user);
         if (error) return [];
         simData = data;
     } else {
@@ -38,7 +38,7 @@ const fetchSimCardDataFromDatabase = async (
         }));
 };
 
-const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRecord[], progressCallback: (progress: number) => void) => {
+const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRecord[], progressCallback: (progress: number) => void, user: User) => {
     const totalRecords = databaseRecords.length;
     const progressRange = 28;
     const recordMap = new Map(
@@ -59,7 +59,7 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
             match: SIMStatus.MATCH,
             quality: qualityStatus,
             status: SIMStatus.ACTIVATED // Update status from REGISTERED to ACTIVATED
-        });
+        }, user);
 
         const progress = 21 + Math.floor((i / totalRecords) * progressRange);
         progressCallback(progress);
@@ -90,7 +90,7 @@ export const processReport = async (
     databaseRecords.forEach(record => {
         simDataMap.set(record.simSerialNumber, record);
     });
-    await syncMatch(databaseRecords, report.records, progressCallback)
+    await syncMatch(databaseRecords, report.records, progressCallback, user)
     // Update progress
     progressCallback(50);
 

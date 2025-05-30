@@ -36,6 +36,7 @@ export interface SerialItemProps {
     onCheckComplete: () => void;
     onUploadComplete: (success: boolean) => void;
     updateSerialStatus: (id: string, updates: Partial<SerialNumber>) => void;
+    user: User;
 }
 
 // Props for PaginatedSerialGrid component
@@ -48,4 +49,5 @@ export interface PaginatedSerialGridProps {
     onCheckComplete: () => void;
     onUploadComplete: (success: boolean) => void;
     updateSerialStatus: (id: string, updates: Partial<SerialNumber>) => void;
+    user: User;
 }

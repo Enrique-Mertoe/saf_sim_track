@@ -55,7 +55,8 @@ const {user} = useApp()
         }
         const loadsims = async () => {
             try {
-                const data = await simService.getSIMCardsByTeamId(team_id);
+                if (!user) return;
+                const data = await simService.getSIMCardsByTeamId(team_id, user);
                 setSimCards(data)
             } finally {
                 setIsLoading(false);

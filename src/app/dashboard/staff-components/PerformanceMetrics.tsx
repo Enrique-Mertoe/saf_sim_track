@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {ArrowUp, ArrowDown} from 'lucide-react';
+import React, {useEffect, useState} from 'react';
+import {ArrowDown, ArrowUp} from 'lucide-react';
 import simCardService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
 
@@ -35,6 +35,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({dateRange, teamI
                 if (teamId) {
                     metricsData = await simCardService.getTeamPerformanceMetrics(
                         teamId,
+                        user,
                         dateRange?.startDate,
                         dateRange?.endDate
                     );
@@ -42,6 +43,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({dateRange, teamI
                     // Otherwise fetch individual staff metrics
                     metricsData = await simCardService.getStaffPerformanceMetrics(
                         user.id,
+                        user,
                         dateRange?.startDate,
                         dateRange?.endDate
                     );

@@ -1,11 +1,11 @@
 "use client"
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import PerformanceMetrics from './staff-components/PerformanceMetrics';
 import QualityMetricsCard from "@/app/dashboard/staff-components/QualityMetricsCard";
 import SimSalesChart from "@/app/dashboard/staff-components/SimSalesChart";
 import RecentActivitiesTable from './staff-components/RecentActivitiesTable';
-import UpcomingTargetsCard from "@/app/dashboard/staff-components/UpcomingTargetsCard";
 import Dashboard from "@/ui/components/dash/Dashboard";
+import useApp from "@/ui/provider/AppProvider";
 
 interface StaffDashboardProps {
     userId: string;
@@ -14,10 +14,14 @@ interface StaffDashboardProps {
 const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [user, setUser] = useState<any>(null);
+    const {user:usr} = useApp()
 
+    useEffect(() => {
+        setUser(usr)
+    }, [usr]);
 
-
-    if (loading) {
+    if (loading || !user) {
         return (
             <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -43,7 +47,7 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({userId}) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <PerformanceMetrics/>
 
-                        <QualityMetricsCard userId={userId}/>
+                        <QualityMetricsCard userId={userId} user={user}/>
                     </div>
 
                     <SimSalesChart userId={userId}/>

@@ -1111,6 +1111,7 @@ const SerialNumberForm: React.FC = () => {
                             </div>
 
                             <PaginatedSerialGrid
+                                user={user!}
                                 serialNumbers={serialNumbers}
                                 editSerial={editSerial}
                                 removeSerial={removeSerial}

@@ -105,7 +105,7 @@ const TeamLeaderDashboardView = () => {
 
             try {
                 setIsLoading(true);
-                const data = await simService.getSIMCardsByTeamId(user.team_id);
+                const data = await simService.getSIMCardsByTeamId(user.team_id, user);
                 add(data)
             } catch {
                 console.error('Error fetching team data:', error);

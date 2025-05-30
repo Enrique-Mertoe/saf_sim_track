@@ -11,14 +11,15 @@ export const SerialItem = ({
                         teams,
                         onCheckComplete,
                         onUploadComplete,
-                        updateSerialStatus
+                        updateSerialStatus,
+                        user
                     }: SerialItemProps) => {
     const [isEditing, setIsEditing] = useState<boolean>(false);
 
     // Check if a serial exists in the database
     const checkIfSerialExists = async (serial: string): Promise<boolean> => {
         try {
-            const simCard = await simService.getSIMCardBySerialNumber(serial);
+            const simCard = await simService.getSIMCardBySerialNumber(serial, user);
             return !!(simCard && simCard.id);
         } catch (error) {
             console.error("Error checking serial:", error);

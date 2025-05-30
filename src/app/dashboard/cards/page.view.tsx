@@ -81,7 +81,7 @@ const RegisteredSimCards = () => {
         try {
             // This would be replaced with an actual API call
             setUpdatingSerial(newSerialNumber);
-            const {error} = await simService.updateSIMCard(id, newSerialNumber);
+            const {error} = await simService.updateSIMCard(id, newSerialNumber, user!);
             if (error) throw error;
             setUpdatingSerial(null);
             alert.success(

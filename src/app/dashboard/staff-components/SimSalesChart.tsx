@@ -1,6 +1,7 @@
-import React, {useState, useEffect} from 'react';
-import {LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} from 'recharts';
+import React, {useEffect, useState} from 'react';
+import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import simCardService from "@/services/simService";
+import useApp from "@/ui/provider/AppProvider";
 
 interface DailyData {
     date: string;
@@ -18,7 +19,7 @@ const SimSalesChart: React.FC<SimSalesChartProps> = ({userId, duration = 30}) =>
     const [dailyData, setDailyData] = useState<DailyData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-
+    const {user} = useApp()
     // Format the period text based on duration
     const getPeriodText = () => {
         if (duration === 7) return 'Last 7 days';
@@ -31,11 +32,12 @@ const SimSalesChart: React.FC<SimSalesChartProps> = ({userId, duration = 30}) =>
 
     useEffect(() => {
         const fetchData = async () => {
+           if (!user) return;
             setIsLoading(true);
             setError(null);
 
             try {
-                const data = await simCardService.getDailyPerformanceData(userId, duration);
+                const data = await simCardService.getDailyPerformanceData(userId, duration,user);
                 // Format dates to be more readable in the chart
                 const formattedData = data.map(item => ({
                     ...item,
@@ -54,7 +56,7 @@ const SimSalesChart: React.FC<SimSalesChartProps> = ({userId, duration = 30}) =>
         };
 
         fetchData();
-    }, [userId, duration]);
+    }, [userId, duration,user]);
 
     // Calculate totals
     const totalSales = dailyData.reduce((sum, item) => sum + item.sales, 0);
