@@ -129,6 +129,8 @@ export const userService = {
             .eq("admin_id", await admin_id(user));
     },
     async deleteUser(id: string) {
-        return {data: {}, error: {}}
+        return createSupabaseClient().from("users")
+            .delete()
+            .eq('id', id)
     }
 };

@@ -1,7 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {AlertTriangle, ArrowLeft, Briefcase, CheckCircle, CreditCard, User, X} from 'lucide-react';
 import {AnimatePresence, motion} from 'framer-motion';
-import {logService, notificationService, onboardingService, storageService} from "@/services";
+import {logService, notificationService, onboardingService, storageService, userService} from "@/services";
 import {
     ActivityLogCreate,
     NotificationType,
@@ -165,6 +165,7 @@ export default function RequestDetailViewer({request, user, onClose}: {
 
             const r_data = {
                 full_name: request.full_name,
+                r_id: request.id,
                 email: request.email,
                 id_number: request.id_number,
                 phone_number: request.phone_number,
@@ -808,8 +809,11 @@ const RejectRequest = ({request, onClose, user, options}) => {
             const {error} = await onboardingService.updateRequestStatus(request.id, {
                 status: OnboardingRequestStatus.REJECTED,
                 reviewerId: user?.id,
+                user_id:null,
                 review_notes: notes
             });
+            if (request.user_id)
+                await userService.deleteUser(request.user_id)
             if (error)
                 throw error
 

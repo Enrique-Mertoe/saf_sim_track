@@ -6,6 +6,7 @@ import sgMail from '@sendgrid/mail';
 import {join} from "path";
 import {readFileSync} from "node:fs";
 import Accounts from "@/lib/accounts";
+import {onboardingService} from "@/services";
 
 export async function createUser(userData: UserCreate, require_admin = true) {
     const serverSupabase = await createSuperClient();
@@ -85,7 +86,7 @@ export async function onBoardUser(userData: UserCreate) {
         try {
             // Then create the profile record
             const uuid = require('uuid').v4();
-            const {data, error} = await serverSupabase
+            const {data,error} = await serverSupabase
                 .from('users')
                 .insert({
                     id: uuid,
@@ -106,9 +107,19 @@ export async function onBoardUser(userData: UserCreate) {
                 })
                 .select()
                 .single();
+            console.log("kk")
+            try {
+                //@ts-ignore
+               await onboardingService.updateRequestStatus(userData.r_id, {
+                    user_id:uuid,
+                });
+            }catch(e){
+                console.log("ea",e)
+            }
 
             return {data, error};
         } catch (profileError) {
+
             return {data: null, error: profileError};
         }
     } catch (error) {

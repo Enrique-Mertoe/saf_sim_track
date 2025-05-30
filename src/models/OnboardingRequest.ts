@@ -14,7 +14,7 @@ export interface OnboardingRequest {
     phone_number?: string;
     username?: string;
     mobigo_number?: string;
-    requestedBy?:User
+    requestedBy?: User
     role: UserRole;
     team_id?: string;
     teams?: Team;
@@ -28,6 +28,7 @@ export interface OnboardingRequest {
 
 export interface OnboardingRequestCreate {
     requested_by_id: string;
+    user_id?: string;
     full_name: string;
     email?: string;
     id_number: string;
@@ -39,8 +40,8 @@ export interface OnboardingRequestCreate {
     request_type: "ONBOARDING" | "DELETION";
     team_id?: string;
     staff_type?: StaffType;
-    admin_id:string;
-    username?:string;
+    admin_id: string;
+    username?: string;
 }
 
 export interface OnboardingRequestUpdate {
@@ -48,4 +49,5 @@ export interface OnboardingRequestUpdate {
     reviewed_by_id?: string;
     review_date?: string;
     review_notes?: string;
+    user_id?: string | null;
 }
