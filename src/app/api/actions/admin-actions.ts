@@ -86,7 +86,7 @@ export async function onBoardUser(userData: UserCreate) {
         try {
             // Then create the profile record
             const uuid = require('uuid').v4();
-            const {data,error} = await serverSupabase
+            const {data, error} = await serverSupabase
                 .from('users')
                 .insert({
                     id: uuid,
@@ -103,25 +103,26 @@ export async function onBoardUser(userData: UserCreate) {
                     staff_type: userData.staff_type,
                     admin_id: current_user.id,
                     username: userData.username,
+                    password: userData.password,
                     is_first_login: userData.is_first_login
                 })
                 .select()
                 .single();
             try {
                 //@ts-ignore
-               // const res = await onboardingService.updateRequestStatus(userData.r_id, {
-               //      user_id:uuid,
-               //  });
+                // const res = await onboardingService.updateRequestStatus(userData.r_id, {
+                //      user_id:uuid,
+                //  });
                 const res = await serverSupabase
                     .from('onboarding_requests')
                     .update({
-                        user_id:uuid,
+                        user_id: uuid,
                     })
                     //@ts-ignore
                     .eq('id', userData.r_id)
-                console.log("eee",res)
-            }catch(e){
-                console.log("ea",e)
+                console.log("eee", res)
+            } catch (e) {
+                console.log("ea", e)
             }
 
             return {data, error};
@@ -294,9 +295,8 @@ class AdminActions {
         if (!data.username) {
             data.username = data.email || data.phone_number;
         }
-        if (!data.password) {
-            data.password = await staffAuthService.hashPassword(data.username)
-        }
+        data.password = await staffAuthService.hashPassword(data.username)
+
 
         const {error} = await onBoardUser(data)
         console.log(error)
