@@ -6,7 +6,7 @@ import sgMail from '@sendgrid/mail';
 import {join} from "path";
 import {readFileSync} from "node:fs";
 import Accounts from "@/lib/accounts";
-import {onboardingService} from "@/services";
+import {staffAuthService} from "@/services/staffAuthService";
 
 export async function createUser(userData: UserCreate, require_admin = true) {
     const serverSupabase = await createSuperClient();
@@ -107,12 +107,19 @@ export async function onBoardUser(userData: UserCreate) {
                 })
                 .select()
                 .single();
-            console.log("kk")
             try {
                 //@ts-ignore
-               await onboardingService.updateRequestStatus(userData.r_id, {
-                    user_id:uuid,
-                });
+               // const res = await onboardingService.updateRequestStatus(userData.r_id, {
+               //      user_id:uuid,
+               //  });
+                const res = await serverSupabase
+                    .from('onboarding_requests')
+                    .update({
+                        user_id:uuid,
+                    })
+                    //@ts-ignore
+                    .eq('id', userData.r_id)
+                console.log("eee",res)
             }catch(e){
                 console.log("ea",e)
             }
@@ -288,7 +295,7 @@ class AdminActions {
             data.username = data.email || data.phone_number;
         }
         if (!data.password) {
-            data.pa
+            data.password = await staffAuthService.hashPassword(data.username)
         }
 
         const {error} = await onBoardUser(data)
