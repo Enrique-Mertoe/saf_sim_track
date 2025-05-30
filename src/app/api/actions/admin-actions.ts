@@ -7,6 +7,7 @@ import {join} from "path";
 import {readFileSync} from "node:fs";
 import Accounts from "@/lib/accounts";
 import {staffAuthService} from "@/services/staffAuthService";
+import {v4 as uuidv4} from 'uuid';
 
 export async function createUser(userData: UserCreate, require_admin = true) {
     const serverSupabase = await createSuperClient();
@@ -82,10 +83,9 @@ export async function onBoardUser(userData: UserCreate) {
             return {data: null, error: "You are not authorized to onboard users"};
         }
 
-
+        const uuid: string = uuidv4();
         try {
             // Then create the profile record
-            const uuid = require('uuid').v4();
             const {data, error} = await serverSupabase
                 .from('users')
                 .insert({
