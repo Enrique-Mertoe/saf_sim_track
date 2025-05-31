@@ -27,7 +27,8 @@ export const simCardService = {
                 .from('sim_cards')
                 .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
                 .eq("admin_id", await admin_id(user))
-                .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
+                .eq("team_id", user.team_id)
+                // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
                 .order('sale_date', {ascending: false});
         }
 
