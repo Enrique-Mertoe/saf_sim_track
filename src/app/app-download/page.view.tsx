@@ -22,7 +22,6 @@ export default function AppDownloadPage() {
         setIsLoading(false);
       }
     }
-
     fetchDownloadUrl();
   }, []);
 
