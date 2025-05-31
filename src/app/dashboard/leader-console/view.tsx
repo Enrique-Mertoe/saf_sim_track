@@ -20,6 +20,7 @@ import {now} from "@/helper";
 import {useDialog} from "@/app/_providers/dialog";
 import MaterialSelect from "@/ui/components/MaterialSelect";
 import {showModal} from "@/ui/shortcuts";
+import simService from "@/services/simService";
 
 const supabase = createSupabaseClient();
 
@@ -68,9 +69,7 @@ const SimManagementPage = () => {
             setStaffMembers(staffData || []);
 
             // Fetch all SIM cards
-            const {data: simData, error: simError} = await supabase
-                .from('sim_cards')
-                .select('*');
+            const {data: simData, error: simError} = await simService.getAllSimCards(user)
 
             if (simError) throw simError;
             setSimCards(simData || []);
