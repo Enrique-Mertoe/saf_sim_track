@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useRef, useState} from "react";
-import {User, UserStatus, UserUpdate} from "@/models";
+import {User, UserRole, UserStatus, UserUpdate} from "@/models";
 import {formatDate} from "@/helper";
 import {CheckCircle, Edit, Eye, Loader2, MoreHorizontal, Search, Trash2, Undo, X} from "lucide-react";
 import {AnimatePresence, motion} from "framer-motion";
@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import {userService} from "@/services";
 import {useDialog} from "@/app/_providers/dialog";
 import useApp from "@/ui/provider/AppProvider";
+import {showModal} from "@/ui/shortcuts";
 
 type UserTableProps = {
     users: User[];
@@ -40,7 +41,7 @@ export default function UserTable({
     const [hasMore, setHasMore] = useState(true);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-    const {user} = useApp()
+    const {user} = useApp() // Current logged-in user
     // Initialize local users state from props
     useEffect(() => {
         setLocalUsers(users);
@@ -283,18 +284,18 @@ export default function UserTable({
     };
 
     const dialog = useDialog()
-    const handleViewUser = (user: User) => {
-        setViewUser(user);
-        const d = dialog.create({
-            content:
-                <div className={"w-full dark:bg-gray-800 rounded-md p-6"}
+    const handleViewUser = (viewing: User) => {
+        setViewUser(viewing);
+        showModal({
+            content: onClose =>
+                <div className={"w-full bg-gray-50 dark:bg-gray-800 rounded-md p-6"}
                 >
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             User Details
                         </h3>
                         <button
-                            onClick={() => d.dismiss()}
+                            onClick={() => onClose()}
                             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xl font-bold"
                         >
                             ×
@@ -306,7 +307,7 @@ export default function UserTable({
                                 Full Name
                             </p>
                             <p className="text-base text-gray-900 dark:text-white">
-                                {user.full_name}
+                                {viewing.full_name}
                             </p>
                         </div>
                         <div>
@@ -314,7 +315,7 @@ export default function UserTable({
                                 Email
                             </p>
                             <p className="text-base text-gray-900 dark:text-white break-words">
-                                {user.email}
+                                {viewing.email}
                             </p>
                         </div>
                         <div>
@@ -322,7 +323,7 @@ export default function UserTable({
                                 Phone Number
                             </p>
                             <p className="text-base text-gray-900 dark:text-white">
-                                {user.phone_number}
+                                {viewing.phone_number}
                             </p>
                         </div>
                         <div>
@@ -330,15 +331,7 @@ export default function UserTable({
                                 ID Number
                             </p>
                             <p className="text-base text-gray-900 dark:text-white">
-                                {user.id_number}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Role
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white">
-                                {user.role}
+                                {viewing.id_number}
                             </p>
                         </div>
                         <div>
@@ -346,7 +339,7 @@ export default function UserTable({
                                 Status
                             </p>
                             <p className="text-base text-gray-900 dark:text-white">
-                                {user.status}
+                                {viewing.status}
                             </p>
                         </div>
                         <div>
@@ -354,15 +347,23 @@ export default function UserTable({
                                 Last Login
                             </p>
                             <p className="text-base text-gray-900 dark:text-white">
-                                {user.last_login_at
-                                    ? formatDate(user.last_login_at)
+                                {viewing.last_login_at
+                                    ? formatDate(viewing.last_login_at)
                                     : "Never"}
                             </p>
                         </div>
                     </div>
-                    <div className="mt-6 flex justify-end">
+                    <div className="mt-6 flex justify-end space-x-3">
+                        {viewing?.role === UserRole.STAFF && user?.role === UserRole.TEAM_LEADER && (
+                            <button
+                                onClick={() => handleResetPassword(viewing!)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                            >
+                                Reset Password
+                            </button>
+                        )}
                         <button
-                            onClick={() => d.dismiss()}
+                            onClick={() => onClose()}
                             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
                         >
                             Close
@@ -385,8 +386,8 @@ export default function UserTable({
         };
         setEditFormData(formData);
 
-        const d = dialog.create({
-            content: (
+        showModal({
+            content: onClose => (
 
                 <div className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
                     <div className="flex justify-between items-center mb-6">
@@ -394,7 +395,7 @@ export default function UserTable({
                             Edit User
                         </h3>
                         <button
-                            onClick={() => d.dismiss()}
+                            onClick={() => onClose()}
                             className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xl font-bold transition-colors"
                         >
                             ×
@@ -402,7 +403,7 @@ export default function UserTable({
                     </div>
                     <form className="space-y-6" onSubmit={(e) => {
                         e.preventDefault();
-                        handleSubmitEdit(e).then(() => d.dismiss());
+                        handleSubmitEdit(e).then(() => onClose());
                     }}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
@@ -491,7 +492,7 @@ export default function UserTable({
                         <div className="mt-6 flex justify-end space-x-3">
                             <button
                                 type="button"
-                                onClick={() => d.dismiss()}
+                                onClick={() => onClose()}
                                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 disabled={isSubmitting}
                             >
@@ -516,7 +517,7 @@ export default function UserTable({
                 </div>
             ),
             size: "lg"
-        });
+        })
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -552,6 +553,34 @@ export default function UserTable({
             console.error(error);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleResetPassword = async (targetUser: User) => {
+        try {
+            const response = await fetch('/api/users/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: targetUser.id,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setSuccessMessage(`Password for ${targetUser.full_name} has been reset to their username and is_first_login set to true`);
+                setShowSuccessModal(true);
+                setTimeout(() => setShowSuccessModal(false), 3000);
+                toast.success('Password reset successfully');
+            } else {
+                toast.error(`Failed to reset password: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            toast.error('An error occurred while resetting the password');
         }
     };
 
