@@ -14,7 +14,7 @@ export default function AppDownloadPage() {
       try {
         setIsLoading(true);
         // const url = await getAppDownloadUrl();
-        setDownloadUrl("https://aukjtuadtfpmlcfqusaa.supabase.co/storage/v1/object/public/sim-management/apps/ssm-v1-1.0.apk");
+        setDownloadUrl("https://aukjtuadtfpmlcfqusaa.supabase.co/storage/v1/object/public/sim-management/apps/ssm-v1.0.apk");
       } catch (err) {
         setError('Failed to get download link. Please try again later.');
         console.error('Error fetching app download URL:', err);

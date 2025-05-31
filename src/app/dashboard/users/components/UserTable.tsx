@@ -1,3 +1,4 @@
+"use client"
 import {useEffect, useMemo, useRef, useState} from "react";
 import {User, UserRole, UserStatus, UserUpdate} from "@/models";
 import {formatDate} from "@/helper";
@@ -288,88 +289,7 @@ export default function UserTable({
         setViewUser(viewing);
         showModal({
             content: onClose =>
-                <div className={"w-full bg-gray-50 dark:bg-gray-800 rounded-md p-6"}
-                >
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            User Details
-                        </h3>
-                        <button
-                            onClick={() => onClose()}
-                            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xl font-bold"
-                        >
-                            ×
-                        </button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Full Name
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white">
-                                {viewing.full_name}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Email
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white break-words">
-                                {viewing.email}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Phone Number
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white">
-                                {viewing.phone_number}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                ID Number
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white">
-                                {viewing.id_number}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Status
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white">
-                                {viewing.status}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                Last Login
-                            </p>
-                            <p className="text-base text-gray-900 dark:text-white">
-                                {viewing.last_login_at
-                                    ? formatDate(viewing.last_login_at)
-                                    : "Never"}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-6 flex justify-end space-x-3">
-                        {viewing?.role === UserRole.STAFF && user?.role === UserRole.TEAM_LEADER && (
-                            <button
-                                onClick={() => handleResetPassword(viewing!)}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                            >
-                                Reset Password
-                            </button>
-                        )}
-                        <button
-                            onClick={() => onClose()}
-                            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>,
+                <ViewDetails viewing={viewing} onClose={onClose} user={user} setShowSuccessModal={setShowSuccessModal} setSuccessMessage={setSuccessMessage}/>,
             size: "lg"
         })
     };
@@ -556,33 +476,7 @@ export default function UserTable({
         }
     };
 
-    const handleResetPassword = async (targetUser: User) => {
-        try {
-            const response = await fetch('/api/users/reset-password', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: targetUser.id,
-                }),
-            });
 
-            const result = await response.json();
-
-            if (result.success) {
-                setSuccessMessage(`Password for ${targetUser.full_name} has been reset to their username and is_first_login set to true`);
-                setShowSuccessModal(true);
-                setTimeout(() => setShowSuccessModal(false), 3000);
-                toast.success('Password reset successfully');
-            } else {
-                toast.error(`Failed to reset password: ${result.message}`);
-            }
-        } catch (error) {
-            console.error('Error resetting password:', error);
-            toast.error('An error occurred while resetting the password');
-        }
-    };
 
     const closeModals = () => {
         setViewUser(null);
@@ -958,4 +852,130 @@ export default function UserTable({
             </AnimatePresence>
         </div>
     );
+}
+
+
+function ViewDetails({onClose,viewing,setSuccessMessage,setShowSuccessModal,user}:any){
+    const [isResettingPassword, setIsResettingPassword] = useState(false);
+    const handleResetPassword = async (targetUser: User) => {
+        setIsResettingPassword(true);
+        try {
+            const response = await fetch('/api/auth/staff/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: targetUser.id,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                setSuccessMessage(`Password for ${targetUser.full_name} has been reset to their username and is_first_login set to true`);
+                setTimeout(() => setShowSuccessModal(false), 3000);
+                toast.success('Password reset successfully');
+            } else {
+                toast.error(`Failed to reset password: ${result.message}`);
+            }
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            toast.error('An error occurred while resetting the password');
+        } finally {
+            setIsResettingPassword(false);
+        }
+    };
+    return (
+        <div className={"w-full bg-gray-50 dark:bg-gray-800 rounded-md p-6"}
+        >
+            <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    User Details
+                </h3>
+                <button
+                    onClick={() => onClose()}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-xl font-bold"
+                >
+                    ×
+                </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Full Name
+                    </p>
+                    <p className="text-base text-gray-900 dark:text-white">
+                        {viewing.full_name}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Email
+                    </p>
+                    <p className="text-base text-gray-900 dark:text-white break-words">
+                        {viewing.email}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Phone Number
+                    </p>
+                    <p className="text-base text-gray-900 dark:text-white">
+                        {viewing.phone_number}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        ID Number
+                    </p>
+                    <p className="text-base text-gray-900 dark:text-white">
+                        {viewing.id_number}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Status
+                    </p>
+                    <p className="text-base text-gray-900 dark:text-white">
+                        {viewing.status}
+                    </p>
+                </div>
+                <div>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Last Login
+                    </p>
+                    <p className="text-base text-gray-900 dark:text-white">
+                        {viewing.last_login_at
+                            ? formatDate(viewing.last_login_at)
+                            : "Never"}
+                    </p>
+                </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+                {viewing?.role === UserRole.STAFF && user?.role === UserRole.TEAM_LEADER && (
+                    <button
+                        onClick={() => handleResetPassword(viewing!)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center"
+                        disabled={isResettingPassword}
+                    >
+                        {isResettingPassword ? (
+                            <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Resetting...
+                            </>
+                        ) : (
+                            "Reset Password"
+                        )}
+                    </button>
+                )}
+                <button
+                    onClick={() => onClose()}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    )
 }
