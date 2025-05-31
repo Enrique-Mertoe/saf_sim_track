@@ -120,7 +120,6 @@ async function handleResetPassword(data: any) {
 
   const { userId, newPassword } = data;
   const result = await staffAuthService.resetPassword(userId, newPassword);
-
   if (!result.success) {
     return NextResponse.json(
       { success: false, message: result.message },
