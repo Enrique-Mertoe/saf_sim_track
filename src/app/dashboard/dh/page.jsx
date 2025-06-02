@@ -479,7 +479,7 @@ const TeamLeaderDashboardView = () => {
 
                         {/* Tab Content */}
                         {activeTab === 'overview' && (
-                            <div className="space-y-6">
+                            <div className="space-y-6 pb-6 px-6">
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <div className="lg:col-span-2">
                                         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Today's
@@ -493,11 +493,11 @@ const TeamLeaderDashboardView = () => {
                                             }).map((sim) => (
                                                 <div key={sim.id}
                                                      className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow">
-                                                    <div className="flex justify-between items-center">
-                                                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sim.serialNumber}</p>
+                                                    <div className="flex flex-col justify-between items-cesnter">
+                                                        <p className="font-medium text-green-600 dark:text-green-400 text-sm">{sim.serial_number}</p>
                                                         <div className="text-right">
                                                             <p className="text-xs font-medium text-green-600 dark:text-green-400">{sim.registeredBy}</p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{sim.registered_on}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(sim.registered_on)}</p>
                                                         </div>
                                                     </div>
                                                 </div>
