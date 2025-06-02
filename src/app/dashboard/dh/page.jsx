@@ -2,7 +2,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {AlertTriangle, Calendar, CheckCircle2, Clock, Phone, Search, TrendingUp, UserCheck, Users} from 'lucide-react';
 import {useSupabaseSignal} from "@/lib/supabase/event";
-import {teamService} from "@/services";
+import {teamService, userService} from "@/services";
 import useApp from "@/ui/provider/AppProvider";
 import {SIMStatus} from "@/models";
 import simService from "@/services/simService";
@@ -80,13 +80,14 @@ const TeamLeaderDashboardView = () => {
                 setTeamData(teamInfo);
 
                 // Get team hierarchy to get staff members
-                const {data: hierarchy, error: hierarchyError} = await teamService.getTeamHierarchy(user.team_id);
+                // const {data: hierarchy, error: hierarchyError} = await teamService.getTeamHierarchy(user.team_id);
+                const {data:staff,error:hierarchyError} = await userService.getStaffUsers(user.team_id,user)
                 if (hierarchyError) throw hierarchyError;
 
                 // Extract staff members from hierarchy
-                if (hierarchy && hierarchy.length > 0) {
-                    const staffMembers = hierarchy[0].members || [];
-                    setTeamStaff(staffMembers.map(member => ({
+                if (staff && staff.length > 0) {
+                    // const staffMembers = hierarchy[0].members || [];
+                    setTeamStaff(staff.map(member => ({
                         id: member.id,
                         name: member.full_name,
                         role: member.role,

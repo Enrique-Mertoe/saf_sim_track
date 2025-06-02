@@ -37,6 +37,16 @@ export const userService = {
             .eq("admin_id", await admin_id(user))
             .order('full_name');
     },
+    async getStaffUsers(teamId: string, user: User) {
+        const supabase = createSupabaseClient();
+        return supabase
+            .from('users')
+            .select('*')
+            .eq('team_id', teamId)
+            .eq('role', UserRole.STAFF)
+            .eq("admin_id", await admin_id(user))
+            .order('full_name');
+    },
 
     // Get a single user by ID
     async getUserById(userId: string, user: User) {
