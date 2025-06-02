@@ -279,7 +279,7 @@ const TeamLeaderDashboardView = () => {
     }, [simCards, selectedDate]);
 
     const StatCard = ({title, value, subtitle, icon: Icon, color = "blue"}) => (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-lg px-6 py-2 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
