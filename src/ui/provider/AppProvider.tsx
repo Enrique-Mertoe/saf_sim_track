@@ -8,9 +8,11 @@ import {useNavigationStore} from "@/lib/nav-store";
 import {$} from "@/lib/request";
 import {toast} from "react-hot-toast";
 import SignalProvider from "@/ui/provider/SignalProvider";
+import UserManager from "@/utils/usermanager";
 
 interface AppContextType {
     user: User | null,
+    userManager: UserManager,
     signOut: Closure,
     pageLoading: boolean
 }
@@ -21,6 +23,7 @@ export const AppProvider: React.FC<{
     children: React.ReactNode
 }> = ({children}) => {
     const [user, setUser] = useState<User | null>(null)
+    const [userManager, setUserManager] = useState<UserManager>(new UserManager(user))
     const [pageLoading, setPageLoading] = useState<boolean>(true)
     const signOut = async () => {
         const t_id = toast.loading("Loging out.")
@@ -42,6 +45,7 @@ export const AppProvider: React.FC<{
 
     const handler: AppContextType = {
         user,
+        userManager,
         signOut, pageLoading
     }
 
@@ -49,6 +53,7 @@ export const AppProvider: React.FC<{
         const {user, error} = await authService.getCurrentUser();
         setPageLoading(false)
         setUser(user);
+        setUserManager(new UserManager(user))
 
     }
 

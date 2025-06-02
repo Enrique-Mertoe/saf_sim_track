@@ -14,7 +14,7 @@ import {useSupabaseSignal} from "@/lib/supabase/event";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
-    const {user} = useApp();
+    const {user, userManager} = useApp();
     const [requests, setRequests] = useState<OnboardingRequest[]>([]);
     const [activeTab, setActiveTab] = useState<"users" | "requests">("users");
     const [loading, setLoading] = useState(!user);
@@ -452,7 +452,10 @@ export default function UsersPage() {
                                     <div
                                         className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                                         <UserTable
-                                            users={filteredUsers}
+                                            users={
+                                                userManager.isTeamLeader() ?
+
+                                                    filteredUsers.filter(u => u.role != UserRole.TEAM_LEADER) : filteredUsers}
                                             onStatusChange={handleStatusChange}
                                             onDeleteUser={handleDeleteUser}
                                         />

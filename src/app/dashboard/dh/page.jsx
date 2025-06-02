@@ -9,6 +9,11 @@ import simService from "@/services/simService";
 import Dashboard from "@/ui/components/dash/Dashboard";
 import {motion} from "framer-motion";
 import {formatDate} from "@/helper";
+import {showModal} from "@/ui/shortcuts";
+import AssignSimCard from "@/app/dashboard/dh/AssignSimCard";
+import UnassignSimCard from "@/app/dashboard/dh/UnassignSimCard";
+import TransferSimCard from "@/app/dashboard/dh/TransferSimCard";
+import SimCardGrid from "@/app/dashboard/dh/SimCardGrid";
 
 // Helper function to compare dates by day only (ignoring time)
 const isSameDay = (date1, date2) => {
@@ -190,7 +195,7 @@ const TeamLeaderDashboardView = () => {
 
     // Helper function to filter SIM cards based on criteria
     const filterSimCards = (cards, criteria) => {
-        const { status, dateFilter, staffFilter, searchFilter } = criteria;
+        const {status, dateFilter, staffFilter, searchFilter} = criteria;
 
         return cards.filter(sim => {
             // Apply date filter
@@ -216,7 +221,7 @@ const TeamLeaderDashboardView = () => {
             const matchesStaffFilter = staffFilter === 'all' || sim.assignedToId === staffFilter;
 
             // Apply search filter
-            const matchesSearchFilter = !searchFilter || 
+            const matchesSearchFilter = !searchFilter ||
                 sim.serialNumber.toLowerCase().includes(searchFilter.toLowerCase()) ||
                 (sim.customerName && sim.customerName.toLowerCase().includes(searchFilter.toLowerCase()));
 
@@ -274,33 +279,23 @@ const TeamLeaderDashboardView = () => {
     }, [simCards, selectedDate]);
 
     const StatCard = ({title, value, subtitle, icon: Icon, color = "blue"}) => (
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="text-sm font-medium text-gray-600">{title}</p>
-                    <p className={`text-2xl font-bold text-${color}-600`}>{value}</p>
-                    {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+                    <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
+                    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
                 </div>
-                <div className={`p-3 bg-${color}-100 rounded-full`}>
-                    <Icon className={`w-6 h-6 text-${color}-600`}/>
+                <div className={`p-3 bg-${color}-100 dark:bg-${color}-900/30 rounded-full`}>
+                    <Icon className={`w-6 h-6 text-${color}-600 dark:text-${color}-400`}/>
                 </div>
             </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                {/*<div className="mb-8">*/}
-                {/*    <h1 className="text-3xl font-bold text-gray-900">Team Leader Dashboard</h1>*/}
-                {/*    <p className="text-gray-600">Monitor daily SIM card sales and team performance</p>*/}
-                {/*    {teamData && (*/}
-                {/*        <p className="text-sm text-blue-600 mt-1">*/}
-                {/*            Team: {teamData.name} {teamData.leader && `• Leader: ${teamData.leader.full_name}`}*/}
-                {/*        </p>*/}
-                {/*    )}*/}
-                {/*</div>*/}
                 <motion.div
                     className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-6 mb-8 shadow-lg"
                     initial={{opacity: 0, scale: 0.96}}
@@ -354,27 +349,28 @@ const TeamLeaderDashboardView = () => {
                 </motion.div>
 
                 {/* Date and View Mode Controls */}
-                <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-200">
+                <div
+                    className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-500"/>
+                            <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400"/>
                             <input
                                 type="date"
                                 value={selectedDate}
                                 onChange={(e) => setSelectedDate(e.target.value)}
-                                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md px-3 py-2 text-sm"
                             />
                         </div>
 
-                        <div className="flex bg-gray-100 rounded-lg p-1">
+                        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                             {['daily', 'weekly', 'monthly'].map((mode) => (
                                 <button
                                     key={mode}
                                     onClick={() => setViewMode(mode)}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                                         viewMode === mode
-                                            ? 'bg-white text-blue-600 shadow-sm'
-                                            : 'text-gray-600 hover:text-gray-900'
+                                            ? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                                            : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
                                     }`}
                                 >
                                     {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -383,11 +379,11 @@ const TeamLeaderDashboardView = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-gray-500"/>
+                            <Users className="w-4 h-4 text-gray-500 dark:text-gray-400"/>
                             <select
                                 value={selectedStaff}
                                 onChange={(e) => setSelectedStaff(e.target.value)}
-                                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md px-3 py-2 text-sm"
                             >
                                 <option value="all">All Staff</option>
                                 {teamStaff.map(staff => (
@@ -397,7 +393,7 @@ const TeamLeaderDashboardView = () => {
                         </div>
 
                         {isLoading && (
-                            <div className="ml-auto flex items-center text-sm text-gray-500">
+                            <div className="ml-auto flex items-center text-sm text-gray-500 dark:text-gray-400">
                                 <div
                                     className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
                                 Refreshing data...
@@ -439,8 +435,9 @@ const TeamLeaderDashboardView = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div className="border-b border-gray-200">
+                <div
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div className="border-b border-gray-200 dark:border-gray-700">
                         <nav className="flex space-x-8 px-6">
                             {[
                                 {id: 'overview', name: 'Daily Overview', icon: TrendingUp},
@@ -453,20 +450,20 @@ const TeamLeaderDashboardView = () => {
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
                                         activeTab === tab.id
-                                            ? 'border-blue-500 text-blue-600'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                                            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
                                 >
                                     <tab.icon className="w-4 h-4"/>
-                                    {tab.name }
+                                    {tab.name}
                                 </button>
                             ))}
                         </nav>
                     </div>
 
-                    <div className="p-6">
+                    <div className="">
                         {/* Search Bar */}
-                        <div className="mb-6 flex items-center gap-4">
+                        <div className="mb-6 px-6 pt-6 flex items-center gap-4">
                             <div className="relative flex-1 max-w-md">
                                 <Search
                                     className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"/>
@@ -475,7 +472,7 @@ const TeamLeaderDashboardView = () => {
                                     placeholder="Search by serial number..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="pl-10 pr-4 py-2 w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>
@@ -485,7 +482,8 @@ const TeamLeaderDashboardView = () => {
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                     <div className="lg:col-span-2">
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">Today's Registrations</h3>
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Today's
+                                            Registrations</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             {filterSimCards(simCards, {
                                                 status: SIMStatus.REGISTERED,
@@ -494,12 +492,12 @@ const TeamLeaderDashboardView = () => {
                                                 searchFilter: searchTerm
                                             }).map((sim) => (
                                                 <div key={sim.id}
-                                                     className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                                     className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow">
                                                     <div className="flex justify-between items-center">
-                                                        <p className="font-medium text-gray-900 text-sm">{sim.serialNumber}</p>
+                                                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sim.serialNumber}</p>
                                                         <div className="text-right">
-                                                            <p className="text-xs font-medium text-green-600">{sim.registeredBy}</p>
-                                                            <p className="text-xs text-gray-500">{sim.registered_on}</p>
+                                                            <p className="text-xs font-medium text-green-600 dark:text-green-400">{sim.registeredBy}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{sim.registered_on}</p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -510,8 +508,10 @@ const TeamLeaderDashboardView = () => {
                                                 staffFilter: selectedStaff,
                                                 searchFilter: searchTerm
                                             }).length === 0 && (
-                                                <div className="col-span-full text-center py-8 text-gray-500">
-                                                    <Phone className="w-12 h-12 mx-auto mb-4 text-gray-300"/>
+                                                <div
+                                                    className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+                                                    <Phone
+                                                        className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600"/>
                                                     <p>No registrations for the selected date</p>
                                                 </div>
                                             )}
@@ -519,7 +519,8 @@ const TeamLeaderDashboardView = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-lg font-semibold mb-4 text-gray-900">Staff Performance Today</h3>
+                                        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Staff
+                                            Performance Today</h3>
                                         <div className="space-y-2">
                                             {teamStaff.map(staff => {
                                                 const staffRegistrations = filterSimCards(simCards, {
@@ -531,15 +532,15 @@ const TeamLeaderDashboardView = () => {
 
                                                 return (
                                                     <div key={staff.id}
-                                                         className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                                                         className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 shadow-sm">
                                                         <div className="flex justify-between items-center">
                                                             <div>
-                                                                <p className="font-medium text-gray-900 text-sm">{staff.name}</p>
-                                                                <p className="text-xs text-gray-600">{staff.role}</p>
+                                                                <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{staff.name}</p>
+                                                                <p className="text-xs text-gray-600 dark:text-gray-400">{staff.role}</p>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="text-lg font-bold text-blue-600">{staffRegistrations}</p>
-                                                                <p className="text-xs text-gray-500">registrations</p>
+                                                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{staffRegistrations}</p>
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400">registrations</p>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -560,16 +561,20 @@ const TeamLeaderDashboardView = () => {
                                     searchFilter: searchTerm
                                 }).map((sim) => (
                                     <div key={sim.id}
-                                         className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200">
+                                         className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-lg transition-all duration-200">
                                         <div className="flex items-center gap-2 mb-3">
                                             <CheckCircle2 className="w-4 h-4 text-green-500"/>
-                                            <span className="font-medium text-gray-900 text-sm">{sim.serialNumber}</span>
+                                            <span
+                                                className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sim.serialNumber}</span>
                                         </div>
-                                        <div className="flex items-center mt-3 pt-3 border-t border-gray-100">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <div
+                                            className="flex items-center mt-3 pt-3 border-t border-gray-100 dark:border-gray-600">
+                        <span
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400">
                             On:
                         </span>
-                                            <span className="text-xs text-gray-500">{sim.registered_on}</span>
+                                            <span
+                                                className="text-xs text-gray-500 dark:text-gray-400">{sim.registered_on}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -577,62 +582,41 @@ const TeamLeaderDashboardView = () => {
                         )}
 
                         {activeTab === 'assigned' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {filterSimCards(simCards, {
-                                    status: SIMStatus.ASSIGNED,
-                                    dateFilter: viewMode,
-                                    staffFilter: selectedStaff,
-                                    searchFilter: searchTerm
-                                }).map((sim) => (
-                                    <div key={sim.id}
-                                         className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <UserCheck className="w-4 h-4 text-blue-500"/>
-                                            <span className="font-medium text-gray-900 text-sm">{sim.serialNumber}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Assigned
-                        </span>
-                                            <span className="text-xs text-gray-500">{sim.assigned_on}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <SimCardGrid
+                                simCards={simCards}
+                                selectedStaff={selectedStaff}
+                                searchTerm={searchTerm}
+                                filterSimCards={filterSimCards}
+                                SIMStatus={SIMStatus}
+                                status={SIMStatus.ASSIGNED}
+                                itemsPerPage={12}
+                                onUnassign={(selectedSimIds) => {
+                                    showModal({
+                                        content: onClose => <UnassignSimCard onClose={onClose} simCards={selectedSimIds} />
+                                    })
+                                }}
+                                onTransfer={(selectedSimIds) => {
+                                    showModal({
+                                        content: onClose => <TransferSimCard user={user} onClose={onClose} simCards={selectedSimIds} />
+                                    })
+                                }}
+                            />
                         )}
 
                         {activeTab === 'unassigned' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {simCards.filter(sim => {
-                                    // For unassigned, we need to filter for SIM cards that are NOT assigned
-                                    const isUnassigned = sim.status !== SIMStatus.ASSIGNED;
-
-                                    // Use the filterSimCards helper function but apply our own status check
-                                    const otherFiltersMatch = filterSimCards([sim], {
-                                        dateFilter: viewMode,
-                                        staffFilter: selectedStaff,
-                                        searchFilter: searchTerm
-                                    }).length > 0;
-
-                                    return isUnassigned && otherFiltersMatch;
-                                }).map((sim) => (
-                                    <div key={sim.id}
-                                         className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Clock className="w-4 h-4 text-orange-500"/>
-                                            <span className="font-medium text-gray-900 text-sm">{sim.serialNumber}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                            Unassigned
-                        </span>
-                                            <button className="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors">
-                                                Assign
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <SimCardGrid
+                                simCards={simCards}
+                                selectedStaff={selectedStaff}
+                                searchTerm={searchTerm}
+                                filterSimCards={filterSimCards}
+                                SIMStatus={SIMStatus}
+                                itemsPerPage={12}
+                                onAssign={(selectedSimIds) => {
+                                    showModal({
+                                        content: onClose => <AssignSimCard user={user} onClose={onClose} simCards={selectedSimIds}/>
+                                    })
+                                }}
+                            />
                         )}
                     </div>
                 </div>

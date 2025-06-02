@@ -1,41 +1,69 @@
 "use client"
-import {authService} from "@/services";
-import {User} from "@/models";
+import {StaffType, User, UserRole, UserStatus} from "@/models";
+
 
 class UserManager {
-    private static _user: User | null = null;
+    private readonly user: User | null;
 
-    static get user(): User | null {
-        return this._user;
+    constructor(user: User |null) {
+        this.user = user;
     }
 
-    static u1() {
-        console.log("dfsdf", this._user)
-        return this._user;
+    isAdmin(): boolean {
+        return this.user?.role === UserRole.ADMIN;
     }
 
-    static async init(): Promise<User | null> {
-        try {
-            const {user, error} = await authService.getCurrentUser();
-            if (error) {
-                console.error("Error initializing UserManager:", error);
-                this._user = null;
-                return null;
-            }
-            this._user = user;
-            return user
-        } catch (error) {
-            console.error("Exception initializing UserManager:", error);
-            this._user = null;
-            return null;
-        }
+    isTeamLeader(): boolean {
+        return this.user?.role === UserRole.TEAM_LEADER;
+    }
+
+    isStaff(): boolean {
+        return this.user?.role === UserRole.STAFF;
+    }
+
+    isActive(): boolean {
+        return !!(this.user?.is_active && this.user?.status === UserStatus.ACTIVE);
+    }
+
+    isPending(): boolean {
+        return this.user?.status === UserStatus.PENDING_APPROVAL;
+    }
+
+    isBlocked(): boolean {
+        return this.user?.status === UserStatus.SUSPENDED || !this.user?.is_active;
+    }
+
+    isFirstLogin(): boolean {
+        return this.user?.is_first_login || false;
+    }
+
+    hasTeam(): boolean {
+        return !!this.user?.team_id;
+    }
+
+    isFieldAgent(): boolean {
+        return this.user?.staff_type === StaffType.VAN_BA;
+    }
+
+    isOfficeStaff(): boolean {
+        return this.user?.staff_type === StaffType.MPESA_ONLY_AGENT;
+    }
+
+    canAccessAdminPanel(): boolean {
+        return this.isAdmin() || this.isTeamLeader();
+    }
+
+    canManageUsers(): boolean {
+        return this.isAdmin();
+    }
+
+    canManageTeam(): boolean {
+        return this.isAdmin() || this.isTeamLeader();
+    }
+
+    getUser(): User | null {
+        return this.user;
     }
 }
+
 export default UserManager;
-//
-// export default function UserManagerInitProvider() {
-//     useEffect(() => {
-//         UserManager.init()
-//     })
-//     return <></>
-// };
