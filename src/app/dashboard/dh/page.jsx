@@ -132,16 +132,16 @@ const TeamLeaderDashboardView = () => {
             if (payload.new && payload.new.team_id === user.team_id) {
                 const newSim = {
                     id: payload.new.id,
-                    serialNumber: payload.new.serial_number,
+                    serial_number: payload.new.serial_number,
                     status: payload.new.status,
                     assignedTo: payload.new.assigned_to_name || '',
-                    assignedToId: payload.new.assigned_to_user_id || '',
+                    assigned_to_user_id: payload.new.assigned_to_user_id || '',
                     registered_on: payload.new.registered_on ? payload.new.registered_on.split('T')[0] : '',
                     registeredBy: payload.new.registered_by_name || '',
                     customerName: payload.new.customer_name || '',
                     customerPhone: payload.new.customer_phone || '',
                     location: payload.new.location || '',
-                    assignedOn: payload.new.assigned_on ? payload.new.assigned_on.split('T')[0] : ''
+                    assigned_on: payload.new.assigned_on ? payload.new.assigned_on.split('T')[0] : ''
                 };
 
                 add(prev => [newSim, ...prev]);
@@ -153,16 +153,16 @@ const TeamLeaderDashboardView = () => {
             if (payload.new && payload.new.team_id === user.team_id) {
                 const updatedSim = {
                     id: payload.new.id,
-                    serialNumber: payload.new.serial_number,
+                    serial_number: payload.new.serial_number,
                     status: payload.new.status,
                     assignedTo: payload.new.assigned_to_name || '',
-                    assignedToId: payload.new.assigned_to_user_id || '',
+                    assigned_to_user_id: payload.new.assigned_to_user_id || '',
                     registered_on: payload.new.registered_on ? payload.new.registered_on.split('T')[0] : '',
                     registeredBy: payload.new.registered_by_name || '',
                     customerName: payload.new.customer_name || '',
                     customerPhone: payload.new.customer_phone || '',
                     location: payload.new.location || '',
-                    assignedOn: payload.new.assigned_on ? payload.new.assigned_on.split('T')[0] : ''
+                    assigned_on: payload.new.assigned_on ? payload.new.assigned_on.split('T')[0] : ''
                 };
 
                 add(prev =>
@@ -219,11 +219,11 @@ const TeamLeaderDashboardView = () => {
             }
 
             // Apply staff filter
-            const matchesStaffFilter = staffFilter === 'all' || sim.assignedToId === staffFilter;
+            const matchesStaffFilter = staffFilter === 'all' || sim.assigned_to_user_id === staffFilter;
 
             // Apply search filter
             const matchesSearchFilter = !searchFilter ||
-                sim.serialNumber.toLowerCase().includes(searchFilter.toLowerCase()) ||
+                sim.serial_number.toLowerCase().includes(searchFilter.toLowerCase()) ||
                 (sim.customerName && sim.customerName.toLowerCase().includes(searchFilter.toLowerCase()));
 
             // Apply status filter if provided
@@ -566,7 +566,7 @@ const TeamLeaderDashboardView = () => {
                                         <div className="flex items-center gap-2 mb-3">
                                             <CheckCircle2 className="w-4 h-4 text-green-500"/>
                                             <span
-                                                className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sim.serialNumber}</span>
+                                                className="font-medium text-gray-900 dark:text-gray-100 text-sm">{sim.serial_number}</span>
                                         </div>
                                         <div
                                             className="flex items-center mt-3 pt-3 border-t border-gray-100 dark:border-gray-600">
