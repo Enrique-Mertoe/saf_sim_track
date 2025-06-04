@@ -3,7 +3,6 @@ import React, {ChangeEvent, useEffect, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
-import MaterialSelect from "@/ui/components/MaterialSelect";
 import {BatchMetadataCreate, SIMCard, SIMCardCreate, SIMStatus} from "@/models";
 import {batchMetadataService, teamService} from "@/services";
 import {toast} from "react-hot-toast";
@@ -18,6 +17,7 @@ import {isPicklist, parsePicklistText} from "@/utils/picklistParser";
 import alert from "@/ui/alert";
 import {generateId, SerialNumber, TabType, Team} from "@/app/dashboard/pick/types";
 import Signal from "@/lib/Signal";
+import {showModal} from "@/ui/shortcuts";
 
 // Using shared types from types.ts
 
@@ -504,18 +504,284 @@ const SerialNumberForm: React.FC = () => {
         }
     };
 
+    // Function to show team selection modal
+    const showTeamSelectionModal = (): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            showModal({
+                content: (onClose) => (
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Select Team</h2>
+                            <button 
+                                onClick={() => {
+                                    onClose();
+                                    reject(new Error("Team selection cancelled"));
+                                }}
+                                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <p className="text-gray-600 dark:text-gray-300 mb-4">
+                            Please select a team to assign these SIM cards to:
+                        </p>
+
+                        <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                            {teams.map(team => (
+                                <div 
+                                    key={team.id}
+                                    className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    onClick={() => {
+                                        setSelectedTeam(team.id);
+                                        onClose();
+                                        resolve(team.id);
+                                    }}
+                                >
+                                    <div className="flex items-center">
+                                        <div className="flex-1">
+                                            <h3 className="text-sm font-medium text-gray-900 dark:text-white">{team.name}</h3>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Leader: {team.leader || 'No leader'}</p>
+                                        </div>
+                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {teams.length === 0 && (
+                            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                                No teams available. Please create a team first.
+                            </div>
+                        )}
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    reject(new Error("Team selection cancelled"));
+                                }}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                ),
+                size: "md",
+                design: ["scrollable"]
+            });
+        });
+    };
+
+    // Function to prompt for batch metadata
+    const promptForBatchMetadata = (batchId: string): Promise<BatchMetadataCreate> => {
+        return new Promise((resolve, reject) => {
+            showModal({
+                content: (onClose) => {
+                    // Local state for form fields
+                    const [formData, setFormData] = React.useState<BatchMetadataCreate>({
+                        batch_id: batchId,
+                        team_id: selectedTeam,
+                        created_by_user_id: user!.id,
+                        order_number: "",
+                        requisition_number: "",
+                        company_name: "",
+                        collection_point: "",
+                        move_order_number: "",
+                        date_created: new Date().toISOString().split('T')[0],
+                        lot_numbers: [],
+                        item_description: "",
+                        quantity: ""
+                    });
+
+                    // Handle input change
+                    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                        const { name, value } = e.target;
+                        setFormData(prev => ({ ...prev, [name]: value }));
+                    };
+
+                    // Handle lot numbers input (comma-separated)
+                    const handleLotNumbersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                        const lotNumbers = e.target.value.split(',').map(lot => lot.trim()).filter(Boolean);
+                        setFormData(prev => ({ ...prev, lot_numbers: lotNumbers }));
+                    };
+
+                    // Handle form submission
+                    const handleSubmit = (e: React.FormEvent) => {
+                        e.preventDefault();
+                        onClose();
+                        resolve(formData);
+                    };
+
+                    return (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Batch Metadata</h2>
+                                <button 
+                                    onClick={() => {
+                                        onClose();
+                                        reject(new Error("Metadata entry cancelled"));
+                                    }}
+                                    className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <p className="text-gray-600 dark:text-gray-300 mb-4">
+                                No metadata was detected from the uploaded file. Please enter batch information:
+                            </p>
+
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Order Number
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="order_number"
+                                            value={formData.order_number}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Requisition Number
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="requisition_number"
+                                            value={formData.requisition_number}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Company Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="company_name"
+                                            value={formData.company_name}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Collection Point
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="collection_point"
+                                            value={formData.collection_point}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Move Order Number
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="move_order_number"
+                                            value={formData.move_order_number}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Date Created
+                                        </label>
+                                        <input
+                                            type="date"
+                                            name="date_created"
+                                            value={formData.date_created}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Lot Numbers (comma-separated)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="lot_numbers"
+                                            value={formData.lot_numbers.join(', ')}
+                                            onChange={handleLotNumbersChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Quantity
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="quantity"
+                                            value={formData.quantity}
+                                            onChange={handleInputChange}
+                                            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Item Description
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="item_description"
+                                        value={formData.item_description}
+                                        onChange={handleInputChange}
+                                        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end space-x-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onClose();
+                                            reject(new Error("Metadata entry cancelled"));
+                                        }}
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                    >
+                                        Save Metadata
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    );
+                },
+                size: "lg",
+                design: ["scrollable"]
+            });
+        });
+    };
+
     const uploadAllSerials = async () => {
         try {
-            // Validate team selection with better error message
-            if (!selectedTeam) {
-                toast.error("Please select a team before uploading");
-                setGlobalError("You must select a team before uploading serial numbers");
-                return;
-            }
-
-            // Get the selected team name for better user feedback
-            const selectedTeamName = teams.find(t => t.id === selectedTeam)?.name || "Selected Team";
-
             // Filter only valid, non-existing, non-uploaded, and not-checking serials
             const serialsToUpload = serialNumbers
                 .filter(serial =>
@@ -547,6 +813,19 @@ const SerialNumberForm: React.FC = () => {
                 return;
             }
 
+            // Always show team selection modal when upload button is clicked
+            try {
+                const teamId = await showTeamSelectionModal();
+                setSelectedTeam(teamId);
+            } catch (error) {
+                // User cancelled team selection
+                toast.error("Team selection is required for upload");
+                return;
+            }
+
+            // Get the selected team name for better user feedback (now we're sure selectedTeam is set)
+            const selectedTeamName = teams.find(t => t.id === selectedTeam)?.name || "Selected Team";
+
             // Clear previous errors and set upload message
             setGlobalError(null);
             setUploadMessage(`Starting upload of ${serialsToUpload.length} serials to ${selectedTeamName}...`);
@@ -556,18 +835,44 @@ const SerialNumberForm: React.FC = () => {
             // Create a unique batch ID for this upload
             const batchId = `BATCH-${generateId()}`;
 
-            if (batchMetadata) {
-                const metadata: BatchMetadataCreate = {...batchMetadata, batch_id: batchId, team_id: selectedTeam};
+            // Handle batch metadata
+            let metadata: BatchMetadataCreate | null = batchMetadata;
+
+            // If no metadata was detected, prompt the user to enter it
+            if (!metadata) {
+                try {
+                    metadata = await promptForBatchMetadata(batchId);
+                    // Store the metadata for future use
+                    setBatchMetadata(metadata);
+                } catch (error) {
+                    // User cancelled metadata entry, continue without metadata
+                    console.log('User skipped metadata entry:', error);
+                    // We'll continue without metadata
+                }
+            }
+
+            // If we have metadata (either detected or entered by user), save it
+            if (metadata) {
+                // Update with the current batch ID and team
+                const metadataToSave: BatchMetadataCreate = {
+                    ...metadata, 
+                    batch_id: batchId, 
+                    team_id: selectedTeam
+                };
 
                 try {
-                    const {data, error} = await batchMetadataService.createBatchMetadata(metadata);
+                    const {data, error} = await batchMetadataService.createBatchMetadata(metadataToSave);
                     if (error) {
                         console.error('Error storing batch metadata:', error);
-                        throw error
+                        // Don't throw, just log the error and continue
+                        toast.error('Failed to save batch metadata, but will continue with upload');
+                    } else {
+                        toast.success('Batch metadata saved successfully');
                     }
                 } catch (err) {
-                    throw new Error('Exception storing batch metadata:');
-                    // Continue with the upload even if metadata storage fails
+                    console.error('Exception storing batch metadata:', err);
+                    // Don't throw, just log the error and continue
+                    toast.error('Failed to save batch metadata, but will continue with upload');
                 }
             }
 
@@ -595,7 +900,7 @@ const SerialNumberForm: React.FC = () => {
             });
 
             // Upload the serials with progress tracking and error handling
-            await simService.createSIMCardBatch(
+            const result = await simService.createSIMCardBatch(
                 serialDataToUpload,
                 50, // batch size
                 (progress, uploadedCount, chunk, errors) => {
@@ -625,6 +930,11 @@ const SerialNumberForm: React.FC = () => {
                 }
             );
 
+            // Check if the upload was successful
+            if (result.success === 0 || result.errors.length > 0) {
+                throw new Error(`Upload failed: ${result.errors.map(e => e.message || e).join(', ')}`);
+            }
+
             // Show success message with metadata info if available
             let successMessage = `Successfully uploaded ${serialsToUpload.length} serial numbers to ${selectedTeamName}`;
             if (batchMetadata) {
@@ -634,8 +944,25 @@ const SerialNumberForm: React.FC = () => {
             toast.success(successMessage);
             setUploadMessage(successMessage);
 
-            // Clear the list after a delay to allow user to see the success status
-            setTimeout(clearAll, 2000);
+            // Clear the form immediately after successful upload
+            clearAll();
+
+            // Reset the batch metadata
+            setBatchMetadata(null);
+
+            // Reset the selected team
+            setSelectedTeam('');
+
+            // Reset the input value
+            setInputValue('');
+
+            // Refresh the uploaded batches list if we're in view mode
+            if (activeTab === 'view') {
+                loadUploadedBatches();
+            }
+
+            // Signal refresh to other components
+            Signal.trigger("m-refresh", true);
         } catch (error) {
             // Handle any unexpected errors during the upload process
             console.error('Error uploading serials:', error);
@@ -655,6 +982,8 @@ const SerialNumberForm: React.FC = () => {
         } finally {
             // Ensure uploading state is reset regardless of success or failure
             setIsUploading(false);
+            setcurrentPercentage(0);
+            setSofar(0);
         }
     };
 
@@ -710,7 +1039,7 @@ const SerialNumberForm: React.FC = () => {
     // More specific button states for better UX
     const canProcessInput = !isAnyProcessRunning && inputValue.trim().length > 0;
     const canUploadFile = !isAnyProcessRunning || (isFileProcessing && !isPdfInitializing);
-    const canUploadSerials = !isAnyProcessRunning && newValidCount > 0 && selectedTeam !== '';
+    const canUploadSerials = !isAnyProcessRunning && newValidCount > 0;
     const canClearAll = !isAnyProcessRunning && serialNumbers.length > 0;
 
     // Function to delete a batch
@@ -722,13 +1051,22 @@ const SerialNumberForm: React.FC = () => {
         }
 
         try {
-            const {error} = await batchMetadataService.deleteBatchMetadata(batchId);
+            // Call the API route to delete the batch and its associated SIM cards
+            const response = await fetch('/api/batch/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ batchId }),
+            });
 
-            if (error) {
-                console.error('Error deleting batch:', error);
-                toast.error('Failed to delete batch. Please try again.');
+            const result = await response.json();
+
+            if (!response.ok) {
+                console.error('Error deleting batch:', result);
+                toast.error(`Failed to delete batch: ${result.message || 'Please try again.'}`);
             } else {
-                toast.success('Batch deleted successfully');
+                toast.success('Batch and all associated SIM cards deleted successfully');
                 // Reload the batches
                 loadUploadedBatches();
             }
@@ -789,39 +1127,6 @@ const SerialNumberForm: React.FC = () => {
             {/* Upload Tab Content */}
             {activeTab === 'upload' && (
                 <>
-                    {/* Team Selection - Enhanced with better visual prominence */}
-                    <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-green-100">
-                        <label
-                            htmlFor="team-select"
-                            className="block mb-2 text-lg font-medium text-gray-700 flex items-center"
-                        >
-                            <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                      clipRule="evenodd"/>
-                            </svg>
-                            Select Team for Upload
-                            {!selectedTeam && !isAnyProcessRunning && serialNumbers.length > 0 && (
-                                <span className="ml-2 text-sm text-red-500 animate-pulse">
-                                    (Required for upload)
-                                </span>
-                            )}
-                        </label>
-                        <MaterialSelect
-                            valueKey={"id"}
-                            displayKey={"name,leader"}
-                            value={selectedTeam}
-                            animation={"slide"}
-                            onChange={handleTeamChange}
-                            options={teams}
-                            disabled={isAnyProcessRunning}
-                            className={!selectedTeam && !isAnyProcessRunning && serialNumbers.length > 0 ? "border-red-300 focus:border-red-500" : ""}
-                        />
-                        {selectedTeam && (
-                            <p className="mt-2 text-sm text-green-600">
-                                Selected team: {teams.find(t => t.id === selectedTeam)?.name || "Unknown Team"}
-                            </p>
-                        )}
-                    </div>
 
                     {/* Input Section - Enhanced with better guidance */}
                     <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-green-100">
@@ -1049,9 +1354,8 @@ const SerialNumberForm: React.FC = () => {
                                             rounded-md shadow-sm flex items-center justify-center min-w-[200px]
                                             disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed
                                             transition-colors duration-300"
-                                            title={!selectedTeam ? "Please select a team first" :
-                                                newValidCount === 0 ? "No valid serial numbers to upload" :
-                                                    `Upload ${newValidCount} serial numbers to the selected team`}
+                                            title={newValidCount === 0 ? "No valid serial numbers to upload" : 
+                                                    `Upload ${newValidCount} serial numbers`}
                                         >
                                             {isUploading ? (
                                                 <>
@@ -1067,7 +1371,7 @@ const SerialNumberForm: React.FC = () => {
                                                               d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
                                                               clipRule="evenodd"/>
                                                     </svg>
-                                                    Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''} to {teams.find(t => t.id === selectedTeam)?.name || "Selected Team"}
+                                                    Upload {newValidCount} Serial{newValidCount !== 1 ? 's' : ''}
                                                 </>
                                             )}
                                         </motion.button>

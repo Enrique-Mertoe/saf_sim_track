@@ -140,7 +140,6 @@ export default function SimStats({refreshing = false}) {
     // Apply date filter to SIM cards
     const applyDateFilter = (cards: SimAdapter[], filter: {startDate: Date | null, endDate: Date | null}) => {
         if (!filter.startDate && !filter.endDate) {
-            // No filter, use all cards for filtered view
             setFilteredSimCards(cards);
             return;
         }
@@ -283,7 +282,7 @@ export default function SimStats({refreshing = false}) {
             <div className="space-y-4 mt-4">
                 <h3 className="text-lg font-semibold">Teams</h3>
                 {Object.entries(cardsByTeam).map(([teamId, cards]) => {
-                    if (teamId === 'unassigned') return null;
+                    // if (teamId === 'unassigned') return null;
                     const { quality, nonQuality } = countQualityCards(cards);
                     return (
                         <div 
@@ -498,15 +497,25 @@ export default function SimStats({refreshing = false}) {
             color: "blue",
             icon: <BarChart size={18}/>,
             expandable: true,
-            description: "Click to view breakdown by team, batch, and user",
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
                             title="Total SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={cardsByTeam}
-                            cardsByTeamAndBatch={cardsByTeamAndBatch}
+                            cardsByTeam={filteredCardsByTeam}
+                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
+                                acc[teamId] = teamCards.reduce((batchAcc, card) => {
+                                    //@ts-ignore
+                                    const batchId = card.batch_id || 'unassigned';
+                                    if (!batchAcc[batchId]) {
+                                        batchAcc[batchId] = [];
+                                    }
+                                    batchAcc[batchId].push(card);
+                                    return batchAcc;
+                                }, {} as Record<string, SimAdapter[]>);
+                                return acc;
+                            }, {} as Record<string, Record<string, SimAdapter[]>>)}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
@@ -524,20 +533,24 @@ export default function SimStats({refreshing = false}) {
             color: "green",
             icon: <CheckCircle size={20}/>,
             expandable: true,
-            description: "Click to view matched SIMs breakdown",
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
                             title="Matched SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={Object.entries(cardsByTeam).reduce((acc, [teamId, cards]) => {
+                            cardsByTeam={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, cards]) => {
                                 acc[teamId] = cards.filter(card => card.match === SIMStatus.MATCH);
                                 return acc;
                             }, {} as Record<string, SimAdapter[]>)}
-                            cardsByTeamAndBatch={Object.entries(cardsByTeamAndBatch).reduce((acc, [teamId, batches]) => {
-                                acc[teamId] = Object.entries(batches).reduce((batchAcc, [batchId, cards]) => {
-                                    batchAcc[batchId] = cards.filter(card => card.match === SIMStatus.MATCH);
+                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
+                                acc[teamId] = teamCards.filter(card => card.match === SIMStatus.MATCH).reduce((batchAcc, card) => {
+                                    //@ts-ignore
+                                    const batchId = card.batch_id || 'unassigned';
+                                    if (!batchAcc[batchId]) {
+                                        batchAcc[batchId] = [];
+                                    }
+                                    batchAcc[batchId].push(card);
                                     return batchAcc;
                                 }, {} as Record<string, SimAdapter[]>);
                                 return acc;
@@ -559,20 +572,24 @@ export default function SimStats({refreshing = false}) {
             color: "red",
             icon: <XCircle size={20}/>,
             expandable: true,
-            description: "Click to view unmatched SIMs breakdown",
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
                             title="Unmatched SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={Object.entries(cardsByTeam).reduce((acc, [teamId, cards]) => {
+                            cardsByTeam={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, cards]) => {
                                 acc[teamId] = cards.filter(card => card.match === SIMStatus.UNMATCH);
                                 return acc;
                             }, {} as Record<string, SimAdapter[]>)}
-                            cardsByTeamAndBatch={Object.entries(cardsByTeamAndBatch).reduce((acc, [teamId, batches]) => {
-                                acc[teamId] = Object.entries(batches).reduce((batchAcc, [batchId, cards]) => {
-                                    batchAcc[batchId] = cards.filter(card => card.match === SIMStatus.UNMATCH);
+                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
+                                acc[teamId] = teamCards.filter(card => card.match === SIMStatus.UNMATCH).reduce((batchAcc, card) => {
+                                    //@ts-ignore
+                                    const batchId = card.batch_id || 'unassigned';
+                                    if (!batchAcc[batchId]) {
+                                        batchAcc[batchId] = [];
+                                    }
+                                    batchAcc[batchId].push(card);
                                     return batchAcc;
                                 }, {} as Record<string, SimAdapter[]>);
                                 return acc;
@@ -593,7 +610,6 @@ export default function SimStats({refreshing = false}) {
             percentage: qualityPercent,
             color: "purple",
             icon: <Award size={20}/>,
-            description: "Click to view quality metrics breakdown",
             expandable: true,
             onExpandClick: () => {
                 const dialogRef = dialog.create({
@@ -601,13 +617,18 @@ export default function SimStats({refreshing = false}) {
                         <TeamBreakdownDialog
                             title="Quality SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={Object.entries(cardsByTeam).reduce((acc, [teamId, cards]) => {
+                            cardsByTeam={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, cards]) => {
                                 acc[teamId] = cards.filter(card => card.quality === SIMStatus.QUALITY);
                                 return acc;
                             }, {} as Record<string, SimAdapter[]>)}
-                            cardsByTeamAndBatch={Object.entries(cardsByTeamAndBatch).reduce((acc, [teamId, batches]) => {
-                                acc[teamId] = Object.entries(batches).reduce((batchAcc, [batchId, cards]) => {
-                                    batchAcc[batchId] = cards.filter(card => card.quality === SIMStatus.QUALITY);
+                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
+                                acc[teamId] = teamCards.filter(card => card.quality === SIMStatus.QUALITY).reduce((batchAcc, card) => {
+                                    //@ts-ignore
+                                    const batchId = card.batch_id || 'unassigned';
+                                    if (!batchAcc[batchId]) {
+                                        batchAcc[batchId] = [];
+                                    }
+                                    batchAcc[batchId].push(card);
                                     return batchAcc;
                                 }, {} as Record<string, SimAdapter[]>);
                                 return acc;
@@ -771,7 +792,7 @@ export default function SimStats({refreshing = false}) {
                             color={card.color}
                             isRefreshing={isRefreshing}
                             icon={card.icon}
-                            description={card.description}
+                            // description={card.description}
                             expandable={card.expandable}
                             onExpandClick={card.onExpandClick}
                         />
@@ -793,7 +814,6 @@ function StatCard({
                       weekValue = 0,
                       icon, 
                       onExpandClick,
-                      description,
                       expandable = false
                   }: {
     title: string;
@@ -812,7 +832,7 @@ function StatCard({
     const [prevTodayValue, setPrevTodayValue] = useState(todayValue);
     const [prevWeekValue, setPrevWeekValue] = useState(weekValue);
     const [isAnimating, setIsAnimating] = useState(false);
-    const [activeTab, setActiveTab] = useState<'total' | 'today' | 'week'>('today'); // Default to today
+    const [activeTab, setActiveTab] = useState<'total' | 'today'>('today'); // Default to today
 
     // Handle value changes with animation
     useEffect(() => {
@@ -886,9 +906,8 @@ function StatCard({
             case 'total':
                 return value;
             case 'today':
+            default:
                 return todayValue;
-            case 'week':
-                return weekValue;
         }
     };
 
@@ -897,9 +916,8 @@ function StatCard({
             case 'total':
                 return null; // No trend for total
             case 'today':
+            default:
                 return todayVsWeekTrend;
-            case 'week':
-                return weekVsTotalTrend;
         }
     };
 
@@ -930,10 +948,10 @@ function StatCard({
                 )}
             </div>
 
-            {/* Tabs for switching between total, today, and week */}
-            <div className="flex mb-2 border-b border-gray-200 dark:border-gray-700">
+            {/* Tabs for switching between total and today */}
+            <div className="grid grid-cols-2 mb-2 border-b border-gray-200 dark:border-gray-700">
                 <button
-                    className={`px-3 py-1 text-xs font-medium rounded-t-md ${
+                    className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center ${
                         activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
                     }`}
                     onClick={(e) => {
@@ -944,18 +962,7 @@ function StatCard({
                     Today
                 </button>
                 <button
-                    className={`px-3 py-1 text-xs font-medium rounded-t-md ${
-                        activeTab === 'week' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
-                    }`}
-                    onClick={(e) => {
-                        e.stopPropagation(); // Prevent card click
-                        setActiveTab('week');
-                    }}
-                >
-                    This Week
-                </button>
-                <button
-                    className={`px-3 py-1 text-xs font-medium rounded-t-md ${
+                    className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center ${
                         activeTab === 'total' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
                     }`}
                     onClick={(e) => {
@@ -995,21 +1002,18 @@ function StatCard({
                     </p>
                 )}
 
-                {activeTab === 'week' && (
-                    <p className="text-xs text-gray-500 mt-1">
-                        {weekVsTotalTrend >= 0 
-                            ? `${weekVsTotalTrend}% above` 
-                            : `${Math.abs(weekVsTotalTrend)}% below`} weekly average
-                    </p>
-                )}
+                {/*{activeTab === 'week' && (*/}
+                {/*    <p className="text-xs text-gray-500 mt-1">*/}
+                {/*        {weekVsTotalTrend >= 0 */}
+                {/*            ? `${weekVsTotalTrend}% above` */}
+                {/*            : `${Math.abs(weekVsTotalTrend)}% below`} weekly average*/}
+                {/*    </p>*/}
+                {/*)}*/}
             </div>
 
             {/* View More / Expand Section */}
             {expandable && (
                 <div className="pt-2 text-center border-t border-gray-200 dark:border-gray-700">
-                    {description && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{description}</p>
-                    )}
                     <button
                         onClick={(e) => {
                             e.stopPropagation(); // Prevent card click

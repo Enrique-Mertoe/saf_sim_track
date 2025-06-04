@@ -5,7 +5,7 @@ import {admin_id} from "@/services/helper";
 export const simCardService = {
     getAllSimCards: async (user: User) => {
         const supabase = createSupabaseClient();
-        if (user.role === 'admin') {
+        if (user.role === UserRole.ADMIN) {
             return supabase
                 .from('sim_cards')
                 .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
@@ -68,33 +68,68 @@ export const simCardService = {
         let successCount = 0;
         const errors: any[] = [];
 
-        for (let i = 0; i < simCardsData.length; i += chunkSize) {
-            const chunk = simCardsData.slice(i, i + chunkSize);
-            // Clean up data before sending
-            const cleanedData = chunk.map(card => ({
-                ...card,
-                sold_by_user_id: card.sold_by_user_id === '' ? null : card.sold_by_user_id
-            }));
-
-            const {error} = await supabase.from('sim_cards').insert(cleanedData);
-
-            if (error) {
-                console.error(`Error inserting chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(simCardsData.length / chunkSize)}:`, error);
-                errors.push(error);
-                // Continue with next chunk instead of returning immediately
-            } else {
-                successCount += chunk.length;
-            }
-
-            const percent = Math.min(100, Math.round(((i + chunk.length) / simCardsData.length) * 100));
-            updateProgress(percent, successCount, chunk, errors);
+        // Start a transaction
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            throw new Error('No active session found');
         }
 
-        return {
-            success: successCount,
-            failed: simCardsData.length - successCount,
-            errors: errors
-        };
+        try {
+            // Process all chunks within a single logical transaction
+            for (let i = 0; i < simCardsData.length; i += chunkSize) {
+                const chunk = simCardsData.slice(i, i + chunkSize);
+                // Clean up data before sending
+                const cleanedData = chunk.map(card => ({
+                    ...card,
+                    sold_by_user_id: card.sold_by_user_id === '' ? null : card.sold_by_user_id
+                }));
+
+                const {error} = await supabase.from('sim_cards').insert(cleanedData);
+
+                if (error) {
+                    console.error(`Error inserting chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(simCardsData.length / chunkSize)}:`, error);
+                    errors.push(error);
+                    // Stop processing and throw error to trigger rollback
+                    throw error;
+                } else {
+                    successCount += chunk.length;
+                }
+
+                const percent = Math.min(100, Math.round(((i + chunk.length) / simCardsData.length) * 100));
+                updateProgress(percent, successCount, chunk, errors);
+            }
+
+            return {
+                success: successCount,
+                failed: 0, // If we get here, all records were successful
+                errors: []
+            };
+        } catch (error) {
+            console.error('Transaction failed:', error);
+
+            // If there was an error, we need to clean up any records that were inserted
+            // This is necessary because Supabase doesn't support true transactions
+            if (successCount > 0) {
+                try {
+                    // Get the batch_id from the first record to identify all records in this batch
+                    const batchId = simCardsData[0].batch_id;
+                    if (batchId) {
+                        // Delete all records with this batch_id
+                        await supabase.from('sim_cards').delete().eq('batch_id', batchId);
+                        console.log(`Rolled back ${successCount} records for batch ${batchId}`);
+                    }
+                } catch (cleanupError) {
+                    console.error('Error during rollback:', cleanupError);
+                    errors.push(cleanupError);
+                }
+            }
+
+            return {
+                success: 0,
+                failed: simCardsData.length,
+                errors: errors.length > 0 ? errors : [error]
+            };
+        }
     },
 
 
