@@ -573,7 +573,7 @@ const SerialNumberForm: React.FC = () => {
                     </div>
                 ),
                 size: "md",
-                design: ["scrollable"]
+                // design: ["scrollable"]
             });
         });
     };
@@ -596,6 +596,7 @@ const SerialNumberForm: React.FC = () => {
                         date_created: new Date().toISOString().split('T')[0],
                         lot_numbers: [],
                         item_description: "",
+                        //@ts-ignore
                         quantity: ""
                     });
 
@@ -720,7 +721,7 @@ const SerialNumberForm: React.FC = () => {
                                         <input
                                             type="text"
                                             name="lot_numbers"
-                                            value={formData.lot_numbers.join(', ')}
+                                            value={(formData.lot_numbers || []).join(', ')}
                                             onChange={handleLotNumbersChange}
                                             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md"
                                         />
@@ -775,7 +776,7 @@ const SerialNumberForm: React.FC = () => {
                     );
                 },
                 size: "lg",
-                design: ["scrollable"]
+                // design: ["scrollable"]
             });
         });
     };
