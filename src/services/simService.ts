@@ -247,7 +247,7 @@ export const simCardService = {
         const now = Date.now();
 
         if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
-            console.log('Using cached quality count');
+            // console.log('Using cached quality count');
             return cachedData.data;
         }
 

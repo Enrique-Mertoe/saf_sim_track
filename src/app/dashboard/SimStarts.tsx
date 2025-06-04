@@ -39,8 +39,7 @@ export default function SimStats({refreshing = false}) {
         endDate: null
     });
     const [teams, setTeams] = useState<Team[]>([]);
-    const [pagination, setPagination] = useState({ page: 0, pageSize: 100 });
-    const [hasMore, setHasMore] = useState(true);
+    const pageSize = 100; // Keep pageSize as a constant for fetching data
 
     // Individual loading states for each card
     const [isTotalLoading, setIsTotalLoading] = useState(true);
@@ -247,8 +246,8 @@ export default function SimStats({refreshing = false}) {
         }
     };
 
-    // Load more SIM cards (pagination) or expand the view
-    const loadMoreSimCards = async () => {
+    // Expand the view to show details
+    const expandView = async () => {
         if (!user || isLoadingMore) return;
 
         setIsLoadingMore(true);
@@ -259,40 +258,9 @@ export default function SimStats({refreshing = false}) {
                 setIsExpanded(true);
                 // Fetch data with expanded mode
                 await fetchSimCards();
-                return;
             }
-
-            // If already expanded and no more data, return
-            if (!hasMore) return;
-
-            const dateFilterStrings = getDateFilterStrings();
-
-            // Fetch next page of SIM cards
-            const { data, error } = await simService.getSimCardsChunked(
-                user,
-                { page: pagination.page + 1, pageSize: pagination.pageSize },
-                dateFilterStrings
-            );
-
-            if (error) throw error;
-
-            // If we got fewer records than requested, there are no more to load
-            if (!data || data.length < pagination.pageSize) {
-                setHasMore(false);
-            }
-
-            // Append new cards to existing ones
-            const newCards = [...simCards, ...(data as SimAdapter[])];
-            setSimCards(newCards);
-
-            // Apply date filter to all cards
-            applyDateFilter(newCards, dateFilter);
-
-            // Update pagination
-            setPagination(prev => ({ ...prev, page: prev.page + 1 }));
-
         } catch (err) {
-            console.error("Failed to load more SIM cards:", err);
+            console.error("Failed to expand view:", err);
             // Don't set error state here to avoid disrupting the UI
         } finally {
             setIsLoadingMore(false);
@@ -303,10 +271,6 @@ export default function SimStats({refreshing = false}) {
         if (!user) return;
         setIsLoading(true);
         setError(null);
-
-        // Reset pagination when fetching from scratch
-        setPagination({ page: 0, pageSize: 100 });
-        setHasMore(true);
 
         try {
             // Fetch each card's data independently
@@ -319,19 +283,14 @@ export default function SimStats({refreshing = false}) {
             if (isExpanded) {
                 const dateFilterStrings = getDateFilterStrings();
 
-                // Fetch first page of SIM cards
+                // Fetch SIM cards
                 const { data, error } = await simService.getSimCardsChunked(
                     user,
-                    { page: 0, pageSize: pagination.pageSize },
+                    { page: 0, pageSize: pageSize },
                     dateFilterStrings
                 );
 
                 if (error) throw error;
-
-                // If we got fewer records than requested, there are no more to load
-                if (!data || data.length < pagination.pageSize) {
-                    setHasMore(false);
-                }
 
                 // Fetch teams
                 const { data: teamsData, error: teamsError } = await teamService.getAllTeams();
@@ -391,10 +350,6 @@ export default function SimStats({refreshing = false}) {
         // When date filter changes, we need to refresh the data from the server
         // to get accurate counts and filtered data
         setIsRefreshing(true);
-
-        // Reset pagination when filter changes
-        setPagination({ page: 0, pageSize: 100 });
-        setHasMore(true);
 
         // Clear cache to ensure fresh data with new filter
         if (user) {
@@ -459,10 +414,6 @@ export default function SimStats({refreshing = false}) {
                         setDateFilter(restoredDateFilter);
                     }
 
-                    // Restore pagination
-                    if (parsedState.pagination) {
-                        setPagination(parsedState.pagination);
-                    }
 
                     // Restore stats
                     if (parsedState.stats) {
@@ -484,7 +435,6 @@ export default function SimStats({refreshing = false}) {
                     if (parsedState.simCards && parsedState.simCards.length > 0) {
                         setSimCards(parsedState.simCards);
                         setFilteredSimCards(parsedState.filteredSimCards || parsedState.simCards);
-                        setHasMore(parsedState.hasMore !== undefined ? parsedState.hasMore : true);
                         setIsLoading(false);
                         setIsTotalLoading(false);
                         setIsActivatedLoading(false);
@@ -518,7 +468,6 @@ export default function SimStats({refreshing = false}) {
                 try {
                     const stateToSave = {
                         dateFilter,
-                        pagination,
                         stats: {
                             total: totalData.total,
                             matched: activatedData.activated,
@@ -527,7 +476,6 @@ export default function SimStats({refreshing = false}) {
                         },
                         simCards,
                         filteredSimCards,
-                        hasMore,
                         isExpanded
                     };
                     sessionStorage.setItem('simStatsState', JSON.stringify(stateToSave));
@@ -1364,32 +1312,26 @@ export default function SimStats({refreshing = false}) {
                         </div>
                     )}
 
-                    <button
-                        onClick={loadMoreSimCards}
-                        disabled={isLoadingMore}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"
-                    >
-                        {isLoadingMore ? (
-                            <>
-                                <RefreshCw size={16} className="animate-spin" />
-                                Loading...
-                            </>
-                        ) : !isExpanded ? (
-                            <>
-                                View Details
-                            </>
-                        ) : hasMore ? (
-                            <>
-                                Load More
-                            </>
-                        ) : (
-                            <>
-                                All Data Loaded
-                            </>
-                        )}
-                    </button>
+                    {!isExpanded && (
+                        <button
+                            onClick={expandView}
+                            disabled={isLoadingMore}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"
+                        >
+                            {isLoadingMore ? (
+                                <>
+                                    <RefreshCw size={16} className="animate-spin" />
+                                    Loading...
+                                </>
+                            ) : (
+                                <>
+                                    View Details
+                                </>
+                            )}
+                        </button>
+                    )}
 
-                    {isExpanded && !hasMore && simCards.length < stats.total && (
+                    {isExpanded && simCards.length < stats.total && (
                         <div className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
                             <AlertCircle size={16} className="inline mr-1" />
                             Not all records are loaded. Use filters to narrow down results for better performance.
