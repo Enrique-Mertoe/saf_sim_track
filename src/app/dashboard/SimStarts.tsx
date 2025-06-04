@@ -30,18 +30,49 @@ export default function SimStats({refreshing = false}) {
     const [simCards, setSimCards] = useState<SimAdapter[]>([]);
     const [filteredSimCards, setFilteredSimCards] = useState<SimAdapter[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(refreshing);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [dateFilter, setDateFilter] = useState<{startDate: Date | null, endDate: Date | null}>({
         startDate: null,
         endDate: null
     });
     const [teams, setTeams] = useState<Team[]>([]);
+    const [pagination, setPagination] = useState({ page: 0, pageSize: 100 });
+    const [hasMore, setHasMore] = useState(true);
+
+    // Individual loading states for each card
+    const [isTotalLoading, setIsTotalLoading] = useState(true);
+    const [isActivatedLoading, setIsActivatedLoading] = useState(true);
+    const [isUnactivatedLoading, setIsUnactivatedLoading] = useState(true);
+    const [isQualityLoading, setIsQualityLoading] = useState(true);
+
+    // Individual data states for each card
+    const [totalData, setTotalData] = useState<{ total: number }>({ total: 0 });
+    const [activatedData, setActivatedData] = useState<{ activated: number }>({ activated: 0 });
+    const [unactivatedData, setUnactivatedData] = useState<{ unactivated: number }>({ unactivated: 0 });
+    const [qualityData, setQualityData] = useState<{ quality: number }>({ quality: 0 });
+
+    // Combined stats for backward compatibility
+    const [stats, setStats] = useState<{
+        total: number;
+        matched: number;
+        unmatched: number;
+        quality: number;
+    }>({
+        total: 0,
+        matched: 0,
+        unmatched: 0,
+        quality: 0
+    });
     const {user} = useApp();
     const dialog = useDialog();
 
-    // Stats calculated from sim cards (total always uses all cards, not filtered)
-    const totalCards = simCards.length;
+    // Use stats from server for accurate counts regardless of loaded data
+    const totalCards = stats.total;
+
+    // For display purposes, we still need to filter the loaded cards
     const matchedCards = simCards.filter(card => card.match === SIMStatus.MATCH);
     const unmatchedCards = simCards.filter(card => card.match === SIMStatus.UNMATCH);
     const qualityCards = simCards.filter(card => card.quality === SIMStatus.QUALITY);
@@ -51,25 +82,30 @@ export default function SimStats({refreshing = false}) {
     const filteredUnmatchedCards = filteredSimCards.filter(card => card.match === SIMStatus.UNMATCH);
     const filteredQualityCards = filteredSimCards.filter(card => card.quality === SIMStatus.QUALITY);
 
-    // Calculate percentages safely
-    const matchedPercent = totalCards ? Math.round((matchedCards.length / totalCards) * 100) : 0;
-    const unmatchedPercent = totalCards ? Math.round((unmatchedCards.length / totalCards) * 100) : 0;
-    const qualityPercent = matchedCards.length ? Math.round((qualityCards.length / matchedCards.length) * 100) : 0;
+    // Calculate percentages safely using server stats
+    const matchedPercent = totalCards ? Math.round((stats.matched / totalCards) * 100) : 0;
+    const unmatchedPercent = totalCards ? Math.round((stats.unmatched / totalCards) * 100) : 0;
+    const qualityPercent = stats.matched ? Math.round((stats.quality / stats.matched) * 100) : 0;
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfWeek = new Date(startOfToday);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
+    function grp(){
+        const cards = []
+        console.log("cards",simCards)
+        return simCards.reduce((acc, card) => {
+            const teamId = card.team_id?.id || 'unassigned';
+            if (!acc[teamId]) {
+                acc[teamId] = [];
+            }
+            acc[teamId].push(card);
+            return acc;
+        }, {} as Record<string, SimAdapter[]>);
+    }
     // Group cards by team
-    const cardsByTeam = simCards.reduce((acc, card) => {
-        const teamId = card.team_id?.id || 'unassigned';
-        if (!acc[teamId]) {
-            acc[teamId] = [];
-        }
-        acc[teamId].push(card);
-        return acc;
-    }, {} as Record<string, SimAdapter[]>);
+    const cardsByTeam= grp()
 
     // Group filtered cards by team
     const filteredCardsByTeam = filteredSimCards.reduce((acc, card) => {
@@ -109,25 +145,212 @@ export default function SimStats({refreshing = false}) {
     const totalStats = countByDate(simCards, filteredSimCards);
 
 
+    // Convert date filter to string format for API
+    const getDateFilterStrings = () => {
+        if (!dateFilter.startDate && !dateFilter.endDate) return undefined;
+
+        return {
+            startDate: dateFilter.startDate?.toISOString().split('T')[0],
+            endDate: dateFilter.endDate?.toISOString().split('T')[0]
+        };
+    };
+
+    // Fetch total count independently
+    const fetchTotalCount = async () => {
+        if (!user) return;
+        setIsTotalLoading(true);
+
+        try {
+            const dateFilterStrings = getDateFilterStrings();
+            const result = await simService.getTotalCount(user, dateFilterStrings);
+
+            if (result.error) throw result.error;
+
+            setTotalData({ total: result.total });
+
+            // Update combined stats for backward compatibility
+            setStats(prev => ({ ...prev, total: result.total }));
+        } catch (err) {
+            console.error("Failed to fetch total count:", err);
+            // Don't set global error to avoid disrupting other cards
+        } finally {
+            setIsTotalLoading(false);
+        }
+    };
+
+    // Fetch activated count independently
+    const fetchActivatedCount = async () => {
+        if (!user) return;
+        setIsActivatedLoading(true);
+
+        try {
+            const dateFilterStrings = getDateFilterStrings();
+            const result = await simService.getActivatedCount(user, dateFilterStrings);
+
+            if (result.error) throw result.error;
+
+            setActivatedData({ activated: result.activated });
+
+            // Update combined stats for backward compatibility
+            setStats(prev => ({ ...prev, matched: result.activated }));
+        } catch (err) {
+            console.error("Failed to fetch activated count:", err);
+            // Don't set global error to avoid disrupting other cards
+        } finally {
+            setIsActivatedLoading(false);
+        }
+    };
+
+    // Fetch unactivated count independently
+    const fetchUnMatchedCount = async () => {
+        if (!user) return;
+        setIsUnactivatedLoading(true);
+
+        try {
+            const dateFilterStrings = getDateFilterStrings();
+            const result = await simService.getUnmatchedCount(user, dateFilterStrings);
+
+            if (result.error) throw result.error;
+
+            setUnactivatedData({ unactivated: result.unactivated });
+
+            // Update combined stats for backward compatibility
+            setStats(prev => ({ ...prev, unmatched: result.unactivated }));
+        } catch (err) {
+            console.error("Failed to fetch unmatched count:", err);
+            // Don't set global error to avoid disrupting other cards
+        } finally {
+            setIsUnactivatedLoading(false);
+        }
+    };
+
+    // Fetch quality count independently
+    const fetchQualityCount = async () => {
+        if (!user) return;
+        setIsQualityLoading(true);
+
+        try {
+            const dateFilterStrings = getDateFilterStrings();
+            const result = await simService.getQualityCount(user, dateFilterStrings);
+
+            if (result.error) throw result.error;
+
+            setQualityData({ quality: result.quality });
+
+            // Update combined stats for backward compatibility
+            setStats(prev => ({ ...prev, quality: result.quality }));
+        } catch (err) {
+            console.error("Failed to fetch quality count:", err);
+            // Don't set global error to avoid disrupting other cards
+        } finally {
+            setIsQualityLoading(false);
+        }
+    };
+
+    // Load more SIM cards (pagination) or expand the view
+    const loadMoreSimCards = async () => {
+        if (!user || isLoadingMore) return;
+
+        setIsLoadingMore(true);
+
+        try {
+            // If not expanded yet, switch to expanded mode and load initial data
+            if (!isExpanded) {
+                setIsExpanded(true);
+                // Fetch data with expanded mode
+                await fetchSimCards();
+                return;
+            }
+
+            // If already expanded and no more data, return
+            if (!hasMore) return;
+
+            const dateFilterStrings = getDateFilterStrings();
+
+            // Fetch next page of SIM cards
+            const { data, error } = await simService.getSimCardsChunked(
+                user,
+                { page: pagination.page + 1, pageSize: pagination.pageSize },
+                dateFilterStrings
+            );
+
+            if (error) throw error;
+
+            // If we got fewer records than requested, there are no more to load
+            if (!data || data.length < pagination.pageSize) {
+                setHasMore(false);
+            }
+
+            // Append new cards to existing ones
+            const newCards = [...simCards, ...(data as SimAdapter[])];
+            setSimCards(newCards);
+
+            // Apply date filter to all cards
+            applyDateFilter(newCards, dateFilter);
+
+            // Update pagination
+            setPagination(prev => ({ ...prev, page: prev.page + 1 }));
+
+        } catch (err) {
+            console.error("Failed to load more SIM cards:", err);
+            // Don't set error state here to avoid disrupting the UI
+        } finally {
+            setIsLoadingMore(false);
+        }
+    };
+
     const fetchSimCards = async () => {
+        if (!user) return;
         setIsLoading(true);
         setError(null);
 
+        // Reset pagination when fetching from scratch
+        setPagination({ page: 0, pageSize: 100 });
+        setHasMore(true);
+
         try {
-            // Fetch SIM cards
-            const {data, error} = await simService.getAllSimCards(user!);
-            if (error) throw error;
+            // Fetch each card's data independently
+            fetchTotalCount();
+            fetchActivatedCount();
+            fetchUnMatchedCount();
+            fetchQualityCount();
 
-            // Fetch teams
-            const {data: teamsData, error: teamsError} = await teamService.getAllTeams();
-            if (teamsError) throw teamsError;
+            // In expanded mode, fetch detailed data
+            if (isExpanded) {
+                const dateFilterStrings = getDateFilterStrings();
 
-            setSimCards(data as SimAdapter[]);
-            //@ts-ignore
-            setTeams(teamsData as Team[]);
+                // Fetch first page of SIM cards
+                const { data, error } = await simService.getSimCardsChunked(
+                    user,
+                    { page: 0, pageSize: pagination.pageSize },
+                    dateFilterStrings
+                );
 
-            // Apply date filter if set
-            applyDateFilter(data as SimAdapter[], dateFilter);
+                if (error) throw error;
+
+                // If we got fewer records than requested, there are no more to load
+                if (!data || data.length < pagination.pageSize) {
+                    setHasMore(false);
+                }
+
+                // Fetch teams
+                const { data: teamsData, error: teamsError } = await teamService.getAllTeams();
+                if (teamsError) throw teamsError;
+
+                //@ts-ignore
+                setTeams(teamsData as Team[]);
+
+                // Update SIM cards state
+                setSimCards(data as SimAdapter[]);
+
+                // Apply date filter
+                applyDateFilter(data as SimAdapter[], dateFilter);
+            } else {
+                // In initial mode, just clear the SIM cards data
+                setSimCards([]);
+                setFilteredSimCards([]);
+            }
+
         } catch (err) {
             console.error("Failed to fetch SIM cards:", err);
             setError('Failed to fetch SIM cards. Please try again later.');
@@ -164,26 +387,171 @@ export default function SimStats({refreshing = false}) {
     // Handle date filter change
     const handleDateFilterChange = (newFilter: {startDate: Date | null, endDate: Date | null}) => {
         setDateFilter(newFilter);
+
+        // When date filter changes, we need to refresh the data from the server
+        // to get accurate counts and filtered data
+        setIsRefreshing(true);
+
+        // Reset pagination when filter changes
+        setPagination({ page: 0, pageSize: 100 });
+        setHasMore(true);
+
+        // Clear cache to ensure fresh data with new filter
+        if (user) {
+            simService.cache.clearForUser(user.id);
+        }
+
+        // For immediate UI feedback, apply filter to currently loaded cards
         applyDateFilter(simCards, newFilter);
+
+        // Then fetch fresh data independently for each card
+        fetchTotalCount();
+        fetchActivatedCount();
+        fetchUnMatchedCount();
+        fetchQualityCount();
+
+        // Also fetch detailed data if in expanded mode
+        if (isExpanded) {
+            fetchSimCards();
+        } else {
+            setIsRefreshing(false);
+        }
     };
 
     const handleRefresh = () => {
+        // Clear cache to ensure fresh data
+        if (user) {
+            simService.cache.clearForUser(user.id);
+        }
+
+        // Reset expanded state to initial view
+        setIsExpanded(false);
+
         setIsRefreshing(true);
+
+        // Fetch data independently for each card
+        fetchTotalCount();
+        fetchActivatedCount();
+        fetchUnMatchedCount();
+        fetchQualityCount();
+
+        // Also fetch detailed data if needed
         fetchSimCards();
+
         Signal.trigger("m-refresh", true);
     };
 
-    // Initial fetch
+    // State preservation for navigation
     useEffect(() => {
-        if (!user) return;
-        fetchSimCards();
-    }, [user]);
+        // Try to restore state from sessionStorage when component mounts
+        if (user) {
+            try {
+                const savedState = sessionStorage.getItem('simStatsState');
+                if (savedState) {
+                    const parsedState = JSON.parse(savedState);
+
+                    // Restore date filter (convert string dates back to Date objects)
+                    if (parsedState.dateFilter) {
+                        const restoredDateFilter = {
+                            startDate: parsedState.dateFilter.startDate ? new Date(parsedState.dateFilter.startDate) : null,
+                            endDate: parsedState.dateFilter.endDate ? new Date(parsedState.dateFilter.endDate) : null
+                        };
+                        setDateFilter(restoredDateFilter);
+                    }
+
+                    // Restore pagination
+                    if (parsedState.pagination) {
+                        setPagination(parsedState.pagination);
+                    }
+
+                    // Restore stats
+                    if (parsedState.stats) {
+                        setStats(parsedState.stats);
+
+                        // Also restore individual card data
+                        setTotalData({ total: parsedState.stats.total });
+                        setActivatedData({ activated: parsedState.stats.matched });
+                        setUnactivatedData({ unactivated: parsedState.stats.unmatched });
+                        setQualityData({ quality: parsedState.stats.quality });
+                    }
+
+                    // Restore expanded state
+                    if (parsedState.isExpanded !== undefined) {
+                        setIsExpanded(parsedState.isExpanded);
+                    }
+
+                    // Restore SIM cards
+                    if (parsedState.simCards && parsedState.simCards.length > 0) {
+                        setSimCards(parsedState.simCards);
+                        setFilteredSimCards(parsedState.filteredSimCards || parsedState.simCards);
+                        setHasMore(parsedState.hasMore !== undefined ? parsedState.hasMore : true);
+                        setIsLoading(false);
+                        setIsTotalLoading(false);
+                        setIsActivatedLoading(false);
+                        setIsUnactivatedLoading(false);
+                        setIsQualityLoading(false);
+                        return; // Skip initial fetch if we restored state
+                    }
+                }
+            } catch (error) {
+                console.error("Error restoring state:", error);
+                // If there's an error, proceed with normal fetch
+            }
+
+            // If no state was restored or there was an error, fetch data independently
+            fetchTotalCount();
+            fetchActivatedCount();
+            fetchUnMatchedCount();
+            fetchQualityCount();
+
+            // Also fetch detailed data if in expanded mode
+            if (isExpanded) {
+                fetchSimCards();
+            } else {
+                setIsLoading(false);
+            }
+        }
+
+        // Save state to sessionStorage when component unmounts
+        return () => {
+            if (totalData.total > 0) { // Changed condition to check totalData instead of stats
+                try {
+                    const stateToSave = {
+                        dateFilter,
+                        pagination,
+                        stats: {
+                            total: totalData.total,
+                            matched: activatedData.activated,
+                            unmatched: unactivatedData.unactivated,
+                            quality: qualityData.quality
+                        },
+                        simCards,
+                        filteredSimCards,
+                        hasMore,
+                        isExpanded
+                    };
+                    sessionStorage.setItem('simStatsState', JSON.stringify(stateToSave));
+                } catch (error) {
+                    console.error("Error saving state:", error);
+                }
+            }
+        };
+    }, [user]); // Only run on mount/unmount and when user changes
 
     // Handle refreshing prop changes
     useEffect(() => {
-        if (!user)
-            return
+        if (!user) return;
+
         if (refreshing) {
+            // Clear saved state when explicitly refreshing
+            sessionStorage.removeItem('simStatsState');
+
+            // Clear cache to ensure fresh data
+            simService.cache.clearForUser(user.id);
+
+            // Reset expanded state to initial view
+            setIsExpanded(false);
+
             setIsRefreshing(true);
             fetchSimCards();
         }
@@ -229,20 +597,70 @@ export default function SimStats({refreshing = false}) {
     }
     const TeamBreakdownDialog = ({ 
         title, 
-        teams, 
-        cardsByTeam, 
-        cardsByTeamAndBatch, 
+        teams,
+        user,
         onClose 
     }: { 
         title: string, 
-        teams: Team[], 
-        cardsByTeam: Record<string, SimAdapter[]>, 
-        cardsByTeamAndBatch: Record<string, Record<string, SimAdapter[]>>,
+        teams: Team[],
+        user:User,
         onClose: () => void 
     }) => {
         const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
         const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
         const [view, setView] = useState<'teams' | 'batches' | 'users'>('teams');
+        const [isLoading, setIsLoading] = useState(true);
+        const [error, setError] = useState<string | null>(null);
+        const [localDateFilter, setLocalDateFilter] = useState<{startDate: Date | null, endDate: Date | null}>({
+            startDate: dateFilter.startDate,
+            endDate: dateFilter.endDate
+        });
+        const dialog = useDialog();
+
+        // State for hierarchical data
+        const [teamStats, setTeamStats] = useState<Array<{
+            id: string;
+            name: string;
+            leader: any;
+            stats: {
+                total: number;
+                matched: number;
+                unmatched: number;
+                quality: number;
+            }
+        }>>([]);
+
+        const [batchStats, setBatchStats] = useState<Array<{
+            id: string;
+            stats: {
+                total: number;
+                matched: number;
+                unmatched: number;
+                quality: number;
+            }
+        }>>([]);
+
+        const [userStats, setUserStats] = useState<Array<{
+            id: string;
+            name: string;
+            stats: {
+                total: number;
+                matched: number;
+                unmatched: number;
+                quality: number;
+            }
+        }>>([]);
+
+        // Local now and date constants for the dialog
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfWeek = new Date(startOfToday);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+        // Handle date filter change within the dialog
+        const handleLocalDateFilterChange = (newFilter: {startDate: Date | null, endDate: Date | null}) => {
+            setLocalDateFilter(newFilter);
+        };
 
         // Get team name by ID
         const getTeamName = (teamId: string) => {
@@ -250,67 +668,174 @@ export default function SimStats({refreshing = false}) {
             return team ? team.name : 'Unknown Team';
         };
 
-        // Count quality and non-quality cards
-        const countQualityCards = (cards: SimAdapter[]) => {
-            const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;
-            const nonQuality = cards.filter(card => card.quality !== SIMStatus.QUALITY).length;
-            return { quality, nonQuality };
+        // Get date filter strings for API
+        const getDateFilterStrings = () => {
+            if (!localDateFilter.startDate && !localDateFilter.endDate) return undefined;
+
+            return {
+                startDate: localDateFilter.startDate?.toISOString().split('T')[0],
+                endDate: localDateFilter.endDate?.toISOString().split('T')[0]
+            };
         };
 
-        // Get cards sold by user
-        const getCardsByUser = (cards: SimAdapter[]) => {
-            const userMap: Record<string, { user: User, cards: SimAdapter[] }> = {};
+        // Fetch team stats when component mounts or when date filter changes
+        useEffect(() => {
+            if (!user) return;
 
-            cards.forEach(card => {
-                if (card.sold_by_user_id) {
-                    const userId = card.sold_by_user_id.id;
-                    if (!userMap[userId]) {
-                        userMap[userId] = { 
-                            user: card.sold_by_user_id, 
-                            cards: [] 
-                        };
-                    }
-                    userMap[userId].cards.push(card);
+            const fetchTeamStats = async () => {
+                setIsLoading(true);
+                setError(null);
+
+                try {
+                    const dateFilterStrings = getDateFilterStrings();
+                    const { data, error } = await simService.getTeamStats(user, dateFilterStrings);
+
+                    if (error) throw error;
+                    if (!data) throw new Error('No data returned');
+
+                    setTeamStats(data);
+                } catch (err) {
+                    console.error('Error fetching team stats:', err);
+                    setError('Failed to load team statistics');
+                } finally {
+                    setIsLoading(false);
                 }
-            });
+            };
 
-            return Object.values(userMap);
-        };
+            if (view === 'teams') {
+                fetchTeamStats();
+            }
+        }, [user, view, localDateFilter]);
+
+        // Fetch batch stats when a team is selected
+        useEffect(() => {
+            if (!user || !selectedTeam || view !== 'batches') return;
+
+            const fetchBatchStats = async () => {
+                setIsLoading(true);
+                setError(null);
+
+                try {
+                    const dateFilterStrings = getDateFilterStrings();
+                    const { data, error } = await simService.getBatchStatsForTeam(
+                        selectedTeam, 
+                        user, 
+                        dateFilterStrings
+                    );
+
+                    if (error) throw error;
+                    if (!data) throw new Error('No data returned');
+
+                    setBatchStats(data);
+                } catch (err) {
+                    console.error('Error fetching batch stats:', err);
+                    setError('Failed to load batch statistics');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            fetchBatchStats();
+        }, [user, selectedTeam, view, localDateFilter]);
+
+        // Fetch user stats when a batch is selected
+        useEffect(() => {
+            if (!user || !selectedTeam || !selectedBatch || view !== 'users') return;
+
+            const fetchUserStats = async () => {
+                setIsLoading(true);
+                setError(null);
+
+                try {
+                    const dateFilterStrings = getDateFilterStrings();
+                    const { data, error } = await simService.getUserStatsForBatch(
+                        selectedTeam,
+                        selectedBatch,
+                        user,
+                        dateFilterStrings
+                    );
+
+                    if (error) throw error;
+                    if (!data) throw new Error('No data returned');
+
+                    setUserStats(data);
+                } catch (err) {
+                    console.error('Error fetching user stats:', err);
+                    setError('Failed to load user statistics');
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            fetchUserStats();
+        }, [user, selectedTeam, selectedBatch, view, localDateFilter]);
+
+        // Loading indicator
+        const LoadingIndicator = () => (
+            <div className="flex justify-center items-center py-8">
+                <RefreshCw size={24} className="animate-spin text-blue-500" />
+                <span className="ml-2 text-gray-600 dark:text-gray-400">Loading...</span>
+            </div>
+        );
+
+        // Error display
+        const ErrorDisplay = ({ message }: { message: string }) => (
+            <div className="bg-red-50 dark:bg-red-900/30 p-6 rounded-lg text-center my-4">
+                <AlertCircle size={24} className="text-red-500 dark:text-red-400 mx-auto mb-2" />
+                <p className="text-red-600 dark:text-red-400">{message}</p>
+                <button
+                    onClick={() => setError(null)}
+                    className="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-md hover:bg-red-200 transition-colors text-sm"
+                >
+                    Dismiss
+                </button>
+            </div>
+        );
 
         // Render teams view
         const renderTeamsView = () => (
             <div className="space-y-4 mt-4">
                 <h3 className="text-lg font-semibold">Teams</h3>
-                {Object.entries(cardsByTeam).map(([teamId, cards]) => {
-                    // if (teamId === 'unassigned') return null;
-                    const { quality, nonQuality } = countQualityCards(cards);
-                    return (
-                        <div 
-                            key={teamId}
-                            className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-                            onClick={() => {
-                                setSelectedTeam(teamId);
-                                setView('batches');
-                            }}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h4 className="font-medium">{getTeamName(teamId)}</h4>
-                                    <p className="text-sm text-gray-500">Total: {cards.length} SIM cards</p>
+
+                {isLoading ? (
+                    <LoadingIndicator />
+                ) : error ? (
+                    <ErrorDisplay message={error} />
+                ) : teamStats.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        No teams found
+                    </div>
+                ) : (
+                    teamStats.map(team => {
+                        const nonQuality = team.stats.matched - team.stats.quality;
+                        return (
+                            <div 
+                                key={team.id}
+                                className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                                onClick={() => {
+                                    setSelectedTeam(team.id);
+                                    setView('batches');
+                                }}
+                            >
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h4 className="font-medium">{team.name}</h4>
+                                        <p className="text-sm text-gray-500">Total: {team.stats.total} SIM cards</p>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                            Quality: {team.stats.quality}
+                                        </span>
+                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                                            Non-Quality: {nonQuality}
+                                        </span>
+                                    </div>
+                                    <ChevronRight size={16} />
                                 </div>
-                                <div className="flex space-x-2">
-                                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                        Quality: {quality}
-                                    </span>
-                                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                                        Non-Quality: {nonQuality}
-                                    </span>
-                                </div>
-                                <ChevronRight size={16} />
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })
+                )}
             </div>
         );
 
@@ -318,7 +843,8 @@ export default function SimStats({refreshing = false}) {
         const renderBatchesView = () => {
             if (!selectedTeam) return null;
 
-            const batches = cardsByTeamAndBatch[selectedTeam] || {};
+            // Find the selected team name
+            const selectedTeamName = teamStats.find(team => team.id === selectedTeam)?.name || getTeamName(selectedTeam);
 
             return (
                 <div className="space-y-4 mt-4">
@@ -333,38 +859,48 @@ export default function SimStats({refreshing = false}) {
                             <ChevronUp size={16} className="mr-1" />
                             Back to Teams
                         </button>
-                        <h3 className="text-lg font-semibold ml-4">{getTeamName(selectedTeam)} - Batches</h3>
+                        <h3 className="text-lg font-semibold ml-4">{selectedTeamName} - Batches</h3>
                     </div>
 
-                    {Object.entries(batches).map(([batchId, cards]) => {
-                        const { quality, nonQuality } = countQualityCards(cards);
-                        return (
-                            <div 
-                                key={batchId}
-                                className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-                                onClick={() => {
-                                    setSelectedBatch(batchId);
-                                    setView('users');
-                                }}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-medium">Batch: {batchId === 'unassigned' ? 'Unassigned' : batchId}</h4>
-                                        <p className="text-sm text-gray-500">Total: {cards.length} SIM cards</p>
+                    {isLoading ? (
+                        <LoadingIndicator />
+                    ) : error ? (
+                        <ErrorDisplay message={error} />
+                    ) : batchStats.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                            No batches found for this team
+                        </div>
+                    ) : (
+                        batchStats.map(batch => {
+                            const nonQuality = batch.stats.matched - batch.stats.quality;
+                            return (
+                                <div 
+                                    key={batch.id}
+                                    className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+                                    onClick={() => {
+                                        setSelectedBatch(batch.id);
+                                        setView('users');
+                                    }}
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h4 className="font-medium">Batch: {batch.id === 'unassigned' ? 'Unassigned' : batch.id}</h4>
+                                            <p className="text-sm text-gray-500">Total: {batch.stats.total} SIM cards</p>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                                Quality: {batch.stats.quality}
+                                            </span>
+                                            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                                                Non-Quality: {nonQuality}
+                                            </span>
+                                        </div>
+                                        <ChevronRight size={16} />
                                     </div>
-                                    <div className="flex space-x-2">
-                                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                            Quality: {quality}
-                                        </span>
-                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                                            Non-Quality: {nonQuality}
-                                        </span>
-                                    </div>
-                                    <ChevronRight size={16} />
                                 </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
             );
         };
@@ -373,8 +909,8 @@ export default function SimStats({refreshing = false}) {
         const renderUsersView = () => {
             if (!selectedTeam || !selectedBatch) return null;
 
-            const cards = cardsByTeamAndBatch[selectedTeam]?.[selectedBatch] || [];
-            const userCards = getCardsByUser(cards);
+            // Find the selected team name
+            const selectedTeamName = teamStats.find(team => team.id === selectedTeam)?.name || getTeamName(selectedTeam);
 
             return (
                 <div className="space-y-4 mt-4">
@@ -390,39 +926,43 @@ export default function SimStats({refreshing = false}) {
                             Back to Batches
                         </button>
                         <h3 className="text-lg font-semibold ml-4">
-                            {getTeamName(selectedTeam)} - Batch: {selectedBatch === 'unassigned' ? 'Unassigned' : selectedBatch} - Users
+                            {selectedTeamName} - Batch: {selectedBatch === 'unassigned' ? 'Unassigned' : selectedBatch} - Users
                         </h3>
                     </div>
 
-                    {userCards.map(({ user, cards }) => {
-                        const { quality, nonQuality } = countQualityCards(cards);
-                        return (
-                            <div 
-                                key={user.id}
-                                className="p-4 border rounded-lg"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-medium">{user.full_name}</h4>
-                                        <p className="text-sm text-gray-500">Total: {cards.length} SIM cards</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                            Quality: {quality}
-                                        </span>
-                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                                            Non-Quality: {nonQuality}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {userCards.length === 0 && (
-                        <div className="p-4 text-center text-gray-500">
+                    {isLoading ? (
+                        <LoadingIndicator />
+                    ) : error ? (
+                        <ErrorDisplay message={error} />
+                    ) : userStats.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                             No users found for this batch
                         </div>
+                    ) : (
+                        userStats.map(user => {
+                            const nonQuality = user.stats.matched - user.stats.quality;
+                            return (
+                                <div 
+                                    key={user.id}
+                                    className="p-4 border rounded-lg"
+                                >
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <h4 className="font-medium">{user.name}</h4>
+                                            <p className="text-sm text-gray-500">Total: {user.stats.total} SIM cards</p>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                                Quality: {user.stats.quality}
+                                            </span>
+                                            <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                                                Non-Quality: {nonQuality}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
                     )}
                 </div>
             );
@@ -442,43 +982,111 @@ export default function SimStats({refreshing = false}) {
 
                 <div className="mb-4">
                     <div className="flex items-center space-x-2 mb-2">
-                        <Calendar size={16} />
-                        <span className="text-sm text-gray-500">
-                            {dateFilter.startDate 
-                                ? `${dateFilter.startDate.toLocaleDateString()} - ${dateFilter.endDate?.toLocaleDateString() || 'Present'}`
-                                : 'All Time'
-                            }
-                        </span>
+                        <Filter size={16} className="text-gray-500" />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by date:</span>
                     </div>
 
                     <div className="flex space-x-2">
                         <button 
-                            className={`px-3 py-1 rounded-md text-sm ${dateFilter.startDate ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
-                            onClick={() => handleDateFilterChange({startDate: null, endDate: null})}
+                            className={`px-3 py-1 rounded-md text-sm ${localDateFilter.startDate ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200'}`}
+                            onClick={() => handleLocalDateFilterChange({startDate: null, endDate: null})}
                         >
                             All Time
                         </button>
                         <button 
                             className={`px-3 py-1 rounded-md text-sm ${
-                                dateFilter.startDate?.toDateString() === startOfToday.toDateString() 
-                                ? 'bg-blue-100 text-blue-800' 
-                                : 'bg-gray-100 text-gray-800'
+                                localDateFilter.startDate?.toDateString() === startOfToday.toDateString() 
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200' 
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                             }`}
-                            onClick={() => handleDateFilterChange({startDate: startOfToday, endDate: now})}
+                            onClick={() => handleLocalDateFilterChange({startDate: startOfToday, endDate: now})}
                         >
                             Today
                         </button>
                         <button 
                             className={`px-3 py-1 rounded-md text-sm ${
-                                dateFilter.startDate?.toDateString() === startOfWeek.toDateString() 
-                                ? 'bg-blue-100 text-blue-800' 
-                                : 'bg-gray-100 text-gray-800'
+                                localDateFilter.startDate?.toDateString() === startOfWeek.toDateString() 
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200' 
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                             }`}
-                            onClick={() => handleDateFilterChange({startDate: startOfWeek, endDate: now})}
+                            onClick={() => handleLocalDateFilterChange({startDate: startOfWeek, endDate: now})}
                         >
                             This Week
                         </button>
+                        <button 
+                            className="px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 flex items-center"
+                            onClick={() => {
+                                const dialogRef = dialog.create({
+                                    content: (
+                                        <div className="p-4">
+                                            <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                                                    <input 
+                                                        type="date" 
+                                                        className="w-full p-2 border rounded-md"
+                                                        defaultValue={localDateFilter.startDate?.toISOString().split('T')[0]}
+                                                        id="dialog-start-date-input"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+                                                    <input 
+                                                        type="date" 
+                                                        className="w-full p-2 border rounded-md"
+                                                        defaultValue={localDateFilter.endDate?.toISOString().split('T')[0]}
+                                                        id="dialog-end-date-input"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 flex justify-end space-x-2">
+                                                <button 
+                                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
+                                                    onClick={() => dialogRef.dismiss()}
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button 
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                                                    onClick={() => {
+                                                        const startDateInput = document.getElementById('dialog-start-date-input') as HTMLInputElement;
+                                                        const endDateInput = document.getElementById('dialog-end-date-input') as HTMLInputElement;
+
+                                                        const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+                                                        const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+
+                                                        if (endDate) {
+                                                            // Set end date to end of day
+                                                            endDate.setHours(23, 59, 59, 999);
+                                                        }
+
+                                                        handleLocalDateFilterChange({startDate, endDate});
+                                                        dialogRef.dismiss();
+                                                    }}
+                                                >
+                                                    Apply
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ),
+                                    size: "sm"
+                                });
+                            }}
+                        >
+                            <Calendar size={14} className="mr-1" />
+                            Custom
+                        </button>
                     </div>
+
+                    {localDateFilter.startDate && (
+                        <div className="mt-2 flex items-center text-sm text-gray-500">
+                            <Calendar size={14} className="mr-1" />
+                            <span>
+                                {localDateFilter.startDate.toLocaleDateString()} - {localDateFilter.endDate?.toLocaleDateString() || 'Present'}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {view === 'teams' && renderTeamsView()}
@@ -491,31 +1099,20 @@ export default function SimStats({refreshing = false}) {
     const statCards = [
         {
             title: "Total SIM Cards",
-            value: totalStats.total,
+            value: totalData.total,
             todayValue: totalStats.today,
             weekValue: totalStats.thisWeek,
             color: "blue",
             icon: <BarChart size={18}/>,
+            isLoading: isTotalLoading,
             expandable: true,
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
+                            user={user!}
                             title="Total SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={filteredCardsByTeam}
-                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
-                                acc[teamId] = teamCards.reduce((batchAcc, card) => {
-                                    //@ts-ignore
-                                    const batchId = card.batch_id || 'unassigned';
-                                    if (!batchAcc[batchId]) {
-                                        batchAcc[batchId] = [];
-                                    }
-                                    batchAcc[batchId].push(card);
-                                    return batchAcc;
-                                }, {} as Record<string, SimAdapter[]>);
-                                return acc;
-                            }, {} as Record<string, Record<string, SimAdapter[]>>)}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
@@ -525,36 +1122,22 @@ export default function SimStats({refreshing = false}) {
             }
         },
         {
-            title: "Matched",
-            value: matchedStats.total,
+            title: "Activated",
+            value: activatedData.activated,
             todayValue: matchedStats.today,
             weekValue: matchedStats.thisWeek,
             percentage: matchedPercent,
             color: "green",
             icon: <CheckCircle size={20}/>,
+            isLoading: isActivatedLoading,
             expandable: true,
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
-                            title="Matched SIM Cards Breakdown"
+                            title="Activated SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, cards]) => {
-                                acc[teamId] = cards.filter(card => card.match === SIMStatus.MATCH);
-                                return acc;
-                            }, {} as Record<string, SimAdapter[]>)}
-                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
-                                acc[teamId] = teamCards.filter(card => card.match === SIMStatus.MATCH).reduce((batchAcc, card) => {
-                                    //@ts-ignore
-                                    const batchId = card.batch_id || 'unassigned';
-                                    if (!batchAcc[batchId]) {
-                                        batchAcc[batchId] = [];
-                                    }
-                                    batchAcc[batchId].push(card);
-                                    return batchAcc;
-                                }, {} as Record<string, SimAdapter[]>);
-                                return acc;
-                            }, {} as Record<string, Record<string, SimAdapter[]>>)}
+                            user={user!}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
@@ -564,36 +1147,22 @@ export default function SimStats({refreshing = false}) {
             }
         },
         {
-            title: "Unmatched",
-            value: unmatchedStats.total,
+            title: "UnMatched",
+            value: unactivatedData.unactivated,
             todayValue: unmatchedStats.today,
             weekValue: unmatchedStats.thisWeek,
             percentage: unmatchedPercent,
             color: "red",
             icon: <XCircle size={20}/>,
+            isLoading: isUnactivatedLoading,
             expandable: true,
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
+                            user={user!}
                             title="Unmatched SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, cards]) => {
-                                acc[teamId] = cards.filter(card => card.match === SIMStatus.UNMATCH);
-                                return acc;
-                            }, {} as Record<string, SimAdapter[]>)}
-                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
-                                acc[teamId] = teamCards.filter(card => card.match === SIMStatus.UNMATCH).reduce((batchAcc, card) => {
-                                    //@ts-ignore
-                                    const batchId = card.batch_id || 'unassigned';
-                                    if (!batchAcc[batchId]) {
-                                        batchAcc[batchId] = [];
-                                    }
-                                    batchAcc[batchId].push(card);
-                                    return batchAcc;
-                                }, {} as Record<string, SimAdapter[]>);
-                                return acc;
-                            }, {} as Record<string, Record<string, SimAdapter[]>>)}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
@@ -604,35 +1173,21 @@ export default function SimStats({refreshing = false}) {
         },
         {
             title: "Quality",
-            value: qualityStats.total,
+            value: qualityData.quality,
             todayValue: qualityStats.today,
             weekValue: qualityStats.thisWeek,
             percentage: qualityPercent,
             color: "purple",
             icon: <Award size={20}/>,
+            isLoading: isQualityLoading,
             expandable: true,
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
                         <TeamBreakdownDialog
+                            user={user!}
                             title="Quality SIM Cards Breakdown"
                             teams={teams}
-                            cardsByTeam={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, cards]) => {
-                                acc[teamId] = cards.filter(card => card.quality === SIMStatus.QUALITY);
-                                return acc;
-                            }, {} as Record<string, SimAdapter[]>)}
-                            cardsByTeamAndBatch={Object.entries(filteredCardsByTeam).reduce((acc, [teamId, teamCards]) => {
-                                acc[teamId] = teamCards.filter(card => card.quality === SIMStatus.QUALITY).reduce((batchAcc, card) => {
-                                    //@ts-ignore
-                                    const batchId = card.batch_id || 'unassigned';
-                                    if (!batchAcc[batchId]) {
-                                        batchAcc[batchId] = [];
-                                    }
-                                    batchAcc[batchId].push(card);
-                                    return batchAcc;
-                                }, {} as Record<string, SimAdapter[]>);
-                                return acc;
-                            }, {} as Record<string, Record<string, SimAdapter[]>>)}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
@@ -774,7 +1329,7 @@ export default function SimStats({refreshing = false}) {
                 </button>
             </div>
 
-            <DateFilterBar />
+            {isExpanded && <DateFilterBar />}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 {isLoading && !isRefreshing ? (
@@ -799,6 +1354,49 @@ export default function SimStats({refreshing = false}) {
                     ))
                 )}
             </div>
+
+            {/* Data loading status and View More button */}
+            {!isLoading && (
+                <div className="mt-4 mb-8 text-center">
+                    {isExpanded && simCards.length > 0 && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            Showing {simCards.length} of {stats.total} SIM cards
+                        </div>
+                    )}
+
+                    <button
+                        onClick={loadMoreSimCards}
+                        disabled={isLoadingMore}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"
+                    >
+                        {isLoadingMore ? (
+                            <>
+                                <RefreshCw size={16} className="animate-spin" />
+                                Loading...
+                            </>
+                        ) : !isExpanded ? (
+                            <>
+                                View Details
+                            </>
+                        ) : hasMore ? (
+                            <>
+                                Load More
+                            </>
+                        ) : (
+                            <>
+                                All Data Loaded
+                            </>
+                        )}
+                    </button>
+
+                    {isExpanded && !hasMore && simCards.length < stats.total && (
+                        <div className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
+                            <AlertCircle size={16} className="inline mr-1" />
+                            Not all records are loaded. Use filters to narrow down results for better performance.
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
@@ -810,6 +1408,7 @@ function StatCard({
                       percentage,
                       color,
                       isRefreshing,
+                      isLoading = false,
                       todayValue = 0,
                       weekValue = 0,
                       icon, 
@@ -823,6 +1422,7 @@ function StatCard({
     percentage?: number;
     color: "blue" | "green" | "red" | "purple";
     isRefreshing: boolean;
+    isLoading?: boolean;
     icon: React.ReactNode;
     onExpandClick?: () => void;
     description?: string;
@@ -980,13 +1580,13 @@ function StatCard({
                     <p className={`text-2xl font-bold ${colorClasses[color].value} ${
                         isAnimating ? 'animate-pulse' : ''
                     }`}>
-                        {isRefreshing ? (
+                        {isRefreshing || isLoading ? (
                             <span className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
                         ) : getActiveValue().toLocaleString()}
                     </p>
 
                     {/* Trend indicator */}
-                    {!isRefreshing && activeTrend !== null && (
+                    {!isRefreshing && !isLoading && activeTrend !== null && (
                         <div className={`flex items-center ${isTrendPositive ? 'text-green-500' : 'text-red-500'}`}>
                             {isTrendPositive ? <TrendingUp size={16}/> : <TrendingDown size={16}/>}
                             <span className="text-xs font-medium ml-1">{Math.abs(activeTrend)}%</span>

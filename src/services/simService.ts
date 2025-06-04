@@ -2,7 +2,767 @@ import {SIMCard, SIMCardCreate, SIMCardUpdate, SIMStatus, User, UserRole} from "
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {admin_id} from "@/services/helper";
 
+// Interface for pagination parameters
+export interface PaginationParams {
+    page?: number;
+    pageSize?: number;
+    startIndex?: number;
+    endIndex?: number;
+}
+
+// Cache storage
+const cache = {
+    teamStats: new Map<string, { data: any, timestamp: number, filters?: string }>(),
+    batchStats: new Map<string, { data: any, timestamp: number, filters?: string }>(),
+    userStats: new Map<string, { data: any, timestamp: number, filters?: string }>(),
+    simCardCounts: new Map<string, { data: any, timestamp: number, filters?: string }>(),
+
+    // Method to clear all caches
+    clearAll: () => {
+        cache.teamStats.clear();
+        cache.batchStats.clear();
+        cache.userStats.clear();
+        cache.simCardCounts.clear();
+        console.log('All caches cleared');
+    },
+
+    // Method to clear cache for a specific user
+    clearForUser: (userId: string) => {
+        // Clear team stats
+        for (const key of cache.teamStats.keys()) {
+            if (key.includes(userId)) {
+                cache.teamStats.delete(key);
+            }
+        }
+
+        // Clear batch stats
+        for (const key of cache.batchStats.keys()) {
+            if (key.includes(userId)) {
+                cache.batchStats.delete(key);
+            }
+        }
+
+        // Clear user stats
+        for (const key of cache.userStats.keys()) {
+            if (key.includes(userId)) {
+                cache.userStats.delete(key);
+            }
+        }
+
+        // Clear sim card counts
+        for (const key of cache.simCardCounts.keys()) {
+            if (key.includes(userId)) {
+                cache.simCardCounts.delete(key);
+            }
+        }
+
+        console.log(`Cache cleared for user ${userId}`);
+    }
+};
+
+// Cache expiration time (5 minutes)
+const CACHE_EXPIRATION = 5 * 60 * 1000;
+
+// Helper to generate cache key
+const generateCacheKey = (prefix: string, id: string, filters?: { startDate?: string, endDate?: string }) => {
+    const filterString = filters ? `_${filters.startDate || ''}_${filters.endDate || ''}` : '';
+    return `${prefix}_${id}${filterString}`;
+};
+
 export const simCardService = {
+    // Export cache for external use
+    cache,
+
+    // Get only total count of SIM cards
+    getTotalCount: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('simCardTotal', user.id, filters);
+
+        // Check cache
+        const cachedData = cache.simCardCounts.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached total count');
+            return cachedData.data;
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // Base query for total count
+        let baseQuery = supabase
+            .from('sim_cards')
+            .select('id', { count: 'exact', head: false })
+            .eq('admin_id', adminId);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            baseQuery = baseQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            baseQuery = baseQuery.lte('registered_on', filters.endDate);
+        }
+
+        // Apply role-specific filters
+        if (user.role === UserRole.STAFF) {
+            baseQuery = baseQuery.eq('sold_by_user_id', user.id);
+        } else if (user.role === UserRole.TEAM_LEADER) {
+            baseQuery = baseQuery.eq('team_id', user.team_id);
+        }
+
+        // Get total count
+        const { count: totalCount, error: totalError } = await baseQuery;
+
+        const result = {
+            total: totalCount || 0,
+            error: totalError || null
+        };
+
+        // Store in cache if there's no error
+        if (!result.error) {
+            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+        }
+
+        return result;
+    },
+
+    // Get only activated (matched) count of SIM cards
+    getActivatedCount: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('simCardActivated', user.id, filters);
+
+        // Check cache
+        const cachedData = cache.simCardCounts.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached activated count');
+            return cachedData.data;
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // Base query for activated count
+        let baseQuery = supabase
+            .from('sim_cards')
+            .select('id', { count: 'exact', head: false })
+            .eq('admin_id', adminId)
+            .eq('status', SIMStatus.ACTIVATED);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            baseQuery = baseQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            baseQuery = baseQuery.lte('registered_on', filters.endDate);
+        }
+
+        // Apply role-specific filters
+        if (user.role === UserRole.STAFF) {
+            baseQuery = baseQuery.eq('sold_by_user_id', user.id);
+        } else if (user.role === UserRole.TEAM_LEADER) {
+            baseQuery = baseQuery.eq('team_id', user.team_id);
+        }
+
+        // Get activated count
+        const { count: activatedCount, error: activatedError } = await baseQuery;
+
+        const result = {
+            activated: activatedCount || 0,
+            error: activatedError || null
+        };
+
+        // Store in cache if there's no error
+        if (!result.error) {
+            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+        }
+
+        return result;
+    },
+
+    // Get only unactivated (unmatched) count of SIM cards
+    getUnmatchedCount: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('simCardUnactivated', user.id, filters);
+
+        // Check cache
+        const cachedData = cache.simCardCounts.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached unactivated count');
+            return cachedData.data;
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // Base query for unactivated count
+        let baseQuery = supabase
+            .from('sim_cards')
+            .select('id', { count: 'exact', head: false })
+            .eq('admin_id', adminId)
+            .eq('match', SIMStatus.UNMATCH);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            baseQuery = baseQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            baseQuery = baseQuery.lte('registered_on', filters.endDate);
+        }
+
+        // Apply role-specific filters
+        if (user.role === UserRole.STAFF) {
+            baseQuery = baseQuery.eq('sold_by_user_id', user.id);
+        } else if (user.role === UserRole.TEAM_LEADER) {
+            baseQuery = baseQuery.eq('team_id', user.team_id);
+        }
+
+        // Get unactivated count
+        const { count: unactivatedCount, error: unactivatedError } = await baseQuery;
+
+        const result = {
+            unactivated: unactivatedCount || 0,
+            error: unactivatedError || null
+        };
+
+        // Store in cache if there's no error
+        if (!result.error) {
+            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+        }
+
+        return result;
+    },
+
+    // Get only quality count of SIM cards
+    getQualityCount: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('simCardQuality', user.id, filters);
+
+        // Check cache
+        const cachedData = cache.simCardCounts.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached quality count');
+            return cachedData.data;
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // Base query for quality count
+        let baseQuery = supabase
+            .from('sim_cards')
+            .select('id', { count: 'exact', head: false })
+            .eq('admin_id', adminId)
+            .eq('quality', SIMStatus.QUALITY);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            baseQuery = baseQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            baseQuery = baseQuery.lte('registered_on', filters.endDate);
+        }
+
+        // Apply role-specific filters
+        if (user.role === UserRole.STAFF) {
+            baseQuery = baseQuery.eq('sold_by_user_id', user.id);
+        } else if (user.role === UserRole.TEAM_LEADER) {
+            baseQuery = baseQuery.eq('team_id', user.team_id);
+        }
+
+        // Get quality count
+        const { count: qualityCount, error: qualityError } = await baseQuery;
+
+        const result = {
+            quality: qualityCount || 0,
+            error: qualityError || null
+        };
+
+        // Store in cache if there's no error
+        if (!result.error) {
+            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+        }
+
+        return result;
+    },
+    // Get team-level statistics without fetching all SIM cards
+    getTeamStats: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('teamStats', user.id, filters);
+
+        // Check cache
+        const cachedData = cache.teamStats.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached team stats');
+            return { data: cachedData.data, error: null };
+        }
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // Base query to get teams with their SIM card counts
+        let query = supabase
+            .from('teams')
+            .select(`
+                id, 
+                name,
+                leader_id (full_name),
+                sim_cards!team_id (
+                    id,
+                    match,
+                    quality
+                )
+            `)
+            .eq('admin_id', adminId);
+
+        // Apply role-specific filters
+        if (user.role === UserRole.TEAM_LEADER) {
+            query = query.eq('id', user.team_id);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            console.error('Error fetching team stats:', error);
+            return { data: null, error };
+        }
+
+        // Process the data to calculate statistics for each team
+        const teamStats = data.map(team => {
+            const simCards = team.sim_cards || [];
+
+            // Apply date filters if provided
+            let filteredCards = simCards;
+            if (filters?.startDate || filters?.endDate) {
+                filteredCards = simCards.filter(card => {
+                    //@ts-ignore
+                    const cardDate = new Date(card.registered_on || card.created_at);
+                    const startDate = filters?.startDate ? new Date(filters.startDate) : null;
+                    const endDate = filters?.endDate ? new Date(filters.endDate) : null;
+
+                    if (startDate && endDate) {
+                        return cardDate >= startDate && cardDate <= endDate;
+                    } else if (startDate) {
+                        return cardDate >= startDate;
+                    } else if (endDate) {
+                        return cardDate <= endDate;
+                    }
+                    return true;
+                });
+            }
+
+            const total = filteredCards.length;
+            const matched = filteredCards.filter(card => card.match === SIMStatus.MATCH).length;
+            const unmatched = filteredCards.filter(card => card.match === SIMStatus.UNMATCH).length;
+            const quality = filteredCards.filter(card => card.quality === SIMStatus.QUALITY).length;
+
+            return {
+                id: team.id,
+                name: team.name,
+                leader: team.leader_id,
+                stats: {
+                    total,
+                    matched,
+                    unmatched,
+                    quality
+                }
+            };
+        });
+
+        // Store in cache
+        cache.teamStats.set(cacheKey, { data: teamStats, timestamp: Date.now() });
+
+        return { data: teamStats, error: null };
+    },
+
+    // Get batch-level statistics for a specific team
+    getBatchStatsForTeam: async (teamId: string, user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('batchStats', `${user.id}_${teamId}`, filters);
+
+        // Check cache
+        const cachedData = cache.batchStats.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached batch stats');
+            return { data: cachedData.data, error: null };
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // First, get all unique batch IDs for this team
+        let batchQuery = supabase
+            .from('sim_cards')
+            .select('batch_id')
+            .eq('team_id', teamId)
+            .eq('admin_id', adminId)
+            .not('batch_id', 'is', null);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            batchQuery = batchQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            batchQuery = batchQuery.lte('registered_on', filters.endDate);
+        }
+
+        const { data: batchData, error: batchError } = await batchQuery;
+
+        if (batchError) {
+            console.error('Error fetching batch IDs:', batchError);
+            return { data: null, error: batchError };
+        }
+
+        // Extract unique batch IDs
+        const uniqueBatchIds = [...new Set(batchData.map(item => item.batch_id))];
+
+        // Now get statistics for each batch
+        const batchStats = await Promise.all(
+            uniqueBatchIds.map(async (batchId) => {
+                let cardQuery = supabase
+                    .from('sim_cards')
+                    .select('id, match, quality')
+                    .eq('team_id', teamId)
+                    .eq('batch_id', batchId)
+                    .eq('admin_id', adminId);
+
+                // Apply date filters if provided
+                if (filters?.startDate) {
+                    cardQuery = cardQuery.gte('registered_on', filters.startDate);
+                }
+                if (filters?.endDate) {
+                    cardQuery = cardQuery.lte('registered_on', filters.endDate);
+                }
+
+                const { data: cards, error: cardsError } = await cardQuery;
+
+                if (cardsError) {
+                    console.error(`Error fetching cards for batch ${batchId}:`, cardsError);
+                    return null;
+                }
+
+                const total = cards.length;
+                const matched = cards.filter(card => card.match === SIMStatus.MATCH).length;
+                const unmatched = cards.filter(card => card.match === SIMStatus.UNMATCH).length;
+                const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;
+
+                return {
+                    id: batchId,
+                    stats: {
+                        total,
+                        matched,
+                        unmatched,
+                        quality
+                    }
+                };
+            })
+        );
+
+        // Also get cards without a batch ID (unassigned)
+        let unassignedQuery = supabase
+            .from('sim_cards')
+            .select('id, match, quality')
+            .eq('team_id', teamId)
+            .eq('admin_id', adminId)
+            .is('batch_id', null);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            unassignedQuery = unassignedQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            unassignedQuery = unassignedQuery.lte('registered_on', filters.endDate);
+        }
+
+        const { data: unassignedCards, error: unassignedError } = await unassignedQuery;
+
+        if (!unassignedError && unassignedCards.length > 0) {
+            const total = unassignedCards.length;
+            const matched = unassignedCards.filter(card => card.match === SIMStatus.MATCH).length;
+            const unmatched = unassignedCards.filter(card => card.match === SIMStatus.UNMATCH).length;
+            const quality = unassignedCards.filter(card => card.quality === SIMStatus.QUALITY).length;
+
+            batchStats.push({
+                id: 'unassigned',
+                stats: {
+                    total,
+                    matched,
+                    unmatched,
+                    quality
+                }
+            });
+        }
+
+        // Filter out any null values from failed batch queries
+        const validBatchStats = batchStats.filter(batch => batch !== null);
+
+        // Store in cache
+        cache.batchStats.set(cacheKey, { data: validBatchStats, timestamp: Date.now() });
+
+        return { data: validBatchStats, error: null };
+    },
+
+    // Get user-level statistics for a specific batch
+    getUserStatsForBatch: async (teamId: string, batchId: string, user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('userStats', `${user.id}_${teamId}_${batchId}`, filters);
+
+        // Check cache
+        const cachedData = cache.userStats.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached user stats');
+            return { data: cachedData.data, error: null };
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // First, get all unique user IDs who sold cards in this batch
+        let userQuery = supabase
+            .from('sim_cards')
+            .select('sold_by_user_id')
+            .eq('team_id', teamId)
+            .eq('admin_id', adminId);
+
+        // Handle unassigned batch case
+        if (batchId === 'unassigned') {
+            userQuery = userQuery.is('batch_id', null);
+        } else {
+            userQuery = userQuery.eq('batch_id', batchId);
+        }
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            userQuery = userQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            userQuery = userQuery.lte('registered_on', filters.endDate);
+        }
+
+        const { data: userData, error: userError } = await userQuery;
+
+        if (userError) {
+            console.error('Error fetching user IDs:', userError);
+            return { data: null, error: userError };
+        }
+
+        // Extract unique user IDs
+        const uniqueUserIds = [...new Set(userData.map(item => item.sold_by_user_id).filter(id => id !== null))];
+
+        // Now get statistics for each user
+        const userStats = await Promise.all(
+            uniqueUserIds.map(async (userId) => {
+                // First get user details
+                const { data: userDetails, error: userDetailsError } = await supabase
+                    .from('users')
+                    .select('id, full_name')
+                    .eq('id', userId)
+                    .single();
+
+                if (userDetailsError) {
+                    console.error(`Error fetching details for user ${userId}:`, userDetailsError);
+                    return null;
+                }
+
+                // Then get card statistics
+                let cardQuery = supabase
+                    .from('sim_cards')
+                    .select('id, match, quality')
+                    .eq('team_id', teamId)
+                    .eq('sold_by_user_id', userId)
+                    .eq('admin_id', adminId);
+
+                // Handle unassigned batch case
+                if (batchId === 'unassigned') {
+                    cardQuery = cardQuery.is('batch_id', null);
+                } else {
+                    cardQuery = cardQuery.eq('batch_id', batchId);
+                }
+
+                // Apply date filters if provided
+                if (filters?.startDate) {
+                    cardQuery = cardQuery.gte('registered_on', filters.startDate);
+                }
+                if (filters?.endDate) {
+                    cardQuery = cardQuery.lte('registered_on', filters.endDate);
+                }
+
+                const { data: cards, error: cardsError } = await cardQuery;
+
+                if (cardsError) {
+                    console.error(`Error fetching cards for user ${userId}:`, cardsError);
+                    return null;
+                }
+
+                const total = cards.length;
+                const matched = cards.filter(card => card.match === SIMStatus.MATCH).length;
+                const unmatched = cards.filter(card => card.match === SIMStatus.UNMATCH).length;
+                const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;
+
+                return {
+                    id: userId,
+                    name: userDetails.full_name,
+                    stats: {
+                        total,
+                        matched,
+                        unmatched,
+                        quality
+                    }
+                };
+            })
+        );
+
+        // Filter out any null values from failed user queries
+        const validUserStats = userStats.filter(user => user !== null);
+
+        // Store in cache
+        cache.userStats.set(cacheKey, { data: validUserStats, timestamp: Date.now() });
+
+        return { data: validUserStats, error: null };
+    },
+
+    // Get counts of SIM cards by different criteria
+    getSimCardCounts: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
+        // Generate cache key
+        const cacheKey = generateCacheKey('simCardCounts', user.id, filters);
+
+        // Check cache
+        const cachedData = cache.simCardCounts.get(cacheKey);
+        const now = Date.now();
+
+        if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
+            console.log('Using cached sim card counts');
+            return cachedData.data;
+        }
+
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        // Base query for all counts
+        let baseQuery = supabase
+            .from('sim_cards')
+            .select('id, match, quality', { count: 'exact', head: false })
+            .eq('admin_id', adminId);
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            baseQuery = baseQuery.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            baseQuery = baseQuery.lte('registered_on', filters.endDate);
+        }
+
+        // Apply role-specific filters
+        if (user.role === UserRole.STAFF) {
+            baseQuery = baseQuery.eq('sold_by_user_id', user.id);
+        } else if (user.role === UserRole.TEAM_LEADER) {
+            baseQuery = baseQuery.eq('team_id', user.team_id);
+        }
+
+        // Get total count
+        const { count: totalCount, error: totalError } = await baseQuery;
+
+        if (totalError) {
+            console.error('Error fetching total count:', totalError);
+            return { 
+                total: 0, 
+                matched: 0, 
+                unmatched: 0, 
+                quality: 0,
+                error: totalError 
+            };
+        }
+
+        // Get matched count
+        const { count: matchedCount, error: matchedError } = await baseQuery
+            .eq('match', SIMStatus.MATCH);
+
+        // Get unmatched count
+        const { count: unmatchedCount, error: unmatchedError } = await baseQuery
+            .eq('match', SIMStatus.UNMATCH);
+
+        // Get quality count
+        const { count: qualityCount, error: qualityError } = await baseQuery
+            .eq('quality', SIMStatus.QUALITY);
+
+        const result = {
+            total: totalCount || 0,
+            matched: matchedCount || 0,
+            unmatched: unmatchedCount || 0,
+            quality: qualityCount || 0,
+            error: totalError || matchedError || unmatchedError || qualityError || null
+        };
+
+        // Store in cache if there's no error
+        if (!result.error) {
+            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+        }
+
+        return result;
+    },
+
+    // Get SIM cards with pagination
+    getSimCardsChunked: async (user: User, pagination: PaginationParams, filters?: { startDate?: string, endDate?: string }) => {
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        let query;
+
+        if (user.role === UserRole.ADMIN) {
+            query = supabase
+                .from('sim_cards')
+                .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .eq("admin_id", adminId)
+                .order('created_at', {ascending: false});
+        } else if (user.role === UserRole.STAFF) {
+            query = supabase
+                .from('sim_cards')
+                .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
+                .eq('sold_by_user_id', user.id)
+                .eq("admin_id", adminId)
+                .order('registered_on', {ascending: false});
+        } else if (user.role === UserRole.TEAM_LEADER) {
+            query = supabase
+                .from('sim_cards')
+                .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .eq("admin_id", adminId)
+                .eq("team_id", user.team_id)
+                .order('registered_on', {ascending: false});
+        } else {
+            return {data: null, error: "Invalid user role"};
+        }
+
+        // Apply date filters if provided
+        if (filters?.startDate) {
+            query = query.gte('registered_on', filters.startDate);
+        }
+        if (filters?.endDate) {
+            query = query.lte('registered_on', filters.endDate);
+        }
+
+        // Apply pagination
+        if (pagination.page !== undefined && pagination.pageSize !== undefined) {
+            const from = pagination.page * pagination.pageSize;
+            const to = from + pagination.pageSize - 1;
+            query = query.range(from, to);
+        } else if (pagination.startIndex !== undefined && pagination.endIndex !== undefined) {
+            query = query.range(pagination.startIndex, pagination.endIndex);
+        }
+
+        return query;
+    },
+
     getAllSimCards: async (user: User) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
@@ -10,7 +770,7 @@ export const simCardService = {
                 .from('sim_cards')
                 .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
                 .eq("admin_id", await admin_id(user))
-                .order('sale_date', {ascending: false});
+                .order('created_at', {ascending: false});
         }
 
         if (user.role === UserRole.STAFF) {
@@ -20,7 +780,7 @@ export const simCardService = {
                 .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
                 .eq('sold_by_user_id', user.id)
                 .eq("admin_id", await admin_id(user))
-                .order('sale_date', {ascending: false});
+                .order('registered_on', {ascending: false});
         }
         if (user.role === UserRole.TEAM_LEADER) {
             return supabase
@@ -29,7 +789,7 @@ export const simCardService = {
                 .eq("admin_id", await admin_id(user))
                 .eq("team_id", user.team_id)
                 // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
-                .order('sale_date', {ascending: false});
+                .order('registered_on', {ascending: false});
         }
 
         return {data: null, error: "Invalid user role"}
@@ -191,7 +951,7 @@ export const simCardService = {
             .from('sim_cards')
             .select('*')
             .eq('sold_by_user_id', userId)
-            .order('sale_date', {ascending: false});
+            .order('registered_on', {ascending: false});
 
         if (error) {
             console.error('Error fetching SIM cards by user ID:', error);
@@ -253,11 +1013,11 @@ export const simCardService = {
 
         // Add date filters if provided
         if (startDate) {
-            query = query.gte('sale_date', startDate);
+            query = query.gte('registered_on', startDate);
         }
 
         if (endDate) {
-            query = query.lte('sale_date', endDate);
+            query = query.lte('registered_on', endDate);
         }
 
         const {data, error} = await query;
@@ -311,11 +1071,11 @@ export const simCardService = {
 
         // Add date filters if provided
         if (startDate) {
-            query = query.gte('sale_date', startDate);
+            query = query.gte('registered_on', startDate);
         }
 
         if (endDate) {
-            query = query.lte('sale_date', endDate);
+            query = query.lte('registered_on', endDate);
         }
 
         const {data, error} = await query;
@@ -478,14 +1238,14 @@ export const simCardService = {
         }
 
         if (criteria.startDate) {
-            query = query.gte('sale_date', criteria.startDate);
+            query = query.gte('registered_on', criteria.startDate);
         }
 
         if (criteria.endDate) {
-            query = query.lte('sale_date', criteria.endDate);
+            query = query.lte('registered_on', criteria.endDate);
         }
 
-        const {data, error} = await query.order('sale_date', {ascending: false});
+        const {data, error} = await query.order('registered_on', {ascending: false});
 
         if (error) {
             console.error('Error searching SIM cards:', error);
@@ -501,9 +1261,9 @@ export const simCardService = {
             .from('sim_cards')
             .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
             .eq("admin_id", await admin_id(user))
-            .gte('sale_date', startDate)
-            .lte('sale_date', endDate)
-            .order('sale_date', {ascending: false});
+            .gte('registered_on', startDate)
+            .lte('registered_on', endDate)
+            .order('registered_on', {ascending: false});
     },
 };
 
