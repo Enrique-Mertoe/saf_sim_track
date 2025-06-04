@@ -1304,41 +1304,41 @@ export default function SimStats({refreshing = false}) {
             </div>
 
             {/* Data loading status and View More button */}
-            {!isLoading && (
-                <div className="mt-4 mb-8 text-center">
-                    {isExpanded && simCards.length > 0 && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            Showing {simCards.length} of {stats.total} SIM cards
-                        </div>
-                    )}
+            {/*{!isLoading && (*/}
+            {/*    <div className="mt-4 mb-8 text-center">*/}
+            {/*        {isExpanded && simCards.length > 0 && (*/}
+            {/*            <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">*/}
+            {/*                Showing {simCards.length} of {stats.total} SIM cards*/}
+            {/*            </div>*/}
+            {/*        )}*/}
 
-                    {!isExpanded && (
-                        <button
-                            onClick={expandView}
-                            disabled={isLoadingMore}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"
-                        >
-                            {isLoadingMore ? (
-                                <>
-                                    <RefreshCw size={16} className="animate-spin" />
-                                    Loading...
-                                </>
-                            ) : (
-                                <>
-                                    View Details
-                                </>
-                            )}
-                        </button>
-                    )}
+            {/*        {!isExpanded && (*/}
+            {/*            <button*/}
+            {/*                onClick={expandView}*/}
+            {/*                disabled={isLoadingMore}*/}
+            {/*                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"*/}
+            {/*            >*/}
+            {/*                {isLoadingMore ? (*/}
+            {/*                    <>*/}
+            {/*                        <RefreshCw size={16} className="animate-spin" />*/}
+            {/*                        Loading...*/}
+            {/*                    </>*/}
+            {/*                ) : (*/}
+            {/*                    <>*/}
+            {/*                        View Details*/}
+            {/*                    </>*/}
+            {/*                )}*/}
+            {/*            </button>*/}
+            {/*        )}*/}
 
-                    {isExpanded && simCards.length < stats.total && (
-                        <div className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">
-                            <AlertCircle size={16} className="inline mr-1" />
-                            Not all records are loaded. Use filters to narrow down results for better performance.
-                        </div>
-                    )}
-                </div>
-            )}
+            {/*        {isExpanded && simCards.length < stats.total && (*/}
+            {/*            <div className="text-sm text-yellow-600 dark:text-yellow-400 mt-2">*/}
+            {/*                <AlertCircle size={16} className="inline mr-1" />*/}
+            {/*                Not all records are loaded. Use filters to narrow down results for better performance.*/}
+            {/*            </div>*/}
+            {/*        )}*/}
+            {/*    </div>*/}
+            {/*)}*/}
         </div>
     );
 }
