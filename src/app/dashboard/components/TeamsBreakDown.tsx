@@ -3,16 +3,20 @@ import simService from "@/services/simService";
 import {AlertCircle, Calendar, ChevronRight, ChevronUp, Filter, RefreshCw, X,} from "lucide-react";
 import {useEffect, useState} from "react";
 import {showModal} from "@/ui/shortcuts";
+import TeamStats from "@/app/dashboard/components/TeamStats";
+import {teamService} from "@/services";
 
 const TeamBreakdownDialog = ({
                                  title,
                                  teams,
                                  user,
-                                 onClose
+                                 onClose,
+                                 dataType
                              }: {
     title: string,
     teams: Team[],
     user: User,
+    dataType: string;
     onClose: () => void
 }) => {
     const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
@@ -24,7 +28,6 @@ const TeamBreakdownDialog = ({
         startDate: null,
         endDate: null
     });
-    // const dialog = useDialog();
 
     // State for hierarchical data
     const [teamStats, setTeamStats] = useState<Array<{
@@ -96,8 +99,7 @@ const TeamBreakdownDialog = ({
             setError(null);
 
             try {
-                const dateFilterStrings = getDateFilterStrings();
-                const {data, error} = await simService.getTeamStats(user, dateFilterStrings);
+                const {data, error} = await teamService.getAllTeams(user);
 
                 if (error) throw error;
                 if (!data) throw new Error('No data returned');
@@ -211,39 +213,20 @@ const TeamBreakdownDialog = ({
             ) : error ? (
                 <ErrorDisplay message={error}/>
             ) : teamStats.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-8  text-gray-500 dark:text-gray-400">
                     No teams found
                 </div>
             ) : (
-                teamStats.map(team => {
-                    const nonQuality = team.stats.matched - team.stats.quality;
-                    return (
-                        <div
-                            key={team.id}
-                            className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-                            onClick={() => {
-                                setSelectedTeam(team.id);
-                                setView('batches');
-                            }}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h4 className="font-medium">{team.name}</h4>
-                                    <p className="text-sm text-gray-500">Total: {team.stats.total} SIM cards</p>
-                                </div>
-                                <div className="flex space-x-2">
-            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                Quality: {team.stats.quality}
-            </span>
-                                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                Non-Quality: {nonQuality}
-            </span>
-                                </div>
-                                <ChevronRight size={16}/>
-                            </div>
-                        </div>
-                    );
-                })
+                <div className={"grid gap-2 sm:grid-cols-2"}>
+                    {
+                        teamStats.map(team => {
+                            // const nonQuality = team.stats.matched - team.stats.quality;
+                            return (
+                                <TeamStats setView={setView} setSelectedTeam={setSelectedTeam} dataType={dataType} user={user} team={team} key={team.id}/>
+                            );
+                        })
+                    }
+                </div>
             )}
         </div>
     );

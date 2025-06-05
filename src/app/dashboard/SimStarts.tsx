@@ -78,7 +78,7 @@ export default function SimStats({refreshing = false}) {
 
     const statCards = [
         {
-            title: "Registered sim cards",
+            title: "Registered",
             dataType: "registered",
             color: "blue",
             icon: <BarChart size={18}/>,
@@ -88,7 +88,8 @@ export default function SimStats({refreshing = false}) {
                     content: (
                         <TeamBreakdownDialog
                             user={user!}
-                            title="Total SIM Cards Breakdown"
+                            dataType = {"registered"}
+                            title="Registered SIM Cards Breakdown"
                             teams={[]}
                             onClose={() => dialogRef.dismiss()}
                         />
@@ -110,6 +111,7 @@ export default function SimStats({refreshing = false}) {
                         <TeamBreakdownDialog
                             title="Activated SIM Cards Breakdown"
                             teams={[]}
+                            dataType={"activated"}
                             user={user!}
                             onClose={() => dialogRef.dismiss()}
                         />
@@ -132,6 +134,7 @@ export default function SimStats({refreshing = false}) {
                             user={user!}
                             title="Unmatched SIM Cards Breakdown"
                             teams={[]}
+                            dataType={"unmatched"}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
@@ -153,6 +156,7 @@ export default function SimStats({refreshing = false}) {
                             user={user!}
                             title="Quality SIM Cards Breakdown"
                             teams={[]}
+                            dataType={"unmatched"}
                             onClose={() => dialogRef.dismiss()}
                         />
                     ),
