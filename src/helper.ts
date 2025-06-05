@@ -194,3 +194,13 @@ export function escapeHtml(str: string) {
 export function now() {
     return DateTime.now().setZone('Africa/Nairobi').toISO();
 }
+
+export const isSameDay = (date1:any, date2:any) => {
+    if (!date1 || !date2) return false;
+
+    // Extract just the date part (YYYY-MM-DD) for comparison
+    const day1 = date1.split('T')[0];
+    const day2 = date2.split('T')[0];
+
+    return day1 === day2;
+};

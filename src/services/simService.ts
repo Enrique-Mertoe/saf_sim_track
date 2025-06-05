@@ -93,7 +93,7 @@ export const simCardService = {
         // Base query for total count
         let baseQuery = supabase
             .from('sim_cards')
-            .select('id', { count: 'exact', head: false })
+            .select('id,registered_on', { count: 'exact', head: false })
             .eq('admin_id', adminId);
 
         // Apply date filters if provided
@@ -112,7 +112,7 @@ export const simCardService = {
         }
 
         // Get total count
-        const { count: totalCount, error: totalError } = await baseQuery;
+        const { data:all,count: totalCount, error: totalError } = await baseQuery;
 
         const result = {
             total: totalCount || 0,

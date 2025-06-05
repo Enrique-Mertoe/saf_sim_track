@@ -8,7 +8,7 @@ import {SIMStatus} from "@/models";
 import simService from "@/services/simService";
 import Dashboard from "@/ui/components/dash/Dashboard";
 import {motion} from "framer-motion";
-import {formatDate} from "@/helper";
+import {formatDate, isSameDay} from "@/helper";
 import {showModal} from "@/ui/shortcuts";
 import AssignSimCard from "@/app/dashboard/dh/AssignSimCard";
 import UnassignSimCard from "@/app/dashboard/dh/UnassignSimCard";
@@ -16,15 +16,7 @@ import TransferSimCard from "@/app/dashboard/dh/TransferSimCard";
 import SimCardGrid from "@/app/dashboard/dh/SimCardGrid";
 
 // Helper function to compare dates by day only (ignoring time)
-const isSameDay = (date1, date2) => {
-    if (!date1 || !date2) return false;
 
-    // Extract just the date part (YYYY-MM-DD) for comparison
-    const day1 = date1.split('T')[0];
-    const day2 = date2.split('T')[0];
-
-    return day1 === day2;
-};
 
 const TeamLeaderDashboardView = () => {
     const {user} = useApp();
