@@ -78,8 +78,8 @@ export default function SimStats({refreshing = false}) {
 
     const statCards = [
         {
-            title: "Total SIM Cards",
-            dataType: "total",
+            title: "Registered sim cards",
+            dataType: "registered",
             color: "blue",
             icon: <BarChart size={18}/>,
             expandable: true,

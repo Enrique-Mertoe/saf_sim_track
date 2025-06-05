@@ -18,7 +18,7 @@ interface StatCardProps {
     user: User | null;
     onExpandClick?: () => void;
     expandable?: boolean;
-    dataType: 'total' | 'activated' | 'unmatched' | 'quality';
+    dataType: 'total' | 'activated' | 'unmatched' | 'quality' | 'registered';
     supabase: any; // Your Supabase client
     teamId?: string;
     refreshTrigger?: number; // External refresh trigger
@@ -73,7 +73,8 @@ function StatCard({
                 return query.eq('match', SIMStatus.UNMATCH);
             case 'quality':
                 return query.eq('quality', SIMStatus.QUALITY);
-            case 'total':
+            case 'registered':
+                return query.eq('status', SIMStatus.REGISTERED);
             default:
                 return query;
         }
