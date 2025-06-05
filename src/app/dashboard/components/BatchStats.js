@@ -108,8 +108,8 @@ export default function BatchStats({batch, user, dataType, selectedTeam, setSele
 
     // Get registered, assigned, and unassigned counts
     const registered = batch.stats.total;
-    const assigned = batch.stats.matched;
-    const unassigned = batch.stats.total - batch.stats.matched;
+    const assigned = batch.stats.assigned;
+    const unassigned = batch.stats.total - batch.stats.assigned;
 
     return (
         <div

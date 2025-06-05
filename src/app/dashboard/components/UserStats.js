@@ -135,8 +135,8 @@ export default function UserStats({userData, user, dataType, selectedTeam, selec
                             : stats ? null :
                             <p className={"bg-gray-200 px-8 rounded-sm py-2"}></p>
                     }
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-sm text-xs">
-                        Registered: {userData.stats.total}
+                    <span className="px-2 col-span-2 py-1 bg-blue-100 text-blue-800 rounded-sm text-xs">
+                        Registered: {userData.stats.registered}
                     </span>
                 </div>
             </div>

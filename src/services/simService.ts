@@ -93,7 +93,7 @@ export const simCardService = {
         // Base query for total count
         let baseQuery = supabase
             .from('sim_cards')
-            .select('id,registered_on', { count: 'exact', head: false })
+            .select('id,registered_on', {count: 'exact', head: false})
             .eq('admin_id', adminId);
 
         // Apply date filters if provided
@@ -112,7 +112,7 @@ export const simCardService = {
         }
 
         // Get total count
-        const { data:all,count: totalCount, error: totalError } = await baseQuery;
+        const {data: all, count: totalCount, error: totalError} = await baseQuery;
 
         const result = {
             total: totalCount || 0,
@@ -121,7 +121,7 @@ export const simCardService = {
 
         // Store in cache if there's no error
         if (!result.error) {
-            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+            cache.simCardCounts.set(cacheKey, {data: result, timestamp: Date.now()});
         }
 
         return result;
@@ -147,7 +147,7 @@ export const simCardService = {
         // Base query for activated count
         let baseQuery = supabase
             .from('sim_cards')
-            .select('id', { count: 'exact', head: false })
+            .select('id', {count: 'exact', head: false})
             .eq('admin_id', adminId)
             .eq('status', SIMStatus.ACTIVATED);
 
@@ -167,7 +167,7 @@ export const simCardService = {
         }
 
         // Get activated count
-        const { count: activatedCount, error: activatedError } = await baseQuery;
+        const {count: activatedCount, error: activatedError} = await baseQuery;
 
         const result = {
             activated: activatedCount || 0,
@@ -176,7 +176,7 @@ export const simCardService = {
 
         // Store in cache if there's no error
         if (!result.error) {
-            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+            cache.simCardCounts.set(cacheKey, {data: result, timestamp: Date.now()});
         }
 
         return result;
@@ -202,7 +202,7 @@ export const simCardService = {
         // Base query for unactivated count
         let baseQuery = supabase
             .from('sim_cards')
-            .select('id', { count: 'exact', head: false })
+            .select('id', {count: 'exact', head: false})
             .eq('admin_id', adminId)
             .eq('match', SIMStatus.UNMATCH);
 
@@ -222,7 +222,7 @@ export const simCardService = {
         }
 
         // Get unactivated count
-        const { count: unactivatedCount, error: unactivatedError } = await baseQuery;
+        const {count: unactivatedCount, error: unactivatedError} = await baseQuery;
 
         const result = {
             unactivated: unactivatedCount || 0,
@@ -231,7 +231,7 @@ export const simCardService = {
 
         // Store in cache if there's no error
         if (!result.error) {
-            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+            cache.simCardCounts.set(cacheKey, {data: result, timestamp: Date.now()});
         }
 
         return result;
@@ -257,7 +257,7 @@ export const simCardService = {
         // Base query for quality count
         let baseQuery = supabase
             .from('sim_cards')
-            .select('id', { count: 'exact', head: false })
+            .select('id', {count: 'exact', head: false})
             .eq('admin_id', adminId)
             .eq('quality', SIMStatus.QUALITY);
 
@@ -277,7 +277,7 @@ export const simCardService = {
         }
 
         // Get quality count
-        const { count: qualityCount, error: qualityError } = await baseQuery;
+        const {count: qualityCount, error: qualityError} = await baseQuery;
 
         const result = {
             quality: qualityCount || 0,
@@ -286,7 +286,7 @@ export const simCardService = {
 
         // Store in cache if there's no error
         if (!result.error) {
-            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+            cache.simCardCounts.set(cacheKey, {data: result, timestamp: Date.now()});
         }
 
         return result;
@@ -302,7 +302,7 @@ export const simCardService = {
 
         if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
             console.log('Using cached team stats');
-            return { data: cachedData.data, error: null };
+            return {data: cachedData.data, error: null};
         }
         const supabase = createSupabaseClient();
         const adminId = await admin_id(user);
@@ -327,11 +327,11 @@ export const simCardService = {
             query = query.eq('id', user.team_id);
         }
 
-        const { data, error } = await query;
+        const {data, error} = await query;
 
         if (error) {
             console.error('Error fetching team stats:', error);
-            return { data: null, error };
+            return {data: null, error};
         }
 
         // Process the data to calculate statistics for each team
@@ -377,9 +377,9 @@ export const simCardService = {
         });
 
         // Store in cache
-        cache.teamStats.set(cacheKey, { data: teamStats, timestamp: Date.now() });
+        cache.teamStats.set(cacheKey, {data: teamStats, timestamp: Date.now()});
 
-        return { data: teamStats, error: null };
+        return {data: teamStats, error: null};
     },
 
     // Get batch-level statistics for a specific team
@@ -393,7 +393,7 @@ export const simCardService = {
 
         if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
             console.log('Using cached batch stats');
-            return { data: cachedData.data, error: null };
+            return {data: cachedData.data, error: null};
         }
 
         const supabase = createSupabaseClient();
@@ -402,7 +402,7 @@ export const simCardService = {
         // First, get all unique batch IDs for this team
         let batchQuery = supabase
             .from('sim_cards')
-            .select('batch_id', { count: 'exact' })
+            .select('batch_id', {count: 'exact'})
             .eq('team_id', teamId)
             .eq('admin_id', adminId)
             .not('batch_id', 'is', null);
@@ -415,11 +415,11 @@ export const simCardService = {
             batchQuery = batchQuery.lte('registered_on', filters.endDate);
         }
 
-        const { data: batchData, error: batchError } = await batchQuery;
+        const {data: batchData, error: batchError} = await batchQuery;
 
         if (batchError) {
             console.error('Error fetching batch IDs:', batchError);
-            return { data: null, error: batchError };
+            return {data: null, error: batchError};
         }
 
         // Extract unique batch IDs
@@ -428,30 +428,33 @@ export const simCardService = {
         // Now get statistics for each batch
         const batchStats = await Promise.all(
             uniqueBatchIds.map(async (batchId) => {
-                let cardQuery = supabase
-                    .from('sim_cards')
-                    .select('id, match, quality', { count: 'exact' })
-                    .eq('team_id', teamId)
-                    .eq('batch_id', batchId)
-                    .eq('admin_id', adminId);
+                const baseQuery = () => {
+                    let cardQuery = supabase
+                        .from('sim_cards')
+                        .select('id, match, quality', {count: 'exact'})
+                        .eq('team_id', teamId)
+                        .eq('batch_id', batchId)
+                        .eq('admin_id', adminId);
 
-                // Apply date filters if provided
-                if (filters?.startDate) {
-                    cardQuery = cardQuery.gte('registered_on', filters.startDate);
-                }
-                if (filters?.endDate) {
-                    cardQuery = cardQuery.lte('registered_on', filters.endDate);
+                    // Apply date filters if provided
+                    if (filters?.startDate) {
+                        cardQuery = cardQuery.gte('registered_on', filters.startDate);
+                    }
+                    if (filters?.endDate) {
+                        cardQuery = cardQuery.lte('registered_on', filters.endDate);
+                    }
+                    return cardQuery
                 }
 
-                const { data: cards, error: cardsError } = await cardQuery;
+                const {data: cards, error: cardsError, count} = await baseQuery();
 
                 if (cardsError) {
                     console.error(`Error fetching cards for batch ${batchId}:`, cardsError);
                     return null;
                 }
 
-                const total = cards.length;
-                const matched = cards.filter(card => card.match === SIMStatus.MATCH).length;
+                const total = count;
+                const assigned = (await baseQuery().not("assigned_to_user_id", "is", null)).count ?? 0;
                 const unmatched = cards.filter(card => card.match === SIMStatus.UNMATCH).length;
                 const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;
 
@@ -459,7 +462,7 @@ export const simCardService = {
                     id: batchId,
                     stats: {
                         total,
-                        matched,
+                        assigned,
                         unmatched,
                         quality
                     }
@@ -468,26 +471,29 @@ export const simCardService = {
         );
 
         // Also get cards without a batch ID (unassigned)
-        let unassignedQuery = supabase
-            .from('sim_cards')
-            .select('id, match, quality', { count: 'exact' })
-            .eq('team_id', teamId)
-            .eq('admin_id', adminId)
-            .is('batch_id', null);
+        const bQuery = () => {
+            let unassignedQuery = supabase
+                .from('sim_cards')
+                .select('id, match, quality', {count: 'exact'})
+                .eq('team_id', teamId)
+                .eq('admin_id', adminId)
+                .is('batch_id', null);
 
-        // Apply date filters if provided
-        if (filters?.startDate) {
-            unassignedQuery = unassignedQuery.gte('registered_on', filters.startDate);
-        }
-        if (filters?.endDate) {
-            unassignedQuery = unassignedQuery.lte('registered_on', filters.endDate);
+            // Apply date filters if provided
+            if (filters?.startDate) {
+                unassignedQuery = unassignedQuery.gte('registered_on', filters.startDate);
+            }
+            if (filters?.endDate) {
+                unassignedQuery = unassignedQuery.lte('registered_on', filters.endDate);
+            }
+            return unassignedQuery
         }
 
-        const { data: unassignedCards, error: unassignedError } = await unassignedQuery;
+        const {data: unassignedCards, error: unassignedError} = await bQuery();
 
         if (!unassignedError && unassignedCards.length > 0) {
             const total = unassignedCards.length;
-            const matched = unassignedCards.filter(card => card.match === SIMStatus.MATCH).length;
+            const assigned = (await bQuery().not("assigned_to_user_id", "is", null)).count ?? 0;
             const unmatched = unassignedCards.filter(card => card.match === SIMStatus.UNMATCH).length;
             const quality = unassignedCards.filter(card => card.quality === SIMStatus.QUALITY).length;
 
@@ -495,7 +501,7 @@ export const simCardService = {
                 id: 'unassigned',
                 stats: {
                     total,
-                    matched,
+                    assigned,
                     unmatched,
                     quality
                 }
@@ -506,13 +512,16 @@ export const simCardService = {
         const validBatchStats = batchStats.filter(batch => batch !== null);
 
         // Store in cache
-        cache.batchStats.set(cacheKey, { data: validBatchStats, timestamp: Date.now() });
+        cache.batchStats.set(cacheKey, {data: validBatchStats, timestamp: Date.now()});
 
-        return { data: validBatchStats, error: null };
+        return {data: validBatchStats, error: null};
     },
 
     // Get user-level statistics for a specific batch
-    getUserStatsForBatch: async (teamId: string, batchId: string, user: User, filters?: { startDate?: string, endDate?: string }) => {
+    getUserStatsForBatch: async (teamId: string, batchId: string, user: User, filters?: {
+        startDate?: string,
+        endDate?: string
+    }) => {
         // Generate cache key
         const cacheKey = generateCacheKey('userStats', `${user.id}_${teamId}_${batchId}`, filters);
 
@@ -522,7 +531,7 @@ export const simCardService = {
 
         if (cachedData && (now - cachedData.timestamp < CACHE_EXPIRATION)) {
             console.log('Using cached user stats');
-            return { data: cachedData.data, error: null };
+            return {data: cachedData.data, error: null};
         }
 
         const supabase = createSupabaseClient();
@@ -531,7 +540,7 @@ export const simCardService = {
         // First, get all unique user IDs who sold cards in this batch
         let userQuery = supabase
             .from('sim_cards')
-            .select('assigned_to_user_id', { count: 'exact' })
+            .select('assigned_to_user_id', {count: 'exact'})
             .eq('team_id', teamId)
             .eq('admin_id', adminId);
 
@@ -550,11 +559,11 @@ export const simCardService = {
             userQuery = userQuery.lte('registered_on', filters.endDate);
         }
 
-        const { data: userData, error: userError } = await userQuery;
+        const {data: userData, error: userError} = await userQuery;
 
         if (userError) {
             console.error('Error fetching user IDs:', userError);
-            return { data: null, error: userError };
+            return {data: null, error: userError};
         }
 
         // Extract unique user IDs
@@ -564,7 +573,7 @@ export const simCardService = {
         const userStats = await Promise.all(
             uniqueUserIds.map(async (userId) => {
                 // First get user details
-                const { data: userDetails, error: userDetailsError } = await supabase
+                const {data: userDetails, error: userDetailsError} = await supabase
                     .from('users')
                     .select('id, full_name')
                     .eq('id', userId)
@@ -576,36 +585,40 @@ export const simCardService = {
                 }
 
                 // Then get card statistics
-                let cardQuery = supabase
-                    .from('sim_cards')
-                    .select('id, match, quality', { count: 'exact' })
-                    .eq('team_id', teamId)
-                    .eq('assigned_to_user_id', userId)
-                    .eq('admin_id', adminId);
+                const bQury = () => {
+                    let cardQuery = supabase
+                        .from('sim_cards')
+                        .select('id, match, quality', {count: 'exact'})
+                        .eq('team_id', teamId)
+                        .eq('assigned_to_user_id', userId)
+                        .eq('admin_id', adminId);
 
-                // Handle unassigned batch case
-                if (batchId === 'unassigned') {
-                    cardQuery = cardQuery.is('batch_id', null);
-                } else {
-                    cardQuery = cardQuery.eq('batch_id', batchId);
+                    // Handle unassigned batch case
+                    if (batchId === 'unassigned') {
+                        cardQuery = cardQuery.is('batch_id', null);
+                    } else {
+                        cardQuery = cardQuery.eq('batch_id', batchId);
+                    }
+
+                    // Apply date filters if provided
+                    if (filters?.startDate) {
+                        cardQuery = cardQuery.gte('registered_on', filters.startDate);
+                    }
+                    if (filters?.endDate) {
+                        cardQuery = cardQuery.lte('registered_on', filters.endDate);
+                    }
+                    return cardQuery
                 }
 
-                // Apply date filters if provided
-                if (filters?.startDate) {
-                    cardQuery = cardQuery.gte('registered_on', filters.startDate);
-                }
-                if (filters?.endDate) {
-                    cardQuery = cardQuery.lte('registered_on', filters.endDate);
-                }
-
-                const { data: cards, error: cardsError } = await cardQuery;
+                const {data: cards, error: cardsError,count} = await bQury();
 
                 if (cardsError) {
                     console.error(`Error fetching cards for user ${userId}:`, cardsError);
                     return null;
                 }
 
-                const total = cards.length;
+                const total = count;
+                const registered =( await bQury().eq("status",SIMStatus.REGISTERED)).count ?? 0;
                 const matched = cards.filter(card => card.match === SIMStatus.MATCH).length;
                 const unmatched = cards.filter(card => card.match === SIMStatus.UNMATCH).length;
                 const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;
@@ -616,6 +629,7 @@ export const simCardService = {
                     stats: {
                         total,
                         matched,
+                        registered,
                         unmatched,
                         quality
                     }
@@ -627,9 +641,9 @@ export const simCardService = {
         const validUserStats = userStats.filter(user => user !== null);
 
         // Store in cache
-        cache.userStats.set(cacheKey, { data: validUserStats, timestamp: Date.now() });
+        cache.userStats.set(cacheKey, {data: validUserStats, timestamp: Date.now()});
 
-        return { data: validUserStats, error: null };
+        return {data: validUserStats, error: null};
     },
 
     // Get counts of SIM cards by different criteria
@@ -652,7 +666,7 @@ export const simCardService = {
         // Base query for all counts
         let baseQuery = supabase
             .from('sim_cards')
-            .select('id, match, quality', { count: 'exact', head: false })
+            .select('id, match, quality', {count: 'exact', head: false})
             .eq('admin_id', adminId);
 
         // Apply date filters if provided
@@ -671,29 +685,29 @@ export const simCardService = {
         }
 
         // Get total count
-        const { count: totalCount, error: totalError } = await baseQuery;
+        const {count: totalCount, error: totalError} = await baseQuery;
 
         if (totalError) {
             console.error('Error fetching total count:', totalError);
-            return { 
-                total: 0, 
-                matched: 0, 
-                unmatched: 0, 
+            return {
+                total: 0,
+                matched: 0,
+                unmatched: 0,
                 quality: 0,
-                error: totalError 
+                error: totalError
             };
         }
 
         // Get matched count
-        const { count: matchedCount, error: matchedError } = await baseQuery
+        const {count: matchedCount, error: matchedError} = await baseQuery
             .eq('match', SIMStatus.MATCH);
 
         // Get unmatched count
-        const { count: unmatchedCount, error: unmatchedError } = await baseQuery
+        const {count: unmatchedCount, error: unmatchedError} = await baseQuery
             .eq('match', SIMStatus.UNMATCH);
 
         // Get quality count
-        const { count: qualityCount, error: qualityError } = await baseQuery
+        const {count: qualityCount, error: qualityError} = await baseQuery
             .eq('quality', SIMStatus.QUALITY);
 
         const result = {
@@ -706,14 +720,17 @@ export const simCardService = {
 
         // Store in cache if there's no error
         if (!result.error) {
-            cache.simCardCounts.set(cacheKey, { data: result, timestamp: Date.now() });
+            cache.simCardCounts.set(cacheKey, {data: result, timestamp: Date.now()});
         }
 
         return result;
     },
 
     // Get SIM cards with pagination
-    getSimCardsChunked: async (user: User, pagination: PaginationParams, filters?: { startDate?: string, endDate?: string }) => {
+    getSimCardsChunked: async (user: User, pagination: PaginationParams, filters?: {
+        startDate?: string,
+        endDate?: string
+    }) => {
         const supabase = createSupabaseClient();
         const adminId = await admin_id(user);
 
@@ -829,7 +846,7 @@ export const simCardService = {
         const errors: any[] = [];
 
         // Start a transaction
-        const { data: { session } } = await supabase.auth.getSession();
+        const {data: {session}} = await supabase.auth.getSession();
         if (!session) {
             throw new Error('No active session found');
         }
@@ -894,7 +911,7 @@ export const simCardService = {
 
 
     // Update an existing SIM card
-    updateSIMCard: async (id: string, updateData: SIMCardUpdate,user: User) => {
+    updateSIMCard: async (id: string, updateData: SIMCardUpdate, user: User) => {
         const supabase = createSupabaseClient();
 
         return supabase
@@ -925,7 +942,7 @@ export const simCardService = {
     },
 
     // Get SIM card by serial number
-    getSIMCardBySerialNumber: async (serialNumber: string,user: User): Promise<SIMCard | null> => {
+    getSIMCardBySerialNumber: async (serialNumber: string, user: User): Promise<SIMCard | null> => {
         const supabase = createSupabaseClient();
 
         const {data, error} = await supabase
@@ -962,7 +979,7 @@ export const simCardService = {
     },
 
     // Get SIM cards by team ID
-    getSIMCardsByTeamId: async (teamId: string,user: User): Promise<SIMCard[]> => {
+    getSIMCardsByTeamId: async (teamId: string, user: User): Promise<SIMCard[]> => {
         const supabase = createSupabaseClient();
 
         const {data, error} = await supabase
@@ -997,7 +1014,7 @@ export const simCardService = {
     },
 
     // Get performance metrics for a staff member
-    getStaffPerformanceMetrics: async (userId: string,user: User, startDate?: string, endDate?: string): Promise<{
+    getStaffPerformanceMetrics: async (userId: string, user: User, startDate?: string, endDate?: string): Promise<{
         totalSims: number;
         matchedSims: number;
         qualitySims: number;
@@ -1055,7 +1072,7 @@ export const simCardService = {
     },
 
     // Get performance metrics for a team
-    getTeamPerformanceMetrics: async (teamId: string,user: User, startDate?: string, endDate?: string): Promise<{
+    getTeamPerformanceMetrics: async (teamId: string, user: User, startDate?: string, endDate?: string): Promise<{
         totalSims: number;
         matchedSims: number;
         qualitySims: number;
@@ -1113,7 +1130,7 @@ export const simCardService = {
     },
 
     // Get daily performance data for charts (last 30 days by default)
-    getDailyPerformanceData: async (userId: string, days: number = 30,user: User): Promise<{
+    getDailyPerformanceData: async (userId: string, days: number = 30, user: User): Promise<{
         date: string;
         sales: number;
         activations: number;
@@ -1254,7 +1271,7 @@ export const simCardService = {
 
         return data as SIMCard[];
     },
-    getSimCardsByDateRange: async (startDate: string, endDate: string,user: User) => {
+    getSimCardsByDateRange: async (startDate: string, endDate: string, user: User) => {
         const supabase = createSupabaseClient();
 
         return supabase
