@@ -10,7 +10,7 @@ import SimStarts from "@/app/dashboard/SimStarts";
 import Signal from "@/lib/Signal";
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
-import ActivationStatusChart from './components/ActivationStatusChart';
+import SIMActivationChart from './components/ActivationStatusChart';
 import TeamPerformanceChart from './components/TeamPerformanceChart';
 import TimeActivityChart from './components/TimeActivityChart';
 
@@ -109,7 +109,7 @@ export default function SafaricomDashboard() {
                 //@ts-ignore
                 const pendingCount = fetchedSimData.filter(sim => sim.status === SIMStatus.PENDING).length;
                 //@ts-ignore
-                const flaggedCount = fetchedSimData.filter(sim => sim.status === SIMStatus.FLAGGED).length;
+                const rCount = fetchedSimData.filter(sim => sim.status === SIMStatus.REGISTERED).length;
 
                 // Set pie chart data
                 setPieData([
@@ -118,7 +118,7 @@ export default function SafaricomDashboard() {
                     //@ts-ignore
                     {name: 'Pending', value: Math.round((pendingCount / totalSalesCount) * 100) || 0},
                     //@ts-ignore
-                    {name: 'Flagged', value: Math.round((flaggedCount / totalSalesCount) * 100) || 0}
+                    {name: 'Registred', value: Math.round((rCount / totalSalesCount) * 100) || 0}
                 ]);
 
                 // Set overall stats
@@ -126,7 +126,7 @@ export default function SafaricomDashboard() {
                     totalSales: totalSalesCount,
                     activationRate: Math.round((activatedCount / totalSalesCount) * 100) || 0,
                     pendingApprovals: role === 'admin' ? pendingCount : Math.min(pendingCount, 10),
-                    flaggedTransactions: role === 'admin' ? flaggedCount : Math.min(flaggedCount, 5)
+                    flaggedTransactions: role === 'admin' ? rCount : Math.min(rCount, 5)
                 });
 
                 // Get recent SIM cards
@@ -299,7 +299,7 @@ export default function SafaricomDashboard() {
                     {/* Additional Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         {/* Activation Status Pie Chart */}
-                        <ActivationStatusChart data={pieData} loading={loading} />
+                        <SIMActivationChart />
 
                         {/* Team Performance Chart */}
                         <TeamPerformanceChart data={teamPerformance} loading={loading} />
