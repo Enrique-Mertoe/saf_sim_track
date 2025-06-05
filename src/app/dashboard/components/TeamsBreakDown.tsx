@@ -1,9 +1,11 @@
 import {Team, User} from "@/models";
 import simService from "@/services/simService";
-import {AlertCircle, Calendar, ChevronRight, ChevronUp, Filter, RefreshCw, X,} from "lucide-react";
+import {AlertCircle, Calendar, ChevronUp, Filter, RefreshCw, X,} from "lucide-react";
 import {useEffect, useState} from "react";
 import {showModal} from "@/ui/shortcuts";
 import TeamStats from "@/app/dashboard/components/TeamStats";
+import BatchStats from "@/app/dashboard/components/BatchStats";
+import UserStats from "@/app/dashboard/components/UserStats";
 import {teamService} from "@/services";
 
 const TeamBreakdownDialog = ({
@@ -72,6 +74,13 @@ const TeamBreakdownDialog = ({
     // Handle date filter change within the dialog
     const handleLocalDateFilterChange = (newFilter: { startDate: Date | null, endDate: Date | null }) => {
         setLocalDateFilter(newFilter);
+
+        // Reset view state to force reload of data with new date filter
+        setViewState({
+            teams: { loaded: false },
+            batches: { loaded: false, teamId: null },
+            users: { loaded: false, teamId: null, batchId: null }
+        });
     };
 
     // Get team name by ID
@@ -90,11 +99,23 @@ const TeamBreakdownDialog = ({
         };
     };
 
+    // State for preserving view data to prevent frequent loading
+    const [viewState, setViewState] = useState({
+        teams: { loaded: false },
+        batches: { loaded: false, teamId: null },
+        users: { loaded: false, teamId: null, batchId: null }
+    });
+
     // Fetch team stats when component mounts or when date filter changes
     useEffect(() => {
         if (!user) return;
 
         const fetchTeamStats = async () => {
+            // If we already have team data and the view hasn't changed, don't reload
+            if (viewState.teams.loaded && view === 'teams') {
+                return;
+            }
+
             setIsLoading(true);
             setError(null);
 
@@ -105,6 +126,11 @@ const TeamBreakdownDialog = ({
                 if (!data) throw new Error('No data returned');
 
                 setTeamStats(data);
+                // Update view state to indicate teams data is loaded
+                setViewState(prev => ({
+                    ...prev,
+                    teams: { loaded: true }
+                }));
             } catch (err) {
                 console.error('Error fetching team stats:', err);
                 setError('Failed to load team statistics');
@@ -116,13 +142,18 @@ const TeamBreakdownDialog = ({
         if (view === 'teams') {
             fetchTeamStats();
         }
-    }, [user, view, localDateFilter]);
+    }, [user, view, localDateFilter, viewState.teams.loaded]);
 
     // Fetch batch stats when a team is selected
     useEffect(() => {
         if (!user || !selectedTeam || view !== 'batches') return;
 
         const fetchBatchStats = async () => {
+            // If we already have batch data for this team and the view hasn't changed, don't reload
+            if (viewState.batches.loaded && viewState.batches.teamId === selectedTeam) {
+                return;
+            }
+
             setIsLoading(true);
             setError(null);
 
@@ -138,6 +169,12 @@ const TeamBreakdownDialog = ({
                 if (!data) throw new Error('No data returned');
 
                 setBatchStats(data);
+                // Update view state to indicate batches data is loaded for this team
+                // @ts-ignore
+                setViewState(prev => ({
+                    ...prev,
+                    batches: { loaded: true, teamId: selectedTeam }
+                }));
             } catch (err) {
                 console.error('Error fetching batch stats:', err);
                 setError('Failed to load batch statistics');
@@ -147,13 +184,20 @@ const TeamBreakdownDialog = ({
         };
 
         fetchBatchStats();
-    }, [user, selectedTeam, view, localDateFilter]);
+    }, [user, selectedTeam, view, localDateFilter, viewState.batches.loaded, viewState.batches.teamId]);
 
     // Fetch user stats when a batch is selected
     useEffect(() => {
         if (!user || !selectedTeam || !selectedBatch || view !== 'users') return;
 
         const fetchUserStats = async () => {
+            // If we already have user data for this team and batch and the view hasn't changed, don't reload
+            if (viewState.users.loaded && 
+                viewState.users.teamId === selectedTeam && 
+                viewState.users.batchId === selectedBatch) {
+                return;
+            }
+
             setIsLoading(true);
             setError(null);
 
@@ -170,6 +214,12 @@ const TeamBreakdownDialog = ({
                 if (!data) throw new Error('No data returned');
 
                 setUserStats(data);
+                // Update view state to indicate users data is loaded for this team and batch
+                // @ts-ignore
+                setViewState(prev => ({
+                    ...prev,
+                    users: { loaded: true, teamId: selectedTeam, batchId: selectedBatch }
+                }));
             } catch (err) {
                 console.error('Error fetching user stats:', err);
                 setError('Failed to load user statistics');
@@ -179,7 +229,8 @@ const TeamBreakdownDialog = ({
         };
 
         fetchUserStats();
-    }, [user, selectedTeam, selectedBatch, view, localDateFilter]);
+    }, [user, selectedTeam, selectedBatch, view, localDateFilter, 
+        viewState.users.loaded, viewState.users.teamId, viewState.users.batchId]);
 
     // Loading indicator
     const LoadingIndicator = () => (
@@ -222,7 +273,7 @@ const TeamBreakdownDialog = ({
                         teamStats.map(team => {
                             // const nonQuality = team.stats.matched - team.stats.quality;
                             return (
-                                <TeamStats setView={setView} setSelectedTeam={setSelectedTeam} dataType={dataType} user={user} team={team} key={team.id}/>
+                                <TeamStats localDateFilter={localDateFilter} setView={setView} setSelectedTeam={setSelectedTeam} dataType={dataType} user={user} team={team} key={team.id}/>
                             );
                         })
                     }
@@ -263,37 +314,24 @@ const TeamBreakdownDialog = ({
                         No batches found for this team
                     </div>
                 ) : (
-                    batchStats.map(batch => {
-                        const nonQuality = batch.stats.matched - batch.stats.quality;
-                        return (
-                            <div
-                                key={batch.id}
-                                className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
-                                onClick={() => {
-                                    setSelectedBatch(batch.id);
-                                    setView('users');
-                                }}
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-medium">Batch: {batch.id === 'unassigned' ? 'Unassigned' : batch.id}</h4>
-                                        <p className="text-sm text-gray-500">Total: {batch.stats.total} SIM
-                                            cards</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                <span
-                    className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                    Quality: {batch.stats.quality}
-                </span>
-                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                    Non-Quality: {nonQuality}
-                </span>
-                                    </div>
-                                    <ChevronRight size={16}/>
-                                </div>
-                            </div>
-                        );
-                    })
+                    <div className={"grid gap-2"}>
+                        {
+                            batchStats.map(batch => {
+                                return (
+                                    <BatchStats 
+                                        key={batch.id}
+                                        batch={batch} 
+                                        user={user} 
+                                        dataType={dataType} 
+                                        selectedTeam={selectedTeam}
+                                        setSelectedBatch={setSelectedBatch} 
+                                        setView={setView} 
+                                        localDateFilter={localDateFilter}
+                                    />
+                                );
+                            })
+                        }
+                    </div>
                 )}
             </div>
         );
@@ -334,31 +372,23 @@ const TeamBreakdownDialog = ({
                         No users found for this batch
                     </div>
                 ) : (
-                    userStats.map(user => {
-                        const nonQuality = user.stats.matched - user.stats.quality;
-                        return (
-                            <div
-                                key={user.id}
-                                className="p-4 border rounded-lg"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <h4 className="font-medium">{user.name}</h4>
-                                        <p className="text-sm text-gray-500">Total: {user.stats.total} SIM cards</p>
-                                    </div>
-                                    <div className="flex space-x-2">
-                <span
-                    className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                    Quality: {user.stats.quality}
-                </span>
-                                        <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                    Non-Quality: {nonQuality}
-                </span>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
+                    <div className={"grid gap-2 sm:grid-cols-2"}>
+                        {
+                            userStats.map(userData => {
+                                return (
+                                    <UserStats 
+                                        key={userData.id}
+                                        userData={userData} 
+                                        user={user} 
+                                        dataType={dataType} 
+                                        selectedTeam={selectedTeam}
+                                        selectedBatch={selectedBatch}
+                                        localDateFilter={localDateFilter}
+                                    />
+                                );
+                            })
+                        }
+                    </div>
                 )}
             </div>
         );

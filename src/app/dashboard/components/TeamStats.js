@@ -6,7 +6,7 @@ import {DateTime} from "luxon";
 import {admin_id} from "@/services/helper";
 
 const supabase = createSupabaseClient()
-export default function TeamStats({team, user, dataType,setSelectedTeam,setView}) {
+export default function TeamStats({team, user, dataType, setSelectedTeam, setView, localDateFilter}) {
     const [stats, setStats] = useState(null);
     const getFilterConditions = (adminId, break_at = false) => {
         if (!user) return null;
@@ -21,6 +21,13 @@ export default function TeamStats({team, user, dataType,setSelectedTeam,setView}
         if (teamId) {
             query = query.eq('team_id', teamId);
         }
+
+        // Apply date filter if provided
+        if (localDateFilter.startDate && localDateFilter.endDate) {
+            query = query.gte('registered_on', localDateFilter.startDate.toISOString())
+                         .lte('registered_on', localDateFilter.endDate.toISOString());
+        }
+
         if (break_at) return query;
 
         switch (dataType) {
@@ -82,7 +89,16 @@ export default function TeamStats({team, user, dataType,setSelectedTeam,setView}
     }
     useEffect(() => {
         fetchStats().then()
-    }, [user]);
+    }, [user, localDateFilter]);
+    // Determine which stats to show based on date filter
+    const showTodayStat = !localDateFilter.startDate || 
+                          (localDateFilter.startDate && 
+                           localDateFilter.startDate.toDateString() !== new Date().toDateString());
+
+    const showWeekStat = !localDateFilter.startDate || 
+                         (localDateFilter.startDate && 
+                          localDateFilter.startDate.toDateString() !== DateTime.now().minus({days: 7}).startOf("day").toJSDate().toDateString());
+
     return (
         <div
             className="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -98,31 +114,26 @@ export default function TeamStats({team, user, dataType,setSelectedTeam,setView}
                 </div>
                 <div className="flex space-x-2">
                     {
-                        stats ?
-
+                        stats && showTodayStat ?
                             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                                 Today: {stats.today}
                             </span>
-                            :
+                            : stats ? null :
                             <p className={"bg-gray-200 px-8 rounded-sm py-2"}></p>
                     }
                     {
-                        stats ?
-
+                        stats && showWeekStat ?
                             <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs">
                                 This Week: {stats.week}
                             </span>
-                            :
+                            : stats ? null :
                             <p className={"bg-gray-200 px-8 rounded-sm py-2"}></p>
                     }
-
-
                 </div>
                 <ChevronRight size={16}/>
             </div>
             {
                 stats ?
-
                     <p className="text-sm text-gray-500">{stats.total} <span className="text-blue-400 text-xs">{getTerm()[0]}</span> out of {stats.outOf} {getTerm()[1]} Ba</p>
                     :
                     <p className={"bg-gray-200 px-8 rounded-sm py-2"}></p>

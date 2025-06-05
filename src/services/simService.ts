@@ -402,7 +402,7 @@ export const simCardService = {
         // First, get all unique batch IDs for this team
         let batchQuery = supabase
             .from('sim_cards')
-            .select('batch_id')
+            .select('batch_id', { count: 'exact' })
             .eq('team_id', teamId)
             .eq('admin_id', adminId)
             .not('batch_id', 'is', null);
@@ -430,7 +430,7 @@ export const simCardService = {
             uniqueBatchIds.map(async (batchId) => {
                 let cardQuery = supabase
                     .from('sim_cards')
-                    .select('id, match, quality')
+                    .select('id, match, quality', { count: 'exact' })
                     .eq('team_id', teamId)
                     .eq('batch_id', batchId)
                     .eq('admin_id', adminId);
@@ -470,7 +470,7 @@ export const simCardService = {
         // Also get cards without a batch ID (unassigned)
         let unassignedQuery = supabase
             .from('sim_cards')
-            .select('id, match, quality')
+            .select('id, match, quality', { count: 'exact' })
             .eq('team_id', teamId)
             .eq('admin_id', adminId)
             .is('batch_id', null);
@@ -531,7 +531,7 @@ export const simCardService = {
         // First, get all unique user IDs who sold cards in this batch
         let userQuery = supabase
             .from('sim_cards')
-            .select('sold_by_user_id')
+            .select('assigned_to_user_id', { count: 'exact' })
             .eq('team_id', teamId)
             .eq('admin_id', adminId);
 
@@ -558,7 +558,7 @@ export const simCardService = {
         }
 
         // Extract unique user IDs
-        const uniqueUserIds = [...new Set(userData.map(item => item.sold_by_user_id).filter(id => id !== null))];
+        const uniqueUserIds = [...new Set(userData.map(item => item.assigned_to_user_id).filter(id => id !== null))];
 
         // Now get statistics for each user
         const userStats = await Promise.all(
@@ -578,9 +578,9 @@ export const simCardService = {
                 // Then get card statistics
                 let cardQuery = supabase
                     .from('sim_cards')
-                    .select('id, match, quality')
+                    .select('id, match, quality', { count: 'exact' })
                     .eq('team_id', teamId)
-                    .eq('sold_by_user_id', userId)
+                    .eq('assigned_to_user_id', userId)
                     .eq('admin_id', adminId);
 
                 // Handle unassigned batch case
