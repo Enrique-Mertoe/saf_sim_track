@@ -17,12 +17,14 @@ interface ChartData {
 const ENHANCED_COLORS = [
     '#00D4AA', // Vibrant teal for activated
     '#FF6B6B', // Coral red for pending
+    '#EC731CB5', // Coral red for pending
     '#4ECDC4', // Turquoise for registered
 ];
 
 const GRADIENT_COLORS = [
     'url(#activatedGradient)',
     'url(#pendingGradient)',
+    'url(#assignedGradient)',
     'url(#registeredGradient)'
 ];
 
@@ -142,7 +144,7 @@ const SIMActivationChart: React.FC = () => {
 
 
             // Fetch counts for each category
-            const [activatedRes, registeredRes, ttl] = await Promise.all([
+            const [activatedRes, registeredRes, pending, assigned] = await Promise.all([
                 // Activated: has activation_date
                 baseQry(adminId)
                     .eq('status', SIMStatus.ACTIVATED),
@@ -152,16 +154,18 @@ const SIMActivationChart: React.FC = () => {
                     .eq('status', SIMStatus.REGISTERED),
 
                 // Pending: neither registered nor activated
-                // baseQry(adminId)
-                //     .eq('status', SIMStatus.PENDING),
                 baseQry(adminId)
+                    .eq('status', SIMStatus.PENDING),
+                baseQry(adminId)
+                    .eq('status', SIMStatus.ASSIGNED),
             ]);
 
             // Extract counts
             const activatedCount = activatedRes.count ?? 0;
             const registeredCount = registeredRes.count ?? 0;
-            const totalSalesCount = ttl.count ?? 0;
-            const pendingCount = totalSalesCount - activatedCount - registeredCount;
+            const pendingCount = pending.count ?? 0;
+            const assignedCount = assigned.count ?? 0;
+            const totalSalesCount = activatedCount + registeredCount + pendingCount + assignedCount
             setTotalCount(totalSalesCount);
             const pieData: ChartData[] = [
                 {
@@ -181,10 +185,18 @@ const SIMActivationChart: React.FC = () => {
                     icon: <Clock size={16}/>
                 },
                 {
+                    name: 'Assigned',
+                    value: to2dp((assignedCount / totalSalesCount) * 100) || 0,
+
+                    count: assignedCount,
+                    color: ENHANCED_COLORS[2],
+                    icon: <Clock size={16}/>
+                },
+                {
                     name: 'Registered',
                     value: to2dp((registeredCount / totalSalesCount) * 100) || 0,
                     count: registeredCount,
-                    color: ENHANCED_COLORS[2],
+                    color: ENHANCED_COLORS[3],
                     icon: <AlertCircle size={16}/>
                 }
             ];
@@ -251,6 +263,12 @@ const SIMActivationChart: React.FC = () => {
                                             <stop offset="0%" stopColor="#FF8A80"/>
                                             <stop offset="100%" stopColor="#FF6B6B"/>
                                         </linearGradient>
+                                        <linearGradient id="assignedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#EC731CB5"/>
+                                            <stop offset="100%" stopColor="#FF9800B5"/>
+                                        </linearGradient>
+
+
                                         <linearGradient id="registeredGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                             <stop offset="0%" stopColor="#4ECDC4"/>
                                             <stop offset="100%" stopColor="#26A69A"/>
@@ -322,7 +340,7 @@ const SIMActivationChart: React.FC = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
                     {chartData.map((item, index) => (
                         <div
                             key={index}

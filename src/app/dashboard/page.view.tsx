@@ -218,16 +218,16 @@ export default function SafaricomDashboard() {
                         <UserStatistics/>
                     </div>
                     {/* Charts Section */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
                         {/* Sales & Activation Chart */}
                         <motion.div
-                            initial={{opacity: 0, y: 20}}
-                            animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.6, delay: 0.1}}
-                            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className="bg-white col-span-12 md:col-span-8 dark:bg-gray-800 p-2 rounded-lg shadow-md"
                         >
                             <h2 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
-                                <Activity size={18} className="mr-2 text-indigo-600 dark:text-indigo-400"/>
+                                <Activity size={18} className="mr-2 text-indigo-600 dark:text-indigo-400" />
                                 SIM Sales & Activations
                             </h2>
                             <div className="h-72">
@@ -237,41 +237,23 @@ export default function SafaricomDashboard() {
                                     </div>
                                 ) : salesData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart
-                                            data={salesData}
-                                            margin={{top: 5, right: 30, left: 20, bottom: 5}}
-                                        >
-                                            <CartesianGrid
-                                                strokeDasharray="3 3"
-                                                stroke="#f0f0f0"
-                                            />
-                                            <XAxis
-                                                dataKey="name"
-                                                stroke="#888"
-                                            />
-                                            <YAxis
-                                                stroke="#888"
-                                            />
+                                        <LineChart data={salesData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                            <XAxis dataKey="name" stroke="#888" />
+                                            <YAxis stroke="#888" />
                                             <Tooltip
-                                                contentStyle={{
-                                                    backgroundColor: '#ffffff',
-                                                    color: '#000000'
-                                                }}
-                                                wrapperStyle={{
-                                                    backgroundColor: 'transparent'
-                                                }}
-                                                labelStyle={{
-                                                    color: '#000000'
-                                                }}
+                                                contentStyle={{ backgroundColor: '#ffffff', color: '#000000' }}
+                                                wrapperStyle={{ backgroundColor: 'transparent' }}
+                                                labelStyle={{ color: '#000000' }}
                                             />
-                                            <Legend/>
+                                            <Legend />
                                             <Line
                                                 type="monotone"
                                                 dataKey="sales"
                                                 stroke="#4F46E5"
                                                 strokeWidth={2}
-                                                dot={{r: 4}}
-                                                activeDot={{r: 6}}
+                                                dot={{ r: 4 }}
+                                                activeDot={{ r: 6 }}
                                                 animationDuration={1500}
                                             />
                                             <Line
@@ -279,8 +261,8 @@ export default function SafaricomDashboard() {
                                                 dataKey="activations"
                                                 stroke="#10B981"
                                                 strokeWidth={2}
-                                                dot={{r: 4}}
-                                                activeDot={{r: 6}}
+                                                dot={{ r: 4 }}
+                                                activeDot={{ r: 6 }}
                                                 animationDuration={1500}
                                             />
                                         </LineChart>
@@ -293,8 +275,12 @@ export default function SafaricomDashboard() {
                             </div>
                         </motion.div>
 
-                        <DashQuickActions/>
+                        {/* Quick Actions */}
+                        <div className="col-span-12 md:col-span-4">
+                            <DashQuickActions />
+                        </div>
                     </div>
+
 
                     {/* Additional Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
