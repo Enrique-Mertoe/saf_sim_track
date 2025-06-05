@@ -15,7 +15,7 @@ export default function DashQuickActions() {
         <div className="">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
                 <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">Quick Actions</h2>
-                <div className="space-y-4 grid grid-cols-2 gap-2">
+                <div className="space-y-1 flex flex-col  gap-2">
                     <button
                         onClick={() => CreateUser(dialog, user!, {})
                         }
@@ -31,7 +31,7 @@ export default function DashQuickActions() {
                     </button>
                     <button
                         onClick={() => router.push("/dashboard/report")}
-                        className="w-full cursor-pointer flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-lg transition-colors">
+                        className="w-full col-span-1 cursor-pointer flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 rounded-lg transition-colors">
                         <div className="flex items-center">
                             <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-full mr-4">
                                 <BarChart4 className="h-5 w-5 text-blue-600 dark:text-blue-400"/>
