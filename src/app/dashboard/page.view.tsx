@@ -13,6 +13,7 @@ import useApp from "@/ui/provider/AppProvider";
 import SIMActivationChart from './components/ActivationStatusChart';
 import TeamPerformanceChart from './components/TeamPerformanceChart';
 import TimeActivityChart from './components/TimeActivityChart';
+import OverallStats from "@/app/dashboard/OverallStats";
 
 export default function SafaricomDashboard() {
     const [role, setRole] = useState('admin');
@@ -212,10 +213,13 @@ export default function SafaricomDashboard() {
                             <p className="text-gray-500">Overview of SIM card sales and activations</p>
                         </motion.div>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-8">
                         {/* Stats Grid */}
                         <SimStarts refreshing={loading}/>
-                        <UserStatistics/>
+                        <div className="grid gap-2 min-h-full">
+                            <OverallStats/>
+                            <UserStatistics/>
+                        </div>
                     </div>
                     {/* Charts Section */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">

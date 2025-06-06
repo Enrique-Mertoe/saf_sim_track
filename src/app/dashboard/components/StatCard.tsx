@@ -53,13 +53,13 @@ function StatCard({
     const getCacheKey = () => `${dataType}_${teamId || 'all'}`;
 
     // Get filter conditions based on data type
-    const getFilterConditions = (adminId:any) => {
+    const getFilterConditions = (adminId: any) => {
         if (!user) return null;
 
         // Create a fresh query builder each time
         let query = supabase
             .from('sim_cards')
-            .select('*', { count: 'exact', head: true })
+            .select('*', {count: 'exact', head: true})
             .eq("admin_id", adminId);
 
         if (teamId) {
@@ -74,7 +74,7 @@ function StatCard({
             case 'quality':
                 return query.eq('quality', SIMStatus.QUALITY);
             case 'registered':
-                return query.eq('status', SIMStatus.REGISTERED);
+                return query.not('registered_on', "is", null);
             default:
                 return query;
         }
@@ -108,7 +108,7 @@ function StatCard({
 
             const today = DateTime.now().setZone("Africa/Nairobi");
             const startOfToday = today.startOf("day").toJSDate();
-            const startOfWeek = today.minus({ days: 7 }).startOf("day").toJSDate();
+            const startOfWeek = today.minus({days: 7}).startOf("day").toJSDate();
 
             // Execute queries in parallel - each gets a fresh query builder
             const [totalResult, todayResult, weekResult] = await Promise.all([
@@ -145,7 +145,7 @@ function StatCard({
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [dataType, teamId, supabase, data, isLoading,user]);
+    }, [dataType, teamId, supabase, data, isLoading, user]);
 
     // Initial load
     useEffect(() => {

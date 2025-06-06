@@ -5,6 +5,7 @@ import {createSupabaseClient} from "@/lib/supabase/client";
 import {admin_id} from "@/services/helper";
 import useApp from "@/ui/provider/AppProvider";
 import {SIMStatus} from "@/models";
+import {to2dp} from "@/helper";
 
 interface ChartData {
     name: string;
@@ -129,7 +130,7 @@ const SIMActivationChart: React.FC = () => {
     const [activeIndex, setActiveIndex] = useState(-1);
     const [totalCount, setTotalCount] = useState(0);
     const user = useApp().user
-    const to2dp = (num: number) => Math.round(num * 100) / 100;
+
 
     const baseQry = (adminId: any) => (supabase
         .from('sim_cards')

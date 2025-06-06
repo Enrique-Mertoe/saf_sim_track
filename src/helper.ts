@@ -204,3 +204,5 @@ export const isSameDay = (date1:any, date2:any) => {
 
     return day1 === day2;
 };
+
+export  const to2dp = (num: number) => Math.round(num * 100) / 100;

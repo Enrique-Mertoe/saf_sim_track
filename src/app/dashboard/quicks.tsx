@@ -1,4 +1,4 @@
-import {Activity, ArrowUpRight, BarChart4, TrendingUp, Users} from "lucide-react";
+import {Activity, ArrowUpRight, BarChart4, Users} from "lucide-react";
 import {CreateUser} from "@/ui/shortcuts";
 import {useDialog} from "@/app/_providers/dialog";
 import {FC, useEffect, useState} from "react";
@@ -211,7 +211,7 @@ export const UserStatistics: FC = () => {
         const cardClasses = `
       transform transition-all duration-500 ease-out
       ${cardVisible[index] ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
-      flex flex-col p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-lg border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500
+      flex flex-col px-4 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500
     `;
 
         return (
@@ -253,25 +253,19 @@ export const UserStatistics: FC = () => {
 
     return (
         <div
-            className={`bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md transform transition-all duration-700 ${animate ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white">User Statistics</h2>
-                <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/40 rounded-md">
-                    <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400"/>
-                </div>
-            </div>
+            className={`${animate ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <StatCard
-                    index={0}
-                    icon={<Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/>}
-                    iconBg="bg-indigo-100"
-                    iconColor="text-indigo-600 dark:text-indigo-400"
-                    title="Total Users"
-                    subtitle="All system users"
-                    value={userStats.total}
-                    progress={100}
-                />
+                {/*<StatCard*/}
+                {/*    index={0}*/}
+                {/*    icon={<Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400"/>}*/}
+                {/*    iconBg="bg-indigo-100"*/}
+                {/*    iconColor="text-indigo-600 dark:text-indigo-400"*/}
+                {/*    title="Total Users"*/}
+                {/*    subtitle="All system users"*/}
+                {/*    value={userStats.total}*/}
+                {/*    progress={100}*/}
+                {/*/>*/}
 
                 <StatCard
                     index={1}
@@ -293,17 +287,6 @@ export const UserStatistics: FC = () => {
                     subtitle="Field agents"
                     value={userStats.staff}
                     progress={progressStaff}
-                />
-
-                <StatCard
-                    index={3}
-                    icon={<Activity className="h-5 w-5 text-purple-600 dark:text-purple-400"/>}
-                    iconBg="bg-purple-100"
-                    iconColor="text-purple-600 dark:text-purple-400"
-                    title="Active Users"
-                    subtitle="Last 30 days"
-                    value={userStats.active}
-                    progress={progressActive}
                 />
             </div>
         </div>

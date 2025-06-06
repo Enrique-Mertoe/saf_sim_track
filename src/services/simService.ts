@@ -610,7 +610,7 @@ export const simCardService = {
                     return cardQuery
                 }
 
-                const {data: cards, error: cardsError,count} = await bQury();
+                const {data: cards, error: cardsError, count} = await bQury();
 
                 if (cardsError) {
                     console.error(`Error fetching cards for user ${userId}:`, cardsError);
@@ -618,7 +618,7 @@ export const simCardService = {
                 }
 
                 const total = count;
-                const registered =( await bQury().eq("status",SIMStatus.REGISTERED)).count ?? 0;
+                const registered = (await bQury().eq("status", SIMStatus.REGISTERED)).count ?? 0;
                 const matched = cards.filter(card => card.match === SIMStatus.MATCH).length;
                 const unmatched = cards.filter(card => card.match === SIMStatus.UNMATCH).length;
                 const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;
@@ -810,6 +810,98 @@ export const simCardService = {
         }
 
         return {data: null, error: "Invalid user role"}
+    },
+    countAll: async (user: User) => {
+        const supabase = createSupabaseClient();
+        if (user.role === UserRole.ADMIN) {
+            return supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .eq("admin_id", await admin_id(user));
+        }
+
+        // if (user.role === UserRole.STAFF) {
+        //     return supabase
+        //         .from('sim_cards')
+        //
+        //         .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
+        //         .eq('sold_by_user_id', user.id)
+        //         .eq("admin_id", await admin_id(user))
+        //         .order('registered_on', {ascending: false});
+        // }
+        // if (user.role === UserRole.TEAM_LEADER) {
+        //     return supabase
+        //         .from('sim_cards')
+        //         .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+        //         .eq("admin_id", await admin_id(user))
+        //         .eq("team_id", user.team_id)
+        //         // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
+        //         .order('registered_on', {ascending: false});
+        // }
+
+        return {data: null, error: "Invalid user role", count: 0}
+    },
+    countReg: async (user: User) => {
+        const supabase = createSupabaseClient();
+        if (user.role === UserRole.ADMIN) {
+            return supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .not("registered_on", "is", null)
+                .eq("admin_id", await admin_id(user));
+        }
+
+        // if (user.role === UserRole.STAFF) {
+        //     return supabase
+        //         .from('sim_cards')
+        //
+        //         .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
+        //         .eq('sold_by_user_id', user.id)
+        //         .eq("admin_id", await admin_id(user))
+        //         .order('registered_on', {ascending: false});
+        // }
+        // if (user.role === UserRole.TEAM_LEADER) {
+        //     return supabase
+        //         .from('sim_cards')
+        //         .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+        //         .eq("admin_id", await admin_id(user))
+        //         .eq("team_id", user.team_id)
+        //         // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
+        //         .order('registered_on', {ascending: false});
+        // }
+
+        return {data: null, error: "Invalid user role", count: 0}
+    },
+    countAssigned: async (user: User) => {
+        const supabase = createSupabaseClient();
+        if (user.role === UserRole.ADMIN) {
+            return supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .not("assigned_to_user_id", "is", null)
+                .eq("admin_id", await admin_id(user));
+        }
+
+        // if (user.role === UserRole.STAFF) {
+        //     return supabase
+        //         .from('sim_cards')
+        //
+        //         .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
+        //         .eq('sold_by_user_id', user.id)
+        //         .eq("admin_id", await admin_id(user))
+        //         .order('registered_on', {ascending: false});
+        // }
+        // if (user.role === UserRole.TEAM_LEADER) {
+        //     return supabase
+        //         .from('sim_cards')
+        //         .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+        //         .eq("admin_id", await admin_id(user))
+        //         .eq("team_id", user.team_id)
+        //         // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
+        //         .order('registered_on', {ascending: false});
+        // }
+
+        return {data: null, error: "Invalid user role", count: 0}
     },
     // Create a new SIM card record
     createSIMCard: async (simCardData: SIMCardCreate): Promise<SIMCard | null> => {
