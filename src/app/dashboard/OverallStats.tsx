@@ -181,7 +181,7 @@ const SimAllocationCard: React.FC = () => {
 
     return (
         <div
-            className="relative h-full overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 p-2 shadow-2xl border border-green-500/30 dark:border-slate-700/50">
+            className="relative h-full overflow-hidden rounded-2xl p-2 shadow-2xl border border-green-500/30 dark:border-slate-700/50">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
                 {/* Light mode green patterns */}
@@ -280,8 +280,9 @@ const SimAllocationCard: React.FC = () => {
 const OverallStats: React.FC = () => {
     return (
         <div className="w-full h-full transition-colors duration-300">
-
-            <SimAllocationCard/>
+            <Card>
+                <SimAllocationCard/>
+            </Card>
         </div>
     );
 };
@@ -399,6 +400,139 @@ const Skeleton: React.FC = () => {
             {/* Subtle glow effect */}
             <div
                 className="absolute -inset-1 bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-green-600/30 dark:from-blue-600/20 dark:via-purple-600/20 dark:to-teal-600/20 rounded-2xl blur opacity-30"></div>
+        </div>
+    );
+};
+
+const Card = ({children}: any) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+
+    return (
+        <div
+            className={`relative size-full bg-gradient-to-br from-green-600 via-green-700 to-emerald-800 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800    rounded-2xl overflow-hidden shadow-sm cursor-pointer transition-all duration-300 ${
+                isHovered ? 'transform -translate-y-1 shadow-3xl' : ''
+            }`}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* SVG Background Pattern */}
+            <svg
+                className="absolute top-0 left-0 w-full h-full opacity-10"
+                viewBox="0 0 320 192"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+                {/* Gradient Definitions */}
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity="1"/>
+                        <stop offset="100%" stopColor="#16a34a" stopOpacity="1"/>
+                    </linearGradient>
+                    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="1"/>
+                        <stop offset="100%" stopColor="#1d4ed8" stopOpacity="1"/>
+                    </linearGradient>
+                    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#f59e0b" stopOpacity="1"/>
+                        <stop offset="100%" stopColor="#d97706" stopOpacity="1"/>
+                    </linearGradient>
+                    <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity="1"/>
+                        <stop offset="100%" stopColor="#7c3aed" stopOpacity="1"/>
+                    </linearGradient>
+                    <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ec4899" stopOpacity="1"/>
+                        <stop offset="100%" stopColor="#be185d" stopOpacity="1"/>
+                    </linearGradient>
+                    <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#06b6d4" stopOpacity="1"/>
+                        <stop offset="100%" stopColor="#0891b2" stopOpacity="1"/>
+                    </linearGradient>
+                </defs>
+
+                {/* Geometric shapes */}
+                <circle
+                    cx="270"
+                    cy="40"
+                    r="45"
+                    fill="url(#grad1)"
+                    opacity="0.6"
+                    className={`transition-transform duration-600 ${isHovered ? 'scale-110' : ''}`}
+                />
+                <circle
+                    cx="290"
+                    cy="60"
+                    r="28"
+                    fill="url(#grad2)"
+                    opacity="0.4"
+                    className={`transition-transform duration-700 ${isHovered ? 'scale-110' : ''}`}
+                />
+                <circle
+                    cx="250"
+                    cy="25"
+                    r="18"
+                    fill="url(#grad3)"
+                    opacity="0.8"
+                    className={`transition-transform duration-500 ${isHovered ? 'scale-110' : ''}`}
+                />
+
+                {/* Floating elements */}
+                <rect
+                    x="230"
+                    y="100"
+                    width="35"
+                    height="35"
+                    rx="7"
+                    fill="url(#grad4)"
+                    opacity="0.5"
+                    transform="rotate(15 247.5 117.5)"
+                    className={`transition-transform duration-800 ${isHovered ? 'scale-110 rotate-12' : ''}`}
+                />
+                <rect
+                    x="280"
+                    y="120"
+                    width="25"
+                    height="25"
+                    rx="5"
+                    fill="url(#grad5)"
+                    opacity="0.6"
+                    transform="rotate(-20 292.5 132.5)"
+                    className={`transition-transform duration-600 ${isHovered ? 'scale-110 -rotate-12' : ''}`}
+                />
+
+                {/* Wave patterns */}
+                <path
+                    d="M170 192 Q220 172 270 192 Q240 212 170 192"
+                    fill="url(#grad6)"
+                    opacity="0.3"
+                    className={`transition-transform duration-700 ${isHovered ? 'scale-105' : ''}`}
+                />
+                <path
+                    d="M200 0 Q240 20 280 0 Q260 -20 200 0"
+                    fill="url(#grad1)"
+                    opacity="0.4"
+                    className={`transition-transform duration-500 ${isHovered ? 'scale-105' : ''}`}
+                />
+
+                {/* Dots pattern */}
+                <circle cx="60" cy="170" r="4" fill="white" opacity="0.3"/>
+                <circle cx="85" cy="160" r="3" fill="white" opacity="0.4"/>
+                <circle cx="110" cy="175" r="3.5" fill="white" opacity="0.2"/>
+                <circle cx="135" cy="165" r="2.5" fill="white" opacity="0.5"/>
+
+                {/* Mobile device silhouettes */}
+                <rect x="25" y="25" width="15" height="25" rx="4" fill="white" opacity="0.1"/>
+                <rect x="50" y="40" width="12" height="20" rx="3" fill="white" opacity="0.15"/>
+                <rect x="35" y="65" width="17" height="28" rx="4" fill="white" opacity="0.08"/>
+            </svg>
+
+            {/* Gradient overlay */}
+            <div
+                className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-br from-green-500 to-green-600 opacity-10 z-10"></div>
+
+            {/* Content */}
+            <div className="relative z-20 h-full flex flex-col justify-between">
+                {children}
+            </div>
         </div>
     );
 };
