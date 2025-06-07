@@ -875,7 +875,7 @@ export const simCardService = {
             .select('id', {count: "exact"})
             .eq("admin_id", await admin_id(user)), filters)
     },
-    countReg: async (user: User, teamId: string | null = null) => {
+    countReg: async (user: User, teamId: string | null = null,filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
             let q = supabase
@@ -885,7 +885,7 @@ export const simCardService = {
                 .eq("admin_id", await admin_id(user));
             if (teamId)
                 q = q.eq("team_id", teamId)
-            return q
+            return applyFilters(q, filters)
         }
 
         // if (user.role === UserRole.STAFF) {

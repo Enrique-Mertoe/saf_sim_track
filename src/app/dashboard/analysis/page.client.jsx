@@ -1,20 +1,7 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
-import {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis
-} from 'recharts';
-import {AlertTriangle, CheckCircle, Download, Smartphone, XCircle} from 'lucide-react';
+import {Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {CheckCircle, Download, Smartphone, XCircle} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import simCardService from "@/services/simService";
 import {DateTime} from "luxon";
@@ -288,6 +275,7 @@ const SIMAnalysisPage = () => {
                 <MetricCard
                     user={user}
                     title="Total Quality"
+                    dataType={"quality"}
                     value={totalMetrics.totalQuality}
                     subtitle={`${((totalMetrics.totalQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% quality rate`}
                     icon={CheckCircle}
@@ -296,22 +284,23 @@ const SIMAnalysisPage = () => {
                 />
                 <MetricCard
                     user={user}
-                    title="Non-Quality"
+                    title="Activated"
+                    dataType={"activated"}
                     value={totalMetrics.totalNonQuality}
                     subtitle={`${((totalMetrics.totalNonQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% of total`}
                     icon={XCircle}
                     trend={-3}
                     color="red"
                 />
-                <MetricCard
-                    user={user}
-                    title="Unknown Status"
-                    value={totalMetrics.totalUnknown}
-                    subtitle={`${((totalMetrics.totalUnknown / totalMetrics.totalRecorded) * 100).toFixed(1)}% unmatched`}
-                    icon={AlertTriangle}
-                    trend={-5}
-                    color="orange"
-                />
+                {/*<MetricCard*/}
+                {/*    user={user}*/}
+                {/*    title="Unknown Status"*/}
+                {/*    value={totalMetrics.totalUnknown}*/}
+                {/*    subtitle={`${((totalMetrics.totalUnknown / totalMetrics.totalRecorded) * 100).toFixed(1)}% unmatched`}*/}
+                {/*    icon={AlertTriangle}*/}
+                {/*    trend={-5}*/}
+                {/*    color="orange"*/}
+                {/*/>*/}
             </div>
 
             {/* Charts Section */}
@@ -369,58 +358,58 @@ const SIMAnalysisPage = () => {
             </div>
 
             {/* Non-Quality Breakdown Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Non-Quality Reasons */}
-                <div
-                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Non-Quality Breakdown by
-                        Team</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={nonQualityBreakdownData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>
-                            <XAxis dataKey="name" stroke="#6B7280"/>
-                            <YAxis stroke="#6B7280"/>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
-                                    borderRadius: '8px',
-                                    color: '#F9FAFB'
-                                }}
-                            />
-                            <Area type="monotone" dataKey="Top-up < 50 KES" stackId="1" stroke="#FF6B6B"
-                                  fill="#FF6B6B"/>
-                            <Area type="monotone" dataKey="No Top-up" stackId="1" stroke="#FF8A80" fill="#FF8A80"/>
-                            <Area type="monotone" dataKey="Top-up ≥50 Not Converted" stackId="1" stroke="#FFA726"
-                                  fill="#FFA726"/>
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
+            {/*<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">*/}
+            {/*    /!* Non-Quality Reasons *!/*/}
+            {/*    <div*/}
+            {/*        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">*/}
+            {/*        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Non-Quality Breakdown by*/}
+            {/*            Team</h3>*/}
+            {/*        <ResponsiveContainer width="100%" height={300}>*/}
+            {/*            <AreaChart data={nonQualityBreakdownData}>*/}
+            {/*                <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>*/}
+            {/*                <XAxis dataKey="name" stroke="#6B7280"/>*/}
+            {/*                <YAxis stroke="#6B7280"/>*/}
+            {/*                <Tooltip*/}
+            {/*                    contentStyle={{*/}
+            {/*                        backgroundColor: '#1F2937',*/}
+            {/*                        border: '1px solid #374151',*/}
+            {/*                        borderRadius: '8px',*/}
+            {/*                        color: '#F9FAFB'*/}
+            {/*                    }}*/}
+            {/*                />*/}
+            {/*                <Area type="monotone" dataKey="Top-up < 50 KES" stackId="1" stroke="#FF6B6B"*/}
+            {/*                      fill="#FF6B6B"/>*/}
+            {/*                <Area type="monotone" dataKey="No Top-up" stackId="1" stroke="#FF8A80" fill="#FF8A80"/>*/}
+            {/*                <Area type="monotone" dataKey="Top-up ≥50 Not Converted" stackId="1" stroke="#FFA726"*/}
+            {/*                      fill="#FFA726"/>*/}
+            {/*            </AreaChart>*/}
+            {/*        </ResponsiveContainer>*/}
+            {/*    </div>*/}
 
-                {/* Unknown Status Breakdown */}
-                <div
-                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Unknown Status
-                        Breakdown</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={unknownBreakdownData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>
-                            <XAxis dataKey="name" stroke="#6B7280"/>
-                            <YAxis stroke="#6B7280"/>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
-                                    borderRadius: '8px',
-                                    color: '#F9FAFB'
-                                }}
-                            />
-                            <Bar dataKey="Unknown Quality" fill="#81C784"/>
-                            <Bar dataKey="Unknown Non-Quality" fill="#FFAB91"/>
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+            {/*    /!* Unknown Status Breakdown *!/*/}
+            {/*    <div*/}
+            {/*        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">*/}
+            {/*        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Unknown Status*/}
+            {/*            Breakdown</h3>*/}
+            {/*        <ResponsiveContainer width="100%" height={300}>*/}
+            {/*            <BarChart data={unknownBreakdownData}>*/}
+            {/*                <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>*/}
+            {/*                <XAxis dataKey="name" stroke="#6B7280"/>*/}
+            {/*                <YAxis stroke="#6B7280"/>*/}
+            {/*                <Tooltip*/}
+            {/*                    contentStyle={{*/}
+            {/*                        backgroundColor: '#1F2937',*/}
+            {/*                        border: '1px solid #374151',*/}
+            {/*                        borderRadius: '8px',*/}
+            {/*                        color: '#F9FAFB'*/}
+            {/*                    }}*/}
+            {/*                />*/}
+            {/*                <Bar dataKey="Unknown Quality" fill="#81C784"/>*/}
+            {/*                <Bar dataKey="Unknown Non-Quality" fill="#FFAB91"/>*/}
+            {/*            </BarChart>*/}
+            {/*        </ResponsiveContainer>*/}
+            {/*    </div>*/}
+            {/*</div>*/}
 
             {/* Team Breakdown Cards */}
             <div className="mb-8">
