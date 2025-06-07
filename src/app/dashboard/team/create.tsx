@@ -28,9 +28,19 @@ export default function Create({onDismiss}: {
     const [dropdownPosition, setDropdownPosition] = useState("bottom");
     const [regionDropdownPosition, setRegionDropdownPosition] = useState("bottom");
     const [focusedField, setFocusedField] = useState<string | null>(null);
-    const { user } = useApp();
+    const {user} = useApp();
 
-    const regions = ["Northern", "Western", "Central", "Eastern", "Coastal"];
+    const regions = [
+        "Central",
+        "Coast",
+        "Eastern",
+        "Nairobi",
+        "North Eastern",
+        "Nyanza",
+        "Rift Valley",
+        "Western"
+    ];
+
     const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
 
     const leaderButtonRef = useRef<HTMLElement | null>(null);
@@ -151,7 +161,8 @@ export default function Create({onDismiss}: {
                             <div className="bg-green-100 dark:bg-green-700 p-2 sm:p-3 rounded-full">
                                 <Check className="text-green-600 dark:text-green-300 h-6 w-6 sm:h-8 sm:w-8"/>
                             </div>
-                            <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-medium text-green-800 dark:text-green-200">Team Created
+                            <h3 className="mt-3 sm:mt-4 text-base sm:text-lg font-medium text-green-800 dark:text-green-200">Team
+                                Created
                                 Successfully!</h3>
                         </div>
                     </motion.div>
@@ -181,7 +192,8 @@ export default function Create({onDismiss}: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2">
                     {/* Team Name */}
                     <div className="space-y-1">
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team Name</label>
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team
+                            Name</label>
                         <div
                             className={`relative border ${
                                 focusedField === 'name'
@@ -230,7 +242,8 @@ export default function Create({onDismiss}: {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1 sm:gap-2">
                     {/* Van number */}
                     <div className="space-y-1">
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Van number
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Van
+                            number
                             plate</label>
                         <div
                             className={`relative border ${
@@ -279,7 +292,8 @@ export default function Create({onDismiss}: {
                 </div>
                 {/* Team Leader Custom Dropdown */}
                 <div className="space-y-1">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team Leader</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Team
+                        Leader</label>
                     <div className="relative">
                         <button
                             //@ts-ignore
@@ -306,7 +320,8 @@ export default function Create({onDismiss}: {
                             onBlur={() => setTimeout(() => setFocusedField(null), 100)}
                         >
                             <div className="flex items-center">
-                                <UserCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
+                                <UserCircle
+                                    className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                 <span
                                     className={`text-sm ${formData.leader_id ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}`}>
                 {getSelectedLeaderName()}
@@ -368,7 +383,8 @@ export default function Create({onDismiss}: {
                                                         initial={{opacity: 0, scale: 0.8}}
                                                         animate={{opacity: 1, scale: 1}}
                                                     >
-                                                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400"/>
+                                                        <Check
+                                                            className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400"/>
                                                     </motion.div>
                                                 )}
                                             </motion.div>
@@ -376,8 +392,10 @@ export default function Create({onDismiss}: {
                                     ) : ''}
 
                                     <div className="flex flex-col items-center justify-center py-4 sm:py-8">
-                                        <div className="mb-2 sm:mb-3 p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700">
-                                            <UserCircle className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 dark:text-gray-500"/>
+                                        <div
+                                            className="mb-2 sm:mb-3 p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700">
+                                            <UserCircle
+                                                className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 dark:text-gray-500"/>
                                         </div>
                                         <p className="mb-3 sm:mb-4 text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-medium">No
                                             team leaders available</p>
@@ -405,7 +423,8 @@ export default function Create({onDismiss}: {
 
                 {/* Region Custom Dropdown */}
                 <div className="space-y-1">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Region</label>
+                    <label
+                        className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Region</label>
                     <div className="relative">
                         <button
                             //@ts-ignore
@@ -432,7 +451,8 @@ export default function Create({onDismiss}: {
                             onBlur={() => setTimeout(() => setFocusedField(null), 100)}
                         >
                             <div className="flex items-center">
-                                <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
+                                <Globe
+                                    className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                 <span
                                     className={`text-sm ${formData.region ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"}`}>
                 {formData.region || "Select a region"}
@@ -467,7 +487,8 @@ export default function Create({onDismiss}: {
                                             whileHover={{backgroundColor: formData.region === region ? "#dcfce7" : "#f9fafb"}}
                                             whileTap={{scale: 0.98}}
                                         >
-                                            <Globe className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
+                                            <Globe
+                                                className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 dark:text-gray-500 mr-1.5 sm:mr-2"/>
                                             <span
                                                 className="block truncate text-xs sm:text-sm text-gray-800 dark:text-gray-200">{region}</span>
                                             {formData.region === region && (

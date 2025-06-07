@@ -779,13 +779,36 @@ export const simCardService = {
 
         return query;
     },
+    // New service function to fetch SIM cards by batch of serial numbers
+    getSimCardsBySerialBatch: async (
+        user: User,
+        serialNumbers: string[]
+    ) => {
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+        // Common query parts: include relations and admin filter
+        let query = supabase
+            .from('sim_cards')
+            .select('*, sold_by_user_id(*), team_id(*, leader_id(full_name))')
+            .eq('admin_id', adminId)
+            .in('serial_number', serialNumbers)
+            .order('created_at', {ascending: false});
+
+        // Filter for admin role
+        if (user.role === UserRole.ADMIN) {
+
+            return query
+        }
+
+        return {data: null, error: "Invalid user role"}
+    },
 
     getAllSimCards: async (user: User) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
             return supabase
                 .from('sim_cards')
-                .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+                .select('*, assigned_to_user_id(*),team_id(*,leader_id(full_name))')
                 .eq("admin_id", await admin_id(user))
                 .order('created_at', {ascending: false});
         }

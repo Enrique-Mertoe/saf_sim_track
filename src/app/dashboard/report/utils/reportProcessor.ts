@@ -5,38 +5,72 @@ import {SIMStatus} from "@/models/types";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
-    sold_by_user_id: User;
+    assigned_to_user_id?: User;
     qualityStatus: string;
 }
-const fetchSimCardDataFromDatabase = async (
-    simSerialNumbers: string[], 
-    user: User,
-    startDate?: string,
-    endDate?: string
-): Promise<DatabaseRecord[]> => {
-    let simData;
-
-    // If date range is provided, use getSimCardsByDateRange
-    if (startDate && endDate) {
-        const {data, error} = await simService.getSimCardsByDateRange(startDate, endDate, user);
-        if (error) return [];
-        simData = data;
-    } else {
-        // Otherwise use getAllSimCards
-        const {data, error} = await simService.getAllSimCards(user);
-        if (error) return [];
-        simData = data;
-    }
-
-    return (simData as SimAdapter[]).filter(sim => simSerialNumbers.includes(sim.serial_number))
-        .map((serNum) => ({
-            simSerialNumber: serNum.serial_number,
-            simId: serNum.id,
-            team: serNum.team_id.name,
-            uploadedBy: serNum.sold_by_user_id.full_name,
-            createdAt: new Date(serNum.created_at).toISOString(),
-        }));
+// const fetchSimCardDataFromDatasbase = async (
+//     simSerialNumbers: string[],
+//     user: User,
+// ): Promise<DatabaseRecord[]> => {
+//     let simData;
+//
+//
+//     // Otherwise use getAllSimCards
+//     const {data, error} = await simService.getAllSimCards(user);
+//     if (error) return [];
+//     simData = data;
+//
+//
+//     return (simData as SimAdapter[]).filter(sim => simSerialNumbers.includes(sim.serial_number))
+//         .map((serNum) => ({
+//             simSerialNumber: serNum.serial_number,
+//             simId: serNum.id,
+//             team: serNum.team_id.name,
+//             uploadedBy: serNum.sold_by_user_id.full_name,
+//             createdAt: new Date(serNum.created_at).toISOString(),
+//         }));
+// };
+const mapProgressToRange = (naturalProgress: number, min = 21, max = 26) => {
+    return min + ((naturalProgress / 100) * (max - min));
 };
+const fetchSimCardDataFromDatabase = async ({
+                                                progressCallback,
+                                                simSerialNumbers,
+                                                user
+                                            }: {
+                                                progressCallback: (progress: number) => void,
+                                                simSerialNumbers: string[];
+                                                user: User
+                                            }
+): Promise<DatabaseRecord[]> => {
+    const batchSize = 500;
+    const results: DatabaseRecord[] = [];
+    const totalBatches = Math.ceil(simSerialNumbers.length / batchSize);
+    for (let i = 0; i < simSerialNumbers.length; i += batchSize) {
+        const batchIndex = Math.floor(i / batchSize);
+        const batch = simSerialNumbers.slice(i, i + batchSize);
+        const naturalProgress = ((batchIndex + 0.5) / totalBatches) * 100;
+
+        progressCallback(mapProgressToRange(naturalProgress));
+        const {data, error} = await simService.getSimCardsBySerialBatch(user, batch);
+        if (error || !data) continue;
+
+        const simData = data as SimAdapter[];
+
+        const batchMatches = simData.map((sim) => ({
+            simSerialNumber: sim.serial_number,
+            simId: sim.id,
+            team: sim.team_id.name,
+            uploadedBy: sim?.assigned_to_user_id?.full_name ?? "Not assigned",
+            createdAt: new Date(sim.created_at).toISOString(),
+        }));
+
+        results.push(...batchMatches);
+    }
+    progressCallback(27);
+    return results;
+};
+
 
 const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRecord[], progressCallback: (progress: number) => void, user: User) => {
     const totalRecords = databaseRecords.length;
@@ -51,14 +85,15 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
         if (!sourceRecord) continue;
 
         // Determine quality status
-        const isQuality = sourceRecord.quality === "Y" && parseFloat(sourceRecord.topUpAmount.toString()) >= 50;
+        const isQuality = sourceRecord.quality === "Y" ;
+        // && parseFloat(sourceRecord.topUpAmount.toString()) >= 50;
         const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
 
         // Update SIM card status - change from REGISTERED to ACTIVATED if it's a match
         await simService.updateSIMCard(record.simId, {
             match: SIMStatus.MATCH,
             quality: qualityStatus,
-            status: SIMStatus.ACTIVATED // Update status from REGISTERED to ACTIVATED
+            status: SIMStatus.ACTIVATED
         }, user);
 
         const progress = 21 + Math.floor((i / totalRecords) * progressRange);
@@ -83,8 +118,7 @@ export const processReport = async (
     progressCallback(20);
 
     // Fetch matching records from a database
-    const databaseRecords = await fetchSimCardDataFromDatabase(simSerialNumbers, user, startDate, endDate);
-
+    const databaseRecords = await fetchSimCardDataFromDatabase({simSerialNumbers, user, progressCallback});
 
     const simDataMap = new Map<string, DatabaseRecord>();
     databaseRecords.forEach(record => {

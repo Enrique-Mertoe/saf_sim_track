@@ -28,7 +28,7 @@ export interface DatabaseRecord {
   simSerialNumber: string;
   simId: string;
   team: string;
-  uploadedBy: string;
+  uploadedBy?: string;
   createdAt: string;
   // Additional database fields can be added here
 }

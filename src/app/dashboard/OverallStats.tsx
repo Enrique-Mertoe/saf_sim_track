@@ -455,7 +455,7 @@ const Card = ({children}: any) => {
                     cy="40"
                     r="45"
                     fill="url(#grad1)"
-                    opacity="0.6"
+                    opacity="0.9"
                     className={`transition-transform duration-600 ${isHovered ? 'scale-110' : ''}`}
                 />
                 <circle
@@ -463,7 +463,7 @@ const Card = ({children}: any) => {
                     cy="60"
                     r="28"
                     fill="url(#grad2)"
-                    opacity="0.4"
+                    opacity="0.6"
                     className={`transition-transform duration-700 ${isHovered ? 'scale-110' : ''}`}
                 />
                 <circle
@@ -514,7 +514,7 @@ const Card = ({children}: any) => {
                 />
 
                 {/* Dots pattern */}
-                <circle cx="60" cy="170" r="4" fill="white" opacity="0.3"/>
+                <circle cx="60" cy="170" r="4" fill="white" opacity="0.5"/>
                 <circle cx="85" cy="160" r="3" fill="white" opacity="0.4"/>
                 <circle cx="110" cy="175" r="3.5" fill="white" opacity="0.2"/>
                 <circle cx="135" cy="165" r="2.5" fill="white" opacity="0.5"/>
