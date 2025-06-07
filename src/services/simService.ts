@@ -979,8 +979,8 @@ export const simCardService = {
 
         const [lt50, noTopUp, gte50NotConverted] = await Promise.all([
             base().lt('top_up_amount', 50),
-            base().is('top_up_amount', null),
-            base().gte('top_up_amount', 50).not('status', 'eq', SIMStatus.ACTIVATED),
+            base().is('top_up_amount', null).not("registered_on", "is", null),
+            base().gte('top_up_amount', 50).lt('usage', 50),
         ]);
 
         return {

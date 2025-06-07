@@ -4,35 +4,14 @@ import simCardService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
 import {SIMStatus} from "@/models/types";
 import {now} from '@/helper';
+import Signal from "@/lib/Signal";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
     assigned_to_user_id?: User;
     qualityStatus: string;
 }
-// const fetchSimCardDataFromDatasbase = async (
-//     simSerialNumbers: string[],
-//     user: User,
-// ): Promise<DatabaseRecord[]> => {
-//     let simData;
-//
-//
-//     // Otherwise use getAllSimCards
-//     const {data, error} = await simService.getAllSimCards(user);
-//     if (error) return [];
-//     simData = data;
-//
-//
-//     return (simData as SimAdapter[]).filter(sim => simSerialNumbers.includes(sim.serial_number))
-//         .map((serNum) => ({
-//             simSerialNumber: serNum.serial_number,
-//             simId: serNum.id,
-//             team: serNum.team_id.name,
-//             uploadedBy: serNum.sold_by_user_id.full_name,
-//             createdAt: new Date(serNum.created_at).toISOString(),
-//         }));
-// };
-const mapProgressToRange = (naturalProgress: number, min = 21, max = 26) => {
+const mapProgressToRange = (naturalProgress: number, min = 11, max = 29) => {
     return min + ((naturalProgress / 100) * (max - min));
 };
 const fetchSimCardDataFromDatabase = async ({
@@ -69,14 +48,14 @@ const fetchSimCardDataFromDatabase = async ({
 
         results.push(...batchMatches);
     }
-    progressCallback(27);
+    progressCallback(30);
     return results;
 };
 
 
 const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRecord[], progressCallback: (progress: number) => void, user: User) => {
     const totalRecords = databaseRecords.length;
-    const progressRange = 28;
+    const progressRange = 31;
     const recordMap = new Map(
         records.filter(r => r.simSerialNumber).map(r => [r.simSerialNumber, r])
     );
@@ -95,11 +74,16 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
         const simId = record.simId;
         const {data: existingSim, error} = await simCardService.DB
             .from('sim_cards')
-            .select('status, activation_date,registered_on')
+            .select('status, activation_date,registered_on,usage')
             .eq('id', simId)
             .single();
 
-        if (error || !existingSim) {
+        if (error) {
+            Signal.trigger("add-process", {label: "Failed step", error: true});
+            throw new Error("Something went wrong");
+        }
+        if (!existingSim) {
+            Signal.trigger("add-process", {label: "Failed step", error: true});
             throw new Error("SIM card not found");
         }
 
@@ -113,32 +97,23 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
         if (!existingSim.activation_date) {
             updateFields.activation_date = now();
         }
+        if (!existingSim.usage) {
+            updateFields.usage = sourceRecord.cumulativeUsage;
+        }
+
         if (!existingSim.registered_on) {
             const date = new Date(sourceRecord.tmDate);
             updateFields.registered_on = date.toISOString().split('T')[0];
         }
 
-// ✅ Only set `status = ACTIVATED` if current is not already ACTIVATED
         if (existingSim.status !== SIMStatus.ACTIVATED) {
             updateFields.status = SIMStatus.ACTIVATED;
         }
 
-// ✅ Only send update if needed
         if (Object.keys(updateFields).length > 0) {
             await simService.updateSIMCard(simId, updateFields, user);
         }
-
-        // // Update SIM card status - change from REGISTERED to ACTIVATED if it's a match
-        // await simService.updateSIMCard(record.simId, {
-        //     match: SIMStatus.MATCH,
-        //     quality: qualityStatus,
-        //     top_up_amount: sourceRecord.topUpAmount,
-        //     status: SIMStatus.ACTIVATED,
-        //     //@ts-ignore
-        //     activation_date: now()
-        // }, user);
-
-        const progress = 28 + Math.floor((i / totalRecords) * progressRange);
+        const progress = 31 + Math.floor((i / totalRecords) * progressRange);
         progressCallback(progress)
 
     }
@@ -155,12 +130,13 @@ export const processReport = async (
     startDate?: string,
     endDate?: string
 ): Promise<ProcessedReport> => {
+    Signal.trigger("add-process", "Extracting serials...");
     // Extract all SIM serial numbers for batch lookup
     const simSerialNumbers = report.records.map(record => record.simSerialNumber);
 
     // Update progress
-    progressCallback(20);
-
+    progressCallback(10);
+    Signal.trigger("add-process", "Checking SIM cards...");
     // Fetch matching records from a database
     const databaseRecords = await fetchSimCardDataFromDatabase({simSerialNumbers, user, progressCallback});
 
@@ -168,9 +144,10 @@ export const processReport = async (
     databaseRecords.forEach(record => {
         simDataMap.set(record.simSerialNumber, record);
     });
+    Signal.trigger("add-process", "Uploading bundle data...");
     await syncMatch(databaseRecords, report.records, progressCallback, user)
     // Update progress
-    progressCallback(50);
+    progressCallback(80);
 
 
     // Process each record
@@ -190,7 +167,8 @@ export const processReport = async (
     });
 
     // Update progress
-    progressCallback(70);
+    progressCallback(90);
+    Signal.trigger("add-process", "Finalizing...");
 
     // Group by team
     const teamMap = new Map<string, ProcessedRecord[]>();
