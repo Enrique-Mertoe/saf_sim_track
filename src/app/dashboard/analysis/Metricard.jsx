@@ -25,15 +25,15 @@ export const MetricCard = ({title, value, user, subtitle, icon: Icon, trend, col
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-                    <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-orange-500'} dark:text-white`}>
+                    <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-amber-500'} dark:text-white`}>
                         {typeof val === 'number' ? val.toLocaleString() : val}
                     </p>
                     {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
                 </div>
                 <div
-                    className={`p-3 rounded-full ${color === 'green' ? 'bg-green-100 dark:bg-green-900' : color === 'red' ? 'bg-red-100 dark:bg-red-900' : 'bg-orange-100 dark:bg-orange-900'}`}>
+                    className={`p-3 rounded-full ${color === 'green' ? 'bg-green-100 dark:bg-green-900' : color === 'red' ? 'bg-red-100 dark:bg-red-900' : 'bg-amber-100 dark:bg-amber-900'}`}>
                     <Icon
-                        className={`h-6 w-6 ${color === 'green' ? 'text-green-600 dark:text-green-400' : color === 'red' ? 'text-red-500 dark:text-red-400' : 'text-orange-500 dark:text-orange-400'}`}/>
+                        className={`h-6 w-6 ${color === 'green' ? 'text-green-600 dark:text-green-400' : color === 'red' ? 'text-red-500 dark:text-red-400' : 'text-amber-500 dark:text-amber-400'}`}/>
                 </div>
             </div>
             {/*  {trend && (*/}

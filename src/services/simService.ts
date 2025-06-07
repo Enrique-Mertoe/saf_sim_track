@@ -791,7 +791,7 @@ export const simCardService = {
         const supabase = createSupabaseClient();
         const adminId = await admin_id(user);
         // Common query parts: include relations and admin filter
-        let query = supabase
+        const query = supabase
             .from('sim_cards')
             .select('*, sold_by_user_id(*), team_id(*, leader_id(full_name))')
             .eq('admin_id', adminId)

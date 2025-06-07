@@ -290,7 +290,7 @@ const SIMAnalysisPage = () => {
                     subtitle={`${((totalMetrics.totalNonQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% of total`}
                     icon={XCircle}
                     trend={-3}
-                    color="red"
+                    color="amber"
                 />
                 {/*<MetricCard*/}
                 {/*    user={user}*/}

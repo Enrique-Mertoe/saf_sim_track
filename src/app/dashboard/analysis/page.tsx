@@ -4,7 +4,7 @@ import {UserRole} from "@/models";
 import SIMAnalysisPage from "@/app/dashboard/analysis/page.client";
 import TeamSIMAnalysisPage from "@/app/dashboard/analysis/page.teamleader.client";
 
-export default async function (){
+export default async function Page(){
     const user = await Accounts.user()
     return (
         <Dashboard>
