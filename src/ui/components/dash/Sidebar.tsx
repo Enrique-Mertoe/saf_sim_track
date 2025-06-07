@@ -7,6 +7,7 @@ import {AnimatePresence, motion} from 'framer-motion';
 import {
     ArrowLeftRight,
     Award,
+    BarChart,
     ClipboardList,
     Cpu,
     CreditCard,
@@ -182,6 +183,7 @@ export default function Sidebar() {
                 {href: '/dashboard/users', icon: Users, label: 'Users'},
                 {href: '/dashboard/team', icon: UserPlus, label: 'Teams'},
                 {href: '/dashboard/pick', icon: ClipboardList, label: 'PickList'},
+                {href: '/dashboard/analysis', icon: BarChart, label: 'Analysis'},
                 {href: '/dashboard/report', icon: PieChart, label: 'Reports'},
                 {href: '/dashboard/filemanager', icon: Folder, label: 'FileManager'},
                 {href: '/dashboard/invoices', icon: CreditCard, label: 'Invoices'},
@@ -192,6 +194,7 @@ export default function Sidebar() {
             navItems.push(
                 {href: '/dashboard/my-team', icon: UserPlus, label: 'My Team'},
                 {href: '/dashboard/leader-console', icon: PieChart, label: 'Sim Assignment'},
+                {href: '/dashboard/analysis', icon: BarChart, label: 'Analysis'},
                 {href: '/dashboard/transfers', icon: ArrowLeftRight, label: 'SIM Transfers'},
                 {href: '/settings', icon: Settings, label: 'Settings'},
             );

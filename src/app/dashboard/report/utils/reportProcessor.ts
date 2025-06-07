@@ -1,5 +1,6 @@
 import {DatabaseRecord, ProcessedRecord, ProcessedReport, Report, SafaricomRecord, TeamReport} from '../types';
 import simService from "@/services/simService";
+import simCardService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
 import {SIMStatus} from "@/models/types";
 import {now} from '@/helper';
@@ -86,22 +87,62 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
         if (!sourceRecord) continue;
 
         // Determine quality status
-        const isQuality = sourceRecord.quality === "Y" ;
+        const isQuality = sourceRecord.quality === "Y";
         // && parseFloat(sourceRecord.topUpAmount.toString()) >= 50;
         const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
 
-        // Update SIM card status - change from REGISTERED to ACTIVATED if it's a match
-        await simService.updateSIMCard(record.simId, {
+
+        const simId = record.simId;
+        const {data: existingSim, error} = await simCardService.DB
+            .from('sim_cards')
+            .select('status, activation_date,registered_on')
+            .eq('id', simId)
+            .single();
+
+        if (error || !existingSim) {
+            throw new Error("SIM card not found");
+        }
+
+        const updateFields: any = {
             match: SIMStatus.MATCH,
             quality: qualityStatus,
-            status: SIMStatus.ACTIVATED,
-            //@ts-ignore
-            activation_date:now()
-        }, user);
+            top_up_amount: sourceRecord.topUpAmount,
+        };
 
-        const progress = 21 + Math.floor((i / totalRecords) * progressRange);
-        progressCallback(progress);
+// ✅ Only set `activation_date` if it's currently null
+        if (!existingSim.activation_date) {
+            updateFields.activation_date = now();
+        }
+        if (!existingSim.registered_on) {
+            const date = new Date(sourceRecord.tmDate);
+            updateFields.registered_on = date.toISOString().split('T')[0];
+        }
+
+// ✅ Only set `status = ACTIVATED` if current is not already ACTIVATED
+        if (existingSim.status !== SIMStatus.ACTIVATED) {
+            updateFields.status = SIMStatus.ACTIVATED;
+        }
+
+// ✅ Only send update if needed
+        if (Object.keys(updateFields).length > 0) {
+            await simService.updateSIMCard(simId, updateFields, user);
+        }
+
+        // // Update SIM card status - change from REGISTERED to ACTIVATED if it's a match
+        // await simService.updateSIMCard(record.simId, {
+        //     match: SIMStatus.MATCH,
+        //     quality: qualityStatus,
+        //     top_up_amount: sourceRecord.topUpAmount,
+        //     status: SIMStatus.ACTIVATED,
+        //     //@ts-ignore
+        //     activation_date: now()
+        // }, user);
+
+        const progress = 28 + Math.floor((i / totalRecords) * progressRange);
+        progressCallback(progress)
+
     }
+    progressCallback(49);
 }
 
 /**
@@ -137,7 +178,7 @@ export const processReport = async (
         const dbRecord = simDataMap.get(record.simSerialNumber);
         const matched = !!dbRecord;
         // const qualitySim = matched && record.topUpAmount >= 50;
-        const qualitySim = matched && record.quality == "Y" && record.topUpAmount >= 50;
+        const qualitySim = matched && record.quality == "Y";
 
         return {
             ...record,

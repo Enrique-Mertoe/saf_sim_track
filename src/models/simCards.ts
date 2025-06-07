@@ -62,3 +62,4 @@ export interface SIMCardUpdate {
     quality?: SIMStatus;
     quality_score?: number;
 }
+

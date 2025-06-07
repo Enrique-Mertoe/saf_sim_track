@@ -126,17 +126,6 @@ const Reports: React.FC = () => {
             setIsProcessing(true);
             setProcessingProgress(0);
 
-            // Simulating processing progress
-            // const processTimer = setInterval(() => {
-            //     setProcessingProgress(prev => {
-            //         if (prev >= 95) {
-            //             clearInterval(processTimer);
-            //             return 95;
-            //         }
-            //         return prev + 2;
-            //     });
-            // }, 200);
-
             // Process the report with date filtering
             const processed = await processReport(
                 reportData, 

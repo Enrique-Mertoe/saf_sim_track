@@ -1,8 +1,9 @@
 // src/pages/Reports/components/ResultsSummary.tsx
 import React from 'react';
-import { motion } from 'framer-motion';
-import { FiDownload, FiRefreshCw, FiPieChart } from 'react-icons/fi';
-import { ProcessedReport } from '../types';
+import {motion} from 'framer-motion';
+// Import the missing FiStar icon
+import {FiCheck, FiDownload, FiPieChart, FiRefreshCw, FiStar} from 'react-icons/fi';
+import {ProcessedReport} from '../types';
 
 interface ResultsSummaryProps {
   processedReport: ProcessedReport;
@@ -33,12 +34,12 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
           Report processed successfully with {processedReport.matchedCount} matches found.
           </p>
         </div>
-        <div className="flex space-x-3 mt-4 md:mt-0">
+        <div className="flex items-center space-x-3 mt-4 md:mt-0">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onGenerateReports}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center"
+            className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white font-medium rounded-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center"
           >
             <FiDownload className="mr-2" />
             Download Report
@@ -47,7 +48,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onProcessNew}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center"
+            className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white font-medium rounded-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center"
           >
             <FiRefreshCw className="mr-2" />
             Process New Report
@@ -55,32 +56,32 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+          className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
         >
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between mb-1">
             <h4 className="text-lg font-medium text-gray-800 dark:text-gray-100">Total SIMs</h4>
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
               <FiPieChart className="text-green-600 dark:text-green-400 w-6 h-6" />
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-1">
+          <div className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">
           {processedReport.totalCount.toLocaleString()}
           </div>
-          <p className="text-gray-600 dark:text-gray-300">Total SIMs in the report</p>
+          <p className="text-gray-600 text-sm dark:text-gray-300">Total SIMs in the report</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+          className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
         >
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between mb-1">
             <h4 className="text-lg font-medium text-gray-800 dark:text-gray-100">Matched SIMs</h4>
             <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
               <FiCheck className="text-green-600 dark:text-green-400 w-6 h-6" />
@@ -100,15 +101,16 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
             </div>
             <span className="text-sm text-gray-600 dark:text-gray-300">{matchedPercentage}%</span>
           </div>
+          <p className="text-gray-600 text-sm dark:text-gray-300">Matched with uploaded pick lists</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+          className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-2"
         >
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-between mb-1">
             <h4 className="text-lg font-medium text-gray-800 dark:text-gray-100">Quality SIMs</h4>
             <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
               <FiStar className="text-purple-600 dark:text-purple-400 w-6 h-6" />
@@ -131,7 +133,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
         </motion.div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-2">
       <h4 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-4">Team Summary</h4>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -185,8 +187,5 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
     </motion.div>
   );
 };
-
-// Import the missing FiStar icon
-import { FiStar, FiCheck } from 'react-icons/fi';
 
 export default ResultsSummary;

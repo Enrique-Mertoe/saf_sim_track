@@ -1,6 +1,7 @@
 import {SIMCard, SIMCardCreate, SIMCardUpdate, SIMStatus, User, UserRole} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {admin_id} from "@/services/helper";
+import {applyFilters, Filter} from "@/helper";
 
 // Interface for pagination parameters
 export interface PaginationParams {
@@ -69,10 +70,11 @@ const generateCacheKey = (prefix: string, id: string, filters?: { startDate?: st
     return `${prefix}_${id}${filterString}`;
 };
 
+const DB = createSupabaseClient();
 export const simCardService = {
     // Export cache for external use
     cache,
-
+    DB,
     // Get only total count of SIM cards
     getTotalCount: async (user: User, filters?: { startDate?: string, endDate?: string }) => {
         // Generate cache key
@@ -337,6 +339,8 @@ export const simCardService = {
         // Process the data to calculate statistics for each team
         const teamStats = data.map(team => {
             const simCards = team.sim_cards || [];
+
+            // console.log("team cards", simCards)
 
             // Apply date filters if provided
             let filteredCards = simCards;
@@ -864,14 +868,24 @@ export const simCardService = {
 
         return {data: null, error: "Invalid user role", count: 0}
     },
-    countReg: async (user: User) => {
+    countQuery: async (user: User, filters: Filter[] = []) => {
+        const supabase = createSupabaseClient();
+        return applyFilters(supabase
+            .from('sim_cards')
+            .select('id', {count: "exact"})
+            .eq("admin_id", await admin_id(user)), filters)
+    },
+    countReg: async (user: User, teamId: string | null = null) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
-            return supabase
+            let q = supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("registered_on", "is", null)
                 .eq("admin_id", await admin_id(user));
+            if (teamId)
+                q = q.eq("team_id", teamId)
+            return q
         }
 
         // if (user.role === UserRole.STAFF) {
@@ -925,6 +939,55 @@ export const simCardService = {
         // }
 
         return {data: null, error: "Invalid user role", count: 0}
+    },
+    countQuality: async (user: User, teamId: string | null = null) => {
+        const supabase = createSupabaseClient();
+        if (user.role === UserRole.ADMIN) {
+            let q = supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .eq("quality", SIMStatus.QUALITY)
+                .eq("admin_id", await admin_id(user));
+            if (teamId)
+                q = q.eq("team_id", teamId)
+            return q
+        }
+
+        return {data: null, error: "Invalid user role", count: 0}
+    },
+    countMatch: async (user: User, teamId: string | null = null, filters: Filter[] = []) => {
+        const supabase = createSupabaseClient();
+        if (user.role === UserRole.ADMIN) {
+            let q = supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .eq("match", SIMStatus.MATCH)
+                .eq("admin_id", await admin_id(user));
+            if (teamId)
+                q = q.eq("team_id", teamId)
+            return applyFilters(q, filters)
+        }
+
+        return {data: null, error: "Invalid user role", count: 0}
+    },
+    countTopUpCategories: async (user: User, filters: Filter[] = []) => {
+        const supabase = createSupabaseClient();
+        const adminId = await admin_id(user);
+
+        const base = () =>
+            applyFilters(supabase.from('sim_cards').select('id', {count: 'exact'}).eq('admin_id', adminId), filters);
+
+        const [lt50, noTopUp, gte50NotConverted] = await Promise.all([
+            base().lt('top_up_amount', 50),
+            base().is('top_up_amount', null),
+            base().gte('top_up_amount', 50).not('status', 'eq', SIMStatus.ACTIVATED),
+        ]);
+
+        return {
+            lt50: lt50.count || 0,
+            noTopUp: noTopUp.count || 0,
+            gte50NotConverted: gte50NotConverted.count || 0,
+        };
     },
     // Create a new SIM card record
     createSIMCard: async (simCardData: SIMCardCreate): Promise<SIMCard | null> => {
