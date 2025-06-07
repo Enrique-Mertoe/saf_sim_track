@@ -2,6 +2,7 @@ import {DatabaseRecord, ProcessedRecord, ProcessedReport, Report, SafaricomRecor
 import simService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
 import {SIMStatus} from "@/models/types";
+import {now} from '@/helper';
 
 type SimAdapter = SIMCard & {
     team_id: Team;
@@ -93,7 +94,9 @@ const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRe
         await simService.updateSIMCard(record.simId, {
             match: SIMStatus.MATCH,
             quality: qualityStatus,
-            status: SIMStatus.ACTIVATED
+            status: SIMStatus.ACTIVATED,
+            //@ts-ignore
+            activation_date:now()
         }, user);
 
         const progress = 21 + Math.floor((i / totalRecords) * progressRange);
