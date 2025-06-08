@@ -82,7 +82,8 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({teamReports, user}) =>
                     activation_date : parseDateToYMD(record.topUpDate),
                     match: SIMStatus.UNMATCH,
                     quality: record.qualitySim ? SIMStatus.QUALITY : SIMStatus.NONQUALITY,
-                    top_up_amount: record.topUpAmount || 0
+                    top_up_amount: +record.topUpAmount || null,
+                    usage: +record.cumulativeUsage || null
                 }));
 
                 // Process in batches of 250
