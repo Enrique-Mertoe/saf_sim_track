@@ -875,7 +875,7 @@ export const simCardService = {
             .select('id', {count: "exact"})
             .eq("admin_id", await admin_id(user)), filters)
     },
-    countReg: async (user: User, teamId: string | null = null,filters: Filter[] = []) => {
+    countReg: async (user: User, teamId: string | null = null, filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
             let q = supabase
@@ -897,15 +897,15 @@ export const simCardService = {
         //         .eq("admin_id", await admin_id(user))
         //         .order('registered_on', {ascending: false});
         // }
-        // if (user.role === UserRole.TEAM_LEADER) {
-        //     return supabase
-        //         .from('sim_cards')
-        //         .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
-        //         .eq("admin_id", await admin_id(user))
-        //         .eq("team_id", user.team_id)
-        //         // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
-        //         .order('registered_on', {ascending: false});
-        // }
+        if (user.role === UserRole.TEAM_LEADER) {
+            let q = supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .not("registered_on", "is", null)
+                .eq("admin_id", await admin_id(user))
+                .eq("team_id", user.team_id)
+            return applyFilters(q, filters)
+        }
 
         return {data: null, error: "Invalid user role", count: 0}
     },
@@ -952,6 +952,15 @@ export const simCardService = {
                 q = q.eq("team_id", teamId)
             return q
         }
+        if (user.role === UserRole.TEAM_LEADER) {
+            let q = supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .eq("quality", SIMStatus.QUALITY)
+                .eq("admin_id", await admin_id(user))
+                .eq("team_id", user.team_id)
+            return q
+        }
 
         return {data: null, error: "Invalid user role", count: 0}
     },
@@ -965,6 +974,15 @@ export const simCardService = {
                 .eq("admin_id", await admin_id(user));
             if (teamId)
                 q = q.eq("team_id", teamId)
+            return applyFilters(q, filters)
+        }
+        if (user.role === UserRole.TEAM_LEADER) {
+            let q = supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .eq("match", SIMStatus.MATCH)
+                .eq("admin_id", await admin_id(user))
+                .eq("team_id", user.team_id)
             return applyFilters(q, filters)
         }
 

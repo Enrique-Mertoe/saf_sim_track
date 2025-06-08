@@ -40,11 +40,11 @@ const TeamBreakdownCard = ({team, user}) => {
             <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{team.name}</h3>
                 <div className={`px-2 py-1 rounded text-xs font-medium ${
-                    team.qualityRate >= 95 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        team.qualityRate >= 90 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
+                    qualityRate >= 95 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                        qualityRate >= 90 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
                             'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                 }`}>
-                    {team.qualityRate >= 95 ? 'Well Done' : team.qualityRate >= 90 ? 'Improve' : 'Needs Attention'}
+                    {qualityRate >= 95 ? 'Well Done' : qualityRate >= 90 ? 'Improve' : 'Needs Attention'}
                 </div>
             </div>
 

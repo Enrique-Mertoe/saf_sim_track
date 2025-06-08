@@ -236,3 +236,43 @@ export const applyFilters = <T>(q: T, filters: Filter[]): T => {
 };
 
 
+export function parseDateToYMD(input: string | number | Date | null | undefined): string | null {
+    if (!input) return null;
+
+    try {
+        if (typeof input === 'string') {
+            // Handle compact format like "20250604"
+            if (/^\d{8}$/.test(input)) {
+                const formatted = `${input.slice(0, 4)}-${input.slice(4, 6)}-${input.slice(6, 8)}`;
+                const d = new Date(formatted);
+                if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+            }
+
+            // Handle ISO-like or valid formats
+            const d = new Date(input);
+            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+        }
+
+        if (typeof input === 'number') {
+            // Unix timestamp or Excel-style date
+            const d = new Date(input);
+            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+        }
+
+        if (input instanceof Date) {
+            if (!isNaN(input.getTime())) return input.toISOString().split('T')[0];
+        }
+    } catch (e) {
+        console.warn("Date parsing error:", e);
+    }
+
+    return null; // Invalid or unknown format
+}
+
+export function chunkArray<T>(array: T[], size: number): T[][] {
+    const result: T[][] = [];
+    for (let i = 0; i < array.length; i += size) {
+        result.push(array.slice(i, i + size));
+    }
+    return result;
+}

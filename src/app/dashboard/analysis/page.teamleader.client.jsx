@@ -1,10 +1,13 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
-import {Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {Cell, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
 import {AlertTriangle, CheckCircle, RefreshCw, Smartphone, TrendingDown, TrendingUp, XCircle} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import simCardService from "@/services/simService";
+import simService from "@/services/simService";
 import {DateTime} from "luxon";
+import {Card, CardContent, CardHeader} from "@/ui/components/Card";
+import {userService} from "@/services";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -13,9 +16,9 @@ const CACHE_DURATION = 5 * 60 * 1000;
 const dataCache = new Map();
 
 export default function TeamSIMAnalysisPage() {
-    const { user } = useApp();
+    const {user} = useApp();
     const [selectedPeriod, setSelectedPeriod] = useState('last-30-days');
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(!user);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(null);
     const [teamData, setTeamData] = useState(null);
@@ -33,16 +36,16 @@ export default function TeamSIMAnalysisPage() {
         const now = DateTime.now().setZone("Africa/Nairobi");
         let startDate;
 
-        switch(selectedPeriod) {
+        switch (selectedPeriod) {
             case 'last-7-days':
-                startDate = now.minus({ days: 7 }).startOf('day');
+                startDate = now.minus({days: 7}).startOf('day');
                 break;
             case 'last-90-days':
-                startDate = now.minus({ days: 90 }).startOf('day');
+                startDate = now.minus({days: 90}).startOf('day');
                 break;
             case 'last-30-days':
             default:
-                startDate = now.minus({ days: 30 }).startOf('day');
+                startDate = now.minus({days: 30}).startOf('day');
                 break;
         }
 
@@ -79,51 +82,37 @@ export default function TeamSIMAnalysisPage() {
         try {
             setError(null);
             if (!isLoading) setIsRefreshing(true);
-
+            const teamId = user.team_id;
             const dateFilters = getDateFilters();
-
-            // Fetch team stats
-            const { data: teamsData, error: teamsError } = await simCardService.getTeamStats(user, dateFilters);
-
-            if (teamsError) throw teamsError;
-
-            if (!teamsData || teamsData.length === 0) {
-                setTeamData(null);
-                setUserStats([]);
-                setTotalMetrics({
-                    totalRecorded: 0,
-                    totalMatched: 0,
-                    totalQuality: 0,
-                    totalNonQuality: 0,
-                    totalUnknown: 0
-                });
-                setIsLoading(false);
-                setIsRefreshing(false);
-                return;
-            }
-
-            // Find the team leader's team
-            const teamData = teamsData.find(team => team.id === user.team_id);
-
-            if (!teamData) {
-                setError("Team data not found");
-                setIsLoading(false);
-                setIsRefreshing(false);
-                return;
-            }
+            const [reg, qlty, mtc] = await Promise.all([
+                simService.countReg(user, teamId),
+                simService.countQuality(user, teamId, [["registered_on", "not", "is", null]]),
+                simService.countMatch(user, teamId, [["registered_on", "not", "is", null]]),
+            ]);
 
             // Process team data
-            const totalRecorded = teamData.stats.total;
-            const matched = teamData.stats.matched;
-            const quality = teamData.stats.quality;
+            const totalRecorded = reg.count ?? 0;
+            const matched = mtc.count ?? 0;
+            const quality = qlty.count ?? 0;
             const matchRate = totalRecorded > 0 ? ((matched / totalRecorded) * 100).toFixed(2) : 0;
             const qualityRate = matched > 0 ? ((quality / matched) * 100).toFixed(2) : 0;
             const nonQuality = matched - quality;
             const unknown = totalRecorded - matched;
 
+            // Fetch real breakdown data
+            const breakdownFilters = [["team_id", teamId]];
+            if (dateFilters.startDate) {
+                breakdownFilters.push(["registered_on", "gte", dateFilters.startDate]);
+            }
+            if (dateFilters.endDate) {
+                breakdownFilters.push(["registered_on", "lte", dateFilters.endDate]);
+            }
+
+            const breakdownData = await simCardService.countTopUpCategories(user, breakdownFilters);
+
             const processedTeamData = {
-                id: teamData.id,
-                name: teamData.name,
+                id: teamId,
+                name: "teamData.name",
                 totalRecorded,
                 matched,
                 matchRate: parseFloat(matchRate),
@@ -131,22 +120,13 @@ export default function TeamSIMAnalysisPage() {
                 qualityRate: parseFloat(qualityRate),
                 nonQuality,
                 unknown,
-                breakdown: {
-                    // These are estimates since we don't have the exact breakdown
-                    topUpBelow50: Math.round(nonQuality * 0.4),
-                    noTopUp: Math.round(nonQuality * 0.3),
-                    topUp50PlusNotConverted: Math.round(nonQuality * 0.3),
-                    unknownQuality: Math.round(unknown * 0.5),
-                    unknownNonQuality: Math.round(unknown * 0.5)
-                }
+                breakdown: breakdownData
             };
 
             // Fetch user stats for the team
-            const { data: usersData, error: usersError } = await simCardService.getUserStatsForBatch(
-                user.team_id, 
-                'unassigned', // This will get all users in the team
-                user, 
-                dateFilters
+            const {data: usersData, error: usersError} = await userService.getStaffUsers(
+                user.team_id,
+                user,
             );
 
             if (usersError) throw usersError;
@@ -184,12 +164,12 @@ export default function TeamSIMAnalysisPage() {
 
     // Initial load
     useEffect(() => {
-        fetchData();
+        fetchData().then();
     }, [fetchData]);
 
     // Handle period change
     useEffect(() => {
-        fetchData();
+        fetchData().then();
     }, [selectedPeriod, fetchData]);
 
     // Periodic refresh
@@ -268,21 +248,21 @@ export default function TeamSIMAnalysisPage() {
     }
 
     const pieChartData = [
-        { name: 'Quality', value: totalMetrics.totalQuality, color: '#00A651' },
-        { name: 'Non-Quality', value: totalMetrics.totalNonQuality, color: '#FF6B6B' },
-        { name: 'Unknown', value: totalMetrics.totalUnknown, color: '#FFA726' }
+        {name: 'Quality', value: totalMetrics.totalQuality, color: '#00A651'},
+        {name: 'Non-Quality', value: totalMetrics.totalNonQuality, color: '#FF6B6B'},
+        {name: 'Unknown', value: totalMetrics.totalUnknown, color: '#FFA726'}
     ];
 
     const userPerformanceData = userStats.map(user => ({
         name: user.name,
-        'Total': user.stats.total,
-        'Quality': user.stats.quality,
-        'Non-Quality': user.stats.matched - user.stats.quality,
-        'Unknown': user.stats.total - user.stats.matched
+        'Total': 0,
+        'Quality': 0,
+        'Non-Quality': 0,
+        'Unknown': 0
     }));
 
-    const MetricCard = ({ title, value, subtitle, icon: Icon, trend, color = "green" }) => (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+    const MetricCard = ({title, value, subtitle, icon: Icon, trend, color = "green"}) => (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
@@ -291,16 +271,18 @@ export default function TeamSIMAnalysisPage() {
                     </p>
                     {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
                 </div>
-                <div className={`p-3 rounded-full ${color === 'green' ? 'bg-green-100 dark:bg-green-900' : color === 'red' ? 'bg-red-100 dark:bg-red-900' : 'bg-orange-100 dark:bg-orange-900'}`}>
-                    <Icon className={`h-6 w-6 ${color === 'green' ? 'text-green-600 dark:text-green-400' : color === 'red' ? 'text-red-500 dark:text-red-400' : 'text-orange-500 dark:text-orange-400'}`} />
+                <div
+                    className={`p-3 rounded-full ${color === 'green' ? 'bg-green-100 dark:bg-green-900' : color === 'red' ? 'bg-red-100 dark:bg-red-900' : 'bg-orange-100 dark:bg-orange-900'}`}>
+                    <Icon
+                        className={`h-6 w-6 ${color === 'green' ? 'text-green-600 dark:text-green-400' : color === 'red' ? 'text-red-500 dark:text-red-400' : 'text-orange-500 dark:text-orange-400'}`}/>
                 </div>
             </div>
             {trend && (
                 <div className="flex items-center mt-4">
                     {trend > 0 ? (
-                        <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                        <TrendingUp className="h-4 w-4 text-green-500 mr-1"/>
                     ) : (
-                        <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                        <TrendingDown className="h-4 w-4 text-red-500 mr-1"/>
                     )}
                     <span className={`text-sm ${trend > 0 ? 'text-green-600' : 'text-red-500'}`}>
                         {Math.abs(trend)}% vs last period
@@ -316,7 +298,7 @@ export default function TeamSIMAnalysisPage() {
             <div className="mb-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Team SIM Quality Analysis</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analysis</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-2">Performance metrics for your team</p>
                     </div>
                     <div className="flex space-x-4">
@@ -329,12 +311,12 @@ export default function TeamSIMAnalysisPage() {
                             <option value="last-30-days">Last 30 Days</option>
                             <option value="last-90-days">Last 90 Days</option>
                         </select>
-                        <button 
+                        <button
                             onClick={handleRefresh}
                             disabled={isLoading || isRefreshing}
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 disabled:opacity-50"
                         >
-                            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}/>
                             <span>Refresh</span>
                         </button>
                     </div>
@@ -343,7 +325,7 @@ export default function TeamSIMAnalysisPage() {
 
             {/* Key Metrics Overview */}
             {isLoading ? (
-                <LoadingSkeleton />
+                <LoadingSkeleton/>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <MetricCard
@@ -377,150 +359,131 @@ export default function TeamSIMAnalysisPage() {
                 </div>
             )}
 
-            {/* Charts Section */}
-            {!isLoading && teamData && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {/* Quality Distribution Pie Chart */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quality Distribution</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <PieChart>
-                                <Pie
-                                    data={pieChartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                >
-                                    {pieChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
+            <div className="grid grid-cols-12 gap-2">
+                <div className="md:col-span-7">
+                    {/* Charts Section */}
+                    {!isLoading && teamData && (
+                        <div className="grid grid-cols-1 gap-6 mb-8">
+                            {/* Quality Distribution Pie Chart */}
+                            <div
+                                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quality
+                                    Distribution</h3>
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie
+                                            data={pieChartData}
+                                            cx="50%"
+                                            cy="50%"
+                                            labelLine={false}
+                                            label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                            outerRadius={80}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                        >
+                                            {pieChartData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color}/>
+                                            ))}
+                                        </Pie>
+                                        <Tooltip/>
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
 
-                    {/* Team Performance */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team Performance</h3>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Total Recorded</p>
-                                <p className="text-xl font-bold text-gray-900 dark:text-white">{teamData.totalRecorded.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Match Rate</p>
-                                <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.matchRate}%</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Quality</p>
-                                <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.quality.toLocaleString()}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">Quality Rate</p>
-                                <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.qualityRate}%</p>
+                            {/* Team Performance */}
+                            <div
+                                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team
+                                    Performance</h3>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Total Recorded</p>
+                                        <p className="text-xl font-bold text-gray-900 dark:text-white">{teamData.totalRecorded.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Match Rate</p>
+                                        <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.matchRate}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Quality</p>
+                                        <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.quality.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Quality Rate</p>
+                                        <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.qualityRate}%</p>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Non-Quality
+                                        Breakdown</h4>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <div className="flex items-center gap-1">
+                                                <TrendingDown className="w-3 h-3 text-red-500"/>
+                                                <span className="text-gray-600 dark:text-gray-400">&lt;50 KES</span>
+                                            </div>
+                                            <span className="text-red-500 font-medium">{teamData.breakdown.lt50}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <div className="flex items-center gap-1">
+                                                <XCircle className="w-3 h-3 text-red-500"/>
+                                                <span className="text-gray-600 dark:text-gray-400">No Top-up</span>
+                                            </div>
+                                            <span
+                                                className="text-red-500 font-medium">{teamData.breakdown.noTopUp}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <div className="flex items-center gap-1">
+                                                <AlertTriangle className="w-3 h-3 text-orange-500"/>
+                                                <span className="text-gray-600 dark:text-gray-400">≥50 Not Conv</span>
+                                            </div>
+                                            <span
+                                                className="text-orange-500 font-medium">{teamData.breakdown.gte50NotConverted}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Non-Quality Breakdown</h4>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600 dark:text-gray-400">Top-up &lt; 50 KES</span>
-                                    <span className="text-red-500 font-medium">{teamData.breakdown.topUpBelow50}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600 dark:text-gray-400">No Top-up</span>
-                                    <span className="text-red-500 font-medium">{teamData.breakdown.noTopUp}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-600 dark:text-gray-400">Top-up ≥50 Not Converted</span>
-                                    <span className="text-orange-500 font-medium">{teamData.breakdown.topUp50PlusNotConverted}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    )}
                 </div>
-            )}
+                <div className="md:col-span-5">
+                    <Card className={"w-ful h-full bg-white dark:bg-gray-800 !border-gray-200"}>
+                        <CardHeader className={"border border-transparent border-b-gray-200 !p-1"}>
+                            <span className={"font-bold text-2md"}>Staff Analysis</span>
+                        </CardHeader>
+                        <CardContent className={"overflow-y-auto"}>
+                            {
+                                userStats.map(userstat => (
+                                    <div
+                                        className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800">
+                                        <div className="flex items-center gap-4">
+                                            <div>
+                                                <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    {userstat.full_name}
+                                                </p>
+                                            </div>
+                                        </div>
 
-            {/* Team Members Performance */}
-            {!isLoading && userStats.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
-                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Team Members Performance</h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50 dark:bg-gray-700">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Team Member</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Recorded</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Matched</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Match Rate</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quality</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quality Rate</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                {userStats.map((user) => {
-                                    const matchRate = user.stats.total > 0 ? ((user.stats.matched / user.stats.total) * 100).toFixed(2) : 0;
-                                    const qualityRate = user.stats.matched > 0 ? ((user.stats.quality / user.stats.matched) * 100).toFixed(2) : 0;
+                                        <div className="flex w-full max-w-[140px] items-center gap-3">
+                                            <div
+                                                className="relative block h-2 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
+                                                <div
+                                                    className="absolute left-0 top-0 flex h-full w-[79%] items-center justify-center rounded-sm bg-brand-500 text-xs font-medium text-white"></div>
+                                            </div>
+                                            <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-400">
+                                                79%
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            }
 
-                                    return (
-                                        <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{user.name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{user.stats.total.toLocaleString()}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{user.stats.matched.toLocaleString()}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-medium">{matchRate}%</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{user.stats.quality.toLocaleString()}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-medium">{qualityRate}%</td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                    parseFloat(qualityRate) >= 95 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                    parseFloat(qualityRate) >= 90 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                                }`}>
-                                                    {parseFloat(qualityRate) >= 95 ? 'Well Done' : parseFloat(qualityRate) >= 90 ? 'Improve' : 'Needs Attention'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                        </CardContent>
+
+                    </Card>
                 </div>
-            )}
-
-            {/* User Performance Chart */}
-            {!isLoading && userStats.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700 mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team Members Comparison</h3>
-                    <ResponsiveContainer width="100%" height={400}>
-                        <BarChart data={userPerformanceData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                            <XAxis dataKey="name" stroke="#6B7280" />
-                            <YAxis stroke="#6B7280" />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
-                                    borderRadius: '8px',
-                                    color: '#F9FAFB'
-                                }}
-                            />
-                            <Bar dataKey="Quality" fill="#00A651" />
-                            <Bar dataKey="Non-Quality" fill="#FF6B6B" />
-                            <Bar dataKey="Unknown" fill="#FFA726" />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            )}
+            </div>
         </div>
     );
 }

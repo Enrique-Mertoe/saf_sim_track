@@ -4,6 +4,7 @@ import simCardService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
 import {SIMStatus} from "@/models/types";
 import Signal from "@/lib/Signal";
+import {chunkArray, parseDateToYMD} from "@/helper";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
@@ -51,108 +52,69 @@ const fetchSimCardDataFromDatabase = async ({
     return results;
 };
 
-
-const syncMatch = async (databaseRecords: DatabaseRecord[], records: SafaricomRecord[], progressCallback: (progress: number) => void, user: User) => {
-    const totalRecords = databaseRecords.length;
-    const progressRange = 31;
+const syncMatch = async (
+    databaseRecords: DatabaseRecord[],
+    records: SafaricomRecord[],
+    progressCallback: () => void,
+    user: User
+) => {
     const recordMap = new Map(
         records.filter(r => r.simSerialNumber).map(r => [r.simSerialNumber, r])
     );
 
-    for (let i = 0; i < totalRecords; i++) {
-        const record = databaseRecords[i];
+    await Promise.allSettled(databaseRecords.map(async (record) => {
         const sourceRecord = recordMap.get(record.simSerialNumber);
-        if (!sourceRecord) continue;
+        if (!sourceRecord) return;
 
-        // Determine quality status
-        const isQuality = sourceRecord.quality === "Y";
-        // && parseFloat(sourceRecord.topUpAmount.toString()) >= 50;
-        const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
+        try {
+            const isQuality = sourceRecord.quality === "Y";
+            const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
 
+            const simId = record.simId;
+            const {data: existingSim, error} = await simCardService.DB
+                .from('sim_cards')
+                .select('status, activation_date,registered_on,usage')
+                .eq('id', simId)
+                .single();
 
-        const simId = record.simId;
-        const {data: existingSim, error} = await simCardService.DB
-            .from('sim_cards')
-            .select('status, activation_date,registered_on,usage')
-            .eq('id', simId)
-            .single();
+            if (error || !existingSim) return;
 
-        if (error) {
-            Signal.trigger("add-process", {label: "Failed step", error: true});
-            throw new Error("Something went wrong");
-        }
-        if (!existingSim) {
-            Signal.trigger("add-process", {label: "Failed step", error: true});
-            throw new Error("SIM card not found");
-        }
+            const updateFields: any = {
+                match: SIMStatus.MATCH,
+                quality: qualityStatus,
+                top_up_amount: sourceRecord.topUpAmount,
+            };
 
-        const updateFields: any = {
-            match: SIMStatus.MATCH,
-            quality: qualityStatus,
-            top_up_amount: sourceRecord.topUpAmount,
-        };
-
-// ✅ Only set `activation_date` if it's currently null
-        const parsedDate = parseDateToYMD(sourceRecord.topUpDate);
-
-        if (!existingSim.activation_date && parsedDate) {
-            updateFields.activation_date = parsedDate;
-        }
-        if (!existingSim.usage) {
-            updateFields.usage = sourceRecord.cumulativeUsage;
-        }
-
-        if (!existingSim.registered_on) {
-            const date = new Date(sourceRecord.tmDate);
-            updateFields.registered_on = date.toISOString().split('T')[0];
-        }
-
-        if (existingSim.status !== SIMStatus.ACTIVATED) {
-            updateFields.status = SIMStatus.ACTIVATED;
-        }
-
-        if (Object.keys(updateFields).length > 0) {
-            await simService.updateSIMCard(simId, updateFields, user);
-        }
-        const progress = 31 + Math.floor((i / totalRecords) * progressRange);
-        progressCallback(progress)
-
-    }
-    progressCallback(49);
-}
-
-function parseDateToYMD(input: string | number | Date | null | undefined): string | null {
-    if (!input) return null;
-
-    try {
-        if (typeof input === 'string') {
-            // Handle compact format like "20250604"
-            if (/^\d{8}$/.test(input)) {
-                const formatted = `${input.slice(0, 4)}-${input.slice(4, 6)}-${input.slice(6, 8)}`;
-                const d = new Date(formatted);
-                if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+            const parsedDate = parseDateToYMD(sourceRecord.topUpDate);
+            if (!existingSim.activation_date && parsedDate) {
+                updateFields.activation_date = parsedDate;
             }
 
-            // Handle ISO-like or valid formats
-            const d = new Date(input);
-            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-        }
+            if (+existingSim.usage) {
+                updateFields.usage = +sourceRecord.cumulativeUsage || 0;
+            }
 
-        if (typeof input === 'number') {
-            // Unix timestamp or Excel-style date
-            const d = new Date(input);
-            if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-        }
+            if (!existingSim.registered_on) {
+                const date = new Date(sourceRecord.tmDate);
+                updateFields.registered_on = date.toISOString().split('T')[0];
+            }
 
-        if (input instanceof Date) {
-            if (!isNaN(input.getTime())) return input.toISOString().split('T')[0];
-        }
-    } catch (e) {
-        console.warn("Date parsing error:", e);
-    }
+            if (existingSim.status !== SIMStatus.ACTIVATED) {
+                updateFields.status = SIMStatus.ACTIVATED;
+            }
 
-    return null; // Invalid or unknown format
-}
+            if (Object.keys(updateFields).length > 0) {
+                await simService.updateSIMCard(simId, updateFields, user);
+            }
+
+        } finally {
+            progressCallback();
+        }
+    }));
+};
+
+
+
 
 /**
  * Process the report by comparing with database records
@@ -179,7 +141,12 @@ export const processReport = async (
         simDataMap.set(record.simSerialNumber, record);
     });
     Signal.trigger("add-process", "Uploading bundle data...");
-    await syncMatch(databaseRecords, report.records, progressCallback, user)
+    // await new Promise(()=>{
+    //     console.log("record",report.records.map(e=>({usage:e.cumulativeUsage,quality:e.quality})))
+    // })
+    // await syncMatch(databaseRecords, report.records, progressCallback, user)
+    await runParallelSync(databaseRecords, report.records, progressCallback, user);
+
     // Update progress
     progressCallback(80);
 
@@ -189,7 +156,7 @@ export const processReport = async (
         const dbRecord = simDataMap.get(record.simSerialNumber);
         const matched = !!dbRecord;
         // const qualitySim = matched && record.topUpAmount >= 50;
-        const qualitySim = matched && record.quality == "Y";
+        const qualitySim = record.quality == "Y";
 
         return {
             ...record,
@@ -253,3 +220,31 @@ export const processReport = async (
         totalCount: processedRecords.length,
     };
 };
+
+const runParallelSync = async (
+    databaseRecords: DatabaseRecord[],
+    records: SafaricomRecord[],
+    progressCallback: (progress: number) => void,
+    user: User
+) => {
+    const batchSize = 250;
+    const batches = chunkArray(databaseRecords, batchSize);
+    const totalRecords = databaseRecords.length;
+
+    let processed = 0;
+
+    const updateProgress = () => {
+        const percent = Math.floor((processed / totalRecords) * 100);
+        progressCallback(percent);
+    };
+
+    await Promise.all(
+        batches.map(batch => syncMatch(batch, records, () => {
+            processed += 1;
+            updateProgress();
+        }, user))
+    );
+
+    progressCallback(100);
+};
+
