@@ -1,12 +1,15 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
-import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import {CheckCircle, Download, Smartphone, XCircle} from 'lucide-react';
+import {Cell, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
+import {CheckCircle, Download, XCircle} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import simCardService from "@/services/simService";
+import simService from "@/services/simService";
 import {DateTime} from "luxon";
 import TeamBreakdownCard from "@/app/dashboard/analysis/TeamBreakDown";
 import {MetricCard} from "@/app/dashboard/analysis/Metricard";
+import TeamAnalysisGraph from "@/app/dashboard/analysis/TeamAnalysisGraph";
+import {SIMStatus} from "@/models";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -204,7 +207,6 @@ const SIMAnalysisPage = () => {
     }));
 
 
-
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             {/* Header */}
@@ -234,156 +236,68 @@ const SIMAnalysisPage = () => {
                 </div>
             </div>
 
-            {/* Key Metrics Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <MetricCard
-                    user={user}
-                    title="Total Recorded"
-                    value={0}
-                    dataType={"total"}
-                    subtitle="Across all teams"
-                    icon={Smartphone}
-                    trend={12}
-                    color="green"
-                />
-                <MetricCard
-                    user={user}
-                    title="Total Quality"
-                    dataType={"quality"}
-                    value={totalMetrics.totalQuality}
-                    subtitle={`${((totalMetrics.totalQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% quality rate`}
-                    icon={CheckCircle}
-                    trend={8}
-                    color="green"
-                />
-                <MetricCard
-                    user={user}
-                    title="Activated"
-                    dataType={"activated"}
-                    value={totalMetrics.totalNonQuality}
-                    subtitle={`${((totalMetrics.totalNonQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% of total`}
-                    icon={XCircle}
-                    trend={-3}
-                    color="amber"
-                />
-                {/*<MetricCard*/}
-                {/*    user={user}*/}
-                {/*    title="Unknown Status"*/}
-                {/*    value={totalMetrics.totalUnknown}*/}
-                {/*    subtitle={`${((totalMetrics.totalUnknown / totalMetrics.totalRecorded) * 100).toFixed(1)}% unmatched`}*/}
-                {/*    icon={AlertTriangle}*/}
-                {/*    trend={-5}*/}
-                {/*    color="orange"*/}
-                {/*/>*/}
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                <div className="md:col-span-8">
+                    {/* Key Metrics Overview */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        {/*<MetricCard*/}
+                        {/*    user={user}*/}
+                        {/*    title="Total Recorded"*/}
+                        {/*    value={0}*/}
+                        {/*    dataType={"total"}*/}
+                        {/*    subtitle="Across all teams"*/}
+                        {/*    icon={Smartphone}*/}
+                        {/*    trend={12}*/}
+                        {/*    color="green"*/}
+                        {/*/>*/}
+                        <MetricCard
+                            user={user}
+                            title="Total Quality"
+                            dataType={"quality"}
+                            value={totalMetrics.totalQuality}
+                            subtitle={`${((totalMetrics.totalQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% quality rate`}
+                            icon={CheckCircle}
+                            trend={8}
+                            color="green"
+                        />
+                        <MetricCard
+                            user={user}
+                            title="Total Non-Quality"
+                            dataType={"nonQuality"}
+                            value={totalMetrics.totalQuality}
+                            subtitle={`${((totalMetrics.totalQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% quality rate`}
+                            icon={XCircle}
+                            trend={8}
+                            color="red"
+                        />
+                        <MetricCard
+                            user={user}
+                            title="Lines Connected"
+                            dataType={"activated"}
+                            value={totalMetrics.totalNonQuality}
+                            subtitle={`${((totalMetrics.totalNonQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% of total`}
+                            icon={XCircle}
+                            trend={-3}
+                            color="amber"
+                        />
+                        {/*<MetricCard*/}
+                        {/*    user={user}*/}
+                        {/*    title="Unknown Status"*/}
+                        {/*    value={totalMetrics.totalUnknown}*/}
+                        {/*    subtitle={`${((totalMetrics.totalUnknown / totalMetrics.totalRecorded) * 100).toFixed(1)}% unmatched`}*/}
+                        {/*    icon={AlertTriangle}*/}
+                        {/*    trend={-5}*/}
+                        {/*    color="orange"*/}
+                        {/*/>*/}
+                    </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols- ov gap-6 mb-8">
-                {/* Quality Distribution Pie Chart */}
-                <div
-                    className="bg-white hidden dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Overall Quality
-                        Distribution</h3>
-                    {/*<ResponsiveContainer width="100%" height={300}>*/}
-                    {/*    <PieChart>*/}
-                    {/*        <Pie*/}
-                    {/*            data={pieChartData}*/}
-                    {/*            cx="50%"*/}
-                    {/*            cy="50%"*/}
-                    {/*            labelLine={false}*/}
-                    {/*            label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}*/}
-                    {/*            outerRadius={80}*/}
-                    {/*            fill="#8884d8"*/}
-                    {/*            dataKey="value"*/}
-                    {/*        >*/}
-                    {/*            {pieChartData.map((entry, index) => (*/}
-                    {/*                <Cell key={`cell-${index}`} fill={entry.color}/>*/}
-                    {/*            ))}*/}
-                    {/*        </Pie>*/}
-                    {/*        <Tooltip/>*/}
-                    {/*    </PieChart>*/}
-                    {/*</ResponsiveContainer>*/}
+                    <TeamAnalysisGraph user={user}/>
                 </div>
 
-                {/* Team Performance Comparison */}
-                <div
-                    className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Team Quality
-                        Comparison</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={qualityBreakdownData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>
-                            <XAxis dataKey="name" stroke="#6B7280"/>
-                            <YAxis stroke="#6B7280"/>
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#1F2937',
-                                    border: '1px solid #374151',
-                                    borderRadius: '8px',
-                                    color: '#F9FAFB'
-                                }}
-                            />
-                            <Bar dataKey="Quality" fill="#00A651"/>
-                            <Bar dataKey="Non-Quality" fill="#FF6B6B"/>
-                            <Bar dataKey="Unknown" fill="#FFA726"/>
-                        </BarChart>
-                    </ResponsiveContainer>
+                <div className="md:col-span-4">
+                    <ContactsBySource user={user}/>
                 </div>
             </div>
-
-            {/* Non-Quality Breakdown Charts */}
-            {/*<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">*/}
-            {/*    /!* Non-Quality Reasons *!/*/}
-            {/*    <div*/}
-            {/*        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">*/}
-            {/*        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Non-Quality Breakdown by*/}
-            {/*            Team</h3>*/}
-            {/*        <ResponsiveContainer width="100%" height={300}>*/}
-            {/*            <AreaChart data={nonQualityBreakdownData}>*/}
-            {/*                <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>*/}
-            {/*                <XAxis dataKey="name" stroke="#6B7280"/>*/}
-            {/*                <YAxis stroke="#6B7280"/>*/}
-            {/*                <Tooltip*/}
-            {/*                    contentStyle={{*/}
-            {/*                        backgroundColor: '#1F2937',*/}
-            {/*                        border: '1px solid #374151',*/}
-            {/*                        borderRadius: '8px',*/}
-            {/*                        color: '#F9FAFB'*/}
-            {/*                    }}*/}
-            {/*                />*/}
-            {/*                <Area type="monotone" dataKey="Top-up < 50 KES" stackId="1" stroke="#FF6B6B"*/}
-            {/*                      fill="#FF6B6B"/>*/}
-            {/*                <Area type="monotone" dataKey="No Top-up" stackId="1" stroke="#FF8A80" fill="#FF8A80"/>*/}
-            {/*                <Area type="monotone" dataKey="Top-up ≥50 Not Converted" stackId="1" stroke="#FFA726"*/}
-            {/*                      fill="#FFA726"/>*/}
-            {/*            </AreaChart>*/}
-            {/*        </ResponsiveContainer>*/}
-            {/*    </div>*/}
-
-            {/*    /!* Unknown Status Breakdown *!/*/}
-            {/*    <div*/}
-            {/*        className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">*/}
-            {/*        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Unknown Status*/}
-            {/*            Breakdown</h3>*/}
-            {/*        <ResponsiveContainer width="100%" height={300}>*/}
-            {/*            <BarChart data={unknownBreakdownData}>*/}
-            {/*                <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>*/}
-            {/*                <XAxis dataKey="name" stroke="#6B7280"/>*/}
-            {/*                <YAxis stroke="#6B7280"/>*/}
-            {/*                <Tooltip*/}
-            {/*                    contentStyle={{*/}
-            {/*                        backgroundColor: '#1F2937',*/}
-            {/*                        border: '1px solid #374151',*/}
-            {/*                        borderRadius: '8px',*/}
-            {/*                        color: '#F9FAFB'*/}
-            {/*                    }}*/}
-            {/*                />*/}
-            {/*                <Bar dataKey="Unknown Quality" fill="#81C784"/>*/}
-            {/*                <Bar dataKey="Unknown Non-Quality" fill="#FFAB91"/>*/}
-            {/*            </BarChart>*/}
-            {/*        </ResponsiveContainer>*/}
-            {/*    </div>*/}
-            {/*</div>*/}
 
             {/* Team Breakdown Cards */}
             <div className="mb-8">
@@ -400,3 +314,159 @@ const SIMAnalysisPage = () => {
 };
 
 export default SIMAnalysisPage;
+
+const ContactsBySource = ({user}) => {
+    const [hoveredSegment, setHoveredSegment] = useState(null);
+    const [selectedSegment, setSelectedSegment] = useState(null);
+    const [data, sB] = useState([]);
+
+    async function loadData() {
+        if (!user)
+            return
+        const data = await simService.countTopUpCategories(user, [["quality", SIMStatus.NONQUALITY]])
+        sB([
+            {name: 'Below 50 Top-up', value: data.lt50, color: '#3B82F6', description: 'Lines with less than 50 KES'},
+            {name: 'No Top-up', value: data.noTopUp, color: '#10B981', description: 'Lines without top-up'},
+            {
+                name: 'Above 50 Not Conv',
+                value: data.gte50NotConverted,
+                color: '#F59E0B',
+                description: 'Lines with 50+ KES not converted'
+            }
+        ])
+    }
+
+    useEffect(() => {
+        loadData().then()
+    }, [user]);
+
+    const total = data.reduce((sum, item) => sum + item.value, 0);
+
+    const CustomTooltip = ({active, payload}) => {
+        if (active && payload && payload.length) {
+            const data = payload[0];
+            return (
+                <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-200 max-w-xs">
+                    <div className="text-sm text-gray-600 font-semibold mb-3">Contact Details</div>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                <div
+                                    className="w-3 h-3 rounded-full mr-2"
+                                    style={{backgroundColor: data.payload.color}}
+                                ></div>
+                                <span className="text-sm text-gray-700 font-medium">{data.name}</span>
+                            </div>
+                        </div>
+                        <div className="text-lg font-bold text-gray-800">{data.value.toLocaleString()}</div>
+                        <div className="text-xs text-gray-500">{data.payload.description}</div>
+                        <div className="text-xs text-blue-600 font-semibold">
+                            {((data.value / total) * 100).toFixed(1)}% of total
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const handlePieEnter = (_, index) => {
+        setHoveredSegment(index);
+    };
+
+    const handlePieLeave = () => {
+        setHoveredSegment(null);
+    };
+
+    const handlePieClick = (_, index) => {
+        setSelectedSegment(selectedSegment === index ? null : index);
+    };
+
+    return (
+        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl border border-gray-100 p-2">
+            <div className="grid grid-cols-1 gap-2">
+                {/* Statistics Grid */}
+                <div className="">
+                    <div className="mb-8">
+                        <h3 className="text-lg font-bold text-gray-800 mb-2">Non-Quality</h3>
+                        <p className="text-gray-600">Non-quality breakdown and analysis</p>
+                    </div>
+                </div>
+
+                {/* Chart Section */}
+                <div className="flex flex-col justify-center">
+                    <div className="relative isolate">
+                        <ResponsiveContainer width="100%" height={320}>
+                            <PieChart>
+                                <Pie
+                                    data={data}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={70}
+                                    outerRadius={120}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                    onMouseEnter={handlePieEnter}
+                                    onMouseLeave={handlePieLeave}
+                                    onClick={handlePieClick}
+                                >
+                                    {data.map((entry, index) => (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.color}
+                                            stroke={hoveredSegment === index || selectedSegment === index ? '#374151' : 'none'}
+                                            strokeWidth={hoveredSegment === index || selectedSegment === index ? 2 : 0}
+                                            style={{
+                                                filter: hoveredSegment === index || selectedSegment === index
+                                                    ? 'brightness(1.1) drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
+                                                    : 'none',
+                                                cursor: 'pointer'
+                                            }}
+                                        />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip/>}/>
+                            </PieChart>
+                        </ResponsiveContainer>
+
+                        {/* Center Total */}
+                        <div className="absolute inset-0 -z-10 flex items-center justify-center pointer-events-none">
+                            <div
+                                className="bg-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg border-4 border-blue-100">
+                                <h3 className="text-3xl font-bold text-gray-800">{total.toLocaleString()}</h3>
+                                <p className="text-xs text-gray-500 font-medium">Total</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="mt-6 space-y-3">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Segment Breakdown</h4>
+                        {data.map((item, index) => (
+                            <div
+                                key={item.name}
+                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                                    hoveredSegment === index || selectedSegment === index
+                                        ? 'bg-blue-50 border-l-4 border-blue-400'
+                                        : 'hover:bg-gray-50'
+                                }`}
+                                onMouseEnter={() => setHoveredSegment(index)}
+                                onMouseLeave={() => setHoveredSegment(null)}
+                                onClick={() => setSelectedSegment(selectedSegment === index ? null : index)}
+                            >
+                                <div className="flex items-center">
+                                    <div
+                                        className="w-3 h-3 rounded-full mr-3"
+                                        style={{backgroundColor: item.color}}
+                                    ></div>
+                                    <span className="text-sm font-medium text-gray-700">{item.name}</span>
+                                </div>
+                                <span className="text-sm font-bold text-gray-800">{item.value}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};

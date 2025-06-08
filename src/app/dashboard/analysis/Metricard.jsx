@@ -11,6 +11,7 @@ export const MetricCard = ({title, value, user, subtitle, icon: Icon, trend, col
                 {
                     quality: ["quality", SIMStatus.QUALITY],
                     total: [],
+                    nonQuality: ["quality", SIMStatus.NONQUALITY],
                     activated: ["status", SIMStatus.ACTIVATED]
                 }[dataType] || []
             ]),
