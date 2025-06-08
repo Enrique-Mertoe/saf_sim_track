@@ -95,9 +95,15 @@ export default function TeamSIMAnalysisPage() {
             const matched = mtc.count ?? 0;
             const quality = qlty.count ?? 0;
             const matchRate = totalRecorded > 0 ? ((matched / totalRecorded) * 100).toFixed(2) : 0;
-            const qualityRate = matched > 0 ? ((quality / matched) * 100).toFixed(2) : 0;
+            let qualityRate = matched > 0 ? ((quality / matched) * 100).toFixed(2) : 0;
             const nonQuality = matched - quality;
             const unknown = totalRecorded - matched;
+            qualityRate = Math.min(Math.max(qualityRate, 0), 100);
+            if (qualityRate >= 10) {
+                qualityRate = Math.ceil(qualityRate);
+            } else {
+                qualityRate = parseFloat(qualityRate.toFixed(2));
+            }
 
             // Fetch real breakdown data
             const breakdownFilters = [["team_id", teamId]];
