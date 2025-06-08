@@ -953,13 +953,12 @@ export const simCardService = {
             return q
         }
         if (user.role === UserRole.TEAM_LEADER) {
-            let q = supabase
+            return supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .eq("quality", SIMStatus.QUALITY)
                 .eq("admin_id", await admin_id(user))
                 .eq("team_id", user.team_id)
-            return q
         }
 
         return {data: null, error: "Invalid user role", count: 0}
@@ -977,7 +976,7 @@ export const simCardService = {
             return applyFilters(q, filters)
         }
         if (user.role === UserRole.TEAM_LEADER) {
-            let q = supabase
+            const q = supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .eq("match", SIMStatus.MATCH)
