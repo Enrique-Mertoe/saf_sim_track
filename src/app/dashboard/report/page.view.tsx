@@ -297,7 +297,10 @@ const Reports: React.FC = () => {
                                 <div className="mt-8">
                                     <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-4">Team
                                         Reports</h3>
-                                    <TeamReportsList teamReports={processedReport.teamReports} user={user}/>
+
+                                    <TeamReportsList teamReports={processedReport.teamReports}
+                                                     //@ts-ignore
+                                                     user={user}/>
                                 </div>
                             </>
                         )}
