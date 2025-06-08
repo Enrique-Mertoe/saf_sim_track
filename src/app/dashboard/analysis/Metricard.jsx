@@ -13,7 +13,8 @@ export const MetricCard = ({title, value, user, subtitle, icon: Icon, trend, col
                     total: [],
                     nonQuality: ["quality", SIMStatus.NONQUALITY],
                     activated: ["status", SIMStatus.ACTIVATED]
-                }[dataType] || []
+                }[dataType] || [],
+                ["status",SIMStatus.ACTIVATED]
             ]),
         ]);
         sV(reg.count ?? 0)

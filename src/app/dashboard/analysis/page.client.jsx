@@ -323,7 +323,7 @@ const ContactsBySource = ({user}) => {
     async function loadData() {
         if (!user)
             return
-        const data = await simService.countTopUpCategories(user, [["quality", SIMStatus.NONQUALITY]])
+        const data = await simService.countTopUpCategories(user, [["quality", SIMStatus.NONQUALITY],["status",SIMStatus.ACTIVATED]])
         sB([
             {name: 'Below 50 Top-up', value: data.lt50, color: '#3B82F6', description: 'Lines with less than 50 KES'},
             {name: 'No Top-up', value: data.noTopUp, color: '#10B981', description: 'Lines without top-up'},
