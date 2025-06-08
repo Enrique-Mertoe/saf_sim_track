@@ -13,7 +13,7 @@ const TeamBreakdownCard = ({team, user}) => {
     const fetchMetrics = async () => {
         if (!user || !teamId) return
         const [reg, qlty, mtc] = await Promise.all([
-            simService.countReg(user, teamId),
+            simService.countReg(user, teamId,[["status",SIMStatus.ACTIVATED]]),
             simService.countQuality(user, teamId, [["registered_on", "not", "is", null]]),
             simService.countMatch(user, teamId, [["registered_on", "not", "is", null]]),
         ]);
