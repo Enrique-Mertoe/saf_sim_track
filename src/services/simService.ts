@@ -898,7 +898,7 @@ export const simCardService = {
         //         .order('registered_on', {ascending: false});
         // }
         if (user.role === UserRole.TEAM_LEADER) {
-            let q = supabase
+            const q = supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("registered_on", "is", null)

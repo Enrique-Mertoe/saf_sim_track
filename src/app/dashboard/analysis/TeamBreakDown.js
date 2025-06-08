@@ -34,7 +34,15 @@ const TeamBreakdownCard = ({team, user}) => {
     }, [user]);
 
     const matchRate = totalRecorded > 0 ? ((matched / totalRecorded) * 100).toFixed(2) : 0;
-    const qualityRate = matched > 0 ? ((quality / matched) * 100).toFixed(2) : 0;
+    let qualityRate = matched > 0 ? (quality / matched) * 100 : 0;
+
+    qualityRate = Math.min(Math.max(qualityRate, 0), 100);
+    if (qualityRate >= 10) {
+        qualityRate = Math.ceil(qualityRate);
+    } else {
+        qualityRate = parseFloat(qualityRate.toFixed(2));
+    }
+
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow border border-gray-200 dark:border-gray-700">
