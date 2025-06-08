@@ -1,6 +1,6 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
-import {Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {CheckCircle, Download, Smartphone, XCircle} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import simCardService from "@/services/simService";
@@ -122,18 +122,10 @@ const SIMAnalysisPage = () => {
                     qualityRate: parseFloat(qualityRate),
                     nonQuality,
                     unknown,
-                    breakdown: {
-                        // These are estimates since we don't have the exact breakdown
-                        topUpBelow50: Math.round(nonQuality * 0.4),
-                        noTopUp: Math.round(nonQuality * 0.3),
-                        topUp50PlusNotConverted: Math.round(nonQuality * 0.3),
-                        unknownQuality: Math.round(unknown * 0.5),
-                        unknownNonQuality: Math.round(unknown * 0.5)
-                    }
                 };
             });
 
-            // Calculate total metrics
+            // // Calculate total metrics
             const newTotalMetrics = {
                 totalRecorded: processedTeamData.reduce((sum, team) => sum + team.totalRecorded, 0),
                 totalMatched: processedTeamData.reduce((sum, team) => sum + team.matched, 0),
@@ -211,24 +203,6 @@ const SIMAnalysisPage = () => {
         Unknown: team.unknown
     }));
 
-    const pieChartData = [
-        {name: 'Quality', value: totalMetrics.totalQuality, color: '#00A651'},
-        {name: 'Non-Quality', value: totalMetrics.totalNonQuality, color: '#FF6B6B'},
-        {name: 'Unknown', value: totalMetrics.totalUnknown, color: '#FFA726'}
-    ];
-
-    const nonQualityBreakdownData = teamData.map(team => ({
-        name: team.name,
-        'Top-up < 50 KES': team.breakdown.topUpBelow50,
-        'No Top-up': team.breakdown.noTopUp,
-        'Top-up ≥50 Not Converted': team.breakdown.topUp50PlusNotConverted
-    }));
-
-    const unknownBreakdownData = teamData.map(team => ({
-        name: team.name,
-        'Unknown Quality': team.breakdown.unknownQuality,
-        'Unknown Non-Quality': team.breakdown.unknownNonQuality
-    }));
 
 
     return (
@@ -310,25 +284,25 @@ const SIMAnalysisPage = () => {
                     className="bg-white hidden dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Overall Quality
                         Distribution</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={pieChartData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                            >
-                                {pieChartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color}/>
-                                ))}
-                            </Pie>
-                            <Tooltip/>
-                        </PieChart>
-                    </ResponsiveContainer>
+                    {/*<ResponsiveContainer width="100%" height={300}>*/}
+                    {/*    <PieChart>*/}
+                    {/*        <Pie*/}
+                    {/*            data={pieChartData}*/}
+                    {/*            cx="50%"*/}
+                    {/*            cy="50%"*/}
+                    {/*            labelLine={false}*/}
+                    {/*            label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}*/}
+                    {/*            outerRadius={80}*/}
+                    {/*            fill="#8884d8"*/}
+                    {/*            dataKey="value"*/}
+                    {/*        >*/}
+                    {/*            {pieChartData.map((entry, index) => (*/}
+                    {/*                <Cell key={`cell-${index}`} fill={entry.color}/>*/}
+                    {/*            ))}*/}
+                    {/*        </Pie>*/}
+                    {/*        <Tooltip/>*/}
+                    {/*    </PieChart>*/}
+                    {/*</ResponsiveContainer>*/}
                 </div>
 
                 {/* Team Performance Comparison */}

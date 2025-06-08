@@ -996,9 +996,10 @@ export const simCardService = {
             applyFilters(supabase.from('sim_cards').select('id', {count: 'exact'}).eq('admin_id', adminId), filters);
 
         const [lt50, noTopUp, gte50NotConverted] = await Promise.all([
-            base().lt('top_up_amount', 50),
+            base().lt('top_up_amount', 50).not('top_up_amount', "is", null),
             base().is('top_up_amount', null).not("registered_on", "is", null),
-            base().gte('top_up_amount', 50).lt('usage', 50),
+            base().gte('top_up_amount', 50).lt('usage', 50).not('usage', "is", null)
+                .not('top_up_amount', "is", null),
         ]);
 
         return {

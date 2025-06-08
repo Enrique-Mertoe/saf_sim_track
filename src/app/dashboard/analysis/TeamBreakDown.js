@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {AlertTriangle, TrendingDown, XCircle} from "lucide-react";
 import simService from "@/services/simService";
+import {SIMStatus} from "@/models";
 
 const TeamBreakdownCard = ({team, user}) => {
     const teamId = team.id;
@@ -10,7 +11,7 @@ const TeamBreakdownCard = ({team, user}) => {
     const [breakdown, sB] = useState({})
 
     const fetchMetrics = async () => {
-        if (!user) return
+        if (!user || !teamId) return
         const [reg, qlty, mtc] = await Promise.all([
             simService.countReg(user, teamId),
             simService.countQuality(user, teamId, [["registered_on", "not", "is", null]]),
@@ -22,8 +23,8 @@ const TeamBreakdownCard = ({team, user}) => {
     }
 
     const fetchBreakDown = async () => {
-        if (!user) return
-        const data = await simService.countTopUpCategories(user, [["team_id", teamId]])
+        if (!user || !teamId) return
+        const data = await simService.countTopUpCategories(user, [["team_id", teamId], ["quality", SIMStatus.NONQUALITY]])
         sB(data)
     }
 
@@ -71,21 +72,21 @@ const TeamBreakdownCard = ({team, user}) => {
                 <div className="space-y-1 text-xs">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
-                            <TrendingDown className="w-3 h-3 text-red-500" />
+                            <TrendingDown className="w-3 h-3 text-red-500"/>
                             <span className="text-gray-600 dark:text-gray-400">&lt;50 KES</span>
                         </div>
                         <span className="text-red-500 font-medium">{breakdown.lt50}</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
-                            <XCircle className="w-3 h-3 text-red-500" />
+                            <XCircle className="w-3 h-3 text-red-500"/>
                             <span className="text-gray-600 dark:text-gray-400">No Top-up</span>
                         </div>
                         <span className="text-red-500 font-medium">{breakdown.noTopUp}</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3 text-orange-500" />
+                            <AlertTriangle className="w-3 h-3 text-orange-500"/>
                             <span className="text-gray-600 dark:text-gray-400">≥50 Not Conv</span>
                         </div>
                         <span className="text-orange-500 font-medium">{breakdown.gte50NotConverted}</span>

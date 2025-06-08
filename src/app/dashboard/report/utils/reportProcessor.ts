@@ -67,7 +67,7 @@ const syncMatch = async (
         if (!sourceRecord) return;
 
         try {
-            const isQuality = sourceRecord.quality === "Y";
+            const isQuality = sourceRecord.quality == "Y";
             const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
 
             const simId = record.simId;
@@ -82,7 +82,8 @@ const syncMatch = async (
             const updateFields: any = {
                 match: SIMStatus.MATCH,
                 quality: qualityStatus,
-                top_up_amount: sourceRecord.topUpAmount,
+                top_up_amount: +sourceRecord.topUpAmount || null,
+                usage : +sourceRecord.cumulativeUsage || null
             };
 
             const parsedDate = parseDateToYMD(sourceRecord.topUpDate);
@@ -90,9 +91,6 @@ const syncMatch = async (
                 updateFields.activation_date = parsedDate;
             }
 
-            if (+existingSim.usage) {
-                updateFields.usage = +sourceRecord.cumulativeUsage || 0;
-            }
 
             if (!existingSim.registered_on) {
                 const date = new Date(sourceRecord.tmDate);
