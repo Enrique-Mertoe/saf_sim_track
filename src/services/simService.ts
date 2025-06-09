@@ -838,13 +838,13 @@ export const simCardService = {
 
         return {data: null, error: "Invalid user role"}
     },
-    countAll: async (user: User) => {
+    countAll: async (user: User, filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
-            return supabase
+            return applyFilters(supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
-                .eq("admin_id", await admin_id(user));
+                .eq("admin_id", await admin_id(user)), filters);
         }
 
         // if (user.role === UserRole.STAFF) {
@@ -856,15 +856,13 @@ export const simCardService = {
         //         .eq("admin_id", await admin_id(user))
         //         .order('registered_on', {ascending: false});
         // }
-        // if (user.role === UserRole.TEAM_LEADER) {
-        //     return supabase
-        //         .from('sim_cards')
-        //         .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
-        //         .eq("admin_id", await admin_id(user))
-        //         .eq("team_id", user.team_id)
-        //         // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
-        //         .order('registered_on', {ascending: false});
-        // }
+        if (user.role === UserRole.TEAM_LEADER) {
+            return applyFilters(supabase
+                .from('sim_cards')
+                .select("id", {count: "exact"})
+                .eq("admin_id", await admin_id(user))
+                .eq("team_id", user.team_id), filters);
+        }
 
         return {data: null, error: "Invalid user role", count: 0}
     },
@@ -940,7 +938,7 @@ export const simCardService = {
 
         return {data: null, error: "Invalid user role", count: 0}
     },
-    countQuality: async (user: User, teamId: string | null = null) => {
+    countQuality: async (user: User, teamId: string | null = null, filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
             let q = supabase
@@ -950,15 +948,15 @@ export const simCardService = {
                 .eq("admin_id", await admin_id(user));
             if (teamId)
                 q = q.eq("team_id", teamId)
-            return q
+            return applyFilters(q, filters)
         }
         if (user.role === UserRole.TEAM_LEADER) {
-            return supabase
+            return applyFilters(supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .eq("quality", SIMStatus.QUALITY)
                 .eq("admin_id", await admin_id(user))
-                .eq("team_id", user.team_id)
+                .eq("team_id", user.team_id), filters)
         }
 
         return {data: null, error: "Invalid user role", count: 0}

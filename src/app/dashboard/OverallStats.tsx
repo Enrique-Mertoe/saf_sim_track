@@ -165,13 +165,22 @@ const fetchUnhandledData = async (user: any) => {
 // Main SIM Allocation Card
 const SimAllocationCard: React.FC = () => {
     const [totalSims, setTotalSims] = React.useState<number | null>(null);
+    const [picklist, sP] = React.useState<number | null>(null);
+    const [extra, sE] = React.useState<number | null>(null);
     const user = useApp().user
     const [isLoading, setIsLoading] = React.useState(!user);
     React.useEffect(() => {
         const fetchTotal = async () => {
             if (!user) return
-            const {count} = await simService.countAll(user)
-            setTotalSims(count ?? 0);
+            const [v1, v2] = await Promise.all([
+                simService.countAll(user),
+                simService.countAll(user, [[
+                    "batch_id", "BATCH-UNKNOWN"
+                ]])
+            ])
+            setTotalSims(v1.count ?? 0);
+            sE(v2.count ?? 0)
+            sP((v1.count ?? 0) - (v2.count ?? 0))
             setIsLoading(false);
         };
         fetchTotal().then();
@@ -231,15 +240,23 @@ const SimAllocationCard: React.FC = () => {
                                 <div className="h-3 bg-white/20 rounded w-12"></div>
                             </div>
                         ) : (
-                            <>
-                                <div className="text-3xl font-bold text-white">
-                                    {totalSims?.toLocaleString()}
+                            <div className={"bg-orange-500/20 p-2 rounded"}>
+                                <div className="text-4xl font-bold text-white tracking-tight">
+                                    {totalSims?.toLocaleString()} <span className="text-white/80 text-sm font-medium">Lines</span>
                                 </div>
-                                <div className="text-white/60 text-sm flex items-center">
-                                    <TrendingUp className="w-3 h-3 mr-1"/>
-                                    Total SIMs
+                                <div className="flex flex-col gap-1 mt-3">
+                                    <div className="text-white/70 text-sm flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                        <TrendingUp className="w-4 h-4 text-emerald-400"/>
+                                        <span className="font-medium">Picklist:</span>
+                                        <span className="text-green-200 font-semibold">{picklist}</span>
+                                    </div>
+                                    <div className="text-white/70 text-sm flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                        <TrendingUp className="w-4 h-4 text-blue-400"/>
+                                        <span className="font-medium">Extra sources:</span>
+                                        <span className="text-blue-200 font-semibold">{extra}</span>
+                                    </div>
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>

@@ -14,6 +14,7 @@ import AssignSimCard from "@/app/dashboard/dh/AssignSimCard";
 import UnassignSimCard from "@/app/dashboard/dh/UnassignSimCard";
 import TransferSimCard from "@/app/dashboard/dh/TransferSimCard";
 import SimCardGrid from "@/app/dashboard/dh/SimCardGrid";
+import {TeamLeaderStatCard} from "@/app/dashboard/dh/TeamLeaderStatCard";
 
 // Helper function to compare dates by day only (ignoring time)
 
@@ -225,17 +226,6 @@ const TeamLeaderDashboardView = () => {
         });
     };
 
-    // Filter SIM cards based on selected date and view mode
-    const filteredSimCards = useMemo(() => {
-        if (!simCards.length) return [];
-
-        return filterSimCards(simCards, {
-            dateFilter: viewMode,
-            staffFilter: selectedStaff,
-            searchFilter: searchTerm
-        });
-    }, [simCards, selectedDate, viewMode, selectedStaff, searchTerm]);
-
     // Calculate statistics
     const stats = useMemo(() => {
         if (!simCards.length) {
@@ -271,20 +261,7 @@ const TeamLeaderDashboardView = () => {
         };
     }, [simCards, selectedDate]);
 
-    const StatCard = ({title, value, subtitle, icon: Icon, color = "blue"}) => (
-        <div className="bg-white dark:bg-gray-800 rounded-lg px-6 py-2 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-                    <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
-                    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
-                </div>
-                <div className={`p-3 bg-${color}-100 dark:bg-${color}-900/30 rounded-full`}>
-                    <Icon className={`w-6 h-6 text-${color}-600 dark:text-${color}-400`}/>
-                </div>
-            </div>
-        </div>
-    );
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
@@ -397,33 +374,33 @@ const TeamLeaderDashboardView = () => {
 
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <StatCard
+                    <TeamLeaderStatCard
                         title="Total Allocated"
-                        value={stats.totalAllocated}
                         subtitle="SIM cards received"
                         icon={Phone}
                         color="blue"
+                        dataType={"total"}
                     />
-                    <StatCard
+                    <TeamLeaderStatCard
                         title="Registered Today"
-                        value={stats.dailyRegistered}
                         subtitle={`Date: ${formatDate(selectedDate)}`}
                         icon={CheckCircle2}
                         color="green"
+                        dataType={"registered-today"}
                     />
-                    <StatCard
+                    <TeamLeaderStatCard
                         title="Total Registered"
-                        value={stats.registered}
                         subtitle={`${stats.registrationRate}% of allocated`}
                         icon={TrendingUp}
+                        dataType={"registered"}
                         color="purple"
                     />
-                    <StatCard
+                    <TeamLeaderStatCard
                         title="Unassigned"
-                        value={stats.unassigned}
                         subtitle="Available for assignment"
                         icon={AlertTriangle}
                         color="orange"
+                        dataType={"unassigned"}
                     />
                 </div>
 
