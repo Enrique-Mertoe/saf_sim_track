@@ -1,6 +1,6 @@
 "use client"
 
-import {Bell, ChevronDown, CreditCard, LogOut, Menu, Moon, Search, Settings, Sun, User, X} from "lucide-react";
+import {Bell, ChevronDown, LogOut, Menu, Moon, Search, Settings, Sun, User, X} from "lucide-react";
 import useApp from "@/ui/provider/AppProvider";
 import {useEffect, useRef, useState} from "react";
 import Signal from "@/lib/Signal";
@@ -9,6 +9,8 @@ import Sidebar from "@/ui/components/dash/Sidebar";
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {useTheme} from "next-themes";
 import {notificationService} from "@/services";
+import Image from "next/image";
+import favicon from "@/app/favicon.ico"
 
 const supabase = createSupabaseClient();
 export default function Header() {
@@ -269,8 +271,10 @@ export default function Header() {
                             animate={{opacity: 1}}
                             transition={{duration: 0.5}}
                         >
-                            <CreditCard className="mr-2 text-green-600 dark:text-green-400" size={24}/>
-                            <span className="text-gray-800 dark:text-white">Safaricom SIM Tracker</span>
+                            <Image src={favicon} alt={"Logo"}
+                            width={34} height={34}
+                            />
+                            <span className="text-gray-800  ms-2 dark:text-white">SSM</span>
                         </motion.div>
                     </div>
 
