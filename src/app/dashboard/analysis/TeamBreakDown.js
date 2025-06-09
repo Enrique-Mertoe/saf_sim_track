@@ -13,9 +13,11 @@ const TeamBreakdownCard = ({team, user}) => {
     const fetchMetrics = async () => {
         if (!user || !teamId) return
         const [reg, qlty, mtc] = await Promise.all([
-            simService.countReg(user, teamId),
-            simService.countQuality(user, teamId, [["registered_on", "not", "is", null]]),
-            simService.countMatch(user, teamId, [["registered_on", "not", "is", null]]),
+            simService.countReg(user, teamId, [
+                ["status", SIMStatus.ACTIVATED]
+            ]),
+            simService.countQuality(user, teamId, [["registered_on", "not", "is", null], ["status", SIMStatus.ACTIVATED]]),
+            simService.countMatch(user, teamId, [["registered_on", "not", "is", null], ["status", SIMStatus.ACTIVATED]]),
         ]);
         setquality(qlty.count ?? 0)
         settotalRecorded(reg.count ?? 0)
@@ -24,7 +26,7 @@ const TeamBreakdownCard = ({team, user}) => {
 
     const fetchBreakDown = async () => {
         if (!user || !teamId) return
-        const data = await simService.countTopUpCategories(user, [["team_id", teamId], ["quality", SIMStatus.NONQUALITY]])
+        const data = await simService.countTopUpCategories(user, [["team_id", teamId], ["quality", SIMStatus.NONQUALITY],["status", SIMStatus.ACTIVATED]])
         sB(data)
     }
 

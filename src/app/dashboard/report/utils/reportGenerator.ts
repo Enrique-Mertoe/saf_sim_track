@@ -142,7 +142,7 @@ const columns = [
     {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
     {header: 'Bundle Purchase Date', key: 'bundlePurchaseDate', width: 20},
     {header: 'Bundle Amount', key: 'bundleAmount', width: 15},
-    {header: 'Usage', key: 'usage', width: 15},
+    {header: 'Usage', key: 'cumulativeUsage', width: 15},
     {header: 'Till/Mobigo MSISDN', key: 'agentMSISDN', width: 20},
     {header: 'BA MSISDN', key: 'ba', width: 15},
 ];
