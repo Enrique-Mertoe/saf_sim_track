@@ -1,5 +1,5 @@
 import React from 'react';
-import {Signal, Smartphone, TrendingUp, WifiOff, Zap} from 'lucide-react';
+import {Smartphone, TrendingUp, WifiOff, Zap} from 'lucide-react';
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
 import {to2dp} from "@/helper";
@@ -264,12 +264,12 @@ const SimAllocationCard: React.FC = () => {
 
             {/* Breakdown Items */}
             <div className="relative z-10 space-y-4">
-                <BreakdownItem
-                    label="Registered SIMs"
-                    color="#dcfce7"
-                    icon={<Signal className="w-4 h-4"/>}
-                    dataFetcher={() => fetchRegData(user)}
-                />
+                {/*<BreakdownItem*/}
+                {/*    label="Registered SIMs"*/}
+                {/*    color="#dcfce7"*/}
+                {/*    icon={<Signal className="w-4 h-4"/>}*/}
+                {/*    dataFetcher={() => fetchRegData(user)}*/}
+                {/*/>*/}
 
                 <BreakdownItem
                     label="Assigned SIMs"
