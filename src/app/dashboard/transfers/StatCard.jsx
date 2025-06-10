@@ -31,7 +31,7 @@ const StatCard = ({title, user, change, trend, bgColor, textColor, icon: Icon, d
 
 
         <div
-            className={`${textColor}  border border-gray-500  rounded-2xl px-6 py-2 transition-all duration-300 hover:scale-105 cursor-pointer ${className}`}>
+            className={`${textColor}  border border-gray-500  rounded-2xl px-6 py-2 transition-all duration-300 cursor-pointer ${className}`}>
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium opacity-90">{title}</h3>
                 <div className="flex items-center space-x-2">
