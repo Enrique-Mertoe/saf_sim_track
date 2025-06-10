@@ -37,6 +37,7 @@ export default function Stats({user}) {
                         icon={CheckCircle}
                     />
                     <StatCard
+                        expandable={true}
                         user={user}
                         dataType={"picklist"}
                         title="From PickList"
