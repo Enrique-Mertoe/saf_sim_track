@@ -48,7 +48,7 @@ function AssignedSims({batch, user}: any) {
             return
         simService.countQuery(user, [
             ["batch_id", batch],
-            ["assigned_to_user_id", "not", "is", "null"],
+            ["assigned_to_user_id", "not", "is", null],
         ]).then(r => {
             sC(r.count ?? 0)
         })
