@@ -38,18 +38,6 @@ export const MetricCard = ({title, value, user, subtitle, icon: Icon, trend, col
                         className={`h-6 w-6 ${color === 'green' ? 'text-green-600 dark:text-green-400' : color === 'red' ? 'text-red-500 dark:text-red-400' : 'text-amber-500 dark:text-amber-400'}`}/>
                 </div>
             </div>
-            {/*  {trend && (*/}
-            {/*      <div className="flex items-center mt-4">*/}
-            {/*          {trend > 0 ? (*/}
-            {/*              <TrendingUp className="h-4 w-4 text-green-500 mr-1"/>*/}
-            {/*          ) : (*/}
-            {/*              <TrendingDown className="h-4 w-4 text-red-500 mr-1"/>*/}
-            {/*          )}*/}
-            {/*          <span className={`text-sm ${trend > 0 ? 'text-green-600' : 'text-red-500'}`}>*/}
-            {/*  {Math.abs(trend)}% vs last period*/}
-            {/*</span>*/}
-            {/*      </div>*/}
-            {/*  )}*/}
         </div>
     );
 }
