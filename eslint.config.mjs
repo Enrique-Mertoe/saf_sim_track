@@ -22,6 +22,7 @@ const eslintConfig = [
                 ignoreRestSiblings: true
             }],
             "@typescript-eslint/no-explicit-any": "off",
+            "prefer-const": "off",
             "react/no-unescaped-entities": "off",
             "@typescript-eslint/ban-ts-comment": "off",
         },

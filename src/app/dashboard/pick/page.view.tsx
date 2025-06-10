@@ -716,7 +716,7 @@ const SerialNumberForm: React.FC = () => {
                     alert.success(`${assignedCount} serials distributed across ${selectedTeams.length} teams`);
                 }
             }
-            let overallResult: any = {success: 0, errors: []};
+            const overallResult: any = {success: 0, errors: []};
             let totalProcessed = 0;
             // Create a single batch metadata record with all teams
             if (metadata) {
