@@ -56,12 +56,12 @@ function AssignedSims({batch, user}: any) {
     if (!user)
         return (
             <span
-                className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-md">
                                                             ...
                                                         </span>
         )
     return (<span
-        className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+        className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-md">
                                                             {count} assigned
                                                         </span>);
 }
@@ -1434,9 +1434,9 @@ const SerialNumberForm: React.FC = () => {
                                                             Created: {formatDate(batch.created_at)}
                                                         </p>
                                                     </div>
-                                                    <div className="flex items-center">
+                                                    <div className="flex flex-col md:flex-row items-center">
                                                         <span
-                                                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-md">
                                                             {batch.sim_count} SIM cards
                                                         </span>
 
