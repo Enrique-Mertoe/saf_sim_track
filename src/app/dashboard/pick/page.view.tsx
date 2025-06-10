@@ -1439,7 +1439,8 @@ const SerialNumberForm: React.FC = () => {
                                                             className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                                             {batch.sim_count} SIM cards
                                                         </span>
-                                                        <AssignedSims user={user}/>
+
+                                                        <AssignedSims batch={batch.batch_id} user={user}/>
                                                         <button
                                                             onClick={() => deleteBatch(batch.id)}
                                                             className="ml-2 text-red-500 hover:text-red-700"
