@@ -387,7 +387,7 @@ export const simCardService = {
     },
 
     // Get batch-level statistics for a specific team
-    getBatchStatsForTeam: async (teamId: string, user: User, filters?: { startDate?: string, endDate?: string }) => {
+    getBatchStatsForTeam: async (teamId: string, user: User, filters?: { startDate?: string, endDate?: string },load_stats=true) => {
         // Generate cache key
         const cacheKey = generateCacheKey('batchStats', `${user.id}_${teamId}`, filters);
 

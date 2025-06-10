@@ -120,7 +120,6 @@ export default function LineBreakDown({user}) {
                 const {data, error} = await simService.getBatchStatsForTeam(
                     selectedTeam,
                     user,
-                    dateFilterStrings
                 );
 
                 if (error) throw error;
@@ -446,33 +445,10 @@ const TeamCard = ({team, user, setSelectedTeam, setView}) => {
     );
 }
 const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
-    const [stats, sSt] = useState({total: 0, assigned: 0})
-    const [isLoading, setIsLoading] = useState(true)
+    const [stats,] = useState(batch.stats)
+    const [isLoading, setIsLoading] = useState(!user || !batch.id)
 
-    const completionRate = stats.total > 0 ? (stats.assigned / stats.total) * 100 : 0
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!user || !team) return
-            setIsLoading(true)
-            const [v1, v2] = await Promise.all([
-                simService.countAll(user, [
-                    ["team_id", team], ["batch_id", batch.batch_id]
-                ]),
-                simService.countAll(user, [
-                    ["assigned_to_user_id", "not", "is", null],
-                    ["team_id", team], ["batch_id", batch.batch_id]
-                ]),
-            ])
-            sSt({
-                total: v1.count ?? 0,
-                assigned: v2.count ?? 0,
-            })
-            setIsLoading(false)
-        }
-        fetchData().then()
-    }, [user, team, batch.batch_id]);
-
+    const completionRate = stats.total > 0 ? (stats.assigned / stats.total) * 100 : 0;
     return (
         <div
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4
