@@ -79,7 +79,7 @@ const TeamReportsList: React.FC<TeamReportsListProps> = ({teamReports, user}) =>
                     admin_id: user.id,
                     status: SIMStatus.ACTIVATED,
                     registered_on : (new Date(record.tmDate)).toISOString().split('T')[0],
-                    activation_date : parseDateToYMD(record.topUpDate),
+                    activation_date : parseDateToYMD(record.dateId),
                     match: SIMStatus.UNMATCH,
                     quality: record.qualitySim ? SIMStatus.QUALITY : SIMStatus.NONQUALITY,
                     top_up_amount: +record.topUpAmount || null,

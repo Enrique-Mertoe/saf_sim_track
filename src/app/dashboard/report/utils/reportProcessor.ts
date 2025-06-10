@@ -86,10 +86,10 @@ const syncMatch = async (
                 usage : +sourceRecord.cumulativeUsage || null
             };
 
-            const parsedDate = parseDateToYMD(sourceRecord.topUpDate);
-            if (!existingSim.activation_date && parsedDate) {
-                updateFields.activation_date = parsedDate;
-            }
+            // if (!existingSim.activation_date) {
+            //     console.log("ppp",parsedDate,sourceRecord.dateId)
+                updateFields.activation_date = parseDateToYMD(sourceRecord.dateId);
+            // }
 
 
             if (!existingSim.registered_on) {

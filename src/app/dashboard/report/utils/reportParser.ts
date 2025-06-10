@@ -1,6 +1,6 @@
 // src/pages/Reports/utils/reportParser.ts
 import * as XLSX from 'xlsx';
-import { Report, SafaricomRecord, ValidationError } from '../types';
+import {Report, SafaricomRecord, ValidationError} from '../types';
 
 /**
  * Parse an Excel file containing Safaricom report data
@@ -26,8 +26,8 @@ export const parseReport = async (file: File): Promise<Report> => {
         // Map to our data structure
         const records: SafaricomRecord[] = jsonData.map((row) => ({
           tmDate: row['TM Date'] || '',
-          id: row['ID Date'] || '',
-          dateId: row['ID'] || '',
+          id: row['ID'] || '',
+          dateId: row['ID Date'] || '',
           month: row['Month'] || '',
           dealerShortcode: row['Dealer Shortcode'] || '',
           dealerName: row['Dealer Name'] || '',
