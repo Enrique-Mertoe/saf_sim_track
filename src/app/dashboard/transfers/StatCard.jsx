@@ -1,8 +1,6 @@
 import {useEffect, useState} from "react";
 import simService from "@/services/simService";
-import {Plus, Upload, TrendingUp, CheckCircle, Play, Clock, ArrowUpRight} from 'lucide-react';
-import {showModal} from "@/ui/shortcuts";
-import LineBreakDown from "@/app/dashboard/transfers/LineBreakDown";
+import {ArrowUpRight} from 'lucide-react';
 
 
 const StatCard = ({title, user, change, trend, bgColor, textColor, icon: Icon,expandable=false, dataType = "general",className=""}) => {
@@ -44,15 +42,15 @@ const StatCard = ({title, user, change, trend, bgColor, textColor, icon: Icon,ex
             `}</style>
 
             <div
-                onClick={()=>{
-                    if (expandable) {
-                        showModal({
-                            content:onClose => {
-                                return <LineBreakDown dataType={dataType} onClose={onClose} user={user}/>
-                            }
-                        })
-                    }
-                }}
+                // onClick={()=>{
+                //     if (expandable) {
+                //         showModal({
+                //             content:onClose => {
+                //                 return <LineBreakDown dataType={dataType} onClose={onClose} user={user}/>
+                //             }
+                //         })
+                //     }
+                // }}
 
                 className={`${textColor} border border-gray-500 rounded-2xl px-6 py-2 transition-all duration-300 cursor-pointer ${className}`}>
                 <div className="flex items-center justify-between mb-4">
