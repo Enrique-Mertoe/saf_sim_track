@@ -12,6 +12,7 @@ export interface BatchMetadata {
     item_description?: string;
     quantity?: number;
     team_id: string;
+    teams?: string[];
     created_by_user_id: string;
 }
 
@@ -27,6 +28,7 @@ export interface BatchMetadataCreate {
     item_description?: string;
     quantity?: number;
     team_id: string;
+    teams?: string[];
     created_by_user_id: string;
 }
 
@@ -40,4 +42,5 @@ export interface BatchMetadataUpdate {
     lot_numbers?: string[];
     item_description?: string;
     quantity?: number;
+    teams?: string[];
 }

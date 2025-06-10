@@ -23,6 +23,24 @@ import TeamSelectionModalContent from "@/app/dashboard/pick/components/TeamSelec
 
 // Using shared types from types.ts
 
+function BatchTeam({team, batch, user}: any) {
+    const [count, sC] = useState<number>(0);
+    useEffect(() => {
+        if (!user)
+            return
+        simService.countQuery(user, [
+            ["batch_id", batch],
+            ["team_id", team.id],
+        ]).then(r => {
+            sC(r.count ?? 0)
+        })
+    }, [user]);
+    return (<span
+        className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                                                        {team?.name || 'Unknown Team'}-{count}
+                                                                    </span>);
+}
+
 const SerialNumberForm: React.FC = () => {
     const {user} = useApp()
     const [activeTab, setActiveTab] = useState<TabType>('upload');
@@ -506,8 +524,23 @@ const SerialNumberForm: React.FC = () => {
         }
     };
 
+    function getSerials() {
+        return [...serialNumbers]
+            .filter(serial =>
+                serial.isValid &&
+                !serial.exists &&
+                !serial.isUploaded &&
+                !serial.isChecking &&
+                !serial.isUploading).sort((a, b) => {
+                const aVal = a.value || '';
+                const bVal = b.value || '';
+                return aVal.localeCompare(bVal, undefined, {numeric: true});
+            })
+    }
+
     // Function to show team selection modal
-    const showTeamSelectionModal = (): Promise<string> => {
+    const showTeamSelectionModal = (): Promise<any> => {
+
         return new Promise((resolve, reject) => {
             showModal({
                 content: (onClose) => (
@@ -517,10 +550,11 @@ const SerialNumberForm: React.FC = () => {
                         onClose={onClose}
                         resolve={resolve}
                         reject={reject}
+                        //@ts-ignore
+                        serials={getSerials()}
                     />
                 ),
-                size: "md",
-                // design: ["scrollable"]
+                size: "lg",
             });
         });
     };
@@ -547,17 +581,28 @@ const SerialNumberForm: React.FC = () => {
         });
     };
 
-    const uploadAllSerials = async (selectedTeam: string) => {
-        setSelectedTeam(selectedTeam)
+    const uploadAllSerials = async (selectionResult: any) => {
+        // Handle both old format (string) and new format (object with teams and ranges)
+        let selectedTeams: string[] = [];
+        let teamRanges: any = {};
+
+        if (typeof selectionResult === 'string') {
+            // Old format - single team ID
+            selectedTeams = [selectionResult];
+            setSelectedTeam(selectionResult);
+        } else if (selectionResult && selectionResult.teams) {
+            // New format - multiple teams with ranges
+            selectedTeams = selectionResult.teams;
+            teamRanges = selectionResult.ranges || {};
+            setSelectedTeam(selectedTeams[0]); // Set the first team as selected for backward compatibility
+        } else {
+            toast.error("Invalid team selection");
+            return;
+        }
+
         try {
             // Filter only valid, non-existing, non-uploaded, and not-checking serials
-            const serialsToUpload = serialNumbers
-                .filter(serial =>
-                    serial.isValid &&
-                    !serial.exists &&
-                    !serial.isUploaded &&
-                    !serial.isChecking &&
-                    !serial.isUploading);
+            const serialsToUpload = getSerials();
 
             // Handle case where there are no valid serials to upload with better error message
             if (serialsToUpload.length === 0) {
@@ -581,15 +626,14 @@ const SerialNumberForm: React.FC = () => {
                 return;
             }
 
-            // Always show team selection modal when upload button is clicked
-
-
-            // Get the selected team name for better user feedback (now we're sure selectedTeam is set)
-            const selectedTeamName = teams.find(t => t.id === selectedTeam)?.name || "Selected Team";
+            // Get team names for better user feedback
+            const teamNames = selectedTeams.map(teamId =>
+                teams.find(t => t.id === teamId)?.name || "Unknown Team"
+            ).join(", ");
 
             // Clear previous errors and set upload message
             setGlobalError(null);
-            setUploadMessage(`Starting upload of ${serialsToUpload.length} serials to ${selectedTeamName}...`);
+            setUploadMessage(`Starting upload of ${serialsToUpload.length} serials to ${teamNames}...`);
             setIsUploading(true);
             setUploadingCount(serialsToUpload.length);
 
@@ -612,31 +656,6 @@ const SerialNumberForm: React.FC = () => {
                 }
             }
 
-            // If we have metadata (either detected or entered by user), save it
-            if (metadata) {
-                // Update with the current batch ID and team
-                const metadataToSave: BatchMetadataCreate = {
-                    ...metadata,
-                    batch_id: batchId,
-                    team_id: selectedTeam
-                };
-
-                try {
-                    const {data, error} = await batchMetadataService.createBatchMetadata(metadataToSave);
-                    if (error) {
-                        console.error('Error storing batch metadata:', error);
-                        // Don't throw, just log the error and continue
-                        toast.error('Failed to save batch metadata, but will continue with upload');
-                    } else {
-                        toast.success('Batch metadata saved successfully');
-                    }
-                } catch (err) {
-                    console.error('Exception storing batch metadata:', err);
-                    // Don't throw, just log the error and continue
-                    toast.error('Failed to save batch metadata, but will continue with upload');
-                }
-            }
-
             // Mark all serials as uploading before starting the upload
             serialsToUpload.forEach(serial => {
                 updateSerialStatus(serial.id, {
@@ -645,60 +664,157 @@ const SerialNumberForm: React.FC = () => {
                     uploadError: null
                 });
             });
-
-            // Prepare the data for upload
-            const serialDataToUpload = serialsToUpload.map(ser => {
-                return {
-                    match: SIMStatus.MATCH,
-                    quality: SIMStatus.NONQUALITY,
-                    serial_number: ser.value,
-                    team_id: selectedTeam,
-                    batch_id: batchId,
-                    registered_by_user_id: user!.id,
-                    //@ts-ignore
-                    admin_id: user!.id,
-                } as SIMCardCreate;
+            // Initialize team serials arrays
+            const teamSerials: { [teamId: string]: SerialNumber[] } = {};
+            selectedTeams.forEach(teamId => {
+                teamSerials[teamId] = [];
             });
-            console.log("team", selectedTeam)
 
-            // Upload the serials with progress tracking and error handling
-            const result = await simService.createSIMCardBatch(
-                serialDataToUpload,
-                50, // batch size
-                (progress, uploadedCount, chunk, errors) => {
-                    // Update progress indicators
-                    setcurrentPercentage(progress);
-                    setSofar(uploadedCount);
+            if (selectedTeams.length === 1) {
+                teamSerials[selectedTeams[0]] = [...serialsToUpload];
+            } else {
+                let currentIndex = 0;
+                let assignedCount = 0;
 
-                    // Get the serial numbers from the current chunk
-                    const uploadedSerialNumbers = chunk.map(s => s.serial_number);
+                // Distribute serials based on team ranges and counts
+                selectedTeams.forEach(teamId => {
+                    const range = teamRanges[teamId];
+                    if (!range?.startRange || !range?.endRange || !range?.count) {
+                        return;
+                    }
 
-                    // Update status for each serial in the current chunk
-                    serialsToUpload.forEach(serial => {
-                        if (uploadedSerialNumbers.includes(serial.value)) {
-                            updateSerialStatus(serial.id, {
-                                isUploading: false,
-                                isUploaded: true,
-                                exists: true,
-                                uploadError: errors && errors.length > 0 ? errors.join('\n') : null
-                            });
+                    // Take the expected count of serials for this team
+                    const expectedCount = range.count;
+                    const teamSerialsBatch = serialsToUpload.slice(currentIndex, currentIndex + expectedCount);
 
-                            // If there were errors for this serial, show a toast
-                            if (errors && errors.length > 0) {
-                                toast.error(`Error uploading ${serial.value}: ${errors.join(', ')}`);
-                            }
-                        }
+                    // Validate that these serials actually fall within the range
+                    const validSerials = teamSerialsBatch.filter(serial => {
+                        const serialValue = serial.value || '';
+                        return serialValue >= range.startRange && serialValue <= range.endRange;
                     });
+
+                    teamSerials[teamId] = validSerials;
+                    assignedCount += validSerials.length;
+
+                    // Move index forward by the number of serials we attempted to assign
+                    currentIndex += expectedCount;
+
+                    // Log any discrepancies
+                    if (validSerials.length !== expectedCount) {
+                        console.warn(`Team ${teamId}: Expected ${expectedCount} serials, got ${validSerials.length} valid serials in range`);
+                    }
+                });
+
+                // Assign any remaining serials to the first team
+                if (currentIndex < serialsToUpload.length) {
+                    const remainingSerials = serialsToUpload.slice(currentIndex);
+                    teamSerials[selectedTeams[0]].push(...remainingSerials);
+                    console.log(`Assigned ${remainingSerials.length} remaining serials to first team`);
                 }
-            );
+
+                if (assignedCount > 0) {
+                    alert.success(`${assignedCount} serials distributed across ${selectedTeams.length} teams`);
+                }
+            }
+            let overallResult: any = {success: 0, errors: []};
+            let totalProcessed = 0;
+            // Create a single batch metadata record with all teams
+            if (metadata) {
+                // Update with the current batch ID and teams
+                const metadataToSave: BatchMetadataCreate = {
+                    ...metadata,
+                    batch_id: batchId,
+                    team_id: selectedTeams[0], // Set first team as primary for backward compatibility
+                    teams: selectedTeams // Store all selected teams
+                };
+
+                try {
+                    const {data, error} = await batchMetadataService.createBatchMetadata(metadataToSave);
+                    if (error) {
+                        console.error('Error storing batch metadata:', error);
+                        // Don't throw, just log the error and continue
+                        toast.error(`Failed to save batch metadata, but will continue with upload`);
+                    } else {
+                        toast.success(`Batch metadata saved successfully`);
+                    }
+                } catch (err) {
+                    console.error('Exception storing batch metadata:', err);
+                    // Don't throw, just log the error and continue
+                    toast.error(`Failed to save batch metadata, but will continue with upload`);
+                }
+            }
+            for (const teamId of selectedTeams) {
+                const teamSerialsToUpload = teamSerials[teamId];
+                if (teamSerialsToUpload.length === 0) continue;
+                const teamName = teams.find(t => t.id === teamId)?.name || "Unknown Team";
+
+                // Prepare the data for upload
+                const serialDataToUpload = teamSerialsToUpload.map(ser => {
+                    return {
+                        match: SIMStatus.MATCH,
+                        quality: SIMStatus.NONQUALITY,
+                        serial_number: ser.value,
+                        team_id: teamId,
+                        batch_id: batchId,
+                        registered_by_user_id: user!.id,
+                        //@ts-ignore
+                        admin_id: user!.id,
+                    } as SIMCardCreate;
+                });
+
+                console.log(`Uploading ${serialDataToUpload.length} serials to team ${teamId} (${teamName})`);
+
+                // Upload the serials with progress tracking and error handling
+                const result = await simService.createSIMCardBatch(
+                    serialDataToUpload,
+                    50, // batch size
+                    (progress, uploadedCount, chunk, errors) => {
+                        // Calculate overall progress
+                        const overallProgress = (totalProcessed + uploadedCount) / serialsToUpload.length * 100;
+
+                        // Update progress indicators
+                        setcurrentPercentage(overallProgress);
+                        setSofar(totalProcessed + uploadedCount);
+
+                        // Get the serial numbers from the current chunk
+                        const uploadedSerialNumbers = chunk.map(s => s.serial_number);
+
+                        // Update status for each serial in the current chunk
+                        teamSerialsToUpload.forEach(serial => {
+                            if (uploadedSerialNumbers.includes(serial.value)) {
+                                updateSerialStatus(serial.id, {
+                                    isUploading: false,
+                                    isUploaded: true,
+                                    exists: true,
+                                    uploadError: errors && errors.length > 0 ? errors.join('\n') : null
+                                });
+
+                                // If there were errors for this serial, show a toast
+                                if (errors && errors.length > 0) {
+                                    toast.error(`Error uploading ${serial.value} to ${teamName}: ${errors.join(', ')}`);
+                                }
+                            }
+                        });
+                    }
+                );
+
+                // Add this team's results to the overall results
+                overallResult.success += result.success || 0;
+                overallResult.errors = [...overallResult.errors, ...result.errors];
+
+                // Update the total processed count
+                totalProcessed += teamSerialsToUpload.length;
+            }
 
             // Check if the upload was successful
-            if (result.success === 0 || result.errors.length > 0) {
-                throw new Error(`Upload failed: ${result.errors.map(e => e.message || e).join(', ')}`);
+            if (overallResult.success === 0 || overallResult.errors.length > 0) {
+                throw new Error(`Upload failed: ${overallResult.errors.map((e: {
+                    message: any;
+                }) => e.message || e).join(', ')}`);
             }
 
             // Show success message with metadata info if available
-            let successMessage = `Successfully uploaded ${serialsToUpload.length} serial numbers to ${selectedTeamName}`;
+            let successMessage = `Successfully uploaded ${serialsToUpload.length} serial numbers to ${teamNames}`;
             if (batchMetadata) {
                 successMessage += ` with picklist metadata (Order #${batchMetadata.order_number || 'N/A'})`;
             }
@@ -1112,8 +1228,8 @@ const SerialNumberForm: React.FC = () => {
                                             whileTap={{scale: 0.98}}
                                             onClick={async () => {
                                                 try {
-                                                    const teamId = await showTeamSelectionModal();
-                                                    uploadAllSerials(teamId).then()
+                                                    const selectionResult = await showTeamSelectionModal();
+                                                    uploadAllSerials(selectionResult).then()
                                                 } catch (error) {
                                                     // User cancelled team selection
                                                     toast.error("Team selection is required for upload");
@@ -1258,6 +1374,42 @@ const SerialNumberForm: React.FC = () => {
                         <div className="space-y-6">
                             {/* Group batches by team */}
                             {Object.entries(
+                                // uploadedBatches.reduce((groups: any, batch: any) => {
+                                //     // Handle both single team_id and multiple teams
+                                //     if (batch.teams && batch.teams.length > 0) {
+                                //         // For batches with multiple teams, add to each team's group
+                                //         batch.teams.forEach((teamId: string) => {
+                                //             const team = teams.find(t => t.id === teamId);
+                                //             const teamName = team?.name || 'Unknown Team';
+                                //
+                                //             if (!groups[teamId]) {
+                                //                 groups[teamId] = {
+                                //                     name: teamName,
+                                //                     batches: []
+                                //                 };
+                                //             }
+                                //
+                                //             // Only add the batch once to each team's group
+                                //             if (!groups[teamId].batches.some((b: any) => b.id === batch.id)) {
+                                //                 groups[teamId].batches.push(batch);
+                                //             }
+                                //         });
+                                //     } else {
+                                //         // Fallback to the old single team_id approach
+                                //         const teamId = batch.team_id?.id || 'unknown';
+                                //         const teamName = batch.team_id?.name || 'Unknown Team';
+                                //
+                                //         if (!groups[teamId]) {
+                                //             groups[teamId] = {
+                                //                 name: teamName,
+                                //                 batches: []
+                                //             };
+                                //         }
+                                //
+                                //         groups[teamId].batches.push(batch);
+                                //     }
+                                //     return groups;
+                                // }, {})
                                 uploadedBatches.reduce((groups: any, batch: any) => {
                                     const teamId = batch.team_id?.id || 'unknown';
                                     const teamName = batch.team_id?.name || 'Unknown Team';
@@ -1346,6 +1498,24 @@ const SerialNumberForm: React.FC = () => {
                                                                 <span className="font-medium text-gray-600">Date Created:</span> {batch.date_created}
                                                             </div>
                                                         )}
+                                                    </div>
+                                                )}
+
+                                                {/* Teams */}
+                                                {batch.teams && batch.teams.length > 1 && (
+                                                    <div className="mt-2">
+                                                        <span
+                                                            className="text-sm font-medium text-gray-600">Teams:</span>
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {batch.teams.map((teamId: string, index: number) => {
+                                                                const team = teams.find(t => t.id === teamId);
+                                                                return (
+                                                                    <BatchTeam user={user} key={team?.id || index}
+                                                                               team={team}
+                                                                               batch={batch.batch_id}/>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 )}
 
