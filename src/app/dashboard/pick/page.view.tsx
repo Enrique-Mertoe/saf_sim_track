@@ -948,35 +948,38 @@ const SerialNumberForm: React.FC = () => {
     // Function to delete a batch
     const deleteBatch = async (batchId: string) => {
         if (!user) return;
+        alert.confirm({
+            type: alert.WARN,
+            title: "Batch management",
+            message: "Are you sure you want to delete this batch? This action cannot be undone.",
+            async task() {
+                try {
+                    // Call the API route to delete the batch and its associated SIM cards
+                    const response = await fetch('/api/batch/delete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({batchId}),
+                    });
 
-        if (!confirm('Are you sure you want to delete this batch? This action cannot be undone.')) {
-            return;
-        }
+                    const result = await response.json();
 
-        try {
-            // Call the API route to delete the batch and its associated SIM cards
-            const response = await fetch('/api/batch/delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({batchId}),
-            });
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete batch: ${result.message || 'Please try again.'}`);
+                    } else {
+                        toast.success('Batch and all associated SIM cards deleted successfully');
+                        // Reload the batches
+                        return loadUploadedBatches();
 
-            const result = await response.json();
-
-            if (!response.ok) {
-                console.error('Error deleting batch:', result);
-                toast.error(`Failed to delete batch: ${result.message || 'Please try again.'}`);
-            } else {
-                toast.success('Batch and all associated SIM cards deleted successfully');
-                // Reload the batches
-                loadUploadedBatches();
+                    }
+                } catch (err) {
+                    console.error('Exception deleting batch:', err);
+                    throw new Error('An unexpected error occurred while deleting the batch.');
+                }
             }
-        } catch (err) {
-            console.error('Exception deleting batch:', err);
-            toast.error('An unexpected error occurred while deleting the batch.');
-        }
+        });
+
     };
 
     // Function to format date
