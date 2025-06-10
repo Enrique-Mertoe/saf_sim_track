@@ -1495,7 +1495,7 @@ const SerialNumberForm: React.FC = () => {
                                                 )}
 
                                                 {/* Teams */}
-                                                {batch.teams && batch.teams.length > 1 && (
+                                                {batch.teams && batch.teams.length > 0 && (
                                                     <div className="mt-2">
                                                         <span
                                                             className="text-sm font-medium text-gray-600">Teams:</span>
