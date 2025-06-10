@@ -182,9 +182,9 @@ const syncMatch = async (
 
                     const parsedDate = parseDateToYMD(sourceRecord.dateId);
 
-                    // if (!existingSim.activation_date) {
+                    if (!existingSim.activation_date) {
                         updateFields.activation_date = parsedDate;
-                    // }
+                    }
 
                     if (!existingSim.registered_on) {
                         const date = new Date(sourceRecord.tmDate);

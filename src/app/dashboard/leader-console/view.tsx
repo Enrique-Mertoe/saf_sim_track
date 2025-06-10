@@ -83,18 +83,31 @@ const SimManagementPage = () => {
     };
 
     // Calculate stats
-    const stats = useMemo(() => {
-        const assigned = simCards.filter(sim => sim.assigned_to_user_id !== null);
-        const unassigned = simCards.filter(sim => sim.assigned_to_user_id === null);
-        const sold = simCards.filter(sim => sim.status === SIMStatus.REGISTERED);
-
-        return {
-            total: simCards.length,
-            assigned: assigned.length,
-            unassigned: unassigned.length,
-            sold: sold.length
+    const [stats1, sSt] = useState({total: 0, assigned: 0, unassigned: 0, sold: 0})
+    const stats =  {
+            total: stats1.total,
+            assigned: stats1.assigned,
+            unassigned: stats1.total - stats1.assigned,
+            sold: stats1.sold
         };
-    }, [simCards]);
+
+    useEffect(() => {
+        if (!user || ! user.team_id) return
+        simService.countQuery(user,[
+            ["team_id",user.team_id]
+        ]).then(r => {
+            sSt(prev => ({...prev, total: r.count ?? 0}))
+        });
+        simService.countReg(user).then(r => {
+            sSt(prev => ({...prev, sold: r.count ?? 0}))
+        });
+        simService.countQuery(user, [
+            ["assigned_to_user_id", "not", "is", null],
+            ["team_id",user.team_id]
+        ]).then(r => {
+            sSt(prev => ({...prev, assigned: r.count ?? 0}))
+        });
+    }, [user]);
 
     // Group assigned SIMs by team member
     const assignedByMember = useMemo(() => {
@@ -254,8 +267,8 @@ const SimManagementPage = () => {
 
         showModal(
             {
-                size:"md",
-                content: onClose=> <>
+                size: "md",
+                content: onClose => <>
                     <div className="bg-white overflow-y-auto rounded-lg p-6 w-full">
                         <h3 className="text-lg font-semibold mb-4">Assign SIMs to Team Member</h3>
                         <p className="text-sm text-gray-600 mb-4">
@@ -296,7 +309,7 @@ const SimManagementPage = () => {
                                             .from('sim_cards')
                                             .update({
                                                 assigned_to_user_id: localSelectedMember,
-                                                status:SIMStatus.ASSIGNED,// Use local variable
+                                                status: SIMStatus.ASSIGNED,// Use local variable
                                                 assigned_on: now()
                                             })
                                             .in('id', selectedSims);
