@@ -9,6 +9,7 @@ import alert from "@/ui/alert";
 import {showModal} from "@/ui/shortcuts";
 import TransfersTab from './components/TransfersTab';
 import GeneralTab from './components/GeneralTab';
+import Stats from "@/app/dashboard/transfers/Stats";
 
 type Team = TeamX & {
     batches: BatchMetadata[],
@@ -595,9 +596,9 @@ const AdminTransfersPage = () => {
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">SIM Distribution Center</h1>
                         <p className="text-gray-600">Manage SIM card transfers and distribution across teams</p>
                     </div>
+                    <Stats user={user}/>
 
                     {/* Error message */}
                     {error && (

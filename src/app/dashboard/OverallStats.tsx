@@ -1,8 +1,10 @@
 import React from 'react';
-import {Smartphone, TrendingUp, WifiOff, Zap} from 'lucide-react';
+import {ArrowUpRightSquare, Smartphone, TrendingUp, WifiOff, Zap} from 'lucide-react';
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
 import {to2dp} from "@/helper";
+import Signal from "@/lib/Signal";
+import {useRouter} from "next/navigation";
 
 // Types
 interface BreakdownItemProps {
@@ -168,6 +170,7 @@ const SimAllocationCard: React.FC = () => {
     const [picklist, sP] = React.useState<number | null>(null);
     const [extra, sE] = React.useState<number | null>(null);
     const user = useApp().user
+    const router = useRouter();
     const [isLoading, setIsLoading] = React.useState(!user);
     React.useEffect(() => {
         const fetchTotal = async () => {
@@ -264,13 +267,6 @@ const SimAllocationCard: React.FC = () => {
 
             {/* Breakdown Items */}
             <div className="relative z-10 space-y-4">
-                {/*<BreakdownItem*/}
-                {/*    label="Registered SIMs"*/}
-                {/*    color="#dcfce7"*/}
-                {/*    icon={<Signal className="w-4 h-4"/>}*/}
-                {/*    dataFetcher={() => fetchRegData(user)}*/}
-                {/*/>*/}
-
                 <BreakdownItem
                     label="Assigned SIMs"
                     color="#fed7aa"
@@ -284,6 +280,19 @@ const SimAllocationCard: React.FC = () => {
                     icon={<Zap className="w-4 h-4"/>}
                     dataFetcher={() => fetchUnhandledData(user)}
                 />
+            </div>
+            <div className={"mt-4 relative z-10 flex"}>
+                <button
+                    onClick={e=>{
+                        e.stopPropagation();
+                        Signal.trigger("app-page-loading", true)
+                        router.push("/dashboard/transfers", {scroll: false});
+                    }}
+
+                    className={"text-white cursor-pointer flex items-center justify-center gap-2  rounded-sm ms-auto bg-black/20 px-4 py-2"}>
+                    see distribution
+                    <ArrowUpRightSquare className="w-5 h-5"/>
+                </button>
             </div>
 
             {/* Subtle glow effect */}
