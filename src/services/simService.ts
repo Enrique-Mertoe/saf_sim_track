@@ -387,7 +387,10 @@ export const simCardService = {
     },
 
     // Get batch-level statistics for a specific team
-    getBatchStatsForTeam: async (teamId: string, user: User, filters?: { startDate?: string, endDate?: string },load_stats=true) => {
+    getBatchStatsForTeam: async (teamId: string, user: User, filters?: {
+        startDate?: string,
+        endDate?: string
+    }, load_stats = true) => {
         // Generate cache key
         const cacheKey = generateCacheKey('batchStats', `${user.id}_${teamId}`, filters);
 
@@ -622,7 +625,7 @@ export const simCardService = {
                 }
 
                 const total = count;
-                const registered = (await bQury().eq("status", SIMStatus.REGISTERED)).count ?? 0;
+                const registered = (await bQury().not("registered_on", "is", null)).count ?? 0;
                 const matched = cards.filter(card => card.match === SIMStatus.MATCH).length;
                 const unmatched = cards.filter(card => card.match === SIMStatus.UNMATCH).length;
                 const quality = cards.filter(card => card.quality === SIMStatus.QUALITY).length;

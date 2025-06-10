@@ -216,32 +216,40 @@ export default function LineBreakDown({user}) {
 
 
     // User Card Component
-    const UserCard = ({userData}) => (
-        <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm">
-            <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200">{userData.name}</h4>
-                <span className="text-xs text-gray-500 dark:text-gray-400">User</span>
+    const UserCard = ({userData}) => {
+        const completionRate = userData.stats?.total > 0 ? (userData.stats.registered / userData.stats.total) * 100 : 0;
+
+        return (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{userData.name}</h4>
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-100 dark:text-amber-200
+                               dark:bg-amber-900 px-2 py-1 rounded">
+                    {Math.round(completionRate)}%
+                </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{userData.stats?.total || 0}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Registered</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{userData.stats?.registered || 0}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Unmatched</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{userData.stats?.unmatched || 0}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Quality</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{userData.stats?.quality || 0}</p>
+                    </div>
+                </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Total</p>
-                    <p className="font-medium">{userData.stats.total}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Matched</p>
-                    <p className="font-medium">{userData.stats.matched}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Unmatched</p>
-                    <p className="font-medium">{userData.stats.unmatched}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Quality</p>
-                    <p className="font-medium">{userData.stats.quality}</p>
-                </div>
-            </div>
-        </div>
-    );
+        );
+    }
 
     // Render teams view
     const renderTeamsView = () => (
