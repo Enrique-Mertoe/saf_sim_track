@@ -41,6 +41,31 @@ function BatchTeam({team, batch, user}: any) {
                                                                     </span>);
 }
 
+function AssignedSims({batch, user}: any) {
+    const [count, sC] = useState<number>(0);
+    useEffect(() => {
+        if (!user)
+            return
+        simService.countQuery(user, [
+            ["batch_id", batch],
+            ["assigned_to_user_id", "not", "is", "null"],
+        ]).then(r => {
+            sC(r.count ?? 0)
+        })
+    }, [user]);
+    if (!user)
+        return (
+            <span
+                className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                                            ...
+                                                        </span>
+        )
+    return (<span
+        className="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                                            {count} assigned
+                                                        </span>);
+}
+
 const SerialNumberForm: React.FC = () => {
     const {user} = useApp()
     const [activeTab, setActiveTab] = useState<TabType>('upload');
@@ -1374,42 +1399,6 @@ const SerialNumberForm: React.FC = () => {
                         <div className="space-y-6">
                             {/* Group batches by team */}
                             {Object.entries(
-                                // uploadedBatches.reduce((groups: any, batch: any) => {
-                                //     // Handle both single team_id and multiple teams
-                                //     if (batch.teams && batch.teams.length > 0) {
-                                //         // For batches with multiple teams, add to each team's group
-                                //         batch.teams.forEach((teamId: string) => {
-                                //             const team = teams.find(t => t.id === teamId);
-                                //             const teamName = team?.name || 'Unknown Team';
-                                //
-                                //             if (!groups[teamId]) {
-                                //                 groups[teamId] = {
-                                //                     name: teamName,
-                                //                     batches: []
-                                //                 };
-                                //             }
-                                //
-                                //             // Only add the batch once to each team's group
-                                //             if (!groups[teamId].batches.some((b: any) => b.id === batch.id)) {
-                                //                 groups[teamId].batches.push(batch);
-                                //             }
-                                //         });
-                                //     } else {
-                                //         // Fallback to the old single team_id approach
-                                //         const teamId = batch.team_id?.id || 'unknown';
-                                //         const teamName = batch.team_id?.name || 'Unknown Team';
-                                //
-                                //         if (!groups[teamId]) {
-                                //             groups[teamId] = {
-                                //                 name: teamName,
-                                //                 batches: []
-                                //             };
-                                //         }
-                                //
-                                //         groups[teamId].batches.push(batch);
-                                //     }
-                                //     return groups;
-                                // }, {})
                                 uploadedBatches.reduce((groups: any, batch: any) => {
                                     const teamId = batch.team_id?.id || 'unknown';
                                     const teamName = batch.team_id?.name || 'Unknown Team';
@@ -1447,6 +1436,7 @@ const SerialNumberForm: React.FC = () => {
                                                             className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
                                                             {batch.sim_count} SIM cards
                                                         </span>
+                                                        <AssignedSims user={user}/>
                                                         <button
                                                             onClick={() => deleteBatch(batch.id)}
                                                             className="ml-2 text-red-500 hover:text-red-700"
