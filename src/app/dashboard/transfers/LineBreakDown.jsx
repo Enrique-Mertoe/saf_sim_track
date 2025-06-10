@@ -1,9 +1,8 @@
-import {useState, useEffect} from "react";
-import {AlertCircle, Calendar, ChevronUp, Filter, RefreshCw, X} from "lucide-react";
-import {showModal} from "@/ui/shortcuts";
+import {useEffect, useState} from "react";
+import {AlertCircle, ChevronUp, RefreshCw} from "lucide-react";
 import simService from "@/services/simService";
 
-export default function LineBreakDown({onClose, dataType, user}) {
+export default function LineBreakDown({user}) {
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [selectedBatch, setSelectedBatch] = useState(null);
     const [view, setView] = useState('teams');
@@ -31,9 +30,9 @@ export default function LineBreakDown({onClose, dataType, user}) {
 
         // Reset view state to force reload of data with new date filter
         setViewState({
-            teams: { loaded: false },
-            batches: { loaded: false, teamId: null },
-            users: { loaded: false, teamId: null, batchId: null }
+            teams: {loaded: false},
+            batches: {loaded: false, teamId: null},
+            users: {loaded: false, teamId: null, batchId: null}
         });
     };
 
@@ -55,14 +54,16 @@ export default function LineBreakDown({onClose, dataType, user}) {
 
     // State for preserving view data to prevent frequent loading
     const [viewState, setViewState] = useState({
-        teams: { loaded: false },
-        batches: { loaded: false, teamId: null },
-        users: { loaded: false, teamId: null, batchId: null }
+        teams: {loaded: false},
+        batches: {loaded: false, teamId: null},
+        users: {loaded: false, teamId: null, batchId: null}
     });
 
     // Fetch team stats when component mounts or when date filter changes
     useEffect(() => {
         const fetchTeamStats = async () => {
+            if (!user)
+                return
             // If we already have team data and the view hasn't changed, don't reload
             if (viewState.teams.loaded && view === 'teams') {
                 return;
@@ -85,7 +86,7 @@ export default function LineBreakDown({onClose, dataType, user}) {
                 // Update view state to indicate teams data is loaded
                 setViewState(prev => ({
                     ...prev,
-                    teams: { loaded: true }
+                    teams: {loaded: true}
                 }));
             } catch (err) {
                 console.error('Error fetching team stats:', err);
@@ -96,9 +97,9 @@ export default function LineBreakDown({onClose, dataType, user}) {
         };
 
         if (view === 'teams') {
-            fetchTeamStats();
+            fetchTeamStats().then();
         }
-    }, [view, localDateFilter, viewState.teams.loaded, dataType, user]);
+    }, [view, localDateFilter, viewState.teams.loaded, user]);
 
     // Fetch batch stats when a team is selected
     useEffect(() => {
@@ -129,7 +130,7 @@ export default function LineBreakDown({onClose, dataType, user}) {
                 // Update view state to indicate batches data is loaded for this team
                 setViewState(prev => ({
                     ...prev,
-                    batches: { loaded: true, teamId: selectedTeam }
+                    batches: {loaded: true, teamId: selectedTeam}
                 }));
             } catch (err) {
                 console.error('Error fetching batch stats:', err);
@@ -140,7 +141,7 @@ export default function LineBreakDown({onClose, dataType, user}) {
         };
 
         fetchBatchStats();
-    }, [selectedTeam, view, localDateFilter, viewState.batches.loaded, viewState.batches.teamId, dataType, user]);
+    }, [selectedTeam, view, localDateFilter, viewState.batches.loaded, viewState.batches.teamId, user]);
 
     // Fetch user stats when a batch is selected
     useEffect(() => {
@@ -148,8 +149,8 @@ export default function LineBreakDown({onClose, dataType, user}) {
 
         const fetchUserStats = async () => {
             // If we already have user data for this team and batch and the view hasn't changed, don't reload
-            if (viewState.users.loaded && 
-                viewState.users.teamId === selectedTeam && 
+            if (viewState.users.loaded &&
+                viewState.users.teamId === selectedTeam &&
                 viewState.users.batchId === selectedBatch) {
                 return;
             }
@@ -174,7 +175,7 @@ export default function LineBreakDown({onClose, dataType, user}) {
                 // Update view state to indicate users data is loaded for this team and batch
                 setViewState(prev => ({
                     ...prev,
-                    users: { loaded: true, teamId: selectedTeam, batchId: selectedBatch }
+                    users: {loaded: true, teamId: selectedTeam, batchId: selectedBatch}
                 }));
             } catch (err) {
                 console.error('Error fetching user stats:', err);
@@ -185,8 +186,8 @@ export default function LineBreakDown({onClose, dataType, user}) {
         };
 
         fetchUserStats();
-    }, [selectedTeam, selectedBatch, view, localDateFilter, 
-        viewState.users.loaded, viewState.users.teamId, viewState.users.batchId, dataType, user]);
+    }, [selectedTeam, selectedBatch, view, localDateFilter,
+        viewState.users.loaded, viewState.users.teamId, viewState.users.batchId, user]);
 
 
     // Loading indicator
@@ -211,75 +212,9 @@ export default function LineBreakDown({onClose, dataType, user}) {
         </div>
     );
 
-    // Team Card Component
-    const TeamCard = ({team}) => (
-        <div 
-            className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => {
-                setSelectedTeam(team.id);
-                setView('batches');
-            }}
-        >
-            <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200">{team.name}</h4>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Team</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Total</p>
-                    <p className="font-medium">{team.stats.total}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Matched</p>
-                    <p className="font-medium">{team.stats.matched}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Unmatched</p>
-                    <p className="font-medium">{team.stats.unmatched}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Quality</p>
-                    <p className="font-medium">{team.stats.quality}</p>
-                </div>
-            </div>
-        </div>
-    );
 
     // Batch Card Component
-    const BatchCard = ({batch}) => (
-        <div 
-            className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => {
-                setSelectedBatch(batch.id);
-                setView('users');
-            }}
-        >
-            <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200">
-                    {batch.id === 'unassigned' ? 'Unassigned' : batch.id}
-                </h4>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Batch</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Total</p>
-                    <p className="font-medium">{batch.stats.total}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Matched</p>
-                    <p className="font-medium">{batch.stats.matched}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Unmatched</p>
-                    <p className="font-medium">{batch.stats.unmatched}</p>
-                </div>
-                <div>
-                    <p className="text-gray-500 dark:text-gray-400">Quality</p>
-                    <p className="font-medium">{batch.stats.quality}</p>
-                </div>
-            </div>
-        </div>
-    );
+
 
     // User Card Component
     const UserCard = ({userData}) => (
@@ -323,9 +258,10 @@ export default function LineBreakDown({onClose, dataType, user}) {
                     No teams found
                 </div>
             ) : (
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-2 sm:grid-cols-4">
                     {teamStats.map(team => (
-                        <TeamCard key={team.id} team={team} />
+                        <TeamCard setSelectedTeam={setSelectedTeam} setView={setView} key={team.id} user={user}
+                                  team={team}/>
                     ))}
                 </div>
             )}
@@ -364,9 +300,10 @@ export default function LineBreakDown({onClose, dataType, user}) {
                         No batches found for this team
                     </div>
                 ) : (
-                    <div className="grid gap-2">
+                    <div className="grid sm:grid-cols-2 gap-2">
                         {batchStats.map(batch => (
-                            <BatchCard key={batch.id} batch={batch} />
+                            <BatchCard key={batch.id} team={selectedTeam} user={user}
+                                       setSelectedBatch={setSelectedBatch} setView={setView} batch={batch}/>
                         ))}
                     </div>
                 )}
@@ -411,7 +348,7 @@ export default function LineBreakDown({onClose, dataType, user}) {
                 ) : (
                     <div className="grid gap-2 sm:grid-cols-2">
                         {userStats.map(userData => (
-                            <UserCard key={userData.id} userData={userData} />
+                            <UserCard key={userData.id} userData={userData}/>
                         ))}
                     </div>
                 )}
@@ -420,138 +357,171 @@ export default function LineBreakDown({onClose, dataType, user}) {
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">
-                    {dataType === 'general' && 'All Lines'}
-                    {dataType === 'assigned' && 'Assigned Lines'}
-                    {dataType === 'picklist' && 'PickList Lines'}
-                    {dataType === 'n_picklist' && 'Extra/Unknown Lines'}
-                </h2>
-                <button
-                    onClick={onClose}
-                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                    <X size={20}/>
-                </button>
-            </div>
-
-            <div className="mb-4">
-                <div className="flex items-center space-x-2 mb-2">
-                    <Filter size={16} className="text-gray-500"/>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by date:</span>
-                </div>
-
-                <div className="flex space-x-2">
-                    <button
-                        className={`px-3 py-1 rounded-md text-sm ${localDateFilter.startDate ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200'}`}
-                        onClick={() => handleLocalDateFilterChange({startDate: null, endDate: null})}
-                    >
-                        All Time
-                    </button>
-                    <button
-                        className={`px-3 py-1 rounded-md text-sm ${
-                            localDateFilter.startDate?.toDateString() === startOfToday.toDateString()
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                        }`}
-                        onClick={() => handleLocalDateFilterChange({startDate: startOfToday, endDate: now})}
-                    >
-                        Today
-                    </button>
-                    <button
-                        className={`px-3 py-1 rounded-md text-sm ${
-                            localDateFilter.startDate?.toDateString() === startOfWeek.toDateString()
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-800/50 dark:text-blue-200'
-                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                        }`}
-                        onClick={() => handleLocalDateFilterChange({startDate: startOfWeek, endDate: now})}
-                    >
-                        This Week
-                    </button>
-                    <button
-                        className="px-3 py-1 rounded-md text-sm bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 flex items-center"
-                        onClick={() => {
-                            showModal({
-                                content: onClose => (
-                                    <div className="p-4">
-                                        <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label
-                                                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start
-                                                    Date</label>
-                                                <input
-                                                    type="date"
-                                                    className="w-full p-2 border rounded-md"
-                                                    defaultValue={localDateFilter.startDate?.toISOString().split('T')[0]}
-                                                    id="dialog-start-date-input"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label
-                                                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End
-                                                    Date</label>
-                                                <input
-                                                    type="date"
-                                                    className="w-full p-2 border rounded-md"
-                                                    defaultValue={localDateFilter.endDate?.toISOString().split('T')[0]}
-                                                    id="dialog-end-date-input"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex justify-end space-x-2">
-                                            <button
-                                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md"
-                                                onClick={() => onClose()}
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-md"
-                                                onClick={() => {
-                                                    const startDateInput = document.getElementById('dialog-start-date-input');
-                                                    const endDateInput = document.getElementById('dialog-end-date-input');
-
-                                                    const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
-                                                    const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
-
-                                                    if (endDate) {
-                                                        // Set end date to end of day
-                                                        endDate.setHours(23, 59, 59, 999);
-                                                    }
-
-                                                    handleLocalDateFilterChange({startDate, endDate});
-                                                    onClose();
-                                                }}
-                                            >
-                                                Apply
-                                            </button>
-                                        </div>
-                                    </div>
-                                ),
-                                size: "sm"
-                            });
-                        }}
-                    >
-                        <Calendar size={14} className="mr-1"/>
-                        Custom
-                    </button>
-                </div>
-
-                {localDateFilter.startDate && (
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
-                        <Calendar size={14} className="mr-1"/>
-                        <span>
-                            {localDateFilter.startDate.toLocaleDateString()} - {localDateFilter.endDate?.toLocaleDateString() || 'Present'}
-                        </span>
-                    </div>
-                )}
-            </div>
-
+        <div className=" px-6">
             {view === 'teams' && renderTeamsView()}
             {view === 'batches' && renderBatchesView()}
             {view === 'users' && renderUsersView()}
+        </div>
+    );
+}
+
+// Team Card Component
+const TeamCard = ({team, user, setSelectedTeam, setView}) => {
+    const [stats, sSt] = useState({total: 0, assigned: 0})
+    const [isLoading, setIsLoading] = useState(true)
+
+    const completionRate = stats.total > 0 ? (stats.assigned / stats.total) * 100 : 0
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user || !team.id) return
+            setIsLoading(true)
+            const [v1, v2] = await Promise.all([
+                simService.countAll(user, [
+                    ["team_id", team.id]
+                ]),
+                simService.countAll(user, [
+                    ["assigned_to_user_id", "not", "is", null],
+                    ["team_id", team.id]
+                ]),
+            ])
+            sSt({
+                total: v1.count ?? 0,
+                assigned: v2.count ?? 0,
+            })
+            setIsLoading(false)
+        }
+        fetchData().then()
+    }, [user]);
+
+
+    return (
+        <div
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4
+                       hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => {
+                setSelectedTeam(team.id);
+                setView('batches');
+            }}
+        >
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{team.name}</h4>
+                {isLoading ? (
+                    <div className="h-5 w-12 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                ) : (
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-100 dark:text-amber-200
+                                   dark:bg-amber-900 px-2 py-1 rounded">
+                        {Math.round(completionRate)}%
+                    </span>
+                )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 text-sm">
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total}</p>
+                    )}
+                </div>
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Assigned</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.assigned}</p>
+                    )}
+                </div>
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Pending</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.assigned}</p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
+    const [stats, sSt] = useState({total: 0, assigned: 0})
+    const [isLoading, setIsLoading] = useState(true)
+
+    const completionRate = stats.total > 0 ? (stats.assigned / stats.total) * 100 : 0
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user || !team) return
+            setIsLoading(true)
+            const [v1, v2] = await Promise.all([
+                simService.countAll(user, [
+                    ["team_id", team], ["batch_id", batch.batch_id]
+                ]),
+                simService.countAll(user, [
+                    ["assigned_to_user_id", "not", "is", null],
+                    ["team_id", team], ["batch_id", batch.batch_id]
+                ]),
+            ])
+            sSt({
+                total: v1.count ?? 0,
+                assigned: v2.count ?? 0,
+            })
+            setIsLoading(false)
+        }
+        fetchData().then()
+    }, [user, team, batch.batch_id]);
+
+    return (
+        <div
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4
+                       hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => {
+                setSelectedBatch(batch.id);
+                setView('users');
+            }}
+        >
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                    {batch.id === 'unassigned' ? 'Unassigned' : batch.id}
+                </h4>
+                {isLoading ? (
+                    <div className="h-5 w-12 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                ) : (
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-100 dark:text-amber-200
+                                   dark:bg-amber-900 px-2 py-1 rounded">
+                        {Math.round(completionRate)}%
+                    </span>
+                )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 text-sm">
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total}</p>
+                    )}
+                </div>
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Assigned</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.assigned}</p>
+                    )}
+                </div>
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Pending</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.assigned}</p>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

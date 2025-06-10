@@ -10,6 +10,7 @@ import {showModal} from "@/ui/shortcuts";
 import TransfersTab from './components/TransfersTab';
 import GeneralTab from './components/GeneralTab';
 import Stats from "@/app/dashboard/transfers/Stats";
+import LineBreakDown from "@/app/dashboard/transfers/LineBreakDown";
 
 type Team = TeamX & {
     batches: BatchMetadata[],
@@ -21,7 +22,7 @@ const AdminTransfersPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     // Main tab navigation
-    const [mainTab, setMainTab] = useState<'transfers' | 'general'>('transfers');
+    const [mainTab, setMainTab] = useState<'transfers' | 'general' | 'allocations'>('allocations');
 
     // Transfers tab state
     const [transfers, setTransfers] = useState<SimCardTransfer[]>([]);
@@ -618,6 +619,19 @@ const AdminTransfersPage = () => {
                     {/* Main Tab Navigation */}
                     <div className="mb-6 flex border-b border-gray-200">
                         <button
+                            onClick={() => setMainTab('allocations')}
+                            className={`px-4 py-2 font-medium text-sm border-b-2 ${
+                                mainTab === 'allocations'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            <div className="flex items-center">
+                                <ArrowLeftRight className="w-4 h-4 mr-2"/>
+                                Allocation
+                            </div>
+                        </button>
+                        <button
                             onClick={() => setMainTab('transfers')}
                             className={`px-4 py-2 font-medium text-sm border-b-2 ${
                                 mainTab === 'transfers'
@@ -644,6 +658,11 @@ const AdminTransfersPage = () => {
                             </div>
                         </button>
                     </div>
+                    {
+                        mainTab === 'allocations' && (
+                            <LineBreakDown user={user}/>
+                        )
+                    }
 
                     {/* Transfers Tab Content */}
                     {mainTab === 'transfers' && (
