@@ -12,6 +12,7 @@ import GeneralTab from './components/GeneralTab';
 import Stats from "@/app/dashboard/transfers/Stats";
 import LineBreakDown from "@/app/dashboard/transfers/LineBreakDown";
 import {showDialog, TransferRequestDetails} from "@/app/dashboard/transfers/utility";
+import ClientApi from "@/lib/utils/ClientApi";
 
 type Team = TeamX & {
     batches: BatchMetadata[],
