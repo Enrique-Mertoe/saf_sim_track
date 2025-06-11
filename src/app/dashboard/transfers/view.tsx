@@ -5,7 +5,9 @@ import useApp from "@/ui/provider/AppProvider";
 import {SimCardTransfer, Team, TransferStatus} from "@/models";
 import {AlertTriangle, ArrowLeftRight, Check, RefreshCw, Search, X} from 'lucide-react';
 import {useSupabaseSignal} from "@/lib/supabase/event";
-import alert from "@/ui/alert";
+import ClientApi from "@/lib/utils/ClientApi";
+import {showDialog} from "@/app/dashboard/transfers/utility";
+
 
 const TransfersPage = () => {
     const {user} = useApp();
@@ -20,12 +22,6 @@ const TransfersPage = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
 
-    function showDialog(props: any) {
-        if (props.type == "success")
-            alert.success(props.message);
-        if (props.type == "rejected")
-            alert.error(props.message);
-    }
 
     // Setup Supabase realtime for transfers
     const transferSignal = useSupabaseSignal('sim_card_transfers', {autoConnect: true});
@@ -40,6 +36,7 @@ const TransfersPage = () => {
                 setIsLoading(true);
                 const {data, error} = await simCardTransferService.getTransferRequests({
                     sourceTeamId: user.team_id,
+                    adminId: user.admin_id,
                     pageSize: 100
                 });
 
@@ -119,7 +116,6 @@ const TransfersPage = () => {
             }
         };
 
-        // Subscribe to events
         transferSignal.onInsert(handleInsert);
         transferSignal.onUpdate(handleUpdate);
 
@@ -130,7 +126,6 @@ const TransfersPage = () => {
         };
     }, [transferSignal, user]);
 
-    // Handle SIM card selection
     const handleSimCardSelection = (simCardId: string) => {
         setSelectedSimCards(prev => {
             if (prev.includes(simCardId)) {
@@ -155,11 +150,23 @@ const TransfersPage = () => {
                 source_team_id: user.team_id,
                 destination_team_id: destinationTeamId,
                 requested_by_id: user.id,
+                admin_id: user.admin_id,
                 sim_cards: selectedSimCards,
                 reason: reason
             };
 
-            const {data, error} = await simCardTransferService.createTransferRequest(transferData);
+            const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
+                ClientApi.of("transfer").get()
+                    .create_transfer_request(transferData)
+                    .then(res => {
+                        if (res.ok)
+                            resolve({error: null, data: res.data})
+                        else
+                            resolve({error: res.error, data: null})
+                    }).catch(err => {
+                        resolve({error: err.message, data: null})
+                    })
+            });
 
             if (error) throw error;
 
@@ -186,6 +193,7 @@ const TransfersPage = () => {
             // Refresh transfers
             const {data: refreshedTransfers} = await simCardTransferService.getTransferRequests({
                 sourceTeamId: user.team_id,
+                adminId: user.admin_id,
                 pageSize: 100
             });
 
@@ -206,20 +214,20 @@ const TransfersPage = () => {
         try {
             setIsLoading(true);
 
-            const {data, error} = await simCardTransferService.cancelTransferRequest(transferId, user.id);
+            const {data,error} = await new Promise<{data:any,error:any}>((resolve, reject) => {
+                ClientApi.of("transfer").get()
+                    .del_transfer_request({id: transferId})
+                    .then(res => {
+                        if (res.ok)
+                            resolve({error:null,data:true})
+                    }).catch(err => {
+                    resolve({error:err.message,data:null})
+                })
+            })
+
+            // const {data, error} = await simCardTransferService.cancelTransferRequest(transferId, user.id);
 
             if (error) throw error;
-
-            // Create notification for admin
-            if (user.admin_id && data) {
-                await simCardTransferService.createTransferNotification(
-                    data,
-                    user.admin_id,
-                    'cancelled'
-                );
-            }
-
-            // Show success message
             showDialog({
                 title: 'Transfer Request Cancelled',
                 message: 'Your transfer request has been cancelled.',

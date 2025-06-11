@@ -13,6 +13,7 @@ export interface SimCardTransfer {
   destination_team_id: string;
   requested_by_id: string;
   approved_by_id?: string;
+  admin_id?: string;
   approval_date?: string;
   status: TransferStatus;
   reason?: string;
@@ -24,6 +25,7 @@ export interface SimCardTransferCreate {
   source_team_id: string;
   destination_team_id: string;
   requested_by_id: string;
+  admin_id?: string;
   sim_cards: string[];
   reason?: string;
   notes?: string;

@@ -1,6 +1,7 @@
 import {makeResponse} from "@/helper";
 import {NextRequest} from "next/server";
 import AdminActions, {Logs} from "@/app/api/actions/admin-actions";
+import TransferActions from "@/app/api/actions/transfer-actions";
 import {createSuperClient} from "@/lib/supabase/server";
 import Accounts from "@/lib/accounts";
 
@@ -62,7 +63,7 @@ interface ApiRequest {
 }
 
 class ApiHandler {
-    static ALLOWED = ["admin", "profile"]
+    static ALLOWED = ["admin", "profile", "transfer"]
 
     static async builder(action: string, data: any, target?: string) {
         if (this.ALLOWED.includes(action) && !target)
@@ -74,6 +75,8 @@ class ApiHandler {
                 return await Logs.builder(target as string, data);
             case "profile":
                 return await ProfileActions.builder(target as string, data);
+            case "transfer":
+                return await TransferActions.builder(target as string, data);
             default:
                 return await this._b(action, data)
         }

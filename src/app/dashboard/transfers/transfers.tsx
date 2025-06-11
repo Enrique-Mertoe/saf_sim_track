@@ -11,6 +11,7 @@ import TransfersTab from './components/TransfersTab';
 import GeneralTab from './components/GeneralTab';
 import Stats from "@/app/dashboard/transfers/Stats";
 import LineBreakDown from "@/app/dashboard/transfers/LineBreakDown";
+import {showDialog, TransferRequestDetails} from "@/app/dashboard/transfers/utility";
 
 type Team = TeamX & {
     batches: BatchMetadata[],
@@ -52,12 +53,7 @@ const AdminTransfersPage = () => {
     // Setup Supabase realtime for transfers
     const transferSignal = useSupabaseSignal('sim_card_transfers', {autoConnect: true});
 
-    function showDialog(props: any) {
-        if (props.type == "success")
-            alert.success(props.message);
-        if (props.type == "rejected")
-            alert.error(props.message);
-    }
+
 
     // Fetch transfers
     useEffect(() => {
@@ -67,6 +63,7 @@ const AdminTransfersPage = () => {
             try {
                 setIsLoading(true);
                 const {data, error} = await simCardTransferService.getTransferRequests({
+                    adminId: user.id,
                     pageSize: 100
                 });
 
@@ -325,7 +322,18 @@ const AdminTransfersPage = () => {
         try {
             setIsLoading(true);
 
-            const {data, error} = await simCardTransferService.approveTransferRequest(transferId, user.id);
+            const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
+                ClientApi.of("transfer").get()
+                    .approve_transfer_request({id: transferId, admin_id: user.id})
+                    .then(res => {
+                        if (res.ok)
+                            resolve({error: null, data: res.data})
+                        else
+                            resolve({error: res.error, data: null})
+                    }).catch(err => {
+                        resolve({error: err.message, data: null})
+                    })
+            });
 
             if (error) throw error;
 
@@ -368,11 +376,22 @@ const AdminTransfersPage = () => {
         try {
             setIsLoading(true);
 
-            const {data, error} = await simCardTransferService.rejectTransferRequest(
-                selectedTransfer.id,
-                user.id,
-                rejectReason
-            );
+            const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
+                ClientApi.of("transfer").get()
+                    .reject_transfer_request({
+                        id: selectedTransfer.id, 
+                        admin_id: user.id,
+                        reason: rejectReason
+                    })
+                    .then(res => {
+                        if (res.ok)
+                            resolve({error: null, data: res.data})
+                        else
+                            resolve({error: res.error, data: null})
+                    }).catch(err => {
+                        resolve({error: err.message, data: null})
+                    })
+            });
 
             if (error) throw error;
 
@@ -512,48 +531,7 @@ const AdminTransfersPage = () => {
     const viewTransferDetails = (transfer: SimCardTransfer) => {
         showDialog({
             title: 'Transfer Request Details',
-            message: (
-                <div className="space-y-4">
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">From Team</p>
-                        <p className="text-base">{getTeamName(transfer.source_team_id)}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">To Team</p>
-                        <p className="text-base">{getTeamName(transfer.destination_team_id)}</p>
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">SIM Cards</p>
-                        <p className="text-base">{Array.isArray(transfer.sim_cards) ? transfer.sim_cards.length : 0} cards</p>
-                    </div>
-                    {transfer.reason && (
-                        <div>
-                            <p className="text-sm font-medium text-gray-500">Reason</p>
-                            <p className="text-base">{transfer.reason}</p>
-                        </div>
-                    )}
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Status</p>
-                        <p className="text-base">{transfer.status}</p>
-                    </div>
-                    {transfer.notes && (
-                        <div>
-                            <p className="text-sm font-medium text-gray-500">Notes</p>
-                            <p className="text-base">{transfer.notes}</p>
-                        </div>
-                    )}
-                    <div>
-                        <p className="text-sm font-medium text-gray-500">Requested On</p>
-                        <p className="text-base">{new Date(transfer.created_at).toLocaleString()}</p>
-                    </div>
-                    {transfer.approval_date && (
-                        <div>
-                            <p className="text-sm font-medium text-gray-500">Processed On</p>
-                            <p className="text-base">{new Date(transfer.approval_date).toLocaleString()}</p>
-                        </div>
-                    )}
-                </div>
-            ),
+            message: <TransferRequestDetails transfer={transfer} getTeamName={getTeamName} />,
             type: 'info'
         });
     };

@@ -287,6 +287,7 @@ class AdminActions {
         return makeResponse({ok: true})
     }
 
+
     static async onboard(data: any) {
         // Ensure is_first_login is set to true for onboarding
         data.is_first_login = true;
