@@ -92,7 +92,7 @@ export default function CreateUserModal({onClose, onSuccess}: CreateUserModalPro
                     return setError(`Failed to load teams. Please try again. ${error.message}`);
                 // const response = await fetch('/api/teams');
                 // const data = await response.json();
-                setTeams(data.filter((team: Team) => team.is_active));
+                setTeams((data || []).filter((team: Team) => team.is_active));
             } catch (error) {
                 console.error('Error fetching teams:', error);
                 setError('Failed to load teams. Please try again.');
