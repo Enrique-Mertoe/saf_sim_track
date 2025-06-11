@@ -38,7 +38,7 @@ export const teamService = {
             if (userDetails1) {
                 user = userDetails1 as User;
             } else {
-                return {data:null,error:true}
+                return {data:null,error:{} as any}
             }
         } else {
             user = userDetails
