@@ -1353,7 +1353,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
                             {/* Box List */}
                             <div className="max-h-60 overflow-y-auto">
-                                <div className="grid grid-cols-2 gap-1">
+                                <div className="grid gap-1">
                                     {filteredBoxes.map(box => {
                                         const isSelected = selectedBoxes.includes(box.boxNumber);
                                         const isAssigned = boxAssignments[box.boxNumber] !== null;
