@@ -1375,11 +1375,11 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                 onDragStart={(e) => handleDragStart(e, box.boxNumber)}
                                             >
                                                 <div className="text-xs font-medium">Box {box.boxNumber}</div>
-                                                <div className="text-xs text-gray-500 truncate">
-                                                    Start: {box.startRange.substring(0, 8)}...
+                                                <div className="text-xs text-gray-500 ">
+                                                    Start: {box.startRange}
                                                 </div>
                                                 <div className="text-xs text-gray-500 truncate">
-                                                    End: {box.endRange.substring(0, 8)}...
+                                                    End: {box.endRange}
                                                 </div>
                                                 <div className="text-xs text-gray-500">
                                                     {box.count} SIMs
