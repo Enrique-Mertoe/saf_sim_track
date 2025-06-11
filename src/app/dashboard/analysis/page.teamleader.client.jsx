@@ -461,27 +461,7 @@ export default function TeamSIMAnalysisPage() {
                         <CardContent className={"overflow-y-auto"}>
                             {
                                 userStats.map(userstat => (
-                                    <div
-                                        className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800">
-                                        <div className="flex items-center gap-4">
-                                            <div>
-                                                <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-300">
-                                                    {userstat.full_name}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex w-full max-w-[140px] items-center gap-3">
-                                            <div
-                                                className="relative block h-2 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
-                                                <div
-                                                    className="absolute left-0 top-0 flex h-full w-[79%] items-center justify-center rounded-sm bg-brand-500 text-xs font-medium text-white"></div>
-                                            </div>
-                                            <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-400">
-                                                79%
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <UserStat user={user} stat={userstat}/>
                                 ))
                             }
 
@@ -492,4 +472,55 @@ export default function TeamSIMAnalysisPage() {
             </div>
         </div>
     );
+}
+
+
+const UserStat = ({user, stat}) => {
+    const [stats, sS] = useState({total: 0, registered: 0})
+    const completionRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
+
+    useEffect(() => {
+        if (!user) return
+        Promise.all([
+            simService.countAll(user, [
+                ["assigned_to_user_id", stat.id]
+            ]),
+            simService.countAll(user, [
+                ["assigned_to_user_id", stat.id],
+                ["registered_on", "not", "is", null]
+            ]),
+        ]).then(([r1, r2]) => {
+            sS({
+                total: r1.count ?? 0,
+                registered: r2.count ?? 0
+            })
+        })
+    }, [user]);
+
+    return (
+        <div
+            className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800">
+            <div className="flex items-center gap-4">
+                <div>
+                    <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-300">
+                        {stat.full_name}
+                    </p>
+                </div>
+            </div>
+
+            <div className="flex w-full max-w-[140px] items-center gap-3">
+                <div
+                    className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
+                    <div
+                        className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
+                        style={{ width: `${completionRate}%` }}
+                    ></div>
+
+                </div>
+                <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-400">
+                    {completionRate}%
+                </p>
+            </div>
+        </div>
+    )
 }
