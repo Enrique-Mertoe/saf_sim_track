@@ -1,10 +1,10 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, reject, serials = []}) => {
     // Add state for search term and selected teams
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTeams, setSelectedTeams] = useState([]);
-    const [view, setView] = useState('selection'); // 'selection' or 'ranges'
+    const [view, setView] = useState('selection'); // 'selection', 'ranges', or 'box-assignment'
     const [teamRanges, setTeamRanges] = useState({});
     const [remainingCount, setRemainingCount] = useState(0);
     const [defaultCount, setDefaultCount] = useState(0);
@@ -15,6 +15,15 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
     const [usedSerials, setUsedSerials] = useState(new Set());
     const [teamRangeErrors, setTeamRangeErrors] = useState({});
     const [successfulRanges, setSuccessfulRanges] = useState({});
+    const [boxMode, setBoxMode] = useState(true); // Enable box mode by default
+    const [totalBoxes, setTotalBoxes] = useState(0);
+    const [teamBoxes, setTeamBoxes] = useState({}); // Track boxes per team
+    const [availableBoxes, setAvailableBoxes] = useState([]); // All available boxes
+    const [selectedBoxes, setSelectedBoxes] = useState([]); // Currently selected boxes
+    const [selectedTeamForBoxes, setSelectedTeamForBoxes] = useState(null); // Selected team for box assignment
+    const [boxAssignments, setBoxAssignments] = useState({}); // Map of box number to team ID
+    const [teamSearchTerm, setTeamSearchTerm] = useState(''); // Search term for teams in box assignment view
+    const [boxSearchTerm, setBoxSearchTerm] = useState(''); // Search term for boxes
     const dropdownRef = useRef(null); // Reference to the active dropdown
 
     // Initialize available serials and sort them
@@ -29,6 +38,33 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                 return a.value.localeCompare(b.value);
             });
             setAvailableSerials(sorted);
+
+            // Calculate total boxes (each box has 100 SIM cards)
+            const boxCount = Math.ceil(sorted.length / 100);
+            setTotalBoxes(boxCount);
+
+            // Initialize available boxes
+            const boxes = [];
+            for (let i = 0; i < boxCount; i++) {
+                const startIdx = i * 100;
+                const endIdx = Math.min(startIdx + 99, sorted.length - 1);
+
+                boxes.push({
+                    boxNumber: i + 1,
+                    startRange: sorted[startIdx].value,
+                    endRange: sorted[endIdx].value,
+                    count: endIdx - startIdx + 1,
+                    serials: sorted.slice(startIdx, endIdx + 1)
+                });
+            }
+            setAvailableBoxes(boxes);
+
+            // Initialize empty box assignments
+            const initialAssignments = {};
+            boxes.forEach(box => {
+                initialAssignments[box.boxNumber] = null;
+            });
+            setBoxAssignments(initialAssignments);
         }
     }, [serials]);
 
@@ -112,8 +148,12 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
         sVC(Math.floor(defaultValue / selectedTeams.length));
         setRemainingCount(defaultValue); // Set the input value as well
 
-        // Switch to ranges view
-        setView('ranges');
+        // Switch to box assignment view if box mode is enabled, otherwise to ranges view
+        if (boxMode) {
+            setView('box-assignment');
+        } else {
+            setView('ranges');
+        }
     };
 
     const handleConfirm = () => {
@@ -440,6 +480,16 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
         return availableSerials[endIdx].value;
     };
 
+    // Function to calculate end range for a box (always 99 SIMs after start)
+    const calculateBoxEndRange = (startSerial) => {
+        const startIdx = availableSerials.findIndex(s => s.value === startSerial);
+        if (startIdx === -1) return '';
+
+        // A box contains 100 SIMs, so end index is start + 99
+        const endIdx = Math.min(startIdx + 99, availableSerials.length - 1);
+        return availableSerials[endIdx].value;
+    };
+
     // Function to check if a team can have more serials assigned
     const canTeamHaveSerials = (teamId) => {
         const teamIndex = selectedTeams.indexOf(teamId);
@@ -524,64 +574,111 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
             }
         };
 
-        // Calculate count if both start and end are set
-        if (field === 'endRange' && newRanges[teamId].startRange && value) {
-            const startIdx = availableSerials.findIndex(s => s.value === newRanges[teamId].startRange);
-            const endIdx = availableSerials.findIndex(s => s.value === value);
-            if (startIdx !== -1 && endIdx !== -1) {
-                newRanges[teamId].count = Math.max(0, endIdx - startIdx + 1);
+        // Special handling for box mode
+        if (boxMode && field === 'startRange') {
+            // Update box information for this team
+            updateTeamBoxes(teamId, value);
 
-                // Set success state for end range
-                setSuccessfulRanges(prev => ({
-                    ...prev,
-                    [teamId]: {
-                        ...(prev[teamId] || {}),
-                        endRange: true
+            // In box mode, when start range is set, automatically calculate end range
+            if (value) {
+                const boxEndRange = calculateBoxEndRange(value);
+                if (boxEndRange) {
+                    newRanges[teamId].endRange = boxEndRange;
+
+                    // Calculate count
+                    const startIdx = availableSerials.findIndex(s => s.value === value);
+                    const endIdx = availableSerials.findIndex(s => s.value === boxEndRange);
+                    if (startIdx !== -1 && endIdx !== -1) {
+                        newRanges[teamId].count = Math.max(0, endIdx - startIdx + 1);
                     }
-                }));
 
-                // Show success briefly then fade out
-                setTimeout(() => {
-                    setSuccessfulRanges(prev => {
-                        if (!prev[teamId]) return prev;
-                        return {
-                            ...prev,
-                            [teamId]: {
-                                ...prev[teamId],
-                                endRange: false
-                            }
-                        };
-                    });
-                }, 2000);
+                    // Set success state for both ranges
+                    setSuccessfulRanges(prev => ({
+                        ...prev,
+                        [teamId]: {
+                            ...(prev[teamId] || {}),
+                            startRange: true,
+                            endRange: true
+                        }
+                    }));
+
+                    // Show success briefly then fade out
+                    setTimeout(() => {
+                        setSuccessfulRanges(prev => {
+                            if (!prev[teamId]) return prev;
+                            return {
+                                ...prev,
+                                [teamId]: {
+                                    ...prev[teamId],
+                                    startRange: false,
+                                    endRange: false
+                                }
+                            };
+                        });
+                    }, 2000);
+                }
             }
-        } else if (field === 'startRange' && newRanges[teamId].endRange && value) {
-            const startIdx = availableSerials.findIndex(s => s.value === value);
-            const endIdx = availableSerials.findIndex(s => s.value === newRanges[teamId].endRange);
-            if (startIdx !== -1 && endIdx !== -1) {
-                newRanges[teamId].count = Math.max(0, endIdx - startIdx + 1);
+        } else {
+            // Original logic for non-box mode or end range changes
+            // Calculate count if both start and end are set
+            if (field === 'endRange' && newRanges[teamId].startRange && value) {
+                const startIdx = availableSerials.findIndex(s => s.value === newRanges[teamId].startRange);
+                const endIdx = availableSerials.findIndex(s => s.value === value);
+                if (startIdx !== -1 && endIdx !== -1) {
+                    newRanges[teamId].count = Math.max(0, endIdx - startIdx + 1);
 
-                // Set success state for start range
-                setSuccessfulRanges(prev => ({
-                    ...prev,
-                    [teamId]: {
-                        ...(prev[teamId] || {}),
-                        startRange: true
-                    }
-                }));
+                    // Set success state for end range
+                    setSuccessfulRanges(prev => ({
+                        ...prev,
+                        [teamId]: {
+                            ...(prev[teamId] || {}),
+                            endRange: true
+                        }
+                    }));
 
-                // Show success briefly then fade out
-                setTimeout(() => {
-                    setSuccessfulRanges(prev => {
-                        if (!prev[teamId]) return prev;
-                        return {
-                            ...prev,
-                            [teamId]: {
-                                ...prev[teamId],
-                                startRange: false
-                            }
-                        };
-                    });
-                }, 2000);
+                    // Show success briefly then fade out
+                    setTimeout(() => {
+                        setSuccessfulRanges(prev => {
+                            if (!prev[teamId]) return prev;
+                            return {
+                                ...prev,
+                                [teamId]: {
+                                    ...prev[teamId],
+                                    endRange: false
+                                }
+                            };
+                        });
+                    }, 2000);
+                }
+            } else if (field === 'startRange' && newRanges[teamId].endRange && value) {
+                const startIdx = availableSerials.findIndex(s => s.value === value);
+                const endIdx = availableSerials.findIndex(s => s.value === newRanges[teamId].endRange);
+                if (startIdx !== -1 && endIdx !== -1) {
+                    newRanges[teamId].count = Math.max(0, endIdx - startIdx + 1);
+
+                    // Set success state for start range
+                    setSuccessfulRanges(prev => ({
+                        ...prev,
+                        [teamId]: {
+                            ...(prev[teamId] || {}),
+                            startRange: true
+                        }
+                    }));
+
+                    // Show success briefly then fade out
+                    setTimeout(() => {
+                        setSuccessfulRanges(prev => {
+                            if (!prev[teamId]) return prev;
+                            return {
+                                ...prev,
+                                [teamId]: {
+                                    ...prev[teamId],
+                                    startRange: false
+                                }
+                            };
+                        });
+                    }, 2000);
+                }
             }
         }
 
@@ -635,20 +732,99 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
             return;
         }
 
-        const endRange = calculateEndRange(startRange, countNum);
+        if (boxMode) {
+            // In box mode, count represents number of boxes
+            const startIdx = availableSerials.findIndex(s => s.value === startRange);
+            if (startIdx === -1) return;
 
-        const newRanges = {
-            ...teamRanges,
-            [teamId]: {
-                ...currentRange,
-                endRange: endRange,
-                count: countNum
+            // Calculate which box this start range belongs to
+            const boxIndex = Math.floor(startIdx / 100);
+
+            // Calculate end range based on box count
+            const endBoxIndex = boxIndex + countNum - 1;
+            const endSerialIndex = Math.min((endBoxIndex + 1) * 100 - 1, availableSerials.length - 1);
+            const endRange = availableSerials[endSerialIndex].value;
+
+            // Update boxes for this team
+            const boxes = [];
+            for (let i = 0; i < countNum; i++) {
+                const boxStartIdx = boxIndex * 100 + (i * 100);
+
+                if (boxStartIdx < availableSerials.length) {
+                    const boxEndIdx = Math.min(boxStartIdx + 99, availableSerials.length - 1);
+
+                    boxes.push({
+                        boxNumber: boxIndex + i + 1,
+                        startRange: availableSerials[boxStartIdx].value,
+                        endRange: availableSerials[boxEndIdx].value,
+                        count: boxEndIdx - boxStartIdx + 1
+                    });
+                }
             }
-        };
 
-        // Propagate changes to subsequent teams
-        const finalRanges = propagateRangeChanges(teamId, newRanges);
-        setTeamRanges(finalRanges);
+            setTeamBoxes(prev => ({
+                ...prev,
+                [teamId]: {
+                    boxCount: countNum,
+                    boxes: boxes
+                }
+            }));
+
+            const newRanges = {
+                ...teamRanges,
+                [teamId]: {
+                    ...currentRange,
+                    endRange: endRange,
+                    count: endSerialIndex - startIdx + 1
+                }
+            };
+
+            // Propagate changes to subsequent teams
+            const finalRanges = propagateRangeChanges(teamId, newRanges);
+            setTeamRanges(finalRanges);
+        } else {
+            // Original logic for non-box mode
+            const endRange = calculateEndRange(startRange, countNum);
+
+            const newRanges = {
+                ...teamRanges,
+                [teamId]: {
+                    ...currentRange,
+                    endRange: endRange,
+                    count: countNum
+                }
+            };
+
+            // Propagate changes to subsequent teams
+            const finalRanges = propagateRangeChanges(teamId, newRanges);
+            setTeamRanges(finalRanges);
+        }
+    };
+
+    // Function to handle box count change
+    const handleBoxCountChange = (teamId, boxCount) => {
+        if (!boxMode) return;
+
+        const currentRange = teamRanges[teamId] || {};
+        const startRange = currentRange.startRange;
+
+        if (!startRange) return;
+
+        const boxCountNum = parseInt(boxCount);
+        if (isNaN(boxCountNum) || boxCountNum <= 0) {
+            setTeamBoxes(prev => ({
+                ...prev,
+                [teamId]: {
+                    ...prev[teamId],
+                    boxCount: 0,
+                    boxes: []
+                }
+            }));
+            return;
+        }
+
+        // Call handleCountChange with box count
+        handleCountChange(teamId, boxCountNum);
     };
 
     // Function to divide SIMs equally among teams
@@ -657,40 +833,109 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
         // If we have actual serials, use them for the ranges
         if (availableSerials.length > 0) {
-            const countPerTeam = Math.floor(availableSerials.length / selectedTeams.length);
-            const remainder = availableSerials.length % selectedTeams.length;
+            if (boxMode) {
+                // Box-based distribution
+                const boxesPerTeam = Math.floor(totalBoxes / selectedTeams.length);
+                const remainderBoxes = totalBoxes % selectedTeams.length;
 
-            const newRanges = {};
-            let startIndex = 0;
+                const newRanges = {};
+                const newTeamBoxes = {};
+                let startBoxIndex = 0;
 
-            selectedTeams.forEach((teamId, index) => {
-                // Last team gets the remainder
-                const teamCount = index === selectedTeams.length - 1 ?
-                    countPerTeam + remainder : countPerTeam;
+                selectedTeams.forEach((teamId, index) => {
+                    // Last team gets the remainder boxes
+                    const teamBoxCount = index === selectedTeams.length - 1 ?
+                        boxesPerTeam + remainderBoxes : boxesPerTeam;
 
-                if (teamCount === 0 || startIndex >= availableSerials.length) {
+                    if (teamBoxCount === 0 || startBoxIndex >= totalBoxes) {
+                        newRanges[teamId] = {
+                            startRange: '',
+                            endRange: '',
+                            count: 0
+                        };
+                        newTeamBoxes[teamId] = {
+                            boxCount: 0,
+                            boxes: []
+                        };
+                        return;
+                    }
+
+                    // Calculate start and end indices based on boxes
+                    const startSerialIndex = startBoxIndex * 100;
+                    const endBoxIndex = startBoxIndex + teamBoxCount - 1;
+                    const endSerialIndex = Math.min((endBoxIndex + 1) * 100 - 1, availableSerials.length - 1);
+
+                    // Create box information for this team
+                    const boxes = [];
+                    for (let i = startBoxIndex; i <= endBoxIndex; i++) {
+                        const boxStartIdx = i * 100;
+                        const boxEndIdx = Math.min(boxStartIdx + 99, availableSerials.length - 1);
+
+                        if (boxStartIdx < availableSerials.length) {
+                            boxes.push({
+                                boxNumber: i + 1,
+                                startRange: availableSerials[boxStartIdx].value,
+                                endRange: availableSerials[boxEndIdx].value,
+                                count: boxEndIdx - boxStartIdx + 1
+                            });
+                        }
+                    }
+
                     newRanges[teamId] = {
-                        startRange: '',
-                        endRange: '',
-                        count: 0
+                        startRange: availableSerials[startSerialIndex].value,
+                        endRange: availableSerials[endSerialIndex].value,
+                        count: endSerialIndex - startSerialIndex + 1
                     };
-                    return;
-                }
 
-                const endIndex = Math.min(startIndex + teamCount - 1, availableSerials.length - 1);
+                    newTeamBoxes[teamId] = {
+                        boxCount: teamBoxCount,
+                        boxes: boxes
+                    };
 
-                newRanges[teamId] = {
-                    startRange: availableSerials[startIndex].value,
-                    endRange: availableSerials[endIndex].value,
-                    count: endIndex - startIndex + 1
-                };
+                    startBoxIndex = endBoxIndex + 1;
+                });
 
-                startIndex = endIndex + 1;
-            });
+                setTeamRanges(newRanges);
+                setTeamBoxes(newTeamBoxes);
+                updateUsedSerials(newRanges);
+                return;
+            } else {
+                // Original SIM-based distribution
+                const countPerTeam = Math.floor(availableSerials.length / selectedTeams.length);
+                const remainder = availableSerials.length % selectedTeams.length;
 
-            setTeamRanges(newRanges);
-            updateUsedSerials(newRanges);
-            return;
+                const newRanges = {};
+                let startIndex = 0;
+
+                selectedTeams.forEach((teamId, index) => {
+                    // Last team gets the remainder
+                    const teamCount = index === selectedTeams.length - 1 ?
+                        countPerTeam + remainder : countPerTeam;
+
+                    if (teamCount === 0 || startIndex >= availableSerials.length) {
+                        newRanges[teamId] = {
+                            startRange: '',
+                            endRange: '',
+                            count: 0
+                        };
+                        return;
+                    }
+
+                    const endIndex = Math.min(startIndex + teamCount - 1, availableSerials.length - 1);
+
+                    newRanges[teamId] = {
+                        startRange: availableSerials[startIndex].value,
+                        endRange: availableSerials[endIndex].value,
+                        count: endIndex - startIndex + 1
+                    };
+
+                    startIndex = endIndex + 1;
+                });
+
+                setTeamRanges(newRanges);
+                updateUsedSerials(newRanges);
+                return;
+            }
         }
 
         // Fallback to the original implementation if no serials are available
@@ -718,6 +963,218 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
         setTeamRanges(newRanges);
     };
+
+    // Function to update box information when a team's start range changes
+    const updateTeamBoxes = (teamId, startRange) => {
+        if (!boxMode || !startRange) return;
+
+        const startIdx = availableSerials.findIndex(s => s.value === startRange);
+        if (startIdx === -1) return;
+
+        // Calculate which box this start range belongs to
+        const boxIndex = Math.floor(startIdx / 100);
+
+        // Create box information for this team
+        const boxes = [];
+        const currentTeamBoxes = teamBoxes[teamId] || { boxCount: 1, boxes: [] };
+        const boxCount = currentTeamBoxes.boxCount || 1;
+
+        for (let i = 0; i < boxCount; i++) {
+            const boxStartIdx = boxIndex * 100 + (i * 100);
+
+            if (boxStartIdx < availableSerials.length) {
+                const boxEndIdx = Math.min(boxStartIdx + 99, availableSerials.length - 1);
+
+                boxes.push({
+                    boxNumber: boxIndex + i + 1,
+                    startRange: availableSerials[boxStartIdx].value,
+                    endRange: availableSerials[boxEndIdx].value,
+                    count: boxEndIdx - boxStartIdx + 1
+                });
+            }
+        }
+
+        setTeamBoxes(prev => ({
+            ...prev,
+            [teamId]: {
+                ...currentTeamBoxes,
+                boxes: boxes
+            }
+        }));
+
+        // Update the team's overall range based on the boxes
+        if (boxes.length > 0) {
+            const firstBox = boxes[0];
+            const lastBox = boxes[boxes.length - 1];
+
+            setTeamRanges(prev => ({
+                ...prev,
+                [teamId]: {
+                    ...prev[teamId],
+                    startRange: firstBox.startRange,
+                    endRange: lastBox.endRange,
+                    count: lastBox.endRange ? 
+                        availableSerials.findIndex(s => s.value === lastBox.endRange) - 
+                        availableSerials.findIndex(s => s.value === firstBox.startRange) + 1 : 0
+                }
+            }));
+        }
+    };
+
+    // Function to handle box selection
+    const handleBoxSelect = (boxNumber) => {
+        setSelectedBoxes(prev => {
+            if (prev.includes(boxNumber)) {
+                return prev.filter(num => num !== boxNumber);
+            } else {
+                return [...prev, boxNumber];
+            }
+        });
+    };
+
+    // Function to handle team selection for box assignment
+    const handleTeamSelectForBoxes = (teamId) => {
+        setSelectedTeamForBoxes(teamId === selectedTeamForBoxes ? null : teamId);
+    };
+
+    // Function to assign selected boxes to selected team
+    const handleAssignBoxes = () => {
+        if (!selectedTeamForBoxes || selectedBoxes.length === 0) {
+            alert("Please select both boxes and a team");
+            return;
+        }
+
+        const newBoxAssignments = { ...boxAssignments };
+        selectedBoxes.forEach(boxNumber => {
+            newBoxAssignments[boxNumber] = selectedTeamForBoxes;
+        });
+        setBoxAssignments(newBoxAssignments);
+
+        // Update team boxes
+        updateTeamBoxesFromAssignments(newBoxAssignments);
+
+        // Clear selected boxes
+        setSelectedBoxes([]);
+    };
+
+    // Function to update team boxes based on box assignments
+    const updateTeamBoxesFromAssignments = (assignments) => {
+        const newTeamBoxes = {};
+
+        // Group boxes by team
+        Object.entries(assignments).forEach(([boxNumber, teamId]) => {
+            if (!teamId) return; // Skip unassigned boxes
+
+            const box = availableBoxes.find(b => b.boxNumber === parseInt(boxNumber));
+            if (!box) return;
+
+            if (!newTeamBoxes[teamId]) {
+                newTeamBoxes[teamId] = {
+                    boxCount: 0,
+                    boxes: []
+                };
+            }
+
+            newTeamBoxes[teamId].boxes.push(box);
+            newTeamBoxes[teamId].boxCount = newTeamBoxes[teamId].boxes.length;
+        });
+
+        // Update team ranges based on assigned boxes
+        const newTeamRanges = { ...teamRanges };
+        Object.entries(newTeamBoxes).forEach(([teamId, teamBoxData]) => {
+            if (teamBoxData.boxes.length === 0) {
+                newTeamRanges[teamId] = {
+                    startRange: '',
+                    endRange: '',
+                    count: 0
+                };
+                return;
+            }
+
+            // Sort boxes by box number
+            const sortedBoxes = [...teamBoxData.boxes].sort((a, b) => a.boxNumber - b.boxNumber);
+
+            newTeamRanges[teamId] = {
+                startRange: sortedBoxes[0].startRange,
+                endRange: sortedBoxes[sortedBoxes.length - 1].endRange,
+                count: sortedBoxes.reduce((total, box) => total + box.count, 0)
+            };
+        });
+
+        setTeamBoxes(newTeamBoxes);
+        setTeamRanges(newTeamRanges);
+    };
+
+    // Function to handle drag start for a box
+    const handleDragStart = (e, boxNumber) => {
+        e.dataTransfer.setData('boxNumber', boxNumber.toString());
+    };
+
+    // Function to handle drag over for a team
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    // Function to handle drop on a team
+    const handleDrop = (e, teamId) => {
+        e.preventDefault();
+        const boxNumber = parseInt(e.dataTransfer.getData('boxNumber'));
+
+        // Update box assignment
+        const newBoxAssignments = { ...boxAssignments };
+        newBoxAssignments[boxNumber] = teamId;
+        setBoxAssignments(newBoxAssignments);
+
+        // Update team boxes
+        updateTeamBoxesFromAssignments(newBoxAssignments);
+    };
+
+    // Function to handle box assignment confirmation
+    const handleBoxAssignmentConfirm = () => {
+        // Check if any team has no boxes assigned
+        const teamsWithNoBoxes = selectedTeams.filter(teamId => 
+            !Object.values(boxAssignments).includes(teamId)
+        );
+
+        if (teamsWithNoBoxes.length > 0) {
+            const teamNames = teamsWithNoBoxes.map(teamId => {
+                const team = teams.find(t => t.id === teamId);
+                return team ? team.name : 'Unknown Team';
+            }).join(', ');
+
+            if (!confirm(`The following teams have no boxes assigned: ${teamNames}. Continue anyway?`)) {
+                return;
+            }
+        }
+
+        // Return selected teams with their ranges
+        const result = {
+            teams: selectedTeams,
+            ranges: teamRanges,
+            boxAssignments: boxAssignments
+        };
+
+        setSelectedTeam(selectedTeams[0]); // For backward compatibility
+        onClose();
+        resolve(result);
+    };
+
+    // Filter teams for box assignment view
+    const filteredTeamsForBoxes = teams.filter(team => {
+        if (!selectedTeams.includes(team.id)) return false;
+
+        const teamNameMatch = team.name.toLowerCase().includes(teamSearchTerm.toLowerCase());
+        const leaderNameMatch = (team.leader || '').toLowerCase().includes(teamSearchTerm.toLowerCase());
+        return teamNameMatch || leaderNameMatch;
+    });
+
+    // Filter boxes for box assignment view
+    const filteredBoxes = availableBoxes.filter(box => {
+        const boxNumberMatch = box.boxNumber.toString().includes(boxSearchTerm);
+        const startRangeMatch = box.startRange.includes(boxSearchTerm);
+        const endRangeMatch = box.endRange.includes(boxSearchTerm);
+        return boxNumberMatch || startRangeMatch || endRangeMatch;
+    });
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 h-full w-full">
@@ -845,6 +1302,245 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                         </button>
                     </div>
                 </>
+            ) : view === 'box-assignment' ? (
+                // Box Assignment View
+                <>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Assign Boxes to Teams</h2>
+                        <button
+                            onClick={() => setView('selection')}
+                            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                      d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        Assign boxes to teams by selecting boxes and a team, then clicking "Assign". You can also drag boxes to teams.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        {/* Boxes Column */}
+                        <div className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-md font-medium text-gray-800">Available Boxes</h3>
+                                <div className="text-xs text-gray-500">
+                                    {selectedBoxes.length} selected / {availableBoxes.length} total
+                                </div>
+                            </div>
+
+                            {/* Box Search */}
+                            <div className="relative mb-2">
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" 
+                                         viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    className="block w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg"
+                                    placeholder="Search boxes..."
+                                    value={boxSearchTerm}
+                                    onChange={(e) => setBoxSearchTerm(e.target.value)}
+                                />
+                            </div>
+
+                            {/* Box List */}
+                            <div className="max-h-60 overflow-y-auto">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {filteredBoxes.map(box => {
+                                        const isSelected = selectedBoxes.includes(box.boxNumber);
+                                        const isAssigned = boxAssignments[box.boxNumber] !== null;
+                                        const assignedTeam = isAssigned ? 
+                                            teams.find(t => t.id === boxAssignments[box.boxNumber]) : null;
+
+                                        return (
+                                            <div
+                                                key={box.boxNumber}
+                                                className={`p-2 border rounded cursor-pointer ${
+                                                    isSelected
+                                                        ? 'border-blue-500 bg-blue-50'
+                                                        : isAssigned
+                                                            ? 'border-green-500 bg-green-50'
+                                                            : 'border-gray-200 hover:bg-gray-50'
+                                                }`}
+                                                onClick={() => !isAssigned && handleBoxSelect(box.boxNumber)}
+                                                draggable={!isAssigned}
+                                                onDragStart={(e) => handleDragStart(e, box.boxNumber)}
+                                            >
+                                                <div className="text-xs font-medium">Box {box.boxNumber}</div>
+                                                <div className="text-xs text-gray-500 truncate">
+                                                    Start: {box.startRange.substring(0, 8)}...
+                                                </div>
+                                                <div className="text-xs text-gray-500 truncate">
+                                                    End: {box.endRange.substring(0, 8)}...
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {box.count} SIMs
+                                                </div>
+                                                {isAssigned && (
+                                                    <div className="mt-1 text-xs text-green-600 font-medium truncate">
+                                                        Assigned to: {assignedTeam?.name || 'Unknown'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Teams Column */}
+                        <div className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-md font-medium text-gray-800">Teams</h3>
+                                <div className="text-xs text-gray-500">
+                                    {selectedTeams.length} teams
+                                </div>
+                            </div>
+
+                            {/* Team Search */}
+                            <div className="relative mb-2">
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" 
+                                         viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    className="block w-full p-2 pl-10 text-sm border border-gray-300 rounded-lg"
+                                    placeholder="Search teams..."
+                                    value={teamSearchTerm}
+                                    onChange={(e) => setTeamSearchTerm(e.target.value)}
+                                />
+                            </div>
+
+                            {/* Team List */}
+                            <div className="max-h-60 overflow-y-auto">
+                                {filteredTeamsForBoxes.map(team => {
+                                    const isSelected = team.id === selectedTeamForBoxes;
+                                    const assignedBoxCount = Object.values(boxAssignments).filter(
+                                        teamId => teamId === team.id
+                                    ).length;
+
+                                    return (
+                                        <div
+                                            key={team.id}
+                                            className={`p-3 border rounded-lg mb-2 cursor-pointer ${
+                                                isSelected
+                                                    ? 'border-blue-500 bg-blue-50'
+                                                    : 'border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                            onClick={() => handleTeamSelectForBoxes(team.id)}
+                                            onDragOver={handleDragOver}
+                                            onDrop={(e) => handleDrop(e, team.id)}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <h4 className="text-sm font-medium">{team.name}</h4>
+                                                    <p className="text-xs text-gray-500">Leader: {team.leader || 'No leader'}</p>
+                                                </div>
+                                                <div className="text-xs font-medium text-blue-600">
+                                                    {assignedBoxCount} boxes
+                                                </div>
+                                            </div>
+
+                                            {/* Show assigned boxes */}
+                                            {assignedBoxCount > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                                    <div className="text-xs font-medium mb-1">Assigned Boxes:</div>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {Object.entries(boxAssignments)
+                                                            .filter(([_, teamId]) => teamId === team.id)
+                                                            .map(([boxNumber]) => (
+                                                                <span 
+                                                                    key={boxNumber}
+                                                                    className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded"
+                                                                >
+                                                                    Box {boxNumber}
+                                                                </span>
+                                                            ))
+                                                        }
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Assignment Controls */}
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleAssignBoxes}
+                                className={`px-4 py-1 text-sm font-medium rounded-md ${
+                                    selectedBoxes.length > 0 && selectedTeamForBoxes
+                                        ? 'text-white bg-blue-600 hover:bg-blue-700'
+                                        : 'text-gray-400 bg-gray-200 cursor-not-allowed'
+                                }`}
+                                disabled={selectedBoxes.length === 0 || !selectedTeamForBoxes}
+                            >
+                                Assign Selected Boxes
+                            </button>
+                            <span className="text-sm text-gray-500">
+                                {selectedBoxes.length} boxes selected
+                            </span>
+                        </div>
+                        <div>
+                            <button
+                                onClick={() => {
+                                    // Reset all assignments
+                                    const resetAssignments = {};
+                                    Object.keys(boxAssignments).forEach(boxNumber => {
+                                        resetAssignments[boxNumber] = null;
+                                    });
+                                    setBoxAssignments(resetAssignments);
+                                    setTeamBoxes({});
+
+                                    // Reset team ranges
+                                    const resetRanges = {};
+                                    selectedTeams.forEach(teamId => {
+                                        resetRanges[teamId] = {
+                                            startRange: '',
+                                            endRange: '',
+                                            count: 0
+                                        };
+                                    });
+                                    setTeamRanges(resetRanges);
+                                }}
+                                className="px-4 py-1 text-sm font-medium text-red-600 border border-red-600 rounded-md hover:bg-red-50"
+                            >
+                                Reset All
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={handleBoxAssignmentConfirm}
+                            className="px-4 py-1 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        >
+                            Confirm & Upload
+                        </button>
+                        <button
+                            onClick={() => setView('selection')}
+                            className="px-4 py-1 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                        >
+                            Back
+                        </button>
+                    </div>
+                </>
             ) : (
                 // Range Selection View
                 <>
@@ -866,15 +1562,44 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                         Set serial number ranges for each selected team:
                     </p>
 
-                    {/* Divide equally option and remaining serials info */}
+                    {/* Distribution mode selection and divide equally option */}
                     <div className="mb-4 p-3 border border-gray-200 rounded-lg">
+                        <div className="flex items-center justify-between mb-3">
+                            <label className="text-sm font-medium text-gray-700">Distribution Mode</label>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setBoxMode(true)}
+                                    className={`px-3 py-1 text-xs font-medium rounded ${
+                                        boxMode 
+                                            ? 'text-white bg-green-600 hover:bg-green-700' 
+                                            : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    Box Mode
+                                </button>
+                                <button
+                                    onClick={() => setBoxMode(false)}
+                                    className={`px-3 py-1 text-xs font-medium rounded ${
+                                        !boxMode 
+                                            ? 'text-white bg-green-600 hover:bg-green-700' 
+                                            : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    Individual Mode
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="flex items-center justify-between mb-2">
-                            <label className="text-sm font-medium text-gray-700">Divide SIMs equally among teams</label>
+                            <label className="text-sm font-medium text-gray-700">
+                                {boxMode ? 'Divide boxes equally among teams' : 'Divide SIMs equally among teams'}
+                            </label>
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center space-x-1">
                                     {vCount ? <span
-                                        className="text-sm text-blue-500 px-3 py-1 bg-blue-200 rounded-full">{vCount} each</span> : null}
-
+                                        className="text-sm text-blue-500 px-3 py-1 bg-blue-200 rounded-full">
+                                        {boxMode ? `${Math.floor(vCount / 100)} boxes` : `${vCount} SIMs`} each
+                                    </span> : null}
                                 </div>
 
                                 <button
@@ -886,9 +1611,21 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                 </button>
                             </div>
                         </div>
+
                         {availableSerials.length > 0 && (
                             <div className="text-xs text-gray-500">
-                                Available serials: {getRemainingSerials()} | Total: {availableSerials.length}
+                                {boxMode ? (
+                                    <>
+                                        Available boxes: {Math.ceil(getRemainingSerials() / 100)} | 
+                                        Total boxes: {totalBoxes} | 
+                                        Total SIMs: {availableSerials.length}
+                                    </>
+                                ) : (
+                                    <>
+                                        Available serials: {getRemainingSerials()} | 
+                                        Total: {availableSerials.length}
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -1153,45 +1890,87 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                     </div>
 
                                     <div className="flex flex-col gap-2">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <label className="text-xs text-gray-500">Count:</label>
-                                                <input
-                                                    type="number"
-                                                    value={range.count || ''}
-                                                    onChange={(e) => {
-                                                        const newCount = parseInt(e.target.value);
-                                                        // Store the value temporarily without applying it
-                                                        const tempCount = !isNaN(newCount) && newCount > 0 ? newCount : 0;
+                                        {boxMode ? (
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs text-gray-500">Box Count:</label>
+                                                    <input
+                                                        type="number"
+                                                        value={(teamBoxes[teamId]?.boxCount) || ''}
+                                                        onChange={(e) => {
+                                                            const newBoxCount = parseInt(e.target.value);
+                                                            // Store the value temporarily without applying it
+                                                            const tempBoxCount = !isNaN(newBoxCount) && newBoxCount > 0 ? newBoxCount : 0;
 
-                                                        // Update the count in the state
-                                                        handleCountChange(teamId, tempCount);
-                                                    }}
-                                                    placeholder="0"
-                                                    className={`w-20 p-1 text-sm border rounded ${
-                                                        !range.startRange ? 'border-gray-300 bg-gray-100' : 'border-gray-300'
-                                                    }`}
-                                                    disabled={isDisabled || !range.startRange}
-                                                />
-                                                <button
-                                                    onClick={() => handleCountChange(teamId, range.count)}
-                                                    className={`px-2 py-1 text-xs rounded ${
-                                                        !range.startRange || !range.count || isDisabled
-                                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                            : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                                    }`}
-                                                    disabled={!range.startRange || !range.count || isDisabled}
-                                                >
-                                                    Auto-set End
-                                                </button>
+                                                            // Update the box count in the state
+                                                            handleBoxCountChange(teamId, tempBoxCount);
+                                                        }}
+                                                        placeholder="0"
+                                                        className={`w-20 p-1 text-sm border rounded ${
+                                                            !range.startRange ? 'border-gray-300 bg-gray-100' : 'border-gray-300'
+                                                        }`}
+                                                        disabled={isDisabled || !range.startRange}
+                                                    />
+                                                    <button
+                                                        onClick={() => handleBoxCountChange(teamId, teamBoxes[teamId]?.boxCount || 1)}
+                                                        className={`px-2 py-1 text-xs rounded ${
+                                                            !range.startRange || isDisabled
+                                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                        }`}
+                                                        disabled={!range.startRange || isDisabled}
+                                                    >
+                                                        Update Boxes
+                                                    </button>
+                                                </div>
+
+                                                {range.count > 0 && (
+                                                    <span className="text-xs text-green-600 font-medium">
+                                                        {teamBoxes[teamId]?.boxCount || 0} Boxes ({range.count} SIMs)
+                                                    </span>
+                                                )}
                                             </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs text-gray-500">Count:</label>
+                                                    <input
+                                                        type="number"
+                                                        value={range.count || ''}
+                                                        onChange={(e) => {
+                                                            const newCount = parseInt(e.target.value);
+                                                            // Store the value temporarily without applying it
+                                                            const tempCount = !isNaN(newCount) && newCount > 0 ? newCount : 0;
 
-                                            {range.count > 0 && (
-                                                <span className="text-xs text-green-600 font-medium">
-                                                    {range.count} SIMs
-                                                </span>
-                                            )}
-                                        </div>
+                                                            // Update the count in the state
+                                                            handleCountChange(teamId, tempCount);
+                                                        }}
+                                                        placeholder="0"
+                                                        className={`w-20 p-1 text-sm border rounded ${
+                                                            !range.startRange ? 'border-gray-300 bg-gray-100' : 'border-gray-300'
+                                                        }`}
+                                                        disabled={isDisabled || !range.startRange}
+                                                    />
+                                                    <button
+                                                        onClick={() => handleCountChange(teamId, range.count)}
+                                                        className={`px-2 py-1 text-xs rounded ${
+                                                            !range.startRange || !range.count || isDisabled
+                                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                        }`}
+                                                        disabled={!range.startRange || !range.count || isDisabled}
+                                                    >
+                                                        Auto-set End
+                                                    </button>
+                                                </div>
+
+                                                {range.count > 0 && (
+                                                    <span className="text-xs text-green-600 font-medium">
+                                                        {range.count} SIMs
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {/* Preview of what will happen when count is changed */}
                                         {range.startRange && range.count > 0 && (
@@ -1264,6 +2043,27 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                         })()}
                                                     </div>
                                                 )}
+                                            </div>
+                                        )}
+
+                                        {/* Box details in box mode */}
+                                        {boxMode && teamBoxes[teamId]?.boxes && teamBoxes[teamId].boxes.length > 0 && (
+                                            <div className="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-200">
+                                                <div className="font-medium mb-1">Box Details:</div>
+                                                <div className="max-h-32 overflow-y-auto">
+                                                    {teamBoxes[teamId].boxes.map((box, boxIdx) => (
+                                                        <div key={boxIdx} className="mb-1 pb-1 border-b border-gray-200 last:border-b-0">
+                                                            <div className="flex justify-between">
+                                                                <span className="font-medium">Box {box.boxNumber}:</span>
+                                                                <span>{box.count} SIMs</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-gray-500">
+                                                                <span>Start: {box.startRange}</span>
+                                                                <span>End: {box.endRange}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
