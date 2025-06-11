@@ -8,6 +8,7 @@ export interface SerialNumber {
     isChecking: boolean;
     checkError: string | null;
     exists: boolean;
+    lot: string;
     isUploading: boolean;
     isUploaded: boolean;
     uploadError: string | null;

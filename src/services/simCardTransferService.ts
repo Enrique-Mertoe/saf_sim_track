@@ -183,6 +183,18 @@ export const simCardTransferService = {
   ): Promise<{ data: SimCardTransfer | null; error: any }> {
     const supabase = createSupabaseClient();
 
+    // First, get the transfer request to access sim_cards and destination_team_id
+    const { data: transferRequest, error: fetchError } = await supabase
+      .from('sim_card_transfers')
+      .select('*')
+      .eq('id', transferId)
+      .eq('status', TransferStatus.PENDING)
+      .single();
+
+    if (fetchError) {
+      return { data: null, error: fetchError };
+    }
+
     // Update the status to approved
     const { data, error } = await supabase
       .from('sim_card_transfers')
@@ -195,6 +207,28 @@ export const simCardTransferService = {
       .eq('status', TransferStatus.PENDING)
       .select()
       .single();
+
+    if (error) {
+      return { data, error };
+    }
+
+    // Update the team_id for each SIM card in the transfer
+    const simCards = transferRequest.sim_cards || [];
+    const destinationTeamId = transferRequest.destination_team_id;
+
+    if (simCards.length > 0) {
+      const { error: updateSimCardsError } = await supabase
+        .from('sim_cards')
+        .update({
+          team_id: destinationTeamId,
+          updated_at: new Date().toISOString()
+        })
+        .in('id', simCards);
+
+      if (updateSimCardsError) {
+        return { data, error: updateSimCardsError };
+      }
+    }
 
     return { data, error };
   },

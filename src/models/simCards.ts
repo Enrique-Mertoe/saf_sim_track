@@ -32,6 +32,7 @@ export interface SIMCard {
     quality_score?: number;
     match: SIMStatus;
     quality: SIMStatus;
+    in_transit?: boolean;
 }
 
 export interface SIMCardCreate {
@@ -43,6 +44,8 @@ export interface SIMCardCreate {
     quality: SIMStatus;
     batch_id: string;
     registered_by_user_id: string;
+    in_transit?: boolean;
+    lot?: string;
 }
 
 export interface SIMCardUpdate {
@@ -61,5 +64,5 @@ export interface SIMCardUpdate {
     match?: SIMStatus;
     quality?: SIMStatus;
     quality_score?: number;
+    in_transit?: boolean;
 }
-

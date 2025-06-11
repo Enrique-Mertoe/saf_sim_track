@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
+import {groupSerialsByLot} from "@/app/dashboard/pick/utility";
 
 const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, reject, serials = []}) => {
     // Add state for search term and selected teams
@@ -26,40 +27,15 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
     const [boxSearchTerm, setBoxSearchTerm] = useState(''); // Search term for boxes
     const dropdownRef = useRef(null); // Reference to the active dropdown
 
+
     // Initialize available serials and sort them
     useEffect(() => {
         if (serials.length > 0) {
-            const sorted = [...serials].sort((a, b) => {
-                const numA = parseInt(a.value);
-                const numB = parseInt(b.value);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return numA - numB;
-                }
-                return a.value.localeCompare(b.value);
-            });
-            setAvailableSerials(sorted);
+            setAvailableSerials(serials);
 
-            // Calculate total boxes (each box has 100 SIM cards)
-            const boxCount = Math.ceil(sorted.length / 100);
-            setTotalBoxes(boxCount);
-
-            // Initialize available boxes
-            const boxes = [];
-            for (let i = 0; i < boxCount; i++) {
-                const startIdx = i * 100;
-                const endIdx = Math.min(startIdx + 99, sorted.length - 1);
-
-                boxes.push({
-                    boxNumber: i + 1,
-                    startRange: sorted[startIdx].value,
-                    endRange: sorted[endIdx].value,
-                    count: endIdx - startIdx + 1,
-                    serials: sorted.slice(startIdx, endIdx + 1)
-                });
-            }
+            const boxes = groupSerialsByLot(serials);
             setAvailableBoxes(boxes);
 
-            // Initialize empty box assignments
             const initialAssignments = {};
             boxes.forEach(box => {
                 initialAssignments[box.boxNumber] = null;
@@ -976,7 +952,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
         // Create box information for this team
         const boxes = [];
-        const currentTeamBoxes = teamBoxes[teamId] || { boxCount: 1, boxes: [] };
+        const currentTeamBoxes = teamBoxes[teamId] || {boxCount: 1, boxes: []};
         const boxCount = currentTeamBoxes.boxCount || 1;
 
         for (let i = 0; i < boxCount; i++) {
@@ -1013,8 +989,8 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                     ...prev[teamId],
                     startRange: firstBox.startRange,
                     endRange: lastBox.endRange,
-                    count: lastBox.endRange ? 
-                        availableSerials.findIndex(s => s.value === lastBox.endRange) - 
+                    count: lastBox.endRange ?
+                        availableSerials.findIndex(s => s.value === lastBox.endRange) -
                         availableSerials.findIndex(s => s.value === firstBox.startRange) + 1 : 0
                 }
             }));
@@ -1044,7 +1020,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
             return;
         }
 
-        const newBoxAssignments = { ...boxAssignments };
+        const newBoxAssignments = {...boxAssignments};
         selectedBoxes.forEach(boxNumber => {
             newBoxAssignments[boxNumber] = selectedTeamForBoxes;
         });
@@ -1065,7 +1041,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
         Object.entries(assignments).forEach(([boxNumber, teamId]) => {
             if (!teamId) return; // Skip unassigned boxes
 
-            const box = availableBoxes.find(b => b.boxNumber === parseInt(boxNumber));
+            const box = availableBoxes.find(b => b.boxNumber === boxNumber);
             if (!box) return;
 
             if (!newTeamBoxes[teamId]) {
@@ -1080,7 +1056,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
         });
 
         // Update team ranges based on assigned boxes
-        const newTeamRanges = { ...teamRanges };
+        const newTeamRanges = {...teamRanges};
         Object.entries(newTeamBoxes).forEach(([teamId, teamBoxData]) => {
             if (teamBoxData.boxes.length === 0) {
                 newTeamRanges[teamId] = {
@@ -1092,7 +1068,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
             }
 
             // Sort boxes by box number
-            const sortedBoxes = [...teamBoxData.boxes].sort((a, b) => a.boxNumber - b.boxNumber);
+            const sortedBoxes = [...teamBoxData.boxes].sort((a, b) => a.boxNumber.localeCompare(b.boxNumber));
 
             newTeamRanges[teamId] = {
                 startRange: sortedBoxes[0].startRange,
@@ -1118,10 +1094,10 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
     // Function to handle drop on a team
     const handleDrop = (e, teamId) => {
         e.preventDefault();
-        const boxNumber = parseInt(e.dataTransfer.getData('boxNumber'));
+        const boxNumber = e.dataTransfer.getData('boxNumber');
 
         // Update box assignment
-        const newBoxAssignments = { ...boxAssignments };
+        const newBoxAssignments = {...boxAssignments};
         newBoxAssignments[boxNumber] = teamId;
         setBoxAssignments(newBoxAssignments);
 
@@ -1132,7 +1108,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
     // Function to handle box assignment confirmation
     const handleBoxAssignmentConfirm = () => {
         // Check if any team has no boxes assigned
-        const teamsWithNoBoxes = selectedTeams.filter(teamId => 
+        const teamsWithNoBoxes = selectedTeams.filter(teamId =>
             !Object.values(boxAssignments).includes(teamId)
         );
 
@@ -1320,7 +1296,8 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                     </div>
 
                     <p className="text-gray-600 dark:text-gray-300 mb-4">
-                        Assign boxes to teams by selecting boxes and a team, then clicking "Assign". You can also drag boxes to teams.
+                        Assign boxes to teams by selecting boxes and a team, then clicking "Assign". You can also drag
+                        boxes to teams.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1336,7 +1313,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                             {/* Box Search */}
                             <div className="relative mb-2">
                                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" 
+                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -1357,7 +1334,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                     {filteredBoxes.map(box => {
                                         const isSelected = selectedBoxes.includes(box.boxNumber);
                                         const isAssigned = boxAssignments[box.boxNumber] !== null;
-                                        const assignedTeam = isAssigned ? 
+                                        const assignedTeam = isAssigned ?
                                             teams.find(t => t.id === boxAssignments[box.boxNumber]) : null;
 
                                         return (
@@ -1374,7 +1351,10 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                 draggable={!isAssigned}
                                                 onDragStart={(e) => handleDragStart(e, box.boxNumber)}
                                             >
-                                                <div className="text-xs font-medium">Box {box.boxNumber}</div>
+                                                <div className="text-xs font-medium">
+                                                    Box <span
+                                                    className="text-blue-600 font-semibold">&lt;&lt;{box.lot}&gt;&gt;</span>
+                                                </div>
                                                 <div className="text-xs text-gray-500 ">
                                                     Start: {box.startRange}
                                                 </div>
@@ -1408,7 +1388,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                             {/* Team Search */}
                             <div className="relative mb-2">
                                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" 
+                                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
                                          viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                                               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -1461,7 +1441,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                         {Object.entries(boxAssignments)
                                                             .filter(([_, teamId]) => teamId === team.id)
                                                             .map(([boxNumber]) => (
-                                                                <span 
+                                                                <span
                                                                     key={boxNumber}
                                                                     className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded"
                                                                 >
@@ -1570,8 +1550,8 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                 <button
                                     onClick={() => setBoxMode(true)}
                                     className={`px-3 py-1 text-xs font-medium rounded ${
-                                        boxMode 
-                                            ? 'text-white bg-green-600 hover:bg-green-700' 
+                                        boxMode
+                                            ? 'text-white bg-green-600 hover:bg-green-700'
                                             : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
                                     }`}
                                 >
@@ -1580,8 +1560,8 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                 <button
                                     onClick={() => setBoxMode(false)}
                                     className={`px-3 py-1 text-xs font-medium rounded ${
-                                        !boxMode 
-                                            ? 'text-white bg-green-600 hover:bg-green-700' 
+                                        !boxMode
+                                            ? 'text-white bg-green-600 hover:bg-green-700'
                                             : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
                                     }`}
                                 >
@@ -1616,13 +1596,13 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                             <div className="text-xs text-gray-500">
                                 {boxMode ? (
                                     <>
-                                        Available boxes: {Math.ceil(getRemainingSerials() / 100)} | 
-                                        Total boxes: {totalBoxes} | 
+                                        Available boxes: {Math.ceil(getRemainingSerials() / 100)} |
+                                        Total boxes: {totalBoxes} |
                                         Total SIMs: {availableSerials.length}
                                     </>
                                 ) : (
                                     <>
-                                        Available serials: {getRemainingSerials()} | 
+                                        Available serials: {getRemainingSerials()} |
                                         Total: {availableSerials.length}
                                     </>
                                 )}
@@ -2015,8 +1995,8 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
                                                                 if (affectedTeams.length === 0) return null;
 
-                                                                const teamsText = affectedTeams.length === 1 
-                                                                    ? affectedTeams[0] 
+                                                                const teamsText = affectedTeams.length === 1
+                                                                    ? affectedTeams[0]
                                                                     : `${affectedTeams.slice(0, -1).join(', ')} and ${affectedTeams[affectedTeams.length - 1]}`;
 
                                                                 return (
@@ -2048,13 +2028,16 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
                                         {/* Box details in box mode */}
                                         {boxMode && teamBoxes[teamId]?.boxes && teamBoxes[teamId].boxes.length > 0 && (
-                                            <div className="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-200">
+                                            <div
+                                                className="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-200">
                                                 <div className="font-medium mb-1">Box Details:</div>
                                                 <div className="max-h-32 overflow-y-auto">
                                                     {teamBoxes[teamId].boxes.map((box, boxIdx) => (
-                                                        <div key={boxIdx} className="mb-1 pb-1 border-b border-gray-200 last:border-b-0">
+                                                        <div key={boxIdx}
+                                                             className="mb-1 pb-1 border-b border-gray-200 last:border-b-0">
                                                             <div className="flex justify-between">
-                                                                <span className="font-medium">Box {box.boxNumber}:</span>
+                                                                <span
+                                                                    className="font-medium">Box {box.boxNumber}:</span>
                                                                 <span>{box.count} SIMs</span>
                                                             </div>
                                                             <div className="flex justify-between text-gray-500">

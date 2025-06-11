@@ -52,6 +52,21 @@ class TransferActions {
             return makeResponse({error: error.message});
         }
 
+        // Mark SIM cards as in_transit when transfer request is created
+        if (data.sim_cards && data.sim_cards.length > 0) {
+            const {error: updateSimCardsError} = await supabaseAdmin
+                .from("sim_cards")
+                .update({
+                    in_transit: true,
+                    updated_at: new Date().toISOString()
+                })
+                .in("id", data.sim_cards);
+
+            if (updateSimCardsError) {
+                return makeResponse({error: updateSimCardsError.message});
+            }
+        }
+
         return makeResponse({ok: true, data: createdData});
     }
 
@@ -60,6 +75,19 @@ class TransferActions {
             return makeResponse({error: 'Missing ID or admin ID'});
         }
 
+        // First, get the transfer request to access sim_cards and destination_team_id
+        const {data: transferRequest, error: fetchError} = await supabaseAdmin
+            .from("sim_card_transfers")
+            .select("*")
+            .eq("id", data.id)
+            .eq("status", TransferStatus.PENDING)
+            .single();
+
+        if (fetchError) {
+            return makeResponse({error: fetchError.message});
+        }
+
+        // Update the transfer request status
         const {data: updatedData, error} = await supabaseAdmin
             .from("sim_card_transfers")
             .update({
@@ -68,12 +96,29 @@ class TransferActions {
                 updated_at: new Date().toISOString()
             })
             .eq("id", data.id)
-            .eq("status", "PENDING")
-            .select()
-            .single();
+            .eq("status", TransferStatus.PENDING);
 
         if (error) {
             return makeResponse({error: error.message});
+        }
+
+        // Update the team_id for each SIM card in the transfer and set in_transit to false
+        const simCards = transferRequest.sim_cards || [];
+        const destinationTeamId = transferRequest.destination_team_id;
+
+        if (simCards.length > 0) {
+            const {error: updateSimCardsError} = await supabaseAdmin
+                .from("sim_cards")
+                .update({
+                    team_id: destinationTeamId,
+                    in_transit: false,
+                    updated_at: new Date().toISOString()
+                })
+                .in("id", simCards);
+
+            if (updateSimCardsError) {
+                return makeResponse({error: updateSimCardsError.message});
+            }
         }
 
         return makeResponse({ok: true, data: updatedData});
@@ -82,6 +127,18 @@ class TransferActions {
     static async reject_t_request(data: any) {
         if (!data.id || !data.admin_id) {
             return makeResponse({error: 'Missing ID or admin ID'});
+        }
+
+        // First, get the transfer request to access sim_cards
+        const {data: transferRequest, error: fetchError} = await supabaseAdmin
+            .from("sim_card_transfers")
+            .select("*")
+            .eq("id", data.id)
+            .eq("status", TransferStatus.PENDING)
+            .single();
+
+        if (fetchError) {
+            return makeResponse({error: fetchError.message});
         }
 
         const {data: updatedData, error} = await supabaseAdmin
@@ -99,6 +156,22 @@ class TransferActions {
 
         if (error) {
             return makeResponse({error: error.message});
+        }
+
+        // Set in_transit to false for all SIM cards in the rejected transfer
+        const simCards = transferRequest.sim_cards || [];
+        if (simCards.length > 0) {
+            const {error: updateSimCardsError} = await supabaseAdmin
+                .from("sim_cards")
+                .update({
+                    in_transit: false,
+                    updated_at: new Date().toISOString()
+                })
+                .in("id", simCards);
+
+            if (updateSimCardsError) {
+                return makeResponse({error: updateSimCardsError.message});
+            }
         }
 
         return makeResponse({ok: true, data: updatedData});

@@ -9,6 +9,7 @@ export const simCardService = {
                              teamId,
                              fromDate,
                              toDate,
+                             includeInTransit = false,
                              page = 1,
                              pageSize = 20
                          }: {
@@ -17,6 +18,7 @@ export const simCardService = {
         teamId?: string;
         fromDate?: string;
         toDate?: string;
+        includeInTransit?: boolean;
         page?: number;
         pageSize?: number;
     }) {
@@ -43,6 +45,10 @@ export const simCardService = {
         if (toDate) {
             query = query.lte('created_at', new Date(toDate).toISOString());
         }
+        // By default, exclude SIM cards that are in transit
+        if (!includeInTransit) {
+            query = query.or('in_transit.is.null,in_transit.eq.false');
+        }
 
         const {count, error: countError} = await query;
 
@@ -54,7 +60,8 @@ export const simCardService = {
                 status_filter: status || null,
                 team_id_param: teamId || null,
                 from_date: fromDate ? new Date(fromDate).toISOString() : null,
-                to_date: toDate ? new Date(toDate).toISOString() : null
+                to_date: toDate ? new Date(toDate).toISOString() : null,
+                include_in_transit: includeInTransit || false
             })
             .range((page - 1) * pageSize, page * pageSize - 1);
         return {
@@ -71,6 +78,7 @@ export const simCardService = {
                               teamId,
                               fromDate,
                               toDate,
+                              includeInTransit = false,
                               page = 1,
                               pageSize = 20
                           }: {
@@ -79,18 +87,25 @@ export const simCardService = {
         teamId?: string;
         fromDate?: string;
         toDate?: string;
+        includeInTransit?: boolean;
         page?: number;
         pageSize?: number;
     }) {
         const supabase = createSupabaseClient();
 
         // First get total count for pagination
-        const {data, error: countError} = await supabase
+        let query = supabase
             .from('sim_cards')
             .select('*')
-
             .gte('created_at', fromDate || '')
             .lte('created_at', toDate || '');
+
+        // By default, exclude SIM cards that are in transit
+        if (!includeInTransit) {
+            query = query.or('in_transit.is.null,in_transit.eq.false');
+        }
+
+        const {data, error: countError} = await query;
         return {
             data,
             count: (data || []).length,

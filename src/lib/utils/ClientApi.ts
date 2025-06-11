@@ -24,7 +24,13 @@ class ClientAdmin {
 }
 
 class ClientSim {
-
+    createSIMCardBatch(data: any, batchSize: number, progressCallback: Function) {
+        return dispatcher("sim", "create_sim_card_batch", {
+            simCardsData: data,
+            batchSize: batchSize,
+            progressCallback: progressCallback
+        });
+    }
 }
 
 class ClientTransfer {

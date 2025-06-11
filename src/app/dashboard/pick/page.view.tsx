@@ -3,6 +3,7 @@ import React, {ChangeEvent, useEffect, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import Button from "@/app/accounts/components/Button";
 import simService from "@/services/simService";
+import ClientApi from "@/lib/utils/ClientApi";
 import {BatchMetadataCreate, SIMCard, SIMCardCreate, SIMStatus} from "@/models";
 import {batchMetadataService, teamService} from "@/services";
 import {toast} from "react-hot-toast";
@@ -20,6 +21,7 @@ import Signal from "@/lib/Signal";
 import {showModal} from "@/ui/shortcuts";
 import BatchMetadataModalContent from "@/app/dashboard/pick/components/BatchMetaDataForm";
 import TeamSelectionModalContent from "@/app/dashboard/pick/components/TeamSelectionModalContent";
+import {extractSerialsWithLots} from "@/app/dashboard/pick/utility";
 
 // Using shared types from types.ts
 
@@ -336,26 +338,118 @@ const SerialNumberForm: React.FC = () => {
         }
     };
 
+    // const process = async () => {
+    //     try {
+    //         // Split by whitespace and filter out empty strings
+    //         // Improved regex to handle various separators (spaces, commas, newlines)
+    //         const serialsToParse = inputValue
+    //             .split(/[\s,;]+/)
+    //             .filter(Boolean)
+    //             .map(s => s.trim());
+    //
+    //         if (serialsToParse.length === 0) {
+    //             throw new Error('No valid serial numbers found');
+    //         }
+    //         if (isPicklist(inputValue)) {
+    //             const metadata = parsePicklistText(
+    //                 inputValue,
+    //                 'null',
+    //                 '',
+    //                 user!.id
+    //             );
+    //             setBatchMetadata(metadata)
+    //         }
+    //
+    //         // Reset the input field
+    //         setInputValue('');
+    //
+    //         // Fetch existing SIM cards more efficiently with error handling
+    //         let existingSerials: string[] = [];
+    //         try {
+    //             const {data, error: simError} = await simService.getAllSimCards(user!);
+    //             if (data && !simError) {
+    //                 existingSerials = data.map((data: SIMCard) => data.serial_number);
+    //             }
+    //         } catch (err) {
+    //             console.error('Error fetching existing SIM cards:', err);
+    //             // Continue with empty array - we'll check existence individually later
+    //         }
+    //
+    //
+    //         // Deduplicate serials first
+    //         const uniqueSerials = [...new Set(serialsToParse)];
+    //
+    //         // Pre-filter obviously invalid serials
+    //         const validSerials = uniqueSerials
+    //             .filter(serial => serial.length >= 16 && !isNaN(Number(serial)));
+    //
+    //         if (validSerials.length === 0) {
+    //             throw new Error('No valid serial numbers found. Serial numbers must be at least 16 digits and contain only numbers.');
+    //         }
+    //
+    //         // Create serial objects with initial validation
+    //         const newSerials: SerialNumber[] = validSerials.map(serial => ({
+    //             id: generateId(),
+    //             value: serial,
+    //             isValid: true,
+    //             isChecking: false,
+    //             checkError: null,
+    //             exists: existingSerials.includes(serial),
+    //             isUploading: false,
+    //             isUploaded: false,
+    //             uploadError: null
+    //         }));
+    //
+    //         setCheckingCount(newSerials.length);
+    //         setSerialNumbers(prev => [...prev, ...newSerials]);
+    //
+    //         // Show user feedback about duplicates if any were removed
+    //         if (uniqueSerials.length < serialsToParse.length) {
+    //             toast.success(`Removed ${serialsToParse.length - uniqueSerials.length} duplicate serial numbers`);
+    //         }
+    //
+    //         // Show user feedback about invalid serials if any were filtered out
+    //         if (validSerials.length < uniqueSerials.length) {
+    //             toast.success(`Filtered out ${uniqueSerials.length - validSerials.length} invalid serial numbers`);
+    //         }
+    //
+    //         return newSerials.length;
+    //     } catch (error) {
+    //         // More graceful error handling
+    //         console.error('Error in process function:', error);
+    //         throw error; // Re-throw to be handled by the caller
+    //     }
+    // };
     const process = async () => {
         try {
-            // Split by whitespace and filter out empty strings
-            // Improved regex to handle various separators (spaces, commas, newlines)
-            const serialsToParse = inputValue
-                .split(/[\s,;]+/)
-                .filter(Boolean)
-                .map(s => s.trim());
+            let serialsWithLots: Array<{ serial: string, lot: string }> = [];
+            let batchMetadata = null;
 
-            if (serialsToParse.length === 0) {
-                throw new Error('No valid serial numbers found');
-            }
             if (isPicklist(inputValue)) {
-                const metadata = parsePicklistText(
+                // Extract serials with their lots from picklist
+                serialsWithLots = extractSerialsWithLots(inputValue);
+
+                // Parse metadata
+                batchMetadata = parsePicklistText(
                     inputValue,
                     'null',
                     '',
                     user!.id
                 );
-                setBatchMetadata(metadata)
+                setBatchMetadata(batchMetadata);
+            } else {
+                serialsWithLots = inputValue
+                    .split(/[\s,;]+/)
+                    .filter(Boolean)
+
+                    .map(s => ({
+                        serial: s.trim(),
+                        lot: "UNKNOWN"
+                    })).filter(serial => serial.serial.length >= 16 && !isNaN(Number(serial.serial)));
+            }
+
+            if (serialsWithLots.length === 0) {
+                throw new Error('No valid serial numbers found');
             }
 
             // Reset the input field
@@ -364,7 +458,10 @@ const SerialNumberForm: React.FC = () => {
             // Fetch existing SIM cards more efficiently with error handling
             let existingSerials: string[] = [];
             try {
-                const {data, error: simError} = await simService.getAllSimCards(user!);
+                const {
+                    data,
+                    error: simError
+                } = await simService.getIn(user!, "serial_number", serialsWithLots.map(s => s.serial));
                 if (data && !simError) {
                     existingSerials = data.map((data: SIMCard) => data.serial_number);
                 }
@@ -373,49 +470,38 @@ const SerialNumberForm: React.FC = () => {
                 // Continue with empty array - we'll check existence individually later
             }
 
-
             // Deduplicate serials first
-            const uniqueSerials = [...new Set(serialsToParse)];
+            const uniqueSerials = [...new Set(serialsWithLots)];
 
-            // Pre-filter obviously invalid serials
-            const validSerials = uniqueSerials
-                .filter(serial => serial.length >= 16 && !isNaN(Number(serial)));
-
-            if (validSerials.length === 0) {
+            if (uniqueSerials.length === 0) {
                 throw new Error('No valid serial numbers found. Serial numbers must be at least 16 digits and contain only numbers.');
             }
 
-            // Create serial objects with initial validation
-            const newSerials: SerialNumber[] = validSerials.map(serial => ({
-                id: generateId(),
-                value: serial,
-                isValid: true,
-                isChecking: false,
-                checkError: null,
-                exists: existingSerials.includes(serial),
-                isUploading: false,
-                isUploaded: false,
-                uploadError: null
-            }));
+            // Create serial objects with initial validation and lot assignment
+            const newSerials: SerialNumber[] = uniqueSerials.map(s => {
+                // Find the lot for this serial if it came from a picklist
+                const serial = s.serial;
 
+                return {
+                    id: generateId(),
+                    value: serial,
+                    lot: s.lot,
+                    isValid: true,
+                    isChecking: false,
+                    checkError: null,
+                    exists: existingSerials.includes(serial),
+                    isUploading: false,
+                    isUploaded: false,
+                    uploadError: null
+                };
+            });
             setCheckingCount(newSerials.length);
             setSerialNumbers(prev => [...prev, ...newSerials]);
 
-            // Show user feedback about duplicates if any were removed
-            if (uniqueSerials.length < serialsToParse.length) {
-                toast.success(`Removed ${serialsToParse.length - uniqueSerials.length} duplicate serial numbers`);
-            }
-
-            // Show user feedback about invalid serials if any were filtered out
-            if (validSerials.length < uniqueSerials.length) {
-                toast.success(`Filtered out ${uniqueSerials.length - validSerials.length} invalid serial numbers`);
-            }
-
             return newSerials.length;
         } catch (error) {
-            // More graceful error handling
             console.error('Error in process function:', error);
-            throw error; // Re-throw to be handled by the caller
+            throw error;
         }
     };
 
@@ -784,48 +870,64 @@ const SerialNumberForm: React.FC = () => {
                         registered_by_user_id: user!.id,
                         //@ts-ignore
                         admin_id: user!.id,
+                        lot: ser.lot,
                     } as SIMCardCreate;
                 });
 
                 console.log(`Uploading ${serialDataToUpload.length} serials to team ${teamId} (${teamName})`);
 
                 // Upload the serials with progress tracking and error handling
-                const result = await simService.createSIMCardBatch(
-                    serialDataToUpload,
-                    50, // batch size
-                    (progress, uploadedCount, chunk, errors) => {
-                        // Calculate overall progress
-                        const overallProgress = (totalProcessed + uploadedCount) / serialsToUpload.length * 100;
+                const result = await new Promise<{
+                    success: number,
+                    failed: number,
+                    errors: any[]
+                }>((resolve, reject) => {
+                    ClientApi.of("sim").get().createSIMCardBatch(
+                        serialDataToUpload,
+                        50, // batch size
+                        (progress: any, uploadedCount: number, chunk: any[], errors: any[]) => {
+                            // Calculate overall progress
+                            const overallProgress = (totalProcessed + uploadedCount) / serialsToUpload.length * 100;
 
-                        // Update progress indicators
-                        setcurrentPercentage(overallProgress);
-                        setSofar(totalProcessed + uploadedCount);
+                            // Update progress indicators
+                            setcurrentPercentage(overallProgress);
+                            setSofar(totalProcessed + uploadedCount);
 
-                        // Get the serial numbers from the current chunk
-                        const uploadedSerialNumbers = chunk.map(s => s.serial_number);
+                            // Get the serial numbers from the current chunk
+                            const uploadedSerialNumbers = chunk.map(s => s.serial_number);
 
-                        // Update status for each serial in the current chunk
-                        teamSerialsToUpload.forEach(serial => {
-                            if (uploadedSerialNumbers.includes(serial.value)) {
-                                updateSerialStatus(serial.id, {
-                                    isUploading: false,
-                                    isUploaded: true,
-                                    exists: true,
-                                    uploadError: errors && errors.length > 0 ? errors.join('\n') : null
-                                });
+                            // Update status for each serial in the current chunk
+                            teamSerialsToUpload.forEach(serial => {
+                                if (uploadedSerialNumbers.includes(serial.value)) {
+                                    updateSerialStatus(serial.id, {
+                                        isUploading: false,
+                                        isUploaded: true,
+                                        exists: true,
+                                        uploadError: errors && errors.length > 0 ? errors.join('\n') : null
+                                    });
 
-                                // If there were errors for this serial, show a toast
-                                if (errors && errors.length > 0) {
-                                    toast.error(`Error uploading ${serial.value} to ${teamName}: ${errors.join(', ')}`);
+                                    // If there were errors for this serial, show a toast
+                                    if (errors && errors.length > 0) {
+                                        toast.error(`Error uploading ${serial.value} to ${teamName}: ${errors.join(', ')}`);
+                                    }
                                 }
-                            }
-                        });
-                    }
-                );
+                            });
+                        }
+                    ).then(result => {
+                        if (result.ok)
+                            resolve(result.data as any)
+                    }).catch(r => {
+                        resolve({
+                            success: 0,
+                            failed: 0,
+                            errors: [r.message]
+                        })
+                    })
+                });
 
                 // Add this team's results to the overall results
                 overallResult.success += result.success || 0;
-                overallResult.errors = [...overallResult.errors, ...result.errors];
+                overallResult.errors = [...overallResult.errors, ...(Array.isArray(result.errors) ? result.errors : [])];
 
                 // Update the total processed count
                 totalProcessed += teamSerialsToUpload.length;

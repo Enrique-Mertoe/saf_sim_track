@@ -809,6 +809,15 @@ export const simCardService = {
 
         return {data: null, error: "Invalid user role"}
     },
+    getIn: async (user: User, key: keyof SIMCard, values: string[]) => {
+        return createSupabaseClient()
+            .from('sim_cards')
+            .select('*')
+            .eq("admin_id", await admin_id(user))
+            .in(key as string, values)
+            .order('created_at', {ascending: false});
+
+    },
 
     getAllSimCards: async (user: User) => {
         const supabase = createSupabaseClient();
