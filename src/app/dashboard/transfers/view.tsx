@@ -62,10 +62,8 @@ const TransfersPage = () => {
             if (!user || !user.admin_id) return;
 
             try {
-                const {data, error} = await teamService.getAllTeams(user);
+                const {data, error} = await teamService.teams(user);
                 if (error) throw error;
-                console.log("teams", data)
-
                 // Filter out the current team
                 const filteredTeams = (data || []).filter(team => team.id !== user.team_id);
                 setTeams(filteredTeams);

@@ -1,20 +1,31 @@
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {TeamCreate, TeamUpdate, User, UserRole} from "@/models";
+import {admin_id} from "@/services/helper";
 
-async function admin(supabase:any){
+async function admin(supabase: any) {
     const {data: currentUser} = await supabase.auth.getUser();
     if (currentUser.user?.role === UserRole.ADMIN) {
         return currentUser.user?.id;
-    }else{
+    } else {
         return currentUser.user?.admin_id;
     }
 
 }
+
 export const teamService = {
+    async teams(user: User) {
+        if (!user) return {data: null, error: true}
+        let query = createSupabaseClient()
+            .from('teams')
+            .select('*, users!leader_id(*)')
+            .eq('admin_id', await admin_id(user));
+
+        return query.order('name');
+    },
     // Get all teams
     async getAllTeams(userDetails: User | undefined = undefined) {
         const supabase = createSupabaseClient();
-
+        let user: User;
         if (!userDetails) {
             const {data: currentUser} = await supabase.auth.getUser();
 
@@ -25,19 +36,19 @@ export const teamService = {
                 .single();
 
             if (userDetails1) {
-                userDetails = userDetails1 as User;
+                user = userDetails1 as User;
+            } else {
+                return []
             }
+        } else {
+            user = userDetails
         }
 
         // Base query
         let query = supabase
             .from('teams')
-            .select('*, users!leader_id(*)');
+            .select('*, users!leader_id(*)').eq('admin_id', await admin_id(user));
 
-        // Filter for admin-specific teams
-        if (userDetails?.role === 'admin') {
-            query = query.eq('admin_id', userDetails.id);
-        }
 
         return query.order('name');
     },
