@@ -8,7 +8,7 @@ interface TransfersTabProps {
   isLoading: boolean;
   error: string | null;
   getTeamName: (teamId: string) => string;
-  handleApproveTransfer: (transferId: string) => Promise<void>;
+  handleApproveTransfer: (transfer: any) => Promise<void>;
   handleRejectTransfer: () => Promise<void>;
   viewTransferDetails: (transfer: SimCardTransfer) => void;
 }
@@ -171,7 +171,7 @@ const TransfersTab: React.FC<TransfersTabProps> = ({
                     {transfer.status === TransferStatus.PENDING && (
                       <>
                         <button
-                          onClick={() => handleApproveTransfer(transfer.id)}
+                          onClick={() => handleApproveTransfer(transfer)}
                           className="px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                         >
                           <span className="flex items-center">

@@ -317,15 +317,16 @@ const AdminTransfersPage = () => {
     }, [transferSignal, user]);
 
     // Handle transfer approval
-    const handleApproveTransfer = async (transferId: string) => {
-        if (!user) return;
+    const handleApproveTransfer = async (transfer: any) => {
+        if (!user || !transfer.id) return;
+        const transferId = transfer.id
 
         try {
             setIsLoading(true);
 
             const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
                 ClientApi.of("transfer").get()
-                    .approve_transfer_request({id: transferId, admin_id: user.id})
+                    .approve_transfer_request({id: transfer.id, admin_id: user.id})
                     .then(res => {
                         if (res.ok)
                             resolve({error: null, data: res.data})

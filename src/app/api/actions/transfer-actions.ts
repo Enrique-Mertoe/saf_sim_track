@@ -91,13 +91,13 @@ class TransferActions {
         const {data: updatedData, error} = await supabaseAdmin
             .from("sim_card_transfers")
             .update({
-                status: 'APPROVED',
+                status: TransferStatus.APPROVED,
                 approved_by_id: data.admin_id,
                 updated_at: new Date().toISOString()
             })
             .eq("id", data.id)
-            .eq("status", TransferStatus.PENDING);
-
+            .eq("status", TransferStatus.PENDING)
+            .eq("admin_id", data.admin_id);
         if (error) {
             return makeResponse({error: error.message});
         }
@@ -144,13 +144,13 @@ class TransferActions {
         const {data: updatedData, error} = await supabaseAdmin
             .from("sim_card_transfers")
             .update({
-                status: 'REJECTED',
+                status: TransferStatus.REJECTED,
                 approved_by_id: data.admin_id,
                 notes: data.reason || '',
                 updated_at: new Date().toISOString()
             })
             .eq("id", data.id)
-            .eq("status", "PENDING")
+            .eq("status", TransferStatus.PENDING)
             .select()
             .single();
 
