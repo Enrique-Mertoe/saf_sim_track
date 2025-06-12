@@ -457,12 +457,12 @@ const SerialNumberForm: React.FC = () => {
 
             // Fetch existing SIM cards more efficiently with error handling
             let existingSerials: string[] = [];
+
             try {
-                const {
-                    data,
-                    error: simError
-                } = await simService.getIn(user!, "serial_number", serialsWithLots.map(s => s.serial));
-                if (data && !simError) {
+                const
+                    data
+                 = await simService.getInBatched(user!, "serial_number", serialsWithLots.map(s => s.serial));
+                if (data) {
                     existingSerials = data.map((data: SIMCard) => data.serial_number);
                 }
             } catch (err) {
@@ -495,6 +495,7 @@ const SerialNumberForm: React.FC = () => {
                     uploadError: null
                 };
             });
+
             setCheckingCount(newSerials.length);
             setSerialNumbers(prev => [...prev, ...newSerials]);
 

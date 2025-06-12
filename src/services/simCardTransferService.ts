@@ -268,7 +268,7 @@ export const simCardTransferService = {
 
     const { data, error } = await supabase
       .from('sim_cards')
-      .select('id, serial_number, status')
+      .select('id, serial_number, status, lot')
       .eq('team_id', teamId)
       .neq('status', 'sold');
 

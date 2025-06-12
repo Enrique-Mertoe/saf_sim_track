@@ -818,6 +818,31 @@ export const simCardService = {
             .order('created_at', {ascending: false});
 
     },
+    async getInBatched(user: User, key: keyof SIMCard, values: string[], chunkSize = 500) {
+        const supabase = createSupabaseClient();
+        const admin = await admin_id(user);
+        const results: any[] = [];
+
+        for (let i = 0; i < values.length; i += chunkSize) {
+            const chunk = values.slice(i, i + chunkSize);
+            const { data, error } = await supabase
+                .from('sim_cards')
+                .select('*')
+                .eq("admin_id", admin)
+                .in(key as string, chunk)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching chunk:', error);
+                continue;
+            }
+
+            results.push(...(data ?? []));
+        }
+
+        return results;
+    },
+
 
     getAllSimCards: async (user: User) => {
         const supabase = createSupabaseClient();

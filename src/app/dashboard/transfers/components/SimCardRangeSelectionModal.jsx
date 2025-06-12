@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {groupSerialsByLot} from "@/app/dashboard/pick/utility";
 
 const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
     // Add state for selected SIM cards and box mode
@@ -13,41 +14,25 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
     const [selectedSimSearchTerm, setSelectedSimSearchTerm] = useState(''); // Search term for selected SIM cards
     const [view, setView] = useState('box-selection'); // 'box-selection' or 'individual-selection'
 
-    // Initialize available SIM cards and sort them
+    // Initialize available SIM cards and group them by lot
     useEffect(() => {
         if (simCards.length > 0) {
-            const sorted = [...simCards].sort((a, b) => {
-                const numA = parseInt(a.serial_number);
-                const numB = parseInt(b.serial_number);
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return numA - numB;
-                }
-                return a.serial_number.localeCompare(b.serial_number);
-            });
+            // Convert simCards to the format expected by groupSerialsByLot
+            const serialsWithLot = simCards.map((sim) => ({
+                value: sim.serial_number,
+                lot: sim.lot || 'unknown', // Use 'unknown' as fallback if lot is not available
+                id: sim.id
+            }));
 
-            // Calculate total boxes (each box has 100 SIM cards)
-            const boxCount = Math.ceil(sorted.length / 100);
-            setTotalBoxes(boxCount);
-
-            // Initialize available boxes
-            const boxes = [];
-            for (let i = 0; i < boxCount; i++) {
-                const startIdx = i * 100;
-                const endIdx = Math.min(startIdx + 99, sorted.length - 1);
-
-                boxes.push({
-                    boxNumber: i + 1,
-                    startRange: sorted[startIdx].serial_number,
-                    endRange: sorted[endIdx].serial_number,
-                    count: endIdx - startIdx + 1,
-                    simCards: sorted.slice(startIdx, endIdx + 1)
-                });
-            }
+            // Group SIM cards by lot
+            const boxes = groupSerialsByLot(serialsWithLot);
+            setTotalBoxes(boxes.length);
             setAvailableBoxes(boxes);
 
             // Initialize empty box assignments
             const initialAssignments = {};
             boxes.forEach(box => {
+                //@ts-ignore
                 initialAssignments[box.boxNumber] = false;
             });
             setBoxAssignments(initialAssignments);
@@ -59,7 +44,8 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
         if (!boxSearchTerm) return true;
 
         return (
-            box.boxNumber.toString().includes(boxSearchTerm) ||
+            (box.boxNumber && box.boxNumber.toString().includes(boxSearchTerm)) ||
+            (box.lot && box.lot.toString().toLowerCase().includes(boxSearchTerm.toLowerCase())) ||
             box.startRange.includes(boxSearchTerm) ||
             box.endRange.includes(boxSearchTerm)
         );
@@ -75,11 +61,13 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
     const toggleBoxSelection = (boxNumber) => {
         setBoxAssignments(prev => ({
             ...prev,
+            //@ts-ignore
             [boxNumber]: !prev[boxNumber]
         }));
 
-        setSelectedBoxes(prev => {
+        setSelectedBoxes((prev) => {
             if (prev.includes(boxNumber)) {
+                //@ts-ignore
                 return prev.filter(num => num !== boxNumber);
             } else {
                 return [...prev, boxNumber];
@@ -142,8 +130,13 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
             selectedBoxes.forEach(boxNumber => {
                 const box = availableBoxes.find(b => b.boxNumber === boxNumber);
                 if (box) {
-                    box.simCards.forEach(sim => {
-                        selectedSimCardIds.push(sim.id);
+                    // The serials array contains the serial numbers, but we need the IDs
+                    // We need to find the original SIM card objects to get their IDs
+                    simCards.forEach(sim => {
+                        // Check if this SIM card's serial number is in the box's serials array
+                        if (box.serials.includes(sim.serial_number)) {
+                            selectedSimCardIds.push(sim.id);
+                        }
                     });
                 }
             });
@@ -227,7 +220,7 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
                                 <div className="relative w-64">
                                     <input
                                         type="text"
-                                        placeholder="Search boxes..."
+                                        placeholder="Search by lot or serial range..."
                                         value={boxSearchTerm}
                                         onChange={(e) => setBoxSearchTerm(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm"
@@ -274,10 +267,10 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
                                         }`}
                                         onClick={() => toggleBoxSelection(box.boxNumber)}
                                     >
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="font-medium">Box #{box.boxNumber}</div>
+                                        <div className="flex flex-col whitespace-nowrap items-start mb-2">
+                                            <div className="font-medium text-sm">Lot: {box.lot}</div>
                                             <div className="text-xs bg-blue-100 text-blue-800 rounded-full px-2 py-0.5">
-                                                {box.count} SIMs
+                                                {box.count}
                                             </div>
                                         </div>
                                         <div className="text-sm text-gray-600">
@@ -428,7 +421,7 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
                                             <button
                                                 onClick={() => view === 'box-selection' 
                                                     ? toggleBoxSelection(availableBoxes.find(box => 
-                                                        box.simCards.some(s => s.id === sim.id))?.boxNumber)
+                                                        box.serials.includes(sim.serial_number))?.boxNumber)
                                                     : toggleSimCardSelection(sim.id)
                                                 }
                                                 className="text-red-500 hover:text-red-700"
@@ -453,7 +446,7 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
             <div className="p-6 border-t border-gray-200 flex justify-between items-center">
                 <div className="text-sm text-gray-600">
                     {view === 'box-selection' 
-                        ? `${selectedBoxes.length} boxes selected (approximately ${selectedBoxes.length * 100} SIM cards)`
+                        ? `${selectedBoxes.length} lots selected (${getAllSelectedSimCardIds().length} SIM cards)`
                         : `${selectedSimCards.length} SIM cards selected`
                     }
                 </div>
