@@ -15,6 +15,7 @@ export async function createUser(userData: UserCreate, require_admin = true) {
     try {
         let current_user: User | undefined = undefined;
         if (require_admin) {
+            // @ts-ignore
             current_user = await Accounts.user()
             if (!current_user) {
                 return {data: null, error: "You are not logged in"};
