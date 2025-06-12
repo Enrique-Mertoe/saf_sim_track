@@ -176,11 +176,11 @@ const ScrollableDialog = ({id, onDismiss, children, className = "", size = "lg",
         <motion.div
             ref={ref}
             key={id}
-            className="fixed inset-0 z-50 bg-black/30 bg-opacity-50 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-black/30 bg-opacity-50 max-h-[100vh] overflow-y-auto"
             onClick={handleBackdropClick}
         >
             <div className={cn(
-                "h-full  mx-auto max-sm:w-full max-w-full flex items-center justify-center",
+                "min-h-[100vh] mx-auto max-sm:w-full max-w-full flex items-center justify-center",
                 //@ts-ignore
                 sizeClasses[size || "lg"],
                 className
@@ -191,7 +191,7 @@ const ScrollableDialog = ({id, onDismiss, children, className = "", size = "lg",
                     exit={{opacity: 0, scale: 1.1}}
                     transition={{duration: 0.2}}
                     className={
-                        cn("bg-whitedark:bg-gray-800 max-sm:min-h-full max-sm:rounded-none rounded-xl w-full overflow-hidden",
+                        cn("max-sm:min-h-full max-sm:rounded-none rounded-xl w-full",
                             //@ts-ignore
                             design)
                     }

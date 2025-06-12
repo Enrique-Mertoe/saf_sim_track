@@ -179,7 +179,7 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-lg shadow-xl max-sm:rounded-none w-full min-h-full  overflow-hidden flex flex-col">
             <div className="p-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900">Select SIM Cards for Transfer</h2>
                 <p className="text-gray-600 mt-1">
