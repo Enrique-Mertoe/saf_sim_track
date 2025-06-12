@@ -13,6 +13,7 @@ const freePaths = [
     "/help",
     "/contact-us",
     "/app-download",
+    "/api/subscriptions"
 
 ];
 

@@ -1,17 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
+import {NextRequest, NextResponse} from 'next/server';
 import {getSession} from "@/lib/session";
-import Accounts from "@/lib/accounts";
 
 export async function GET(request: NextRequest) {
   try {
     const accessToken = await getSession('sb-access-token');
     const refreshToken = await getSession('sb-refresh-token');
 
-    if (!accessToken || !refreshToken) {
-      return NextResponse.json({ user: null }, { status: 401 });
-    }
+    // if (!accessToken || !refreshToken) {
+    //   return NextResponse.json({ user: null }, { status: 401 });
+    // }
 
 
     // Verify the session
@@ -30,6 +27,7 @@ export async function GET(request: NextRequest) {
     //   .single();
 
     const userData:any = await getSession("session-user");
+    console.log(userData)
     if (!userData) {
       return NextResponse.json({ user: null }, { status: 404 });
     }

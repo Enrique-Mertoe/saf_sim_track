@@ -23,7 +23,7 @@ const eslintConfig = [
             }],
             "@typescript-eslint/no-explicit-any": "off",
             "prefer-const": "off",
-            "next/next/no-html-link-for-pages": "off",
+            "@next/next/no-html-link-for-pages": "off",
             "react/no-unescaped-entities": "off",
             "@typescript-eslint/ban-ts-comment": "off",
         },

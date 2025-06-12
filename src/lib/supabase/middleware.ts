@@ -108,21 +108,13 @@ export async function updateSession(request: NextRequest) {
             //     return NextResponse.redirect(url)
             // }
 
-            function get_subscription_user() {
-                if (user?.role === UserRole.ADMIN) {
-                    return user.id
-                } else if (user?.admin_id) {
-                    return user.admin_id
-                } else {
-                    return ''
-                }
-            }
-            const subscription = await Accounts.subscription(user)
+            let subscription = await Accounts.subscription(user)
             if (subscription) {
                 Accounts.subscription(user,true).then()
             }
-
-
+            if (!subscription){
+                subscription = await Accounts.subscription(user,true)
+            }
             // Check subscription status
             // const {data: subscription} = await supabase
             //     .from('subscription_status')

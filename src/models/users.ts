@@ -67,6 +67,7 @@ export type Subscription = {
     status: string;
     starts_at: string;
     expires_at: string;
+    is_active:boolean;
     payment_reference?: string;
     auto_renew?: boolean;
     cancellation_date?: string;

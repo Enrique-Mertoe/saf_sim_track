@@ -47,10 +47,11 @@ class Accounts {
         if (!session_user) return null;
         return session_user as User
     }
-    static async subscription(user: User,update=false) {
+
+    static async subscription(user: User, update = false) {
         if (!user)
             return
-        if (update){
+        if (update) {
             const {data: subscription} = await supabaseAdmin
                 .from('subscription_status')
                 .select('*')
@@ -58,8 +59,8 @@ class Accounts {
                 .single();
             await setSession("user-subscription", subscription);
         }
-        const subs = await getSession("user-subscription")
-        if (!subs) return null;
+        const subs: Subscription | null | undefined = (await getSession("user-subscription")) as any
+        if (!subs || subs.user_id != await admin_id(user)) return null;
         return subs as Subscription
     }
 
