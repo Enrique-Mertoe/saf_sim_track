@@ -24,7 +24,7 @@ class ClientAdmin {
 }
 
 class ClientSim {
-    createSIMCardBatch(data: any, batchSize: number, progressCallback: Function) {
+    createSIMCardBatch(data: any, batchSize: number, progressCallback: Closure) {
         return dispatcher("sim", "create_sim_card_batch", {
             simCardsData: data,
             batchSize: batchSize,
