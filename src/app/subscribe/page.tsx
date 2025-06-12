@@ -14,61 +14,34 @@ interface Plan {
     duration: number;
     features: string[];
     recommended?: boolean;
+    description?: string;
 }
 
 interface SubscriptionPageProps {
     user: {
-        userId: string;
-        fullName: string;
+        id: string;
+        full_name: string;
         role: string;
         subscription?: {
-            planId: string;
-            status: 'active' | 'expired' | 'canceled';
-            expiresAt: string;
+            id: string;
+            user_id: string;
+            plan_id: string;
+            status: string;
+            starts_at: string;
+            expires_at: string;
+            payment_reference?: string;
+            auto_renew?: boolean;
+            cancellation_date?: string;
+            cancellation_reason?: string;
         };
     };
 }
 
-const plans: Plan[] = [
-    {
-        id: 'starter',
-        name: 'Starter',
-        price: 1999,
-        duration: 1,
-        features: [
-            '50 team members',
-            'Basic inventory',
-            '100 SIM activations/month'
-        ]
-    },
-    {
-        id: 'business',
-        name: 'Business',
-        price: 3999,
-        duration: 1,
-        features: [
-            '150 team members',
-            'Advanced analytics',
-            '500 SIM activations/month'
-        ],
-        recommended: true
-    },
-    {
-        id: 'enterprise',
-        name: 'Enterprise',
-        price: 7999,
-        duration: 1,
-        features: [
-            'Unlimited members',
-            'Premium features',
-            'Unlimited activations'
-        ]
-    }
-];
-
 export default function SubscriptionPage() {
     const {user} = useApp()
     const router = useRouter();
+    // Plans will be fetched from the database
+    const [plans, setPlans] = useState<Plan[]>([]);
     const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -79,6 +52,32 @@ export default function SubscriptionPage() {
     const currentPlan = plans[0]
         ? plans.find(plan => plan.id === plans[0]?.id)
         : null;
+
+    // Fetch subscription plans from the database
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const response = await axios.get('/api/subscriptions/plans');
+                if (response.data.plans) {
+                    // Transform the data to match the Plan interface
+                    const formattedPlans = response.data.plans.map((plan: any) => ({
+                        id: plan.id,
+                        name: plan.name,
+                        price: activeTab === 'monthly' ? plan.price_monthly : plan.price_annual,
+                        duration: activeTab === 'monthly' ? 1 : 12,
+                        features: Array.isArray(plan.features) ? plan.features : [],
+                        recommended: plan.is_recommended,
+                        description: plan.description
+                    }));
+                    setPlans(formattedPlans);
+                }
+            } catch (error) {
+                console.error('Error fetching subscription plans:', error);
+            }
+        };
+
+        fetchPlans();
+    }, [activeTab]);
 
     // Check for plan and action parameters in URL when component mounts
     useEffect(() => {
@@ -94,7 +93,7 @@ export default function SubscriptionPage() {
                 setSubscriptionAction('new');
             }
 
-            if (planId && user) {
+            if (planId && user && plans.length > 0) {
                 // Find the plan with the matching ID
                 const selectedPlan = plans.find(plan => plan.id === planId);
                 if (selectedPlan) {
@@ -243,11 +242,7 @@ export default function SubscriptionPage() {
                                 </ul>
 
                                 <button
-                                    onClick={() => handleSelectPlan({
-                                        ...plan,
-                                        price: activeTab === 'annual' ? Math.round(plan.price * 0.85 * 12) : plan.price,
-                                        duration: activeTab === 'annual' ? 12 : 1
-                                    })}
+                                    onClick={() => handleSelectPlan(plan)}
                                     className={`w-full py-2 px-4 rounded-md text-sm font-medium ${
                                         plan.recommended
                                             ? 'bg-green-500 text-white hover:bg-green-600'

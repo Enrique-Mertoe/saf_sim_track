@@ -2,6 +2,7 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 import {updateSession} from "@/lib/supabase/middleware";
+import supa_middleware from "@/app/system/middleware";
 
 const freePaths = [
     '/accounts',
@@ -12,6 +13,7 @@ const freePaths = [
     "/help",
     "/contact-us",
     "/app-download",
+
 ];
 
 export async function middleware(req: NextRequest) {
@@ -24,25 +26,9 @@ export async function middleware(req: NextRequest) {
     if (isFree || isRootPath) {
         return res;
     }
-
-    // const supabase = createMiddlewareClient<Database>({req, res});
-    //
-    // try {
-    //     // IMPORTANT: Check the session, not just the user
-    //     const {data: {session}} = await supabase.auth.getSession();
-    //     if (!session) {
-    //       // await Accounts.logout();
-    //         const loginUrl = new URL('/accounts/login', req.url);
-    //         loginUrl.searchParams.set('from', req.nextUrl.pathname);
-    //         return NextResponse.redirect(loginUrl);
-    //     }
-    //     // await Accounts.session(session, supabase)
-    //     return res;
-    // } catch (error) {
-    //     console.error("Auth middleware error:", error);
-    //     // await Accounts.logout();
-    //     return NextResponse.redirect(new URL('/accounts/login', req.url));
-    // }
+    if (["/system", "/api/system"].some(path => req.nextUrl.pathname.startsWith(path))) {
+        return await supa_middleware(req)
+    }
     return await updateSession(req)
 }
 

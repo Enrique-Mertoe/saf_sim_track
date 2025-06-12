@@ -6,9 +6,10 @@ import Accounts from "@/lib/accounts";
 // List of isolated emails that bypass subscription checks
 // All emails should be in lowercase for case-insensitive comparison
 const ISOLATED_EMAILS = [
-    'admin@example.com',
-    'abutimartin778@gmail.com',
-    'smallvillecycle5@gmail.com'
+    ''
+    // 'admin@example.com',
+    // 'abutimartin778@gmail.com',
+    // 'smallvillecycle5@gmail.com'
 ].map(email => email.toLowerCase());
 
 export async function updateSession(request: NextRequest) {
@@ -54,6 +55,9 @@ export async function updateSession(request: NextRequest) {
     // IMPORTANT: DO NOT REMOVE auth.getUser()
 
     const user = await Accounts.user()
+    if (user)
+        Accounts.update(user).then()
+
 
     // Free paths that don't require authentication or subscription checks
     const freePaths = [
@@ -91,17 +95,18 @@ export async function updateSession(request: NextRequest) {
         try {
 
             // Get user profile data
-            const {data: profile} = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-            if (!profile) {
-                // User profile not found, redirect to login
-                const url = request.nextUrl.clone()
-                url.pathname = '/accounts/login'
-                return NextResponse.redirect(url)
-            }
+            // const {data: profile} = await supabase
+            //     .from('users')
+            //     .select('*')
+            //     .eq('id', user.id)
+            //     .single();
+
+            // if (!profile) {
+            //     // User profile not found, redirect to login
+            //     const url = request.nextUrl.clone()
+            //     url.pathname = '/accounts/login'
+            //     return NextResponse.redirect(url)
+            // }
 
             function get_subscription_user() {
                 if (user?.role === UserRole.ADMIN) {
@@ -112,21 +117,25 @@ export async function updateSession(request: NextRequest) {
                     return ''
                 }
             }
+            const subscription = await Accounts.subscription(user)
+            if (subscription) {
+                Accounts.subscription(user,true).then()
+            }
 
 
             // Check subscription status
-            const {data: subscription} = await supabase
-                .from('subscription_status')
-                .select('*')
-                .eq('user_id', get_subscription_user())
-                .single();
+            // const {data: subscription} = await supabase
+            //     .from('subscription_status')
+            //     .select('*')
+            //     .eq('user_id', get_subscription_user())
+            //     .single();
             // console.log("subscription: ", subscription)
 
             const hasActiveSubscription = subscription && subscription.is_active;
             // Regular user should see service unavailable if not linked to a team
 
             // Handle different scenarios based on user role and subscription status
-            if (profile.role === UserRole.ADMIN) {
+            if (user.role === UserRole.ADMIN) {
                 // Only check subscription if not already on the subscribe page
                 if (!hasActiveSubscription && !request.nextUrl.pathname.startsWith('/subscribe')) {
                     // Check if user has any subscription records (active or expired)
@@ -150,7 +159,7 @@ export async function updateSession(request: NextRequest) {
 
                     return NextResponse.redirect(url)
                 }
-            } else if (profile.role === UserRole.TEAM_LEADER) {
+            } else if (user.role === UserRole.TEAM_LEADER) {
                 // Team leader with no admin_id should see service unavailable page
                 if (!user.admin_id && !request.nextUrl.pathname.startsWith('/service-unavailable')) {
                     const url = request.nextUrl.clone()
@@ -174,7 +183,7 @@ export async function updateSession(request: NextRequest) {
                 }
 
                 // Check if team leader has uploaded ID documents
-                if ((!profile.id_front_url || !profile.id_back_url) &&
+                if ((!user.id_front_url || !user.id_back_url) &&
                     !request.nextUrl.pathname.startsWith('/upload-id') &&
                     !request.nextUrl.pathname.startsWith('/api/')) {
                     const url = request.nextUrl.clone()
@@ -183,11 +192,11 @@ export async function updateSession(request: NextRequest) {
                 }
 
                 // Check if team leader has a valid admin (by checking team relationship)
-                if (profile.team_id) {
+                if (user.team_id) {
                     const {data: team} = await supabase
                         .from('teams')
                         .select('leader_id')
-                        .eq('id', profile.team_id)
+                        .eq('id', user.team_id)
                         .single();
 
                     if (!team || !team.leader_id) {
@@ -208,11 +217,11 @@ export async function updateSession(request: NextRequest) {
                 }
 
                 // Check if user's team has an active team leader
-                if (profile.team_id) {
+                if (user.team_id) {
                     const {data: team} = await supabase
                         .from('teams')
                         .select('leader_id')
-                        .eq('id', profile.team_id)
+                        .eq('id', user.team_id)
                         .single();
 
                     if (!team || !team.leader_id) {

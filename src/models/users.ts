@@ -20,6 +20,7 @@ export interface User {
     username?: string;
     password?: string;
     is_first_login?: boolean;
+    subscription?: Subscription;
 }
 
 export interface UserCreate {
@@ -58,3 +59,16 @@ export interface UserUpdate {
     password?: string;
     is_first_login?: boolean;
 }
+
+export type Subscription = {
+    id: string;
+    user_id: string;
+    plan_id: string;
+    status: string;
+    starts_at: string;
+    expires_at: string;
+    payment_reference?: string;
+    auto_renew?: boolean;
+    cancellation_date?: string;
+    cancellation_reason?: string;
+};

@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import {getSession, setSession} from "@/lib/session";
+import Accounts from "@/lib/accounts";
 
 export async function POST(request: NextRequest) {
     try {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
             // Add new user
             users.push(data);
         }
-
+        await Accounts.session(data)
         await setSession("local-users", JSON.stringify(users));
         return NextResponse.json({success: true});
     } catch (error) {
