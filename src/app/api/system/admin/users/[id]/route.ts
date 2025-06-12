@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/server';
+import {NextRequest, NextResponse} from 'next/server';
+import {supabaseAdmin} from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
@@ -86,8 +86,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }:any 
 ) {
+  const {id} = await params
   try {
     const data = await request.json();
 
@@ -103,7 +104,7 @@ export async function PATCH(
     const { error } = await supabaseAdmin
       .from('users')
       .update({ status: data.status })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) {
       console.error('Error updating user status:', error);
