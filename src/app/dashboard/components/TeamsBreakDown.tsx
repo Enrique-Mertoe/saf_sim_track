@@ -444,7 +444,7 @@ const TeamBreakdownDialog = ({
                         onClick={() => {
                             showModal({
                                 content: onClose => (
-                                    <div className="p-4">
+                                    <div className="p-4 bg-white dark:bg-gray-800">
                                         <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>

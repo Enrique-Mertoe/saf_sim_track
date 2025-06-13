@@ -176,7 +176,7 @@ const ScrollableDialog = ({id, onDismiss, children, className = "", size = "lg",
         <motion.div
             ref={ref}
             key={id}
-            className="fixed inset-0 z-50 bg-black/30 bg-opacity-50 max-h-[100vh] overflow-y-auto"
+            className="fixed inset-0 z-55 bg-black/30 bg-opacity-50 max-h-[100vh] overflow-y-auto"
             onClick={handleBackdropClick}
         >
             <div className={cn(
