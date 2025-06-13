@@ -92,8 +92,8 @@ const TransfersPage = () => {
                     sourceTeamId: user.team_id,
                     adminId: user.admin_id,
                     pageSize: 100,
-                    startDate: dateFilters.startDate,
-                    endDate: dateFilters.endDate
+                    // startDate: dateFilters.startDate,
+                    // endDate: dateFilters.endDate
                 });
 
                 if (error) throw error;
