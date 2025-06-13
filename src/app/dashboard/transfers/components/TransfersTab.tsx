@@ -20,7 +20,7 @@ const TransfersTab: React.FC<TransfersTabProps> = ({
   getTeamName,
   handleApproveTransfer,
   handleRejectTransfer,
-  viewTransferDetails
+  viewTransferDetails,
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');

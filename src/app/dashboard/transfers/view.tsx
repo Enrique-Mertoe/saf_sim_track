@@ -3,12 +3,14 @@ import React, {useEffect, useState} from 'react';
 import {simCardTransferService, teamService} from "@/services";
 import useApp from "@/ui/provider/AppProvider";
 import {SimCardTransfer, Team, TransferStatus} from "@/models";
-import {AlertTriangle, ArrowLeftRight, Check, RefreshCw, X} from 'lucide-react';
+import {AlertTriangle, ArrowLeftRight, Calendar, Check, RefreshCw, X} from 'lucide-react';
 import {useSupabaseSignal} from "@/lib/supabase/event";
 import ClientApi from "@/lib/utils/ClientApi";
 import {showDialog} from "@/app/dashboard/transfers/utility";
 import {showModal} from "@/ui/shortcuts";
 import SimCardRangeSelectionModal from "@/app/dashboard/transfers/components/SimCardRangeSelectionModal";
+import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
+import {format, isToday, isYesterday} from "date-fns";
 
 
 const TransfersPage = () => {
@@ -24,10 +26,58 @@ const TransfersPage = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedSimSearchTerm, setSelectedSimSearchTerm] = useState<string>('');
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+    const [selectedPeriod, setSelectedPeriod] = useState<string>('last-30-days');
+    const [startDate, setStartDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 30)));
+    const [endDate, setEndDate] = useState<Date>(new Date());
 
 
     // Setup Supabase realtime for transfers
     const transferSignal = useSupabaseSignal('sim_card_transfers', {autoConnect: true});
+
+    // Format date for display
+    const formatDateForDisplay = (dateString: string | Date) => {
+        const date = new Date(dateString);
+        if (isToday(date)) {
+            return "Today";
+        } else if (isYesterday(date)) {
+            return "Yesterday";
+        } else {
+            return format(date, "MMM d yyyy");
+        }
+    };
+
+    // Format date range for display
+    const formatDateRangeForDisplay = () => {
+        if (selectedPeriod === 'custom') {
+            const formattedStartDate = formatDateForDisplay(startDate);
+            const formattedEndDate = formatDateForDisplay(endDate);
+
+            if (formattedStartDate === formattedEndDate) {
+                return formattedStartDate;
+            } else {
+                return `${formattedStartDate} - ${formattedEndDate}`;
+            }
+        } else {
+            // For predefined periods, use the period name
+            switch (selectedPeriod) {
+                case 'last-7-days':
+                    return 'Last 7 days';
+                case 'last-90-days':
+                    return 'Last 90 days';
+                case 'last-30-days':
+                default:
+                    return 'Last 30 days';
+            }
+        }
+    };
+
+    // Get date filters for API calls
+    const getDateFilters = () => {
+        return {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+        };
+    };
 
     // Fetch transfers
     useEffect(() => {
@@ -37,10 +87,13 @@ const TransfersPage = () => {
 
             try {
                 setIsLoading(true);
+                const dateFilters = getDateFilters();
                 const {data, error} = await simCardTransferService.getTransferRequests({
                     sourceTeamId: user.team_id,
                     adminId: user.admin_id,
-                    pageSize: 100
+                    pageSize: 100,
+                    startDate: dateFilters.startDate,
+                    endDate: dateFilters.endDate
                 });
 
                 if (error) throw error;
@@ -54,7 +107,7 @@ const TransfersPage = () => {
         };
 
         fetchTransfers();
-    }, [user]);
+    }, [user, startDate, endDate]);
 
     // Fetch teams
     useEffect(() => {
@@ -330,8 +383,44 @@ const TransfersPage = () => {
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">SIM Card Transfers</h1>
-                        <p className="text-gray-600">Transfer unsold SIM cards to other teams</p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900">SIM Card Transfers</h1>
+                                <p className="text-gray-600">Transfer unsold SIM cards to other teams</p>
+                            </div>
+                            <div>
+                                <button
+                                    onClick={() => {
+                                        showModal({
+                                            content: onClose => (
+                                                <ReportDateRangeTemplate
+                                                    onConfirm={selection => {
+                                                        if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
+                                                            // Update state with the selected dates
+                                                            setStartDate(selection.range.startDate);
+                                                            setEndDate(selection.range.endDate);
+                                                            setSelectedPeriod('custom');
+                                                        } else if (selection.type === 'single' && selection.single) {
+                                                            // Handle single date selection
+                                                            setStartDate(selection.single);
+                                                            setEndDate(selection.single);
+                                                            setSelectedPeriod('custom');
+                                                        }
+                                                        onClose();
+                                                    }}
+                                                    onClose={() => onClose()}
+                                                />
+                                            ),
+                                            size: "lg",
+                                        });
+                                    }}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2"
+                                >
+                                    <Calendar className="h-4 w-4"/>
+                                    <span>{formatDateRangeForDisplay()}</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Error message */}

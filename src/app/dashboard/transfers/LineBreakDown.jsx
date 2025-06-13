@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {AlertCircle, ChevronUp, RefreshCw} from "lucide-react";
 import simService from "@/services/simService";
 
-export default function LineBreakDown({user}) {
+export default function LineBreakDown({user,dateRange}) {
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [selectedBatch, setSelectedBatch] = useState(null);
     const [view, setView] = useState('teams');
@@ -158,13 +158,13 @@ export default function LineBreakDown({user}) {
             setError(null);
 
             try {
-                const dateFilterStrings = getDateFilterStrings();
+                // const dateFilterStrings = getDateFilterStrings();
 
                 const {data, error} = await simService.getUserStatsForBatch(
                     selectedTeam,
                     selectedBatch,
                     user,
-                    dateFilterStrings
+                    dateRange
                 );
 
                 if (error) throw error;
@@ -267,7 +267,7 @@ export default function LineBreakDown({user}) {
             ) : (
                 <div className="grid gap-2 sm:grid-cols-4">
                     {teamStats.map(team => (
-                        <TeamCard setSelectedTeam={setSelectedTeam} setView={setView} key={team.id} user={user}
+                        <TeamCard dateRange={dateRange} setSelectedTeam={setSelectedTeam} setView={setView} key={team.id} user={user}
                                   team={team}/>
                     ))}
                 </div>
@@ -373,7 +373,7 @@ export default function LineBreakDown({user}) {
 }
 
 // Team Card Component
-const TeamCard = ({team, user, setSelectedTeam, setView}) => {
+const TeamCard = ({team, user,dateRange, setSelectedTeam, setView}) => {
     const [stats, sSt] = useState({total: 0, assigned: 0})
     const [isLoading, setIsLoading] = useState(true)
 
@@ -383,13 +383,22 @@ const TeamCard = ({team, user, setSelectedTeam, setView}) => {
         const fetchData = async () => {
             if (!user || !team.id) return
             setIsLoading(true)
+            const dateConditions = [];
+            if (dateRange && dateRange.startDate) {
+                dateConditions.push(["created_at", "gte", dateRange.startDate]);
+            }
+            if (dateRange && dateRange.endDate) {
+                dateConditions.push(["created_at", "lte", dateRange.endDate]);
+            }
             const [v1, v2] = await Promise.all([
                 simService.countAll(user, [
-                    ["team_id", team.id]
+                    ["team_id", team.id],
+                    ...(dateConditions || [])
                 ]),
                 simService.countAll(user, [
                     ["assigned_to_user_id", "not", "is", null],
-                    ["team_id", team.id]
+                    ["team_id", team.id],
+                    ...(dateConditions || [])
                 ]),
             ])
             sSt({
@@ -399,7 +408,7 @@ const TeamCard = ({team, user, setSelectedTeam, setView}) => {
             setIsLoading(false)
         }
         fetchData().then()
-    }, [user]);
+    }, [user,dateRange]);
 
 
     return (
