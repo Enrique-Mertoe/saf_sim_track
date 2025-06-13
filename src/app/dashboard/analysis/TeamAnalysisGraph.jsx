@@ -3,20 +3,6 @@ import {Bar, BarChart, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis} from 
 import simService from "@/services/simService";
 import {teamService} from "@/services";
 
-const data1 = [
-    {team: 'Team Alpha', totalRegistered: 45, quality: 30, activated: 25},
-    {team: 'Team Beta', totalRegistered: 38, quality: 35, activated: 27},
-    {team: 'Team Gamma', totalRegistered: 52, quality: 28, activated: 20},
-    {team: 'Team Delta', totalRegistered: 41, quality: 32, activated: 27},
-    {team: 'Team Epsilon', totalRegistered: 35, quality: 40, activated: 25},
-    {team: 'Team Zeta', totalRegistered: 48, quality: 25, activated: 27},
-    {team: 'Team Eta', totalRegistered: 44, quality: 31, activated: 25},
-    {team: 'Team Theta', totalRegistered: 39, quality: 36, activated: 25},
-    {team: 'Team Iota', totalRegistered: 46, quality: 29, activated: 25},
-    {team: 'Team Kappa', totalRegistered: 42, quality: 33, activated: 25},
-    {team: 'Team Lambda', totalRegistered: 37, quality: 38, activated: 25},
-    {team: 'Team Mu', totalRegistered: 49, quality: 26, activated: 25}
-];
 
 const CustomLegend = ({payload}) => {
     return (
@@ -56,24 +42,40 @@ const CustomTooltip = ({active, payload, label}) => {
     return null;
 };
 
-export default function TeamAnalysisGraph({user}) {
+export default function TeamAnalysisGraph({user, dateFilters}) {
     const [data, sD] = useState(null)
+
     useEffect(() => {
         fetchMetrics().then()
-    }, [user]);
+    }, [user, dateFilters]);
 
     const fetchMetrics = async () => {
         if (!user) return
         let {data: teams} = await teamService.getAllTeams(user)
+
+        // Create date filter conditions for API queries
+        const dateConditions = [];
+        if (dateFilters && dateFilters.startDate) {
+            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+        }
+        if (dateFilters && dateFilters.endDate) {
+            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+        }
 
         teams = await Promise.all(
             (teams || []).map(async t => {
                 const teamId = t.id;
 
                 const [reg, qlty, act] = await Promise.all([
-                    simService.countReg(user, teamId),
-                    simService.countQuality(user, teamId, [["registered_on", "not", "is", null]]),
-                    simService.countQuery(user, teamId, [["activated_on", "not", "is", null]]),
+                    simService.countReg(user, teamId, dateConditions),
+                    simService.countQuality(user, teamId, [
+                        ["registered_on", "not", "is", null],
+                        ...(dateConditions || [])
+                    ]),
+                    simService.countQuery(user, teamId, [
+                        ["activated_on", "not", "is", null],
+                        ...(dateConditions || [])
+                    ]),
                 ]);
 
                 const totalRegistered = reg.count ?? 0;
@@ -86,7 +88,7 @@ export default function TeamAnalysisGraph({user}) {
                 };
             })
         );
-       sD( teams)
+       sD(teams)
     }
     return (
         <div className="bg-white p-8 rounded-lg shadow-sm">

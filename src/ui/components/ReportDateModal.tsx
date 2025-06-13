@@ -1,11 +1,11 @@
 "use client";
 
-import {useState, useEffect} from "react";
-import {addMonths, isAfter, isBefore, isSameDay, startOfMonth, endOfMonth, format} from "date-fns";
-import {motion, AnimatePresence} from "framer-motion";
+import {useEffect, useState} from "react";
+import {addMonths, endOfMonth, format, isAfter, isBefore, isSameDay, startOfMonth} from "date-fns";
+import {AnimatePresence, motion} from "framer-motion";
 import Calendar from "@/ui/components/Calendar";
 import {Button} from "@/ui/components/Button";
-import {ChevronLeft, ChevronRight, CalendarIcon} from "lucide-react";
+import {CalendarIcon, ChevronLeft, ChevronRight} from "lucide-react";
 
 export type DateSelection = {
     type: 'range' | 'single';
@@ -50,9 +50,20 @@ export default function ReportDateRangeTemplate({
                 defaultSelection.range.startDate :
                 new Date()
     );
-    const [quickSelection, setQuickSelection] = useState<string | null>(null);
+    const [quickSelection, setQuickSelection] = useState<string | null>("last-30-days");
     const [calendarView, setCalendarView] = useState<'single' | 'dual'>('single');
     const [animating, setAnimating] = useState(false);
+
+    // Set default to last 30 days on mount
+    useEffect(() => {
+        // Only set default if no defaultSelection is provided
+        if (!defaultSelection) {
+            handleQuickSelect("last-30-days");
+        }
+    // We're intentionally not including handleQuickSelect in the deps array
+    // as it would cause the effect to run on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [defaultSelection]);
 
     // Responsive handling for calendar view
     useEffect(() => {

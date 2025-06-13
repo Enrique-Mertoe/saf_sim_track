@@ -1,7 +1,7 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
 import {Cell, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
-import {CheckCircle, Download, XCircle} from 'lucide-react';
+import {Calendar, CheckCircle, Download, XCircle} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import simCardService from "@/services/simService";
 import simService from "@/services/simService";
@@ -10,6 +10,9 @@ import TeamBreakdownCard from "@/app/dashboard/analysis/TeamBreakDown";
 import {MetricCard} from "@/app/dashboard/analysis/Metricard";
 import TeamAnalysisGraph from "@/app/dashboard/analysis/TeamAnalysisGraph";
 import {SIMStatus} from "@/models";
+import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
+import {showModal} from "@/ui/shortcuts";
+import {format, isToday, isYesterday} from "date-fns";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -25,6 +28,9 @@ const SIMAnalysisPage = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(null);
     const [teamData, setTeamData] = useState([]);
+    const [startDate, setStartDate] = useState(DateTime.now().minus({days: 30}).toISODate());
+    const [endDate, setEndDate] = useState(DateTime.now().toISODate());
+    const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [totalMetrics, setTotalMetrics] = useState({
         totalRecorded: 0,
         totalMatched: 0,
@@ -33,34 +39,84 @@ const SIMAnalysisPage = () => {
         totalUnknown: 0
     });
 
+    // Format date for display
+    const formatDateForDisplay = (dateString) => {
+        const date = new Date(dateString);
+        if (isToday(date)) {
+            return "Today";
+        } else if (isYesterday(date)) {
+            return "Yesterday";
+        } else {
+            return format(date, "MMM d yyyy");
+        }
+    };
+
+    // Format date range for display
+    const formatDateRangeForDisplay = () => {
+        if (selectedPeriod === 'custom') {
+            const formattedStartDate = formatDateForDisplay(startDate);
+            const formattedEndDate = formatDateForDisplay(endDate);
+
+            if (formattedStartDate === formattedEndDate) {
+                return formattedStartDate;
+            } else {
+                return `${formattedStartDate} - ${formattedEndDate}`;
+            }
+        } else {
+            // For predefined periods, use the period name
+            switch (selectedPeriod) {
+                case 'last-7-days':
+                    return 'Last 7 days';
+                case 'last-90-days':
+                    return 'Last 90 days';
+                case 'last-30-days':
+                default:
+                    return 'Last 30 days';
+            }
+        }
+    };
+
     // Generate date filters based on selected period
     const getDateFilters = useCallback(() => {
         const now = DateTime.now().setZone("Africa/Nairobi");
-        let startDate;
+        let start, end;
 
-        switch (selectedPeriod) {
-            case 'last-7-days':
-                startDate = now.minus({days: 7}).startOf('day');
-                break;
-            case 'last-90-days':
-                startDate = now.minus({days: 90}).startOf('day');
-                break;
-            case 'last-30-days':
-            default:
-                startDate = now.minus({days: 30}).startOf('day');
-                break;
+        if (selectedPeriod === 'custom') {
+            // Use the custom date range
+            start = DateTime.fromISO(startDate).startOf('day');
+            end = DateTime.fromISO(endDate).endOf('day');
+        } else {
+            // Use predefined periods
+            switch (selectedPeriod) {
+                case 'last-7-days':
+                    start = now.minus({days: 7}).startOf('day');
+                    break;
+                case 'last-90-days':
+                    start = now.minus({days: 90}).startOf('day');
+                    break;
+                case 'last-30-days':
+                default:
+                    start = now.minus({days: 30}).startOf('day');
+                    break;
+            }
+            end = now.endOf('day');
         }
-
+        // start = start.setZone('utc');
+        // end = end.setZone('utc')
         return {
-            startDate: startDate.toISO(),
-            endDate: now.endOf('day').toISO()
+            startDate: start.toISO(),
+            endDate: end.toISO()
         };
-    }, [selectedPeriod]);
+    }, [selectedPeriod, startDate, endDate]);
 
     // Generate cache key
     const getCacheKey = useCallback(() => {
-        return `analysis_${user?.id || 'guest'}_${selectedPeriod}_${selectedTeam}`;
-    }, [user, selectedPeriod, selectedTeam]);
+        // Include custom date range in the cache key when custom period is selected
+        const dateKey = selectedPeriod === 'custom' 
+            ? `${startDate}_${endDate}` 
+            : selectedPeriod;
+        return `analysis_${user?.id || 'guest'}_${dateKey}_${selectedTeam}`;
+    }, [user, selectedPeriod, selectedTeam, startDate, endDate]);
 
     // Fetch data function
     const fetchData = useCallback(async (force = false) => {
@@ -217,16 +273,44 @@ const SIMAnalysisPage = () => {
                         <p className="text-gray-600 dark:text-gray-400 mt-2">Comprehensive breakdown of team performance
                             and quality metrics</p>
                     </div>
-                    <div className="flex space-x-4">
-                        <select
-                            value={selectedPeriod}
-                            onChange={(e) => setSelectedPeriod(e.target.value)}
-                            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
-                        >
-                            <option value="last-7-days">Last 7 Days</option>
-                            <option value="last-30-days">Last 30 Days</option>
-                            <option value="last-90-days">Last 90 Days</option>
-                        </select>
+                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                        <button
+                            onClick={()=>{
+                                    showModal({
+                                        content: onClose=>(<ReportDateRangeTemplate
+                                            onConfirm={selection => {
+                                                if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
+                                                    // Convert Date objects to ISO strings for our date state
+                                                    const newStartDate = selection.range.startDate.toISOString().split('T')[0];
+                                                    const newEndDate = selection.range.endDate.toISOString().split('T')[0];
+
+                                                    // Update state with the selected dates
+                                                    setStartDate(newStartDate);
+                                                    setEndDate(newEndDate);
+                                                    setSelectedPeriod('custom');
+
+                                                    // Fetch data with the new date range
+                                                    fetchData(true);
+                                                } else if (selection.type === 'single' && selection.single) {
+                                                    // Handle single date selection
+                                                    const newDate = selection.single.toISOString().split('T')[0];
+                                                    setStartDate(newDate);
+                                                    setEndDate(newDate);
+                                                    setSelectedPeriod('custom');
+
+                                                    // Fetch data with the new date
+                                                    fetchData(true);
+                                                }
+                                                onClose();
+                                            }}
+                                            onClose={() => onClose()}/>),
+                                        size: "lg",
+                                    });
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2">
+                            <Calendar className="h-4 w-4"/>
+                            <span>{formatDateRangeForDisplay()}</span>
+                        </button>
                         <button
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2">
                             <Download className="h-4 w-4"/>
@@ -255,8 +339,8 @@ const SIMAnalysisPage = () => {
                             title="Total Quality"
                             dataType={"quality"}
                             value={totalMetrics.totalQuality}
-                            subtitle={`${((totalMetrics.totalQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% quality rate`}
                             icon={CheckCircle}
+                            dateFilters={getDateFilters()}
                             trend={8}
                             color="green"
                         />
@@ -265,8 +349,8 @@ const SIMAnalysisPage = () => {
                             title="Total Non-Quality"
                             dataType={"nonQuality"}
                             value={totalMetrics.totalQuality}
-                            subtitle={`${((totalMetrics.totalQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% quality rate`}
                             icon={XCircle}
+                            dateFilters={getDateFilters()}
                             trend={8}
                             color="red"
                         />
@@ -275,7 +359,7 @@ const SIMAnalysisPage = () => {
                             title="Lines Connected"
                             dataType={"activated"}
                             value={totalMetrics.totalNonQuality}
-                            subtitle={`${((totalMetrics.totalNonQuality / totalMetrics.totalRecorded) * 100).toFixed(1)}% of total`}
+                            dateFilters={getDateFilters()}
                             icon={XCircle}
                             trend={-3}
                             color="amber"
@@ -291,11 +375,11 @@ const SIMAnalysisPage = () => {
                         {/*/>*/}
                     </div>
 
-                    <TeamAnalysisGraph user={user}/>
+                    <TeamAnalysisGraph user={user} dateFilters={getDateFilters()}/>
                 </div>
 
                 <div className="md:col-span-4">
-                    <ContactsBySource user={user}/>
+                    <ContactsBySource user={user} dateFilters={getDateFilters()}/>
                 </div>
             </div>
 
@@ -304,7 +388,12 @@ const SIMAnalysisPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Detailed Team Analysis</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
                     {teamData.map(team => (
-                        <TeamBreakdownCard user={user} key={team.id} team={team}/>
+                        <TeamBreakdownCard 
+                            user={user} 
+                            key={team.id} 
+                            team={team}
+                            dateFilters={getDateFilters()}
+                        />
                     ))}
                 </div>
             </div>
@@ -315,7 +404,7 @@ const SIMAnalysisPage = () => {
 
 export default SIMAnalysisPage;
 
-const ContactsBySource = ({user}) => {
+const ContactsBySource = ({user, dateFilters}) => {
     const [hoveredSegment, setHoveredSegment] = useState(null);
     const [selectedSegment, setSelectedSegment] = useState(null);
     const [data, sB] = useState([]);
@@ -323,7 +412,18 @@ const ContactsBySource = ({user}) => {
     async function loadData() {
         if (!user)
             return
-        const data = await simService.countTopUpCategories(user, [["quality", SIMStatus.NONQUALITY],["status",SIMStatus.ACTIVATED]])
+
+        // Create date filter conditions for API queries
+        const conditions = [["quality", SIMStatus.NONQUALITY], ["status", SIMStatus.ACTIVATED]];
+
+        if (dateFilters && dateFilters.startDate) {
+            conditions.push(["registered_on", "gte", dateFilters.startDate]);
+        }
+        if (dateFilters && dateFilters.endDate) {
+            conditions.push(["registered_on", "lte", dateFilters.endDate]);
+        }
+
+        const data = await simService.countTopUpCategories(user, conditions);
         sB([
             {name: 'Below 50 Top-up', value: data.lt50, color: '#3B82F6', description: 'Lines with less than 50 KES'},
             {name: 'No Top-up', value: data.noTopUp, color: '#10B981', description: 'Lines without top-up'},
@@ -338,7 +438,7 @@ const ContactsBySource = ({user}) => {
 
     useEffect(() => {
         loadData().then()
-    }, [user]);
+    }, [user, dateFilters]);
 
     const total = data.reduce((sum, item) => sum + item.value, 0);
 

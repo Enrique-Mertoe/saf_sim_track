@@ -6,11 +6,6 @@ export async function POST(request: NextRequest) {
     try {
         // Sign out from Supabase
         await supabaseAdmin.auth.signOut();
-
-        // Clear cookies
-        // const cookieStore = cookies();
-        // cookieStore.delete('sb-access-token');
-        // cookieStore.delete('sb-refresh-token');
         await flushSession()
 
         return NextResponse.json({success: true});

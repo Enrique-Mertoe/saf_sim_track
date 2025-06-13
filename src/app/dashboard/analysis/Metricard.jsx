@@ -2,26 +2,35 @@ import React, {useEffect, useState} from "react";
 import simService from "@/services/simService";
 import {SIMStatus} from "@/models";
 
-export const MetricCard = ({title, value, user, subtitle, icon: Icon, trend, color = "green", dataType = "total"}) => {
+export const MetricCard = ({title, value, user, dateFilters, icon: Icon, trend, color = "green", dataType = "total"}) => {
     const [val, sV] = useState(value)
     const fetchMetrics = async () => {
         if (!user) return
+        const dateConditions = [];
+        if (dateFilters && dateFilters.startDate) {
+            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+        }
+        if (dateFilters && dateFilters.endDate) {
+            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+        }
         const [reg] = await Promise.all([
             simService.countReg(user, null, [
                 {
                     quality: ["quality", SIMStatus.QUALITY],
                     total: [],
                     nonQuality: ["quality", SIMStatus.NONQUALITY],
-                    activated: ["status", SIMStatus.ACTIVATED]
+                    activated: ["status", SIMStatus.ACTIVATED],
+
                 }[dataType] || [],
-                ["status",SIMStatus.ACTIVATED]
+                ["status",SIMStatus.ACTIVATED],
+                ...dateConditions
             ]),
         ]);
         sV(reg.count ?? 0)
     }
     useEffect(() => {
         fetchMetrics().then()
-    }, [user]);
+    }, [user,dateFilters]);
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">

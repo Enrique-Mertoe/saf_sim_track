@@ -3,7 +3,7 @@ import {AlertTriangle, TrendingDown, XCircle} from "lucide-react";
 import simService from "@/services/simService";
 import {SIMStatus} from "@/models";
 
-const TeamBreakdownCard = ({team, user}) => {
+const TeamBreakdownCard = ({team, user, dateFilters}) => {
     const teamId = team.id;
     const [totalRecorded, settotalRecorded] = useState(0)
     const [quality, setquality] = useState(0)
@@ -12,12 +12,32 @@ const TeamBreakdownCard = ({team, user}) => {
 
     const fetchMetrics = async () => {
         if (!user || !teamId) return
+
+        // Create date filter conditions for API queries
+        const dateConditions = [];
+        if (dateFilters && dateFilters.startDate) {
+            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+        }
+        if (dateFilters && dateFilters.endDate) {
+            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+        }
+        // console.log("dte",dateConditions)
+
         const [reg, qlty, mtc] = await Promise.all([
             simService.countReg(user, teamId, [
-                ["status", SIMStatus.ACTIVATED]
+                ["status", SIMStatus.ACTIVATED],
+                ...dateConditions
             ]),
-            simService.countQuality(user, teamId, [["registered_on", "not", "is", null], ["status", SIMStatus.ACTIVATED]]),
-            simService.countMatch(user, teamId, [["registered_on", "not", "is", null], ["status", SIMStatus.ACTIVATED]]),
+            simService.countQuality(user, teamId, [
+                ["registered_on", "not", "is", null], 
+                ["status", SIMStatus.ACTIVATED],
+                ...dateConditions
+            ]),
+            simService.countMatch(user, teamId, [
+                ["registered_on", "not", "is", null], 
+                ["status", SIMStatus.ACTIVATED],
+                ...dateConditions
+            ]),
         ]);
         setquality(qlty.count ?? 0)
         settotalRecorded(reg.count ?? 0)
@@ -26,14 +46,25 @@ const TeamBreakdownCard = ({team, user}) => {
 
     const fetchBreakDown = async () => {
         if (!user || !teamId) return
-        const data = await simService.countTopUpCategories(user, [["team_id", teamId], ["quality", SIMStatus.NONQUALITY],["status", SIMStatus.ACTIVATED]])
+
+        // Create date filter conditions for API queries
+        const conditions = [["team_id", teamId], ["quality", SIMStatus.NONQUALITY], ["status", SIMStatus.ACTIVATED]];
+
+        if (dateFilters && dateFilters.startDate) {
+            conditions.push(["registered_on", "gte", dateFilters.startDate]);
+        }
+        if (dateFilters && dateFilters.endDate) {
+            conditions.push(["registered_on", "lte", dateFilters.endDate]);
+        }
+
+        const data = await simService.countTopUpCategories(user, conditions);
         sB(data)
     }
 
     useEffect(() => {
         fetchMetrics().then()
         fetchBreakDown().then()
-    }, [user]);
+    }, [user, dateFilters]);
 
     const matchRate = totalRecorded > 0 ? ((matched / totalRecorded) * 100).toFixed(2) : 0;
     let qualityRate = matched > 0 ? (quality / matched) * 100 : 0;
