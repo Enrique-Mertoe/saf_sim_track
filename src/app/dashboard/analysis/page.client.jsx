@@ -13,6 +13,7 @@ import {SIMStatus} from "@/models";
 import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {showModal} from "@/ui/shortcuts";
 import {format, isToday, isYesterday} from "date-fns";
+import {formatLocalDate} from "@/helper";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
