@@ -559,7 +559,7 @@ export default function TeamSIMAnalysisPage() {
                         <CardContent className={"overflow-y-auto"}>
                             {
                                 userStats.map(userstat => (
-                                    <UserStat key={userstat.id} user={user} stat={userstat}/>
+                                    <UserStat key={userstat.id}  dateRange={getDateFilters()} user={user} stat={userstat}/>
                                 ))
                             }
 
@@ -582,18 +582,25 @@ const UserStat = ({user, stat, dateRange}) => {
     useEffect(() => {
         if (!user) return
         setIsLoading(true)
+        const dateConditions = [];
+        if (dateRange && dateRange.startDate) {
+            dateConditions.push(["registered_on", "gte", dateRange.startDate]);
+        }
+        if (dateRange && dateRange.endDate) {
+            dateConditions.push(["registered_on", "lte", dateRange.endDate]);
+        }
 
         Promise.all([
             simService.countAll(user, [
-                ["assigned_to_user_id", stat.id]
+                ["assigned_to_user_id", stat.id],...dateConditions
             ]),
             simService.countAll(user, [
                 ["assigned_to_user_id", stat.id],
-                ["registered_on", "not", "is", null]
+                ["registered_on", "not", "is", null],...dateConditions
             ]),
             simService.countAll(user, [
                 ["quality", SIMStatus.QUALITY],
-                ["assigned_to_user_id", stat.id]
+                ["assigned_to_user_id", stat.id],...dateConditions
             ])
         ]).then(([r1, r2, qualityRes]) => {
             sS({
@@ -606,7 +613,7 @@ const UserStat = ({user, stat, dateRange}) => {
             console.error("Error fetching user stats:", err)
             setIsLoading(false)
         })
-    }, [user, stat.id]);
+    }, [user, stat.id,dateRange]);
 
     // Skeleton loader when data is loading
     if (isLoading) {
@@ -640,6 +647,7 @@ const UserStat = ({user, stat, dateRange}) => {
                             onClick={() => {
                                 showModal({
                                     content: onClose => <UserStartDetails
+                                        dateFilters={dateRange}
                                         onClose={onClose}
                                         userId={stat.id}
                                         userName={stat.full_name}
@@ -679,7 +687,7 @@ const UserStat = ({user, stat, dateRange}) => {
     )
 }
 
-const UserStartDetails = ({onClose, userName, userId}) => {
+const UserStartDetails = ({onClose,dateFilters, userName, userId}) => {
     const {user} = useApp();
     const [isLoading, setIsLoading] = useState(true);
     const [topUpCategories, setTopUpCategories] = useState(null);
@@ -688,8 +696,15 @@ const UserStartDetails = ({onClose, userName, userId}) => {
         if (!user || !userId) return;
 
         setIsLoading(true);
+        const dateConditions = [];
+        if (dateFilters && dateFilters.startDate) {
+            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+        }
+        if (dateFilters && dateFilters.endDate) {
+            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+        }
         simService.countTopUpCategories(user, [
-            ["assigned_to_user_id", userId]
+            ["assigned_to_user_id", userId],...dateConditions
         ])
             .then(data => {
                 setTopUpCategories(data);
@@ -699,7 +714,7 @@ const UserStartDetails = ({onClose, userName, userId}) => {
                 console.error("Error fetching top-up categories:", err);
                 setIsLoading(false);
             });
-    }, [user, userId]);
+    }, [user, userId,dateFilters]);
 
     // Show loading skeleton when data is being fetched
     if (isLoading) {
