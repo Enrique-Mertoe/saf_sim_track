@@ -23,6 +23,7 @@ import {SIMStatus} from "@/models";
 import {showModal} from "@/ui/shortcuts";
 import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {format, isToday, isYesterday} from "date-fns";
+import {formatLocalDate} from "@/helper";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -120,8 +121,8 @@ export default function TeamSIMAnalysisPage() {
     // Generate cache key
     const getCacheKey = useCallback(() => {
         // Include custom date range in the cache key when custom period is selected
-        const dateKey = selectedPeriod === 'custom' 
-            ? `${startDate}_${endDate}` 
+        const dateKey = selectedPeriod === 'custom'
+            ? `${startDate}_${endDate}`
             : selectedPeriod;
         return `team_analysis_${user?.id || 'guest'}_${dateKey}`;
     }, [user, selectedPeriod, startDate, endDate]);
@@ -158,11 +159,11 @@ export default function TeamSIMAnalysisPage() {
                 dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
             }
             const [reg, qlty, mtc] = await Promise.all([
-                simService.countReg(user, teamId,[
+                simService.countReg(user, teamId, [
                     ...dateConditions
                 ]),
-                simService.countQuality(user, teamId, [["registered_on", "not", "is", null],...(dateConditions)]),
-                simService.countMatch(user, teamId, [["registered_on", "not", "is", null],...dateConditions]),
+                simService.countQuality(user, teamId, [["registered_on", "not", "is", null], ...(dateConditions)]),
+                simService.countMatch(user, teamId, [["registered_on", "not", "is", null], ...dateConditions]),
             ]);
 
             // Process team data
@@ -181,14 +182,9 @@ export default function TeamSIMAnalysisPage() {
             }
 
             // Fetch real breakdown data
-            const breakdownFilters = [["team_id", teamId]];
-            if (dateFilters.startDate) {
-                breakdownFilters.push(["registered_on", "gte", dateFilters.startDate]);
-            }
-            if (dateFilters.endDate) {
-                breakdownFilters.push(["registered_on", "lte", dateFilters.endDate]);
-            }
-
+            const breakdownFilters = [["team_id", teamId],
+                ["quality", SIMStatus.NONQUALITY]
+                , ...dateConditions];
             const breakdownData = await simCardService.countTopUpCategories(user, breakdownFilters);
 
             const processedTeamData = {
@@ -384,15 +380,14 @@ export default function TeamSIMAnalysisPage() {
                     </div>
                     <div className="flex space-x-4">
                         <button
-                            onClick={()=>{
+                            onClick={() => {
                                 showModal({
-                                    content: onClose=>(<ReportDateRangeTemplate
+                                    content: onClose => (<ReportDateRangeTemplate
                                         onConfirm={selection => {
                                             if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
                                                 // Convert Date objects to ISO strings for our date state
-                                                const newStartDate = selection.range.startDate.toISOString().split('T')[0];
-                                                const newEndDate = selection.range.endDate.toISOString().split('T')[0];
-
+                                                const newStartDate = formatLocalDate(selection.range.startDate);
+                                                const newEndDate = formatLocalDate(selection.range.endDate);
                                                 // Update state with the selected dates
                                                 setStartDate(newStartDate);
                                                 setEndDate(newEndDate);
@@ -578,7 +573,7 @@ export default function TeamSIMAnalysisPage() {
 }
 
 
-const UserStat = ({user, stat,dateRange}) => {
+const UserStat = ({user, stat, dateRange}) => {
     const [stats, sS] = useState({total: 0, registered: 0})
     const completionRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
     const [nQ, sNq] = useState(0)
@@ -667,7 +662,8 @@ const UserStat = ({user, stat,dateRange}) => {
                         ></div>
                     </div>
                     <div className="absolute bottom-full right-5 mb-2 hidden group-hover:block">
-                        <div className="bg-gray-900/70 text-white text-xs rounded py-2 max-w-screen px-2 whitespace-nowrap">
+                        <div
+                            className="bg-gray-900/70 text-white text-xs rounded py-2 max-w-screen px-2 whitespace-nowrap">
                             {stats.registered} distributed out of {stats.total} assigned
                         </div>
                         <div

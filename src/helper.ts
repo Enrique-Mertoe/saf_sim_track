@@ -276,3 +276,6 @@ export function chunkArray<T>(array: T[], size: number): T[][] {
     }
     return result;
 }
+
+export const formatLocalDate = (date:any) =>
+    date.toLocaleDateString('en-CA');

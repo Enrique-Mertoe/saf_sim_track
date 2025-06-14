@@ -281,9 +281,8 @@ const SIMAnalysisPage = () => {
                                             onConfirm={selection => {
                                                 if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
                                                     // Convert Date objects to ISO strings for our date state
-                                                    const newStartDate = selection.range.startDate.toISOString().split('T')[0];
-                                                    const newEndDate = selection.range.endDate.toISOString().split('T')[0];
-
+                                                    const newStartDate = formatLocalDate(selection.range.startDate);
+                                                    const newEndDate = formatLocalDate(selection.range.endDate);
                                                     // Update state with the selected dates
                                                     setStartDate(newStartDate);
                                                     setEndDate(newEndDate);
