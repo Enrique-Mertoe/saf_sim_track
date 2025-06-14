@@ -9,6 +9,7 @@ import {userService} from "@/services";
 import {useDialog} from "@/app/_providers/dialog";
 import useApp from "@/ui/provider/AppProvider";
 import {showModal} from "@/ui/shortcuts";
+import alert from "@/ui/alert";
 
 type UserTableProps = {
     users: User[];
@@ -164,74 +165,70 @@ export default function UserTable({
     };
 
     const handleDeleteClick = (user: User) => {
-        const d = dialog.create({
-            content: (
-
-                <div className="p-6 bg-white rounded-md dark:bg-gray-800">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Deletion</h3>
-                    <p className="mb-6 text-gray-700 dark:text-gray-300">
-                        Are you sure you want to delete {user.full_name}?
-                    </p>
-                    <div className="flex justify-end space-x-3">
-                        <button
-                            onClick={() => d.dismiss()}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={() => {
-                                d.dismiss();
-                                confirmDeleteUser();
-                            }}
-                            className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800"
-                        >
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            ),
-        });
-        setConfirmDelete(user.id);
+        // const d = dialog.create({
+        //     content: (
+        //
+        //         <div className="p-6 bg-white rounded-md dark:bg-gray-800">
+        //             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Deletion</h3>
+        //             <p className="mb-6 text-gray-700 dark:text-gray-300">
+        //                 Are you sure you want to delete {user.full_name}?
+        //             </p>
+        //             <div className="flex justify-end space-x-3">
+        //                 <button
+        //                     onClick={() => d.dismiss()}
+        //                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+        //                 >
+        //                     Cancel
+        //                 </button>
+        //                 <button
+        //                     onClick={() => {
+        //                         d.dismiss();
+        //                         );
+        //                     }}
+        //                     className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800"
+        //                 >
+        //                     Delete
+        //                 </button>
+        //             </div>
+        //         </div>
+        //     ),
+        // });
+        // setConfirmDelete(user.id);
+        alert.confirm({
+            type: alert.ERROR,
+            message: `Confirm deletion of ${user.full_name}`,
+            title: "User Manager",
+            async task() {
+                return confirmDeleteUser(user)
+            }
+        })
     };
 
-    const confirmDeleteUser = async () => {
-        if (confirmDelete) {
-            setIsDeleting(true);
-            try {
-                // Find the user being deleted to store for potential undo
-                const userIndex = localUsers.findIndex(user => user.id === confirmDelete);
+    const confirmDeleteUser = async (deletedUser: User) => {
+        // Actually delete from database
+        //@ts-ignore
+        const response = await userService.deleteUser<User>(deletedUser.id, user);
+        console.log(response)
+        if (response.data) {
+            // Success - user was deleted
+            setSuccessMessage(`User ${deletedUser.full_name} has been deleted successfully`);
+            // Call parent's onDeleteUser to update parent state
+            onDeleteUser(deletedUser.id);
 
-                // Only proceed if we found the user
-                if (userIndex !== -1) {
-                    const userToDelete = localUsers[userIndex];
+            // Reset delete state after successful deletion
+            resetDeleteState();
+            return true
+        } else {
+            // Error - deletion failed
+            const errorMessage = response.error?.message || 'Unknown error';
+            toast.error(`Failed to delete user: ${errorMessage}`);
 
-                    // Store the user and its position for potential undo
-                    setDeletedUser(userToDelete);
-                    setDeletedUserIndex(userIndex);
-
-                    // Hide the confirmation modal
-                    setConfirmDelete(null);
-
-                    // Remove from local UI immediately for better UX
-                    setLocalUsers(prevUsers => prevUsers.filter(user => user.id !== confirmDelete));
-
-                    // Start the undo countdown timer (5 seconds)
-                    // This needs to be set after other state updates to ensure the useEffect triggers properly
-                    setUndoTimer(5);
-                } else {
-                    // User not found in local state
-                    toast.error("User not found in the current list");
-                    setConfirmDelete(null);
-                }
-            } catch (error: any) {
-                toast.error(`Failed to prepare user deletion: ${error?.message || 'Unknown error'}`);
-                console.error("Error in confirmDeleteUser:", error);
-                setConfirmDelete(null);
-            } finally {
-                setIsDeleting(false);
-            }
+            // Add the user back to the list since deletion failed
+            restoreDeletedUser();
+            resetDeleteState();
+            throw response.error;
         }
+
     };
 
     const finalizeDelete = async () => {
@@ -334,7 +331,8 @@ export default function UserTable({
         setViewUser(viewing);
         showModal({
             content: onClose =>
-                <ViewDetails viewing={viewing} onClose={onClose} user={user} setShowSuccessModal={setShowSuccessModal} setSuccessMessage={setSuccessMessage}/>,
+                <ViewDetails viewing={viewing} onClose={onClose} user={user} setShowSuccessModal={setShowSuccessModal}
+                             setSuccessMessage={setSuccessMessage}/>,
             size: "lg"
         })
     };
@@ -520,7 +518,6 @@ export default function UserTable({
             setIsSubmitting(false);
         }
     };
-
 
 
     const closeModals = () => {
@@ -867,7 +864,8 @@ export default function UserTable({
                             </p>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <div className="bg-gray-100 rounded-sm h-[2px]  absolute top-[1px] w-full transition-all duration-200 left-0">
+                            <div
+                                className="bg-gray-100 rounded-sm h-[2px]  absolute top-[1px] w-full transition-all duration-200 left-0">
                                 <div
                                     className="bg-green-500 h-[2px] rounded-full transition-all duration-1000 ease-linear"
                                     style={{width: `${(undoTimer / 5) * 100}%`}}
@@ -896,7 +894,7 @@ export default function UserTable({
 }
 
 
-function ViewDetails({onClose,viewing,setSuccessMessage,setShowSuccessModal,user}:any){
+function ViewDetails({onClose, viewing, setSuccessMessage, setShowSuccessModal, user}: any) {
     const [isResettingPassword, setIsResettingPassword] = useState(false);
     const handleResetPassword = async (targetUser: User) => {
         setIsResettingPassword(true);
@@ -1002,7 +1000,7 @@ function ViewDetails({onClose,viewing,setSuccessMessage,setShowSuccessModal,user
                     >
                         {isResettingPassword ? (
                             <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin"/>
                                 Resetting...
                             </>
                         ) : (
