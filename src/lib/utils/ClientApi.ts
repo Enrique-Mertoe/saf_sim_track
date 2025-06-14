@@ -1,5 +1,5 @@
 import {$} from "@/lib/request";
-import {SimCardTransfer, UserCreate} from "@/models";
+import {SimCardTransfer, User, UserCreate} from "@/models";
 
 type ApiType = {
     admin: ClientAdmin;
@@ -20,6 +20,9 @@ const dispatcher = <T>(type: keyof ApiType, target: string, data: any) => $.post
 class ClientAdmin {
     create_user(data: UserCreate) {
         return dispatcher("admin", "create_user", data)
+    }
+    del_user(data: Partial<User>) {
+        return dispatcher("admin", "del_user", data)
     }
 }
 

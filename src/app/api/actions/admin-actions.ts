@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {User, UserCreate, UserRole} from "@/models";
-import {createSuperClient} from "@/lib/supabase/server";
+import {createSuperClient, supabaseAdmin} from "@/lib/supabase/server";
 import {SendEmailOptions, SendEmailResult} from "@/types/mail.sendgrid";
 import sgMail from '@sendgrid/mail';
 import {join} from "path";
@@ -284,6 +284,17 @@ class AdminActions {
         console.log(error)
         if (error) {
             return makeResponse({error: (error as any).message})
+        }
+        return makeResponse({ok: true})
+    }
+    static async del_user(data: any) {
+        const {error} = await (await createSuperClient()).auth.admin.deleteUser(data.id)
+        if (error) {
+            return makeResponse({error: (error as any).message})
+        }
+        const {error:dUserError} = await supabaseAdmin.from("users").delete().eq('id',data.id ?? null).select().single()
+        if (dUserError) {
+            return makeResponse({error: (dUserError as any).message})
         }
         return makeResponse({ok: true})
     }

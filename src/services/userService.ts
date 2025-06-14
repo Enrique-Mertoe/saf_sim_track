@@ -2,6 +2,7 @@
 import {User, UserRole, UserUpdate} from "@/models";
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {admin_id} from "./helper";
+import ClientApi from "@/lib/utils/ClientApi";
 
 
 export const userService = {
@@ -138,15 +139,34 @@ export const userService = {
             .eq('id', userId)
             .eq("admin_id", await admin_id(user));
     },
-    async deleteUser(id: string, user?: User) {
-        const supabase = createSupabaseClient();
-        const query = supabase.from("users").delete();
-
-        // Add admin_id check if user is provided
+    async deleteUser<T>(id: string, user?: User) {
+        const data = {};
         if (user) {
-            query.eq("admin_id", await admin_id(user));
+            //@ts-ignore
+            data['admin_id'] = await admin_id(user);
+            // data['auth_user'] = user.auth_;
         }
-
-        return query.eq('id', id).select();
+        return await new Promise((resolve:({data,error}:{data?:T,error?:any})=>void) => {
+            ClientApi.of("admin")
+                .get().del_user({
+                id, ...data
+            }).then((response) => {
+                if (response.ok)
+                    resolve({data: response.data as T});
+                else
+                    resolve({error: response.message});
+            }).catch((error) => {
+                resolve({error: new Error(error.message)});
+            })
+        })
+        // const supabase = createSupabaseClient();
+        // const query = supabase.from("users").delete();
+        //
+        // // Add admin_id check if user is provided
+        // if (user) {
+        //     query.eq("admin_id", await admin_id(user));
+        // }
+        //
+        // return query.eq('id', id).select();
     }
 };

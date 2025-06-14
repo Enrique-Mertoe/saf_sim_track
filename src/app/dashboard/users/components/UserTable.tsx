@@ -238,9 +238,10 @@ export default function UserTable({
         if (deletedUser) {
             try {
                 // Actually delete from database
-                const response = await userService.deleteUser(deletedUser.id, user);
+                //@ts-ignore
+                const response = await userService.deleteUser<User>(deletedUser.id, user);
 
-                if (response.data && response.data.length > 0) {
+                if (response.data) {
                     // Success - user was deleted
                     setSuccessMessage(`User ${deletedUser.full_name} has been deleted successfully`);
                     setShowSuccessModal(true);
