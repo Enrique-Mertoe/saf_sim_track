@@ -4,6 +4,7 @@ import {Cell, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
 import {
     AlertCircle,
     AlertTriangle,
+    Calendar,
     CheckCircle,
     RefreshCw,
     Smartphone,
@@ -20,6 +21,8 @@ import {Card, CardContent, CardHeader} from "@/ui/components/Card";
 import {userService} from "@/services";
 import {SIMStatus} from "@/models";
 import {showModal} from "@/ui/shortcuts";
+import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
+import {format, isToday, isYesterday} from "date-fns";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -35,6 +38,8 @@ export default function TeamSIMAnalysisPage() {
     const [error, setError] = useState(null);
     const [teamData, setTeamData] = useState(null);
     const [userStats, setUserStats] = useState([]);
+    const [startDate, setStartDate] = useState(DateTime.now().minus({days: 30}).toISODate());
+    const [endDate, setEndDate] = useState(DateTime.now().toISODate());
     const [totalMetrics, setTotalMetrics] = useState({
         totalRecorded: 0,
         totalMatched: 0,
@@ -43,34 +48,83 @@ export default function TeamSIMAnalysisPage() {
         totalUnknown: 0
     });
 
+    // Format date for display
+    const formatDateForDisplay = (dateString) => {
+        const date = new Date(dateString);
+        if (isToday(date)) {
+            return "Today";
+        } else if (isYesterday(date)) {
+            return "Yesterday";
+        } else {
+            return format(date, "MMM d yyyy");
+        }
+    };
+
+    // Format date range for display
+    const formatDateRangeForDisplay = () => {
+        if (selectedPeriod === 'custom') {
+            const formattedStartDate = formatDateForDisplay(startDate);
+            const formattedEndDate = formatDateForDisplay(endDate);
+
+            if (formattedStartDate === formattedEndDate) {
+                return formattedStartDate;
+            } else {
+                return `${formattedStartDate} - ${formattedEndDate}`;
+            }
+        } else {
+            // For predefined periods, use the period name
+            switch (selectedPeriod) {
+                case 'last-7-days':
+                    return 'Last 7 days';
+                case 'last-90-days':
+                    return 'Last 90 days';
+                case 'last-30-days':
+                default:
+                    return 'Last 30 days';
+            }
+        }
+    };
+
     // Generate date filters based on selected period
     const getDateFilters = useCallback(() => {
         const now = DateTime.now().setZone("Africa/Nairobi");
-        let startDate;
+        let start, end;
 
-        switch (selectedPeriod) {
-            case 'last-7-days':
-                startDate = now.minus({days: 7}).startOf('day');
-                break;
-            case 'last-90-days':
-                startDate = now.minus({days: 90}).startOf('day');
-                break;
-            case 'last-30-days':
-            default:
-                startDate = now.minus({days: 30}).startOf('day');
-                break;
+        if (selectedPeriod === 'custom') {
+            // Use the custom date range
+            start = DateTime.fromISO(startDate).startOf('day');
+            end = DateTime.fromISO(endDate).endOf('day');
+        } else {
+            // Use predefined periods
+            switch (selectedPeriod) {
+                case 'last-7-days':
+                    start = now.minus({days: 7}).startOf('day');
+                    break;
+                case 'last-90-days':
+                    start = now.minus({days: 90}).startOf('day');
+                    break;
+                case 'last-30-days':
+                default:
+                    start = now.minus({days: 30}).startOf('day');
+                    break;
+            }
+            end = now.endOf('day');
         }
 
         return {
-            startDate: startDate.toISO(),
-            endDate: now.endOf('day').toISO()
+            startDate: start.toISO(),
+            endDate: end.toISO()
         };
-    }, [selectedPeriod]);
+    }, [selectedPeriod, startDate, endDate]);
 
     // Generate cache key
     const getCacheKey = useCallback(() => {
-        return `team_analysis_${user?.id || 'guest'}_${selectedPeriod}`;
-    }, [user, selectedPeriod]);
+        // Include custom date range in the cache key when custom period is selected
+        const dateKey = selectedPeriod === 'custom' 
+            ? `${startDate}_${endDate}` 
+            : selectedPeriod;
+        return `team_analysis_${user?.id || 'guest'}_${dateKey}`;
+    }, [user, selectedPeriod, startDate, endDate]);
 
     // Fetch data function
     const fetchData = useCallback(async (force = false) => {
@@ -96,10 +150,19 @@ export default function TeamSIMAnalysisPage() {
             if (!isLoading) setIsRefreshing(true);
             const teamId = user.team_id;
             const dateFilters = getDateFilters();
+            const dateConditions = [];
+            if (dateFilters && dateFilters.startDate) {
+                dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+            }
+            if (dateFilters && dateFilters.endDate) {
+                dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+            }
             const [reg, qlty, mtc] = await Promise.all([
-                simService.countReg(user, teamId),
-                simService.countQuality(user, teamId, [["registered_on", "not", "is", null]]),
-                simService.countMatch(user, teamId, [["registered_on", "not", "is", null]]),
+                simService.countReg(user, teamId,[
+                    ...dateConditions
+                ]),
+                simService.countQuality(user, teamId, [["registered_on", "not", "is", null],...(dateConditions)]),
+                simService.countMatch(user, teamId, [["registered_on", "not", "is", null],...dateConditions]),
             ]);
 
             // Process team data
@@ -320,15 +383,43 @@ export default function TeamSIMAnalysisPage() {
                         <p className="text-gray-600 dark:text-gray-400 mt-2">Performance metrics for your team</p>
                     </div>
                     <div className="flex space-x-4">
-                        <select
-                            value={selectedPeriod}
-                            onChange={(e) => setSelectedPeriod(e.target.value)}
-                            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white"
-                        >
-                            <option value="last-7-days">Last 7 Days</option>
-                            <option value="last-30-days">Last 30 Days</option>
-                            <option value="last-90-days">Last 90 Days</option>
-                        </select>
+                        <button
+                            onClick={()=>{
+                                showModal({
+                                    content: onClose=>(<ReportDateRangeTemplate
+                                        onConfirm={selection => {
+                                            if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
+                                                // Convert Date objects to ISO strings for our date state
+                                                const newStartDate = selection.range.startDate.toISOString().split('T')[0];
+                                                const newEndDate = selection.range.endDate.toISOString().split('T')[0];
+
+                                                // Update state with the selected dates
+                                                setStartDate(newStartDate);
+                                                setEndDate(newEndDate);
+                                                setSelectedPeriod('custom');
+
+                                                // Fetch data with the new date range
+                                                fetchData(true);
+                                            } else if (selection.type === 'single' && selection.single) {
+                                                // Handle single date selection
+                                                const newDate = selection.single.toISOString().split('T')[0];
+                                                setStartDate(newDate);
+                                                setEndDate(newDate);
+                                                setSelectedPeriod('custom');
+
+                                                // Fetch data with the new date
+                                                fetchData(true);
+                                            }
+                                            onClose();
+                                        }}
+                                        onClose={() => onClose()}/>),
+                                    size: "lg",
+                                });
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2">
+                            <Calendar className="h-4 w-4"/>
+                            <span>{formatDateRangeForDisplay()}</span>
+                        </button>
                         <button
                             onClick={handleRefresh}
                             disabled={isLoading || isRefreshing}
@@ -487,7 +578,7 @@ export default function TeamSIMAnalysisPage() {
 }
 
 
-const UserStat = ({user, stat}) => {
+const UserStat = ({user, stat,dateRange}) => {
     const [stats, sS] = useState({total: 0, registered: 0})
     const completionRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
     const [nQ, sNq] = useState(0)
