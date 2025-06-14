@@ -1,7 +1,17 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
 import {Cell, Pie, PieChart, ResponsiveContainer, Tooltip} from 'recharts';
-import {AlertTriangle, CheckCircle, RefreshCw, Smartphone, TrendingDown, TrendingUp, XCircle} from 'lucide-react';
+import {
+    AlertCircle,
+    AlertTriangle,
+    CheckCircle,
+    RefreshCw,
+    Smartphone,
+    TrendingDown,
+    TrendingUp,
+    X,
+    XCircle
+} from 'lucide-react';
 import useApp from "@/ui/provider/AppProvider";
 import simCardService from "@/services/simService";
 import simService from "@/services/simService";
@@ -9,6 +19,7 @@ import {DateTime} from "luxon";
 import {Card, CardContent, CardHeader} from "@/ui/components/Card";
 import {userService} from "@/services";
 import {SIMStatus} from "@/models";
+import {showModal} from "@/ui/shortcuts";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -366,7 +377,7 @@ export default function TeamSIMAnalysisPage() {
                 </div>
             )}
 
-            <div className="grid grid-cols-12 gap-2">
+            <div className="grid md:grid-cols-12 gap-2">
                 <div className="md:col-span-7">
                     {/* Charts Section */}
                     {!isLoading && teamData && (
@@ -462,7 +473,7 @@ export default function TeamSIMAnalysisPage() {
                         <CardContent className={"overflow-y-auto"}>
                             {
                                 userStats.map(userstat => (
-                                    <UserStat user={user} stat={userstat}/>
+                                    <UserStat key={userstat.id} user={user} stat={userstat}/>
                                 ))
                             }
 
@@ -479,10 +490,13 @@ export default function TeamSIMAnalysisPage() {
 const UserStat = ({user, stat}) => {
     const [stats, sS] = useState({total: 0, registered: 0})
     const completionRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
-    const [nQ,sNq] = useState(0)
+    const [nQ, sNq] = useState(0)
+    const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (!user) return
+        setIsLoading(true)
+
         Promise.all([
             simService.countAll(user, [
                 ["assigned_to_user_id", stat.id]
@@ -491,19 +505,41 @@ const UserStat = ({user, stat}) => {
                 ["assigned_to_user_id", stat.id],
                 ["registered_on", "not", "is", null]
             ]),
-        ]).then(([r1, r2]) => {
+            simService.countAll(user, [
+                ["quality", SIMStatus.QUALITY],
+                ["assigned_to_user_id", stat.id]
+            ])
+        ]).then(([r1, r2, qualityRes]) => {
             sS({
                 total: r1.count ?? 0,
                 registered: r2.count ?? 0
             })
+            sNq(qualityRes.count ?? 0)
+            setIsLoading(false)
+        }).catch(err => {
+            console.error("Error fetching user stats:", err)
+            setIsLoading(false)
         })
-        simService.countAll(user, [
-            ["quality", SIMStatus.QUALITY],
-            ["assigned_to_user_id", stat.id]
-        ]).then(res=>{
-            sNq(res.count ?? 0)
-        })
-    }, [user]);
+    }, [user, stat.id]);
+
+    // Skeleton loader when data is loading
+    if (isLoading) {
+        return (
+            <div
+                className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800 animate-pulse">
+                <div className="flex items-center">
+                    <div>
+                        <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                        <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    </div>
+                </div>
+                <div className="flex flex-col w-full max-w-[140px] items-center gap-3">
+                    <div className="h-1 w-full max-w-[100px] bg-gray-200 dark:bg-gray-700 rounded-sm"></div>
+                    <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -514,7 +550,17 @@ const UserStat = ({user, stat}) => {
                         {stat.full_name}
                     </p>
                     <div className={"flex"}>
-                        <p className={"text-xs font-bold bg-blue-200 text-blue-500 rounded-sm px-4"}>{nQ} Non-Quality</p>
+                        <p
+                            onClick={() => {
+                                showModal({
+                                    content: onClose => <UserStartDetails
+                                        onClose={onClose}
+                                        userId={stat.id}
+                                        userName={stat.full_name}
+                                    />
+                                })
+                            }}
+                            className={"text-xs font-bold cursor-pointer bg-blue-200 text-blue-500 rounded-sm px-4"}>{nQ} Non-Quality</p>
                     </div>
                 </div>
             </div>
@@ -526,7 +572,7 @@ const UserStat = ({user, stat}) => {
 
                     <div
                         className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
-                        style={{ width: `${completionRate}%` }}
+                        style={{width: `${completionRate}%`}}
                     ></div>
 
                 </div>
@@ -537,3 +583,212 @@ const UserStat = ({user, stat}) => {
         </div>
     )
 }
+
+const UserStartDetails = ({onClose, userName, userId}) => {
+    const {user} = useApp();
+    const [isLoading, setIsLoading] = useState(true);
+    const [topUpCategories, setTopUpCategories] = useState(null);
+
+    useEffect(() => {
+        if (!user || !userId) return;
+
+        setIsLoading(true);
+        simService.countTopUpCategories(user, [
+            ["assigned_to_user_id", userId]
+        ])
+            .then(data => {
+                setTopUpCategories(data);
+                setIsLoading(false);
+            })
+            .catch(err => {
+                console.error("Error fetching top-up categories:", err);
+                setIsLoading(false);
+            });
+    }, [user, userId]);
+
+    // Show loading skeleton when data is being fetched
+    if (isLoading) {
+        return (
+            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
+                <div className="relative bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-200"
+                    >
+                        <X size={18} className="text-white"/>
+                    </button>
+                    <div className="flex items-center space-x-3">
+                        <div className="bg-white/20 p-3 rounded-full">
+                            <AlertCircle size={24} className="text-white"/>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">Non-Quality Breakdown</h2>
+                            <p className="text-green-100 text-sm">{userName ? `${userName} - ` : ''}Service Quality
+                                Analysis</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="p-6 animate-pulse">
+                    <div className="bg-gray-200 dark:bg-gray-700 h-20 rounded-lg mb-6"></div>
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="border-l-4 rounded-lg p-4 bg-gray-100 dark:bg-gray-800">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                    <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                </div>
+                                <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const breakdownData = [
+        {
+            id: 1,
+            label: '<50 KES',
+            value: topUpCategories?.lt50 || 0,
+            icon: AlertCircle,
+            severity: 'low'
+        },
+        {
+            id: 2,
+            label: 'No Top-up',
+            value: topUpCategories?.noTopUp || 0,
+            icon: TrendingUp,
+            severity: 'high'
+        },
+        {
+            id: 3,
+            label: '≥50 Not Conv',
+            value: topUpCategories?.gte50NotConverted || 0,
+            icon: AlertTriangle,
+            severity: 'medium'
+        }
+    ];
+
+    const total = breakdownData.reduce((sum, item) => sum + item.value, 0);
+
+    const getSeverityStyles = (severity) => {
+        switch (severity) {
+            case 'low':
+                return 'bg-green-50 border-l-green-500 text-green-700';
+            case 'medium':
+                return 'bg-green-100 border-l-green-600 text-green-800';
+            case 'high':
+                return 'bg-green-200 border-l-green-700 text-green-900';
+            default:
+                return 'bg-green-50 border-l-green-500 text-green-700';
+        }
+    };
+
+    const getProgressWidth = (value) => {
+        return `${(value / total) * 100}%`;
+    };
+
+    return (
+        <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
+            {/* Header */}
+            <div className="relative bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all duration-200"
+                >
+                    <X size={18} className="text-white"/>
+                </button>
+
+                <div className="flex items-center space-x-3">
+                    <div className="bg-white/20 p-3 rounded-full">
+                        <AlertCircle size={24} className="text-white"/>
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-white">Non-Quality Breakdown</h2>
+                        <p className="text-green-100 text-sm">{userName ? `${userName} - ` : ''}Service Quality
+                            Analysis</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+                {/* Summary Stats */}
+                <div className="bg-green-50 rounded-lg p-4 mb-6 border border-green-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-green-800">Total Issues</p>
+                            <p className="text-2xl font-bold text-green-700">{total}</p>
+                        </div>
+                        <div className="bg-green-600 p-3 rounded-full">
+                            <TrendingUp size={20} className="text-white"/>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Breakdown Items */}
+                <div className="space-y-4">
+                    {breakdownData.map((item) => {
+                        const Icon = item.icon;
+                        const percentage = getProgressWidth(item.value);
+
+                        return (
+                            <div key={item.id}
+                                 className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                                <div className="flex items-center space-x-2">
+                                    <Icon size={16} className="text-green-600"/>
+                                    <span className="text-gray-700 text-sm font-medium">{item.label}</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-xs text-gray-500">{percentage}</span>
+                                    <span
+                                        className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                      {item.value}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Visual Summary */}
+                <div className="mt-6 bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribution Overview</h4>
+                    <div className="flex rounded-full overflow-hidden h-3 bg-gray-200">
+                        {breakdownData.map((item, index) => (
+                            <div
+                                key={item.id}
+                                className={`transition-all duration-500 ${
+                                    index === 0 ? 'bg-green-400' :
+                                        index === 1 ? 'bg-green-600' : 'bg-green-500'
+                                }`}
+                                style={{width: getProgressWidth(item.value)}}
+                                title={`${item.label}: ${item.value}`}
+                            />
+                        ))}
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-gray-600">
+                        <span>Low Impact</span>
+                        <span>High Impact</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                    <div className="text-xs text-gray-500">
+                        Last updated: {new Date().toLocaleDateString()}
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
