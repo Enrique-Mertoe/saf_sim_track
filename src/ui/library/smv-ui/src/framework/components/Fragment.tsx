@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React, {JSX, ReactNode} from 'react';
 import {useLifecycle} from '../hooks/useLifecycle';
 import {LifecycleRegistry} from '../core/Lifecycle';
 
