@@ -564,21 +564,29 @@ const UserStat = ({user, stat}) => {
                     </div>
                 </div>
             </div>
+            <div className="group relative">
+                <div className="flex flex-col w-full max-w-[140px] items-center gap-3">
 
-            <div className="flex flex-col w-full max-w-[140px] items-center gap-3">
-
-                <div
-                    className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
 
                     <div
-                        className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
-                        style={{width: `${completionRate}%`}}
-                    ></div>
+                        className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
+                        <div
+                            className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
+                            style={{width: `${completionRate}%`}}
+                        ></div>
+                    </div>
+                    <div className="absolute bottom-full right-5 mb-2 hidden group-hover:block">
+                        <div className="bg-gray-900/70 text-white text-xs rounded py-2 max-w-screen px-2 whitespace-nowrap">
+                            {stats.registered} distributed out of {stats.total} assigned
+                        </div>
+                        <div
+                            className="border-t-4 border-l-4 border-r-4 border-transparent border-t-gray-900/70 w-0 h-0 absolute right-2 -translate-x-1/2"></div>
+                    </div>
 
+                    <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
+                        {completionRate}% distributed
+                    </p>
                 </div>
-                <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
-                    {completionRate}% distributed
-                </p>
             </div>
         </div>
     )
