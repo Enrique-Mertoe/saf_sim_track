@@ -233,17 +233,14 @@ export default function UsersPage() {
     };
 
     const handleDeleteUser = async (userId: string) => {
-        try {
-            const response = await fetch(`/api/users/${userId}`, {
-                method: 'DELETE',
-            });
 
-            if (response.ok) {
-                // Remove the user from the state
-                setUsers(users.filter(user => user.id !== userId));
-            }
-        } catch (error) {
-            console.error('Error deleting user:', error);
+        const response = await fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+        });
+
+        if (response.ok) {
+            // Remove the user from the state
+            setUsers(users.filter(user => user.id !== userId));
         }
     };
 

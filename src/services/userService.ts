@@ -138,9 +138,15 @@ export const userService = {
             .eq('id', userId)
             .eq("admin_id", await admin_id(user));
     },
-    async deleteUser(id: string) {
-        return createSupabaseClient().from("users")
-            .delete()
-            .eq('id', id)
+    async deleteUser(id: string, user?: User) {
+        const supabase = createSupabaseClient();
+        const query = supabase.from("users").delete();
+
+        // Add admin_id check if user is provided
+        if (user) {
+            query.eq("admin_id", await admin_id(user));
+        }
+
+        return query.eq('id', id).select();
     }
 };

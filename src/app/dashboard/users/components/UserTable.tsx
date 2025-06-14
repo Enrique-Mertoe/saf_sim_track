@@ -121,13 +121,24 @@ export default function UserTable({
 
     // Handle undo timer countdown
     useEffect(() => {
+        // Only start/continue countdown if we have a deleted user and positive timer
         if (deletedUser && undoTimer > 0) {
+            // Clear any existing timer to prevent multiple timers
+            if (undoTimerRef.current) {
+                clearTimeout(undoTimerRef.current);
+            }
+
+            // Set new timer to decrement counter
             undoTimerRef.current = setTimeout(() => {
-                setUndoTimer(undoTimer - 1);
+                setUndoTimer(prevTimer => prevTimer - 1);
             }, 1000);
 
+            // Cleanup function to clear timer when component unmounts or dependencies change
             return () => {
-                if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+                if (undoTimerRef.current) {
+                    clearTimeout(undoTimerRef.current);
+                    undoTimerRef.current = null;
+                }
             };
         } else if (deletedUser && undoTimer === 0) {
             // Time's up, finalize deletion
@@ -190,23 +201,33 @@ export default function UserTable({
             try {
                 // Find the user being deleted to store for potential undo
                 const userIndex = localUsers.findIndex(user => user.id === confirmDelete);
-                const userToDelete = localUsers[userIndex];
 
-                if (userToDelete) {
+                // Only proceed if we found the user
+                if (userIndex !== -1) {
+                    const userToDelete = localUsers[userIndex];
+
                     // Store the user and its position for potential undo
                     setDeletedUser(userToDelete);
                     setDeletedUserIndex(userIndex);
-                    setUndoTimer(5); // 5 seconds countdown
 
                     // Hide the confirmation modal
                     setConfirmDelete(null);
 
                     // Remove from local UI immediately for better UX
                     setLocalUsers(prevUsers => prevUsers.filter(user => user.id !== confirmDelete));
+
+                    // Start the undo countdown timer (5 seconds)
+                    // This needs to be set after other state updates to ensure the useEffect triggers properly
+                    setUndoTimer(5);
+                } else {
+                    // User not found in local state
+                    toast.error("User not found in the current list");
+                    setConfirmDelete(null);
                 }
-            } catch (error) {
-                toast.error("Failed to delete user");
-                console.error(error);
+            } catch (error: any) {
+                toast.error(`Failed to prepare user deletion: ${error?.message || 'Unknown error'}`);
+                console.error("Error in confirmDeleteUser:", error);
+                setConfirmDelete(null);
             } finally {
                 setIsDeleting(false);
             }
@@ -216,12 +237,11 @@ export default function UserTable({
     const finalizeDelete = async () => {
         if (deletedUser) {
             try {
-                console.log(`Finalizing deletion for user: ${deletedUser.id}`);
                 // Actually delete from database
-                const response = await userService.deleteUser(deletedUser.id);
-                console.log("Delete response:", response);
+                const response = await userService.deleteUser(deletedUser.id, user);
 
-                if (response.data) {
+                if (response.data && response.data.length > 0) {
+                    // Success - user was deleted
                     setSuccessMessage(`User ${deletedUser.full_name} has been deleted successfully`);
                     setShowSuccessModal(true);
                     setTimeout(() => setShowSuccessModal(false), 3000);
@@ -229,18 +249,23 @@ export default function UserTable({
                     // Call parent's onDeleteUser to update parent state
                     onDeleteUser(deletedUser.id);
 
-                    // Force a page reload to ensure the user list is updated
+                    // Reset delete state after successful deletion
+                    resetDeleteState();
                 } else {
-                    toast.error(`Failed to delete user: ${(response.error as any)?.message || 'Unknown error'}`);
+                    // Error - deletion failed
+                    const errorMessage = response.error?.message || 'Unknown error';
+                    toast.error(`Failed to delete user: ${errorMessage}`);
+
                     // Add the user back to the list since deletion failed
                     restoreDeletedUser();
+                    resetDeleteState();
                 }
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error finalizing deletion:", error);
-                toast.error("Failed to delete user");
+                toast.error(`Failed to delete user: ${error?.message || 'Unknown error'}`);
+
                 // Add the user back to the list since deletion failed
                 restoreDeletedUser();
-            } finally {
                 resetDeleteState();
             }
         }
@@ -249,16 +274,31 @@ export default function UserTable({
     const restoreDeletedUser = () => {
         if (deletedUser && deletedUserIndex >= 0) {
             // Create a new array with the user inserted back at the original position
-            const newUsers = [...localUsers];
-            newUsers.splice(deletedUserIndex, 0, deletedUser);
-            setLocalUsers(newUsers);
+            setLocalUsers(prevUsers => {
+                const newUsers = [...prevUsers];
+                // Make sure we don't insert beyond array bounds
+                const insertIndex = Math.min(deletedUserIndex, newUsers.length);
+                newUsers.splice(insertIndex, 0, deletedUser);
+                return newUsers;
+            });
+
+            // Show success message
+            toast.success(`User ${deletedUser.full_name} has been restored`);
         }
     };
 
     const resetDeleteState = () => {
+        // Clear any active timer
+        if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+            undoTimerRef.current = null;
+        }
+
+        // Reset all deletion-related state
         setDeletedUser(null);
         setDeletedUserIndex(-1);
         setUndoTimer(0);
+        setConfirmDelete(null);
     };
 
     const handleUndoDelete = () => {
@@ -266,11 +306,11 @@ export default function UserTable({
             // Clear the timer
             if (undoTimerRef.current) {
                 clearTimeout(undoTimerRef.current);
+                undoTimerRef.current = null;
             }
 
             // Add the user back to the list at the original position
             restoreDeletedUser();
-            toast.success("Deletion undone");
 
             // Reset state
             resetDeleteState();
@@ -278,9 +318,13 @@ export default function UserTable({
     };
 
     const cancelUndo = () => {
+        // Clear the timer if it exists
         if (undoTimerRef.current) {
             clearTimeout(undoTimerRef.current);
+            undoTimerRef.current = null;
         }
+
+        // Proceed with deletion immediately
         finalizeDelete();
     };
 
@@ -812,29 +856,25 @@ export default function UserTable({
             {/* Undo Delete Bar */}
             <AnimatePresence>
                 {deletedUser && (
-                    <motion.div
-                        initial={{y: 100, opacity: 0}}
-                        animate={{y: 0, opacity: 1}}
-                        exit={{y: 100, opacity: 0}}
-                        transition={{duration: 0.3}}
-                        className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white p-4 rounded-lg shadow-lg flex justify-between items-center z-50 w-11/12 max-w-2xl"
+                    <div
+                        className="fixed top-4 max-h-max left-1/2 transform -translate-x-1/2 bg-gray-800 gap-1 text-white px-4 rounded-lg shadow-lg flex justify-between items-center z-50 min-w-max max-w-screen py-1"
                     >
-                        <div className="flex items-center">
+                        <div className="flex pt-1 items-center">
                             <p>
                                 User {deletedUser.full_name} deleted. Undo in {undoTimer}{" "}
                                 seconds.
                             </p>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <div className="w-32 bg-gray-600 rounded-full h-2">
+                            <div className="bg-gray-100 rounded-sm h-[2px]  absolute top-[1px] w-full transition-all duration-200 left-0">
                                 <div
-                                    className="bg-green-500 h-2 rounded-full transition-all duration-1000 ease-linear"
+                                    className="bg-green-500 h-[2px] rounded-full transition-all duration-1000 ease-linear"
                                     style={{width: `${(undoTimer / 5) * 100}%`}}
                                 ></div>
                             </div>
                             <button
                                 onClick={handleUndoDelete}
-                                className="flex items-center bg-white text-gray-800 px-3 py-1 rounded-md hover:bg-gray-100"
+                                className="flex items-center bg-white  text-xs text-gray-800 px-3 py-1 rounded-md hover:bg-gray-100"
                             >
                                 <Undo size={14} className="mr-1"/>
                                 Undo
@@ -847,7 +887,7 @@ export default function UserTable({
                                 <X size={18}/>
                             </button>
                         </div>
-                    </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </div>
