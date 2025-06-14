@@ -6,7 +6,10 @@ export function extractSerialsWithLots(text: string): SerialWithLot[] {
     const serialsWithLots: Array<{ serial: string, lot: string }> = [];
 
     // Split by lot number pattern - this creates sections where each section starts with a lot
-    const sections = text.split(/<<\s*(\d+\s*_[A-Z0-9\-]+)\s*>>/i);
+    // const sections = text.split(/<<\s*(\d+\s*_[A-Z0-9\-]+)\s*>>/i);
+    // const sections = text.split(/<<\s*(\d+[-_][A-Z0-9\-]+)\s*>>/i);
+    const sections = text.split(/<<\s*(\d+\s*[-_][A-Z0-9\-]+)\s*>>/i);
+
 
     // Process sections in pairs (lot number, content)
     for (let i = 1; i < sections.length; i += 2) {
