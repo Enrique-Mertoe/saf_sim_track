@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useId, useState} from 'react';
 import {TrendingDown, TrendingUp} from 'lucide-react';
 import {SIMStatus, User} from "@/models";
 import {admin_id} from "@/services/helper";
@@ -8,6 +8,8 @@ interface StatData {
     total: number;
     today: number;
     week: number;
+    pick: number;
+    pickToday: number;
     lastFetched: number;
 }
 
@@ -44,7 +46,9 @@ function StatCard({
                       teamId,
                       refreshTrigger = 0
                   }: StatCardProps) {
-    const [data, setData] = useState<StatData>({total: 0, today: 0, week: 0, lastFetched: 0});
+    const [data, setData] = useState<StatData>({total: 0, today: 0,
+        pick:0,pickToday:0,
+        week: 0, lastFetched: 0});
     const [isLoading, setIsLoading] = useState(!!user);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -113,19 +117,25 @@ function StatCard({
             const startOfWeek = today.minus({days: 7}).startOf("day").toJSDate();
 
             // Execute queries in parallel - each gets a fresh query builder
-            const [totalResult, todayResult, weekResult] = await Promise.all([
+            const [totalResult, todayResult, weekResult,pickResult,pickToday] = await Promise.all([
                 getFilterConditions(adminId),
                 getFilterConditions(adminId)?.gte('registered_on', startOfToday.toISOString()),
-                getFilterConditions(adminId)?.gte('registered_on', startOfWeek.toISOString())
+                getFilterConditions(adminId)?.gte('registered_on', startOfWeek.toISOString()),
+                getFilterConditions(adminId)?.neq('batch_id', "BATCH-UNKNOWN"),
+                getFilterConditions(adminId)?.neq('batch_id',  "BATCH-UNKNOWN")?.gte('registered_on', startOfToday.toISOString()),
             ]);
 
             if (totalResult.error) throw totalResult.error;
             if (todayResult.error) throw todayResult.error;
             if (weekResult.error) throw weekResult.error;
+            if (pickResult.error) throw pickResult.err;
+            if (pickToday.error) throw pickToday.error;
 
             const newData: StatData = {
                 total: totalResult.count || 0,
                 today: todayResult.count || 0,
+                pick: pickResult.count ?? 0,
+                pickToday: pickToday.count ?? 0,
                 week: weekResult.count || 0,
                 lastFetched: now
             };
@@ -238,6 +248,9 @@ function StatCard({
     const getActiveValue = () => {
         return activeTab === 'total' ? data.total : data.today;
     };
+    const getActivePick = () => {
+        return activeTab === 'total' ? data.pick : data.pickToday;
+    };
 
     const getActiveTrend = () => {
         return activeTab === 'today' ? todayVsWeekTrend : null;
@@ -251,6 +264,7 @@ function StatCard({
         if (e) e.stopPropagation();
         fetchData(true);
     }, [fetchData]);
+
 
     return (
         <div
@@ -292,53 +306,67 @@ function StatCard({
             </div>
 
             {/* Tabs */}
-            <div className={`grid ${[
-                "",
-                "grid-cols-1",
-                "grid-cols-2"
-            ][tabs.length]} mb-2 border-b border-gray-200 dark:border-gray-700`}>
-                {
-                    tabs.map(tab => {
-                        if (tab == "today")
-                            return (<button
-                                className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
-                                    activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
-                                }`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveTab('today');
-                                }}
-                            >
-                                Today
-                            </button>)
-                        if (tab == "total") return (<button
-                            className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
-                                activeTab === 'total' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
-                            }`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveTab('total');
-                            }}
-                        >
-                            Total
-                        </button>)
-                    })
-                }
-            </div>
+            {
+                tabs.length > 1 && (
+                    <div className={`grid ${[
+                        "",
+                        "grid-cols-1",
+                        "grid-cols-2"
+                    ][tabs.length]} mb-2 border-b border-gray-200 dark:border-gray-700`}>
+                        {
+                            tabs.map((tab,index) => {
+                                if (tab == "today")
+                                    return (<button key={index}
+                                        className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
+                                            activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
+                                        }`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveTab('today');
+                                        }}
+                                    >
+                                        Today
+                                    </button>)
+                                if (tab == "total") return (<button
+                                    key={index}
+                                    className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
+                                        activeTab === 'total' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
+                                    }`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveTab('total');
+                                    }}
+                                >
+                                    Total
+                                </button>)
+                            })
+                        }
+                    </div>
+                )
+
+            }
 
             {/* Value display */}
             <div className="mb-4">
                 <div className="flex items-center justify-between">
-                    <p className={`text-2xl font-bold ${colorClasses[color].value} ${
-                        isAnimating ? 'animate-pulse' : ''
-                    }`}>
-                        {isRefreshing || isLoading ? (
-                            <span
-                                className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
-                        ) : (
-                            getActiveValue().toLocaleString()
-                        )}
-                    </p>
+                    <div className="flex gap-1 items-center justify-center">
+                        <p className={`text-2xl font-bold ${colorClasses[color].value} ${
+                            isAnimating ? 'animate-pulse' : ''
+                        }`}>
+                            {isRefreshing || isLoading ? (
+                                <span
+                                    className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></span>
+                            ) : (
+                                getActiveValue().toLocaleString()
+                            )}
+                        </p>
+                        {
+                            isRefreshing || isLoading ? '' :
+
+                                (<TreeDiagram picklist={getActivePick()}
+                                              extra={(getActiveValue() -  getActivePick()).toLocaleString()} theme={color}/>)
+                        }
+                    </div>
 
                     {/* Trend indicator */}
                     {!isRefreshing && !isLoading && !error && activeTrend !== null && (
@@ -367,5 +395,88 @@ function StatCard({
         </div>
     );
 }
+
+const TreeDiagram = ({picklist, extra, theme = "blue"}: any) => {
+    const id = useId();
+    const gradientId = `themeGradient-${id}`;
+    const filterId = `glow-${id}`;
+
+    const themes = {
+        blue: {
+            gradient: ["#1E88E5", "#64B5F6"],
+            picklist: "#1E88E5",
+            extra: "#1565C0"
+        },
+        green: {
+            gradient: ["#2E7D32", "#66BB6A"],
+            picklist: "#2E7D32",
+            extra: "#66BB6A"
+        },
+        red: {
+            gradient: ["#E53935", "#EF9A9A"],
+            picklist: "#E53935",
+            extra: "#B71C1C"
+        },
+        purple: {
+            gradient: ["#8E24AA", "#BA68C8"],
+            picklist: "#AB47BC",
+            extra: "#8E24AA"
+        }
+    };
+
+    // @ts-ignore
+    const current = themes[theme] || themes.green;
+
+    return (
+        <svg width="150" height="80" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", margin: "auto" }}>
+            <defs>
+                <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={current.gradient[0]} />
+                    <stop offset="100%" stopColor={current.gradient[1]} />
+                </linearGradient>
+                {/*<filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">*/}
+                {/*    <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />*/}
+                {/*    <feMerge>*/}
+                {/*        <feMergeNode in="blur" />*/}
+                {/*        <feMergeNode in="SourceGraphic" />*/}
+                {/*    </feMerge>*/}
+                {/*</filter>*/}
+            </defs>
+
+            {/* Arms - adjusted closer vertically */}
+            <path
+                d="M10 40 H30 Q35 40 35 36 V30 Q35 26 40 26 H60"
+                stroke={`url(#${gradientId})`}
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                filter={`url(#${filterId})`}
+            />
+
+            <path
+                d="M30 40 Q35 40 35 44 V50 Q35 54 40 54 H60"
+                stroke={`url(#${gradientId})`}
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                filter={`url(#${filterId})`}
+            />
+
+            {/* Radio-style Dots */}
+            <circle cx="60" cy="26" r="6" fill="white" stroke={current.picklist} strokeWidth="2" />
+            <circle cx="60" cy="26" r="2" fill={current.picklist} />
+
+            <circle cx="60" cy="54" r="6" fill="white" stroke={current.extra} strokeWidth="2" />
+            <circle cx="60" cy="54" r="2" fill={current.extra} />
+
+            {/* Top Label */}
+            <text x="70" y="31" fontSize="10" fill={current.picklist} fontWeight="bold" fontFamily="Arial, sans-serif"> Picklist: {picklist || 0}</text>
+
+            {/* Bottom Label */}
+            <text x="70" y="59" fontSize="10" fill={current.extra} fontWeight="bold" fontFamily="Arial, sans-serif"> Extra:{extra || 0}</text>
+        </svg>
+    );
+};
+
 
 export default StatCard;

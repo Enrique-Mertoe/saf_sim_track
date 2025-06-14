@@ -101,10 +101,10 @@ export default function SimStats({refreshing = false}) {
             }
         },
         {
-            title: "Activated",
+            title: "Active Lines",
             dataType: "activated",
             color: "green",
-            tabs:["today","total"],
+            tabs:["total"],
             icon: <CheckCircle size={20}/>,
             expandable: true,
             onExpandClick: () => {
@@ -147,7 +147,7 @@ export default function SimStats({refreshing = false}) {
             }
         },
         {
-            title: "Quality",
+            title: "Quality Lines",
             dataType: "quality",
             color: "purple",
             tabs:["total"],
