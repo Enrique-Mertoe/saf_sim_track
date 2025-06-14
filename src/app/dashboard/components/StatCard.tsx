@@ -16,6 +16,7 @@ interface StatCardProps {
     color: "blue" | "green" | "red" | "purple";
     icon: React.ReactNode;
     user: User | null;
+    tabs: Partial<string[]>
     onExpandClick?: () => void;
     expandable?: boolean;
     dataType: 'total' | 'activated' | 'unmatched' | 'quality' | 'registered';
@@ -35,6 +36,7 @@ function StatCard({
                       color,
                       user,
                       icon,
+                      tabs,
                       onExpandClick,
                       expandable = false,
                       dataType,
@@ -46,7 +48,7 @@ function StatCard({
     const [isLoading, setIsLoading] = useState(!!user);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<'total' | 'today'>('today');
+    const [activeTab, setActiveTab] = useState<'total' | 'today'>(tabs[0] as any);
     const [isAnimating, setIsAnimating] = useState(false);
 
     // Generate cache key
@@ -290,29 +292,38 @@ function StatCard({
             </div>
 
             {/* Tabs */}
-            <div className="grid grid-cols-2 mb-2 border-b border-gray-200 dark:border-gray-700">
-                <button
-                    className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
-                        activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
-                    }`}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveTab('today');
-                    }}
-                >
-                    Today
-                </button>
-                <button
-                    className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
-                        activeTab === 'total' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
-                    }`}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveTab('total');
-                    }}
-                >
-                    Total
-                </button>
+            <div className={`grid ${[
+                "",
+                "grid-cols-1",
+                "grid-cols-2"
+            ][tabs.length]} mb-2 border-b border-gray-200 dark:border-gray-700`}>
+                {
+                    tabs.map(tab => {
+                        if (tab == "today")
+                            return (<button
+                                className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
+                                    activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
+                                }`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveTab('today');
+                                }}
+                            >
+                                Today
+                            </button>)
+                        if (tab == "total") return (<button
+                            className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
+                                activeTab === 'total' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
+                            }`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveTab('total');
+                            }}
+                        >
+                            Total
+                        </button>)
+                    })
+                }
             </div>
 
             {/* Value display */}

@@ -83,6 +83,7 @@ export default function SimStats({refreshing = false}) {
             color: "blue",
             icon: <BarChart size={18}/>,
             expandable: true,
+            tabs:["today","total"],
             onExpandClick: () => {
                 const dialogRef = dialog.create({
                     content: (
@@ -103,6 +104,7 @@ export default function SimStats({refreshing = false}) {
             title: "Activated",
             dataType: "activated",
             color: "green",
+            tabs:["today","total"],
             icon: <CheckCircle size={20}/>,
             expandable: true,
             onExpandClick: () => {
@@ -125,6 +127,7 @@ export default function SimStats({refreshing = false}) {
             title: "UnMatched",
             dataType: "unmatched",
             color: "red",
+            tabs:["total"],
             icon: <XCircle size={20}/>,
             expandable: true,
             onExpandClick: () => {
@@ -147,6 +150,7 @@ export default function SimStats({refreshing = false}) {
             title: "Quality",
             dataType: "quality",
             color: "purple",
+            tabs:["total"],
             icon: <Award size={20}/>,
             expandable: true,
             onExpandClick: () => {
@@ -197,6 +201,7 @@ export default function SimStats({refreshing = false}) {
                             key={index}
                             title={card.title}
                             user={user}
+                            tabs={card.tabs}
                             //@ts-ignore
                             color={card.color}
                             isRefreshing={isRefreshing}
