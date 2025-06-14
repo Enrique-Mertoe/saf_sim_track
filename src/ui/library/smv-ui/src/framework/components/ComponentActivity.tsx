@@ -43,11 +43,13 @@ export function useActivityLifecycle(): LifecycleRegistry {
 export function withLifecycle<P extends object>(
     Component: React.ComponentType<P>
 ): React.ComponentType<P> {
-    return (props: P) => (
-        <ComponentActivity>
-            <Component {...props} />
-        </ComponentActivity>
-    );
+    return function WrappedComponent (props: P){
+        return (
+            <ComponentActivity>
+                <Component {...props} />
+            </ComponentActivity>
+        );
+    }
 }
 
 type ActivityProps = LifecycleOwner & {}
