@@ -8,6 +8,7 @@ import simService from "@/services/simService";
 import {DateTime} from "luxon";
 import {Card, CardContent, CardHeader} from "@/ui/components/Card";
 import {userService} from "@/services";
+import {SIMStatus} from "@/models";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -478,6 +479,7 @@ export default function TeamSIMAnalysisPage() {
 const UserStat = ({user, stat}) => {
     const [stats, sS] = useState({total: 0, registered: 0})
     const completionRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
+    const [nQ,sNq] = useState(0)
 
     useEffect(() => {
         if (!user) return
@@ -495,30 +497,41 @@ const UserStat = ({user, stat}) => {
                 registered: r2.count ?? 0
             })
         })
+        simService.countAll(user, [
+            ["quality", SIMStatus.QUALITY],
+            ["assigned_to_user_id", stat.id]
+        ]).then(res=>{
+            sNq(res.count ?? 0)
+        })
     }, [user]);
 
     return (
         <div
             className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center ">
                 <div>
-                    <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-300">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {stat.full_name}
                     </p>
+                    <div className={"flex"}>
+                        <p className={"text-xs font-bold bg-blue-200 text-blue-500 rounded-sm px-4"}>{nQ} Non-Quality</p>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex w-full max-w-[140px] items-center gap-3">
+            <div className="flex flex-col w-full max-w-[140px] items-center gap-3">
+
                 <div
                     className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
+
                     <div
                         className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
                         style={{ width: `${completionRate}%` }}
                     ></div>
 
                 </div>
-                <p className="text-theme-sm font-medium text-gray-700 dark:text-gray-400">
-                    {completionRate}%
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
+                    {completionRate}% distributed
                 </p>
             </div>
         </div>
