@@ -572,7 +572,7 @@ export default function TeamSIMAnalysisPage() {
                                     className={"bg-red-200 px-4 rounded-full text-red-500"}>{nonQualityUnref}</span></span>
                             )}
                         </CardHeader>
-                        <CardContent className={"overflow-y-auto"}>
+                        <CardContent className={"overflow-y-auto px-0"}>
                             {
                                 userStats.map(userstat => (
                                     <UserStat key={userstat.id} dateRange={getDateFilters()} user={user}
@@ -612,17 +612,21 @@ const UserStat = ({user, stat, dateRange}) => {
                 ["assigned_to_user_id", stat.id], ...dateConditions
             ]),
             simService.countAll(user, [
-                ["assigned_to_user_id", stat.id],
+                ["assigned_to_user_id", stat.id], ["quality", SIMStatus.QUALITY],
                 ["registered_on", "not", "is", null], ...dateConditions
+            ]),
+            simService.countAll(user, [
+                ["assigned_to_user_id", stat.id],
             ]),
             simService.countAll(user, [
                 ["quality", SIMStatus.NONQUALITY],
                 ["assigned_to_user_id", stat.id], ...dateConditions
             ])
-        ]).then(([r1, r2, qualityRes]) => {
+        ]).then(([r1, r2, r3, qualityRes]) => {
             sS({
                 total: r1.count ?? 0,
-                registered: r2.count ?? 0
+                registered: r2.count ?? 0,
+                assigned: r3.count ?? 0,
             })
             sNq(qualityRes.count ?? 0)
             setIsLoading(false)
@@ -636,7 +640,7 @@ const UserStat = ({user, stat, dateRange}) => {
     if (isLoading) {
         return (
             <div
-                className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800 animate-pulse">
+                className="flex px-2 items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800 animate-pulse">
                 <div className="flex items-center">
                     <div>
                         <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
@@ -652,55 +656,78 @@ const UserStat = ({user, stat, dateRange}) => {
     }
 
     return (
-        <div
-            className="flex items-center justify-between border-b border-gray-100 py-3 last:border-b-0 dark:border-gray-800">
-            <div className="flex items-center ">
-                <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {stat.full_name}
-                    </p>
-                    <div className={"flex"}>
-                        <p
-                            onClick={() => {
-                                showModal({
-                                    content: onClose => <UserStartDetails
-                                        dateFilters={dateRange}
-                                        onClose={onClose}
-                                        userId={stat.id}
-                                        userName={stat.full_name}
-                                    />
-                                })
-                            }}
-                            className={"text-xs font-bold cursor-pointer bg-blue-200 text-blue-500 rounded-sm px-4"}>{nQ} Non-Quality</p>
-                    </div>
-                </div>
-            </div>
-            <div className="group relative">
-                <div className="flex flex-col w-full max-w-[140px] items-center gap-3">
-
-
+        <>
+            {
+                stats.assigned > 0 ? (
                     <div
-                        className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
-                        <div
-                            className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
-                            style={{width: `${completionRate}%`}}
-                        ></div>
-                    </div>
-                    <div className="absolute bottom-full right-5 mb-2 hidden group-hover:block">
-                        <div
-                            className="bg-gray-900/70 text-white text-xs rounded py-2 max-w-screen px-2 whitespace-nowrap">
-                            {stats.registered} distributed out of {stats.total} assigned
+                        className={`flex  ${
+                            stats.assigned === 0 && "bg-amber-100 dark:bg-gray-800"
+                        } items-center justify-between border-b border-gray-100 py-3 px-2 last:border-b-0 dark:border-gray-800`}>
+                        <div className="flex items-center ">
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {stat.full_name}
+                                </p>
+                                <div className={"flex"}>
+                                    <p
+                                        onClick={() => {
+                                            showModal({
+                                                content: onClose => <UserStartDetails
+                                                    dateFilters={dateRange}
+                                                    onClose={onClose}
+                                                    userId={stat.id}
+                                                    userName={stat.full_name}
+                                                />
+                                            })
+                                        }}
+                                        className={"text-xs font-bold cursor-pointer bg-blue-200 text-blue-500 rounded-sm px-4"}>{nQ} Non-Quality</p>
+                                </div>
+                            </div>
                         </div>
-                        <div
-                            className="border-t-4 border-l-4 border-r-4 border-transparent border-t-gray-900/70 w-0 h-0 absolute right-2 -translate-x-1/2"></div>
-                    </div>
+                        <div className="group  relative">
+                            <div className="flex flex-col w-full max-w-[140px] items-center gap-3">
 
-                    <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
-                        {completionRate}% distributed
-                    </p>
-                </div>
-            </div>
-        </div>
+
+                                <div
+                                    className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
+                                    <div
+                                        className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
+                                        style={{width: `${completionRate}%`}}
+                                    ></div>
+                                </div>
+                                <div className="absolute bottom-full right-5 mb-2 hidden group-hover:block">
+                                    <div
+                                        className="bg-gray-900/70 text-white text-xs rounded py-2 max-w-screen px-2 whitespace-nowrap">
+                                        {stats.registered} quality out of {stats.assigned} assigned
+                                    </div>
+                                    <div
+                                        className="border-t-4 border-l-4 border-r-4 border-transparent border-t-gray-900/70 w-0 h-0 absolute right-2 -translate-x-1/2"></div>
+                                </div>
+
+                                <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
+                                    {completionRate}% quality score
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div
+                        className={`flex  bg-amber-100 dark:bg-gray-800 items-center justify-between border-b border-gray-100 py-3 px-2 last:border-b-0 dark:border-gray-800`}>
+                        <div className="flex gap-2 flex-col ">
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {stat.full_name}
+                                </p>
+                            </div>
+                            <span className={"flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300"}>
+                                <AlertTriangle className="w-4 h-4 text-orange-500"/>
+                                <span>No assigned lines found</span>
+                            </span>
+                        </div>
+                    </div>
+                )
+            }
+        </>
     )
 }
 
