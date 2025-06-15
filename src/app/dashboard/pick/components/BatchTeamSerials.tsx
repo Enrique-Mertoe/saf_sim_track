@@ -17,6 +17,7 @@ interface Box {
     startSerial: string;
     endSerial: string;
     serials: string[];
+    cards?: SIMCard[];
     count: number;
     isLoading: boolean;
 }
@@ -66,7 +67,7 @@ const BatchTeamSerials: React.FC<BatchTeamSerialsProps> = ({
                 const teamSimCards = simCards.filter((card: any) => card.team_id === teamId);
 
                 // Group by lot
-                const lotGroups: { [key: string]: string[] } = {};
+                const lotGroups: { [key: string]: SIMCard[] } = {};
 
                 teamSimCards.forEach((card: any) => {
                     const lot = card.lot || 'Unknown';
@@ -76,19 +77,20 @@ const BatchTeamSerials: React.FC<BatchTeamSerialsProps> = ({
                         lotGroups[lot] = [];
                     }
 
-                    lotGroups[lot].push(serial);
+                    lotGroups[lot].push(card);
                 });
 
                 // Create boxes
                 const boxesData = Object.entries(lotGroups).map(([lot, serials]) => {
                     // Sort serials for determining start and end
-                    const sortedSerials = [...serials].sort();
+                    const sortedSerials = [...(serials.map(s=>s.serial_number))].sort();
 
                     return {
                         lot,
                         startSerial: sortedSerials[0] || '',
                         endSerial: sortedSerials[sortedSerials.length - 1] || '',
                         serials: [], // Will be loaded on demand
+                        cards:serials,
                         count: serials.length, // Add count of serials in the box
                         isLoading: false
                     };
@@ -164,6 +166,7 @@ const BatchTeamSerials: React.FC<BatchTeamSerialsProps> = ({
             updatedBoxes[currentBoxIndex] = {
                 ...updatedBoxes[currentBoxIndex],
                 serials: sortedSerials,
+                cards:boxSimCards,
                 count: sortedSerials.length, // Update count with actual loaded serials count
                 isLoading: false
             };
@@ -346,6 +349,9 @@ const BatchTeamSerials: React.FC<BatchTeamSerialsProps> = ({
                                                             {box.endSerial}
                                                         </div>
                                                     </div>
+                                                    <span className={"bg-amber-50 text-amber-500"}>
+                                                        {box.cards?.filter(serial => serial.assigned_to_user_id!=null).length.toLocaleString()} assigned
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -374,10 +380,10 @@ const BatchTeamSerials: React.FC<BatchTeamSerialsProps> = ({
                                 }}
                                 className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
                             />
-                            <div className={`fixed md:relative z-50 md:z-0 right-0 top-0 h-full w-full md:w-1/2 bg-white dark:bg-gray-800 md:border-l border-gray-200/50 dark:border-gray-700/50 flex flex-col transition-all duration-500 ease-out transform ${
+                            <div className={`absolute md:relative z-50 md:z-0 right-0 top-0 bottom-0 min-h-full w-full md:w-1/2 bg-white dark:bg-gray-800 md:border-l border-gray-200/50 dark:border-gray-700/50 flex flex-col transition-all duration-500 ease-out transform ${
                                 isRightPanelVisible ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
                             }`}>
-                                <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50/30 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200/50 dark:border-gray-700/50">
+                                <div className="px-6 py-2 bg-gradient-to-r from-gray-50 to-blue-50/30 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200/50 dark:border-gray-700/50">
                                     <div className="flex items-center gap-4">
                                         <button
                                             onClick={() => {
@@ -415,7 +421,7 @@ const BatchTeamSerials: React.FC<BatchTeamSerialsProps> = ({
                                             </div>
                                         ) : (
                                             <>
-                                                <div className={`flex-1 overflow-y-auto ${Theme.Scrollbar}`}>
+                                                <div className={`flex-grow overflow-y-auto ${Theme.Scrollbar}`}>
                                                     <div className="p-6">
                                                         <div className="grid gap-2">
                                                             {getPaginatedSerials().map((serial, index) => (
