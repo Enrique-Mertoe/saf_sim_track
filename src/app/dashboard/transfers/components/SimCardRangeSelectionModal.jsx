@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {groupSerialsByLot} from "@/app/dashboard/pick/utility";
 
-const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
+const SimCardRangeSelectionModal = ({simCards, onClose, resolve, reject}) => {
     // Add state for selected SIM cards and box mode
     const [selectedSimCards, setSelectedSimCards] = useState([]);
     const [boxMode, setBoxMode] = useState(true); // Enable box mode by default
@@ -13,6 +13,24 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
     const [simSearchTerm, setSimSearchTerm] = useState(''); // Search term for individual SIM cards
     const [selectedSimSearchTerm, setSelectedSimSearchTerm] = useState(''); // Search term for selected SIM cards
     const [view, setView] = useState('box-selection'); // 'box-selection' or 'individual-selection'
+
+    // Pagination for selected SIM cards
+    const [selectedSimCardsPage, setSelectedSimCardsPage] = useState(1);
+    const [selectedSimCardsPerPage, setSelectedSimCardsPerPage] = useState(10);
+
+    // Pagination for individual selection
+    const [individualSelectionPage, setIndividualSelectionPage] = useState(1);
+    const [individualSelectionPerPage, setIndividualSelectionPerPage] = useState(10);
+
+
+    const [isVisible, setIsVisible] = useState(false);
+    const [contentVisible, setContentVisible] = useState(false);
+
+    useEffect(() => {
+        setIsVisible(true);
+        const timer = setTimeout(() => setContentVisible(true), 150);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Initialize available SIM cards and group them by lot
     useEffect(() => {
@@ -56,6 +74,20 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
         if (!simSearchTerm) return true;
         return sim.serial_number.toLowerCase().includes(simSearchTerm.toLowerCase());
     });
+
+    // Pagination for individual selection
+    const totalIndividualSelectionPages = Math.ceil(filteredSimCards.length / individualSelectionPerPage);
+    const paginatedIndividualSimCards = filteredSimCards.slice(
+        (individualSelectionPage - 1) * individualSelectionPerPage,
+        individualSelectionPage * individualSelectionPerPage
+    );
+
+    // Handle page change for individual selection
+    const handleIndividualSelectionPageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalIndividualSelectionPages) {
+            setIndividualSelectionPage(newPage);
+        }
+    };
 
     // Toggle box selection
     const toggleBoxSelection = (boxNumber) => {
@@ -153,13 +185,25 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
         return simCards.filter(sim => selectedIds.includes(sim.id));
     };
 
-    // Filter selected SIM cards based on search term
     const filteredSelectedSimCards = getSelectedSimCardDetails().filter(sim => {
         if (!selectedSimSearchTerm) return true;
         return sim.serial_number.toLowerCase().includes(selectedSimSearchTerm.toLowerCase());
     });
 
-    // Handle confirm button click
+    // Pagination for selected SIM cards
+    const totalSelectedSimCardsPages = Math.ceil(filteredSelectedSimCards.length / selectedSimCardsPerPage);
+    const paginatedSelectedSimCards = filteredSelectedSimCards.slice(
+        (selectedSimCardsPage - 1) * selectedSimCardsPerPage,
+        selectedSimCardsPage * selectedSimCardsPerPage
+    );
+
+    // Handle page change for selected SIM cards
+    const handleSelectedSimCardsPageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalSelectedSimCardsPages) {
+            setSelectedSimCardsPage(newPage);
+        }
+    };
+
     const handleConfirm = () => {
         const selectedIds = getAllSelectedSimCardIds();
 
@@ -169,7 +213,7 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
         }
 
         resolve(selectedIds);
-        onClose();
+        handleClose();
     };
 
     // Handle cancel button click
@@ -178,295 +222,531 @@ const SimCardRangeSelectionModal = ({ simCards, onClose, resolve, reject }) => {
         onClose();
     };
 
+    const handleClose = () => {
+        setContentVisible(false);
+        setTimeout(() => {
+            setIsVisible(false);
+            setTimeout(() => onClose(), 200);
+        }, 150);
+    };
+
     return (
-        <div className="bg-white rounded-lg shadow-xl max-sm:rounded-none w-full min-h-full  overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Select SIM Cards for Transfer</h2>
-                <p className="text-gray-600 mt-1">
-                    Choose SIM cards to transfer by selecting entire boxes or individual SIM cards
-                </p>
-            </div>
+        <
+        >
+            <div
+                className={`bg-white rounded-lg shadow-xl max-sm:rounded-none w-full  max-h-[90vh] m-4 overflow-hidden flex flex-col transform transition-all duration-300 ${
+                    contentVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+                }`}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className={`p-6 border-b border-gray-200 transform transition-all duration-500 delay-100 ${
+                    contentVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
+                }`}>
+                    <h2 className="text-xl font-semibold text-gray-900">Select SIM Cards for Transfer</h2>
+                    <p className="text-gray-600 mt-1">
+                        Choose SIM cards to transfer by selecting entire boxes or individual SIM cards
+                    </p>
+                </div>
 
-            {/* Selection Mode Tabs */}
-            <div className="flex border-b border-gray-200">
-                <button
-                    onClick={() => setView('box-selection')}
-                    className={`flex-1 py-3 px-4 text-center ${
-                        view === 'box-selection'
-                            ? 'border-b-2 border-blue-500 text-blue-600 font-medium'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    Box Selection
-                </button>
-                <button
-                    onClick={() => setView('individual-selection')}
-                    className={`flex-1 py-3 px-4 text-center ${
-                        view === 'individual-selection'
-                            ? 'border-b-2 border-blue-500 text-blue-600 font-medium'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                    Individual Selection
-                </button>
-            </div>
+                {/* Selection Mode Tabs */}
+                <div className={`flex border-b border-gray-200 transform transition-all duration-500 delay-200 ${
+                    contentVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
+                }`}>
+                    <button
+                        onClick={() => setView('box-selection')}
+                        className={`flex-1 py-3 px-4 text-center transition-all duration-200 ${
+                            view === 'box-selection'
+                                ? 'border-b-2 border-blue-500 text-blue-600 font-medium'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        Box Selection
+                    </button>
+                    <button
+                        onClick={() => setView('individual-selection')}
+                        className={`flex-1 py-3 px-4 text-center transition-all duration-200 ${
+                            view === 'individual-selection'
+                                ? 'border-b-2 border-blue-500 text-blue-600 font-medium'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        Individual Selection
+                    </button>
+                </div>
 
-            <div className="flex-1 overflow-auto p-6 flex flex-col md:flex-row gap-4">
-                {/* Left panel - Selection area */}
-                <div className="flex-1 min-w-0">
-                    {view === 'box-selection' && (
-                        <div>
-                            <div className="mb-4 flex justify-between items-center">
-                                <div className="relative w-64">
-                                    <input
-                                        type="text"
-                                        placeholder="Search by lot or serial range..."
-                                        value={boxSearchTerm}
-                                        onChange={(e) => setBoxSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm"
-                                    />
-                                    <svg
-                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                        />
-                                    </svg>
-                                </div>
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={selectAllBoxes}
-                                        className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-sm hover:bg-blue-100"
-                                    >
-                                        Select All
-                                    </button>
-                                    <button
-                                        onClick={deselectAllBoxes}
-                                        className="px-3 py-1 bg-gray-50 text-gray-600 rounded-md text-sm hover:bg-gray-100"
-                                    >
-                                        Deselect All
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {filteredBoxes.map((box) => (
-                                    <div
-                                        key={box.boxNumber}
-                                        className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                                            boxAssignments[box.boxNumber]
-                                                ? 'border-blue-500 bg-blue-50'
-                                                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/30'
-                                        }`}
-                                        onClick={() => toggleBoxSelection(box.boxNumber)}
-                                    >
-                                        <div className="flex flex-col whitespace-nowrap items-start mb-2">
-                                            <div className="font-medium text-sm">Lot: {box.lot}</div>
-                                            <div className="text-xs bg-blue-100 text-blue-800 rounded-full px-2 py-0.5">
-                                                {box.count}
-                                            </div>
+                <div
+                    className={`flex-1 overflow-auto p-6 flex flex-col md:flex-row gap-4 transform transition-all duration-500 delay-300 ${
+                        contentVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                    }`}>
+                    {/* Left panel - Selection area */}
+                    <div className="flex-1 min-w-0">
+                        <div className={`transition-all duration-300 ${
+                            view === 'box-selection' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute'
+                        }`}>
+                            {view === 'box-selection' && (
+                                <div>
+                                    <div className="mb-4 flex justify-between items-center">
+                                        <div className="relative w-64">
+                                            <input
+                                                type="text"
+                                                placeholder="Search by lot or serial range..."
+                                                value={boxSearchTerm}
+                                                onChange={(e) => setBoxSearchTerm(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm transition-colors duration-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            />
+                                            <svg
+                                                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 transition-colors duration-200"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                                />
+                                            </svg>
                                         </div>
-                                        <div className="text-sm text-gray-600">
-                                            <div>Start: {box.startRange}</div>
-                                            <div>End: {box.endRange}</div>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={selectAllBoxes}
+                                                className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-sm hover:bg-blue-100 transition-colors duration-200 transform hover:scale-105"
+                                            >
+                                                Select All
+                                            </button>
+                                            <button
+                                                onClick={deselectAllBoxes}
+                                                className="px-3 py-1 bg-gray-50 text-gray-600 rounded-md text-sm hover:bg-gray-100 transition-colors duration-200 transform hover:scale-105"
+                                            >
+                                                Deselect All
+                                            </button>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
 
-                            {filteredBoxes.length === 0 && (
-                                <div className="text-center py-8 text-gray-500">
-                                    No boxes match your search
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {filteredBoxes.map((box, index) => (
+                                            <div
+                                                key={box.boxNumber}
+                                                className={`border rounded-lg p-4 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-md ${
+                                                    boxAssignments[box.boxNumber]
+                                                        ? 'border-blue-500 bg-blue-50 scale-105 shadow-md'
+                                                        : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/30'
+                                                }`}
+                                                style={{
+                                                    animationDelay: `${index * 50}ms`
+                                                }}
+                                                onClick={() => toggleBoxSelection(box.boxNumber)}
+                                            >
+                                                <div className="flex flex-col whitespace-nowrap items-start mb-2">
+                                                    <div className="font-medium text-sm">Lot: {box.lot}</div>
+                                                    <div
+                                                        className={`text-xs rounded-full px-2 py-0.5 transition-colors duration-200 ${
+                                                            boxAssignments[box.boxNumber]
+                                                                ? 'bg-blue-200 text-blue-900'
+                                                                : 'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                        {box.count}
+                                                    </div>
+                                                </div>
+                                                <div className="text-sm text-gray-600">
+                                                    <div>Start: {box.startRange}</div>
+                                                    <div>End: {box.endRange}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {filteredBoxes.length === 0 && (
+                                        <div className="text-center py-8 text-gray-500 animate-fade-in">
+                                            No boxes match your search
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
-                    )}
 
-                    {view === 'individual-selection' && (
-                        <div>
-                            <div className="mb-4 flex justify-between items-center">
-                                <div className="relative w-64">
-                                    <input
-                                        type="text"
-                                        placeholder="Search SIM cards..."
-                                        value={simSearchTerm}
-                                        onChange={(e) => setSimSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm"
-                                    />
-                                    <svg
-                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                        />
-                                    </svg>
-                                </div>
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={selectAllSimCards}
-                                        className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-sm hover:bg-blue-100"
-                                    >
-                                        Select All
-                                    </button>
-                                    <button
-                                        onClick={deselectAllSimCards}
-                                        className="px-3 py-1 bg-gray-50 text-gray-600 rounded-md text-sm hover:bg-gray-100"
-                                    >
-                                        Deselect All
-                                    </button>
-                                </div>
-                            </div>
+                        <div className={`transition-all duration-300 ${
+                            view === 'individual-selection' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute'
+                        }`}>
+                            {view === 'individual-selection' && (
+                                <div>
+                                    <div className="mb-4 flex justify-between items-center">
+                                        <div className="relative w-64">
+                                            <input
+                                                type="text"
+                                                placeholder="Search SIM cards..."
+                                                value={simSearchTerm}
+                                                onChange={(e) => setSimSearchTerm(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm transition-colors duration-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            />
+                                            <svg
+                                                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                                />
+                                            </svg>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={selectAllSimCards}
+                                                className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-sm hover:bg-blue-100 transition-colors duration-200 transform hover:scale-105"
+                                            >
+                                                Select All
+                                            </button>
+                                            <button
+                                                onClick={deselectAllSimCards}
+                                                className="px-3 py-1 bg-gray-50 text-gray-600 rounded-md text-sm hover:bg-gray-100 transition-colors duration-200 transform hover:scale-105"
+                                            >
+                                                Deselect All
+                                            </button>
+                                        </div>
+                                    </div>
 
-                            <div className="border border-gray-200 rounded-md overflow-hidden">
-                                <div className="max-h-96 overflow-y-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Select
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Serial Number
-                                                </th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Status
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredSimCards.map(sim => (
-                                                <tr key={sim.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedSimCards.includes(sim.id)}
-                                                            onChange={() => toggleSimCardSelection(sim.id)}
-                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                                        />
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {sim.serial_number}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                            {sim.status}
-                                                        </span>
-                                                    </td>
+                                    <div className="border border-gray-200 rounded-md overflow-hidden">
+                                        <div className="max-h-96 overflow-y-auto">
+                                            <table className="min-w-full divide-y divide-gray-200">
+                                                <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col"
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Select
+                                                    </th>
+                                                    <th scope="col"
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Serial Number
+                                                    </th>
+                                                    <th scope="col"
+                                                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                        Status
+                                                    </th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                {paginatedIndividualSimCards.map((sim, index) => (
+                                                    <tr
+                                                        key={sim.id}
+                                                        className="hover:bg-gray-50 transition-colors duration-200"
+                                                        style={{
+                                                            animationDelay: `${index * 50}ms`
+                                                        }}
+                                                    >
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedSimCards.includes(sim.id)}
+                                                                onChange={() => toggleSimCardSelection(sim.id)}
+                                                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors duration-200"
+                                                            />
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                            {sim.serial_number}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                                <span
+                                                                    className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                                    {sim.status}
+                                                                </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
 
-                            {filteredSimCards.length === 0 && (
-                                <div className="text-center py-8 text-gray-500">
-                                    No SIM cards match your search
+                                    {/* Pagination controls for individual selection */}
+                                    {filteredSimCards.length > 0 && (
+                                        <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                                            <div className="flex-1 flex justify-between sm:hidden">
+                                                <button
+                                                    onClick={() => handleIndividualSelectionPageChange(individualSelectionPage - 1)}
+                                                    disabled={individualSelectionPage === 1}
+                                                    className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md transition-all duration-200 ease-in-out ${
+                                                        individualSelectionPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    Previous
+                                                </button>
+                                                <button
+                                                    onClick={() => handleIndividualSelectionPageChange(individualSelectionPage + 1)}
+                                                    disabled={individualSelectionPage === totalIndividualSelectionPages}
+                                                    className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md transition-all duration-200 ease-in-out ${
+                                                        individualSelectionPage === totalIndividualSelectionPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                                <div>
+                                                    <p className="text-sm text-gray-700">
+                                                        Showing <span className="font-medium">{(individualSelectionPage - 1) * individualSelectionPerPage + 1}</span> to{' '}
+                                                        <span className="font-medium">
+                                                            {Math.min(individualSelectionPage * individualSelectionPerPage, filteredSimCards.length)}
+                                                        </span>{' '}
+                                                        of <span className="font-medium">{filteredSimCards.length}</span> results
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                                        <button
+                                                            onClick={() => handleIndividualSelectionPageChange(individualSelectionPage - 1)}
+                                                            disabled={individualSelectionPage === 1}
+                                                            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium transition-all duration-200 ease-in-out ${
+                                                                individualSelectionPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                                                            }`}
+                                                        >
+                                                            <span className="sr-only">Previous</span>
+                                                            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                                <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                        {/* Page numbers */}
+                                                        {[...Array(totalIndividualSelectionPages)].map((_, i) => (
+                                                            <button
+                                                                key={i}
+                                                                onClick={() => handleIndividualSelectionPageChange(i + 1)}
+                                                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-all duration-200 ease-in-out ${
+                                                                    individualSelectionPage === i + 1
+                                                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                                }`}
+                                                            >
+                                                                {i + 1}
+                                                            </button>
+                                                        ))}
+                                                        <button
+                                                            onClick={() => handleIndividualSelectionPageChange(individualSelectionPage + 1)}
+                                                            disabled={individualSelectionPage === totalIndividualSelectionPages}
+                                                            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium transition-all duration-200 ease-in-out ${
+                                                                individualSelectionPage === totalIndividualSelectionPages ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                                                            }`}
+                                                        >
+                                                            <span className="sr-only">Next</span>
+                                                            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </nav>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {filteredSimCards.length === 0 && (
+                                        <div className="text-center py-8 text-gray-500 animate-fade-in">
+                                            No SIM cards match your search
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Right panel - Selected SIM cards */}
-                <div className="w-full md:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-4 mt-4 md:mt-0">
-                    <div className="mb-3">
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">Selected SIM Cards</h3>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search selected SIMs..."
-                                value={selectedSimSearchTerm}
-                                onChange={(e) => setSelectedSimSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm"
-                            />
-                            <svg
-                                className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
                         </div>
                     </div>
 
-                    <div className="border border-gray-200 rounded-md overflow-hidden">
-                        <div className="max-h-96 overflow-y-auto">
-                            {filteredSelectedSimCards.length > 0 ? (
-                                <ul className="divide-y divide-gray-200">
-                                    {filteredSelectedSimCards.map(sim => (
-                                        <li key={sim.id} className="px-4 py-3 hover:bg-gray-50 flex justify-between items-center">
-                                            <span className="text-sm font-medium text-gray-900">{sim.serial_number}</span>
-                                            <button
-                                                onClick={() => view === 'box-selection' 
-                                                    ? toggleBoxSelection(availableBoxes.find(box => 
-                                                        box.serials.includes(sim.serial_number))?.boxNumber)
-                                                    : toggleSimCardSelection(sim.id)
-                                                }
-                                                className="text-red-500 hover:text-red-700"
+                    {/* Right panel - Selected SIM cards */}
+                    <div
+                        className="w-full md:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-4 mt-4 md:mt-0">
+                        <div className="mb-3">
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Selected SIM Cards</h3>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Search selected SIMs..."
+                                    value={selectedSimSearchTerm}
+                                    onChange={(e) => setSelectedSimSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm transition-colors duration-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                />
+                                <svg
+                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div className="border border-gray-200 rounded-md overflow-hidden">
+                            <div className="max-h-96 overflow-y-auto">
+                                {filteredSelectedSimCards.length > 0 ? (
+                                    <ul className="divide-y divide-gray-200">
+                                        {paginatedSelectedSimCards.map((sim, index) => (
+                                            <li
+                                                key={sim.id}
+                                                className="px-4 py-3 hover:bg-gray-50 flex justify-between items-center transition-all duration-200 transform hover:translate-x-1"
+                                                style={{
+                                                    animationDelay: `${index * 30}ms`
+                                                }}
                                             >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                <span
+                                                    className="text-sm font-medium text-gray-900">{sim.serial_number}</span>
+                                                <button
+                                                    onClick={() => view === 'box-selection'
+                                                        ? toggleBoxSelection(availableBoxes.find(box =>
+                                                            box.serials.includes(sim.serial_number))?.boxNumber)
+                                                        : toggleSimCardSelection(sim.id)
+                                                    }
+                                                    className="text-red-500 hover:text-red-700 transition-all duration-200 transform hover:scale-110"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor"
+                                                         viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path strokeLinecap="round" strokeLinejoin="round"
+                                                              strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="text-center py-8 text-gray-500 animate-pulse">
+                                        No SIM cards selected
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Pagination controls for selected SIM cards */}
+                        {filteredSelectedSimCards.length > 0 && (
+                            <div className="mt-4 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                                <div className="flex-1 flex justify-between sm:hidden">
+                                    <button
+                                        onClick={() => handleSelectedSimCardsPageChange(selectedSimCardsPage - 1)}
+                                        disabled={selectedSimCardsPage === 1}
+                                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md transition-all duration-200 ease-in-out ${
+                                            selectedSimCardsPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Previous
+                                    </button>
+                                    <button
+                                        onClick={() => handleSelectedSimCardsPageChange(selectedSimCardsPage + 1)}
+                                        disabled={selectedSimCardsPage === totalSelectedSimCardsPages}
+                                        className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md transition-all duration-200 ease-in-out ${
+                                            selectedSimCardsPage === totalSelectedSimCardsPages ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                                <div className="hidden flex-col sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                    <div className={"order-2"}>
+                                        <p className="text-sm text-gray-700">
+                                            Showing <span className="font-medium">{(selectedSimCardsPage - 1) * selectedSimCardsPerPage + 1}</span> to{' '}
+                                            <span className="font-medium">
+                                                {Math.min(selectedSimCardsPage * selectedSimCardsPerPage, filteredSelectedSimCards.length)}
+                                            </span>{' '}
+                                            of <span className="font-medium">{filteredSelectedSimCards.length}</span> results
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                            <button
+                                                onClick={() => handleSelectedSimCardsPageChange(selectedSimCardsPage - 1)}
+                                                disabled={selectedSimCardsPage === 1}
+                                                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium transition-all duration-200 ease-in-out ${
+                                                    selectedSimCardsPage === 1 ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <span className="sr-only">Previous</span>
+                                                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                                                 </svg>
                                             </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                    No SIM cards selected
+                                            {/* Page numbers */}
+                                            {[...Array(totalSelectedSimCardsPages)].map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => handleSelectedSimCardsPageChange(i + 1)}
+                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-all duration-200 ease-in-out ${
+                                                        selectedSimCardsPage === i + 1
+                                                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+                                            <button
+                                                onClick={() => handleSelectedSimCardsPageChange(selectedSimCardsPage + 1)}
+                                                disabled={selectedSimCardsPage === totalSelectedSimCardsPages}
+                                                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium transition-all duration-200 ease-in-out ${
+                                                    selectedSimCardsPage === totalSelectedSimCardsPages ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <span className="sr-only">Next</span>
+                                                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                            </button>
+                                        </nav>
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div
+                    className={`p-6 border-t border-gray-200 flex justify-between items-center transform transition-all duration-500 delay-400 ${
+                        contentVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                    }`}>
+                    <div className="text-sm text-gray-600">
+                        {view === 'box-selection'
+                            ? `${selectedBoxes.length} lots selected (${getAllSelectedSimCardIds().length} SIM cards)`
+                            : `${selectedSimCards.length} SIM cards selected`
+                        }
+                    </div>
+                    <div className="flex space-x-3">
+                        <button
+                            onClick={handleCancel}
+                            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirm}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+                        >
+                            Confirm Selection
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-between items-center">
-                <div className="text-sm text-gray-600">
-                    {view === 'box-selection' 
-                        ? `${selectedBoxes.length} lots selected (${getAllSelectedSimCardIds().length} SIM cards)`
-                        : `${selectedSimCards.length} SIM cards selected`
+            <style jsx>{`
+                @keyframes fade-in {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
                     }
-                </div>
-                <div className="flex space-x-3">
-                    <button
-                        onClick={handleCancel}
-                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleConfirm}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Confirm Selection
-                    </button>
-                </div>
-            </div>
-        </div>
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .animate-fade-in {
+                    animation: fade-in 0.3s ease-out;
+                }
+            `}</style>
+        </>
     );
 };
-
 export default SimCardRangeSelectionModal;

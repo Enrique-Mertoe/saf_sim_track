@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import {simCardTransferService, teamService} from "@/services";
 import useApp from "@/ui/provider/AppProvider";
-import {SimCardTransfer, Team, TransferStatus} from "@/models";
+import {SIMCard, SimCardTransfer, SIMStatus, Team, TransferStatus} from "@/models";
 import {AlertTriangle, ArrowLeftRight, Calendar, Check, RefreshCw, X} from 'lucide-react';
 import {useSupabaseSignal} from "@/lib/supabase/event";
 import ClientApi from "@/lib/utils/ClientApi";
@@ -11,6 +11,7 @@ import {showModal} from "@/ui/shortcuts";
 import SimCardRangeSelectionModal from "@/app/dashboard/transfers/components/SimCardRangeSelectionModal";
 import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {format, isToday, isYesterday} from "date-fns";
+import simService from "@/services/simService";
 
 
 const TransfersPage = () => {
@@ -140,7 +141,20 @@ const TransfersPage = () => {
             if (!user || !user.team_id) return;
 
             try {
-                const {data, error} = await simCardTransferService.getUnsoldSimCards(user.team_id);
+                // const {data, error} = await simCardTransferService.getUnsoldSimCards(user.team_id);
+                const data = await new Promise((resolve: (e: SIMCard[]) => void) => {
+                    const chunks: SIMCard[] = [];
+                    simService.streamChunks(user, (chunk, end) => {
+                            chunks.push(...chunk)
+                            if (end) {
+                                resolve(chunks)
+                            }
+                        },
+                        {
+                            filters: [["team_id", user.team_id], ["status", SIMStatus.PENDING]]
+                        }
+                    )
+                });
                 if (error) throw error;
                 setUnsoldSimCards(data || []);
             } catch (err) {
@@ -228,7 +242,7 @@ const TransfersPage = () => {
                 reason: reason
             };
 
-            const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
+            const {data, error} = await new Promise<{ data: any, error: any }>((resolve, reject) => {
                 ClientApi.of("transfer").get()
                     .create_transfer_request(transferData)
                     .then(res => {
@@ -237,8 +251,8 @@ const TransfersPage = () => {
                         else
                             resolve({error: res.error, data: null})
                     }).catch(err => {
-                        resolve({error: err.message, data: null})
-                    })
+                    resolve({error: err.message, data: null})
+                })
             });
 
             if (error) throw error;
@@ -287,14 +301,14 @@ const TransfersPage = () => {
         try {
             setIsLoading(true);
 
-            const {data,error} = await new Promise<{data:any,error:any}>((resolve, reject) => {
+            const {data, error} = await new Promise<{ data: any, error: any }>((resolve, reject) => {
                 ClientApi.of("transfer").get()
                     .del_transfer_request({id: transferId})
                     .then(res => {
                         if (res.ok)
-                            resolve({error:null,data:true})
+                            resolve({error: null, data: true})
                     }).catch(err => {
-                    resolve({error:err.message,data:null})
+                    resolve({error: err.message, data: null})
                 })
             })
 
@@ -515,10 +529,13 @@ const TransfersPage = () => {
                                         ) : (
                                             <ul className="divide-y divide-gray-200">
                                                 {filteredSelectedSimCards.map(sim => (
-                                                    <li key={sim.id} className="px-4 py-3 hover:bg-gray-50 flex justify-between items-center">
+                                                    <li key={sim.id}
+                                                        className="px-4 py-3 hover:bg-gray-50 flex justify-between items-center">
                                                         <div className="flex items-center">
-                                                            <span className="text-sm font-medium text-gray-900">{sim.serial_number}</span>
-                                                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                            <span
+                                                                className="text-sm font-medium text-gray-900">{sim.serial_number}</span>
+                                                            <span
+                                                                className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                                 {sim.status}
                                                             </span>
                                                         </div>
@@ -526,8 +543,10 @@ const TransfersPage = () => {
                                                             onClick={() => handleSimCardSelection(sim.id)}
                                                             className="text-red-500 hover:text-red-700"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor"
+                                                                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                                <path strokeLinecap="round" strokeLinejoin="round"
+                                                                      strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                                                             </svg>
                                                         </button>
                                                     </li>
@@ -554,8 +573,10 @@ const TransfersPage = () => {
                                             className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                                         >
                                             <span className="flex items-center text-sm">
-                                                <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                                                <svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg"
+                                                     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                                          d="M4 6h16M4 12h16m-7 6h7"/>
                                                 </svg>
                                                 Select SIM Cards
                                             </span>
