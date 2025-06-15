@@ -461,7 +461,7 @@ const SerialNumberForm: React.FC = () => {
             try {
                 const
                     data
-                 = await simService.getInBatched(user!, "serial_number", serialsWithLots.map(s => s.serial));
+                        = await simService.getInBatched(user!, "serial_number", serialsWithLots.map(s => s.serial));
                 if (data) {
                     existingSerials = data.map((data: SIMCard) => data.serial_number);
                 }
@@ -470,8 +470,10 @@ const SerialNumberForm: React.FC = () => {
                 // Continue with empty array - we'll check existence individually later
             }
 
+
             // Deduplicate serials first
             const uniqueSerials = [...new Set(serialsWithLots)];
+            // console.log(uniqueSerials)
 
             if (uniqueSerials.length === 0) {
                 throw new Error('No valid serial numbers found. Serial numbers must be at least 16 digits and contain only numbers.');
@@ -694,23 +696,26 @@ const SerialNumberForm: React.FC = () => {
     };
 
     const uploadAllSerials = async (selectionResult: any) => {
-        // Handle both old format (string) and new format (object with teams and ranges)
-        let selectedTeams: string[] = [];
-        let teamRanges: any = {};
-
-        if (typeof selectionResult === 'string') {
-            // Old format - single team ID
-            selectedTeams = [selectionResult];
-            setSelectedTeam(selectionResult);
-        } else if (selectionResult && selectionResult.teams) {
-            // New format - multiple teams with ranges
-            selectedTeams = selectionResult.teams;
-            teamRanges = selectionResult.ranges || {};
-            setSelectedTeam(selectedTeams[0]); // Set the first team as selected for backward compatibility
-        } else {
-            toast.error("Invalid team selection");
+        // Only handle the new standardized format - array of objects with teamId and boxes
+        if (!Array.isArray(selectionResult)) {
+            toast.error("Invalid team selection format");
             return;
         }
+
+        let selectedTeams: string[] = [];
+        let teamBoxes: any = {}; // Store boxes by team
+
+        // Extract team IDs and boxes from the selection result
+        selectedTeams = selectionResult.map(team => team.teamId);
+
+        // Store boxes by team for direct use
+        selectionResult.forEach(team => {
+            if (team.teamId && team.boxes) {
+                teamBoxes[team.teamId] = team.boxes;
+            }
+        });
+
+        setSelectedTeam(selectedTeams[0]); // Set the first team as selected
 
         try {
             // Filter only valid, non-existing, non-uploaded, and not-checking serials
@@ -782,51 +787,48 @@ const SerialNumberForm: React.FC = () => {
                 teamSerials[teamId] = [];
             });
 
-            if (selectedTeams.length === 1) {
-                teamSerials[selectedTeams[0]] = [...serialsToUpload];
-            } else {
-                let currentIndex = 0;
-                let assignedCount = 0;
+            // Distribute serials based on the boxes information
+            let assignedCount = 0;
 
-                // Distribute serials based on team ranges and counts
-                selectedTeams.forEach(teamId => {
-                    const range = teamRanges[teamId];
-                    if (!range?.startRange || !range?.endRange || !range?.count) {
-                        return;
-                    }
+            // For each team, find matching serials from serialsToUpload based on lot and serial values
+            selectedTeams.forEach(teamId => {
+                const boxes = teamBoxes[teamId] || [];
+                if (boxes.length === 0) return;
 
-                    // Take the expected count of serials for this team
-                    const expectedCount = range.count;
-                    const teamSerialsBatch = serialsToUpload.slice(currentIndex, currentIndex + expectedCount);
-
-                    // Validate that these serials actually fall within the range
-                    const validSerials = teamSerialsBatch.filter(serial => {
-                        const serialValue = serial.value || '';
-                        return serialValue >= range.startRange && serialValue <= range.endRange;
-                    });
-
-                    teamSerials[teamId] = validSerials;
-                    assignedCount += validSerials.length;
-
-                    // Move index forward by the number of serials we attempted to assign
-                    currentIndex += expectedCount;
-
-                    // Log any discrepancies
-                    if (validSerials.length !== expectedCount) {
-                        console.warn(`Team ${teamId}: Expected ${expectedCount} serials, got ${validSerials.length} valid serials in range`);
+                // Collect all serials from all boxes for this team
+                const teamSerialValues = new Set();
+                boxes.forEach((box: { serials: any[]; }) => {
+                    if (box.serials && Array.isArray(box.serials)) {
+                        box.serials.forEach(serial => teamSerialValues.add(serial));
                     }
                 });
 
-                // Assign any remaining serials to the first team
-                if (currentIndex < serialsToUpload.length) {
-                    const remainingSerials = serialsToUpload.slice(currentIndex);
-                    teamSerials[selectedTeams[0]].push(...remainingSerials);
-                    console.log(`Assigned ${remainingSerials.length} remaining serials to first team`);
-                }
+                // Find matching serials in serialsToUpload
+                const validSerials = serialsToUpload.filter(serial =>
+                    teamSerialValues.has(serial.value)
+                );
 
-                if (assignedCount > 0) {
-                    alert.success(`${assignedCount} serials distributed across ${selectedTeams.length} teams`);
-                }
+                teamSerials[teamId] = validSerials;
+                assignedCount += validSerials.length;
+            });
+
+            // Assign any unassigned serials to the first team
+            const assignedSerialValues = new Set();
+            Object.values(teamSerials).forEach(serials => {
+                serials.forEach(serial => assignedSerialValues.add(serial.value));
+            });
+
+            const unassignedSerials = serialsToUpload.filter(serial =>
+                !assignedSerialValues.has(serial.value)
+            );
+
+            if (unassignedSerials.length > 0) {
+                teamSerials[selectedTeams[0]].push(...unassignedSerials);
+                console.log(`Assigned ${unassignedSerials.length} unassigned serials to first team`);
+            }
+
+            if (assignedCount > 0) {
+                alert.success(`${assignedCount} serials distributed across ${selectedTeams.length} teams`);
             }
             const overallResult: any = {success: 0, errors: []};
             let totalProcessed = 0;
@@ -836,7 +838,7 @@ const SerialNumberForm: React.FC = () => {
                 const metadataToSave: BatchMetadataCreate = {
                     ...metadata,
                     batch_id: batchId,
-                    team_id: selectedTeams[0], // Set first team as primary for backward compatibility
+                    team_id: selectedTeams[0], // Set first team as primary
                     teams: selectedTeams // Store all selected teams
                 };
 
@@ -876,7 +878,6 @@ const SerialNumberForm: React.FC = () => {
                 });
 
                 console.log(`Uploading ${serialDataToUpload.length} serials to team ${teamId} (${teamName})`);
-
                 // Upload the serials with progress tracking and error handling
                 const result = await new Promise<{
                     success: number,

@@ -44,6 +44,22 @@ export default function UserTable({
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
     const {user} = useApp() // Current logged-in user
+
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (containerRef.current) {
+                setScrolled(containerRef.current.scrollLeft > 0);
+            }
+        };
+        const container = containerRef.current;
+        container?.addEventListener('scroll', handleScroll);
+        return () => container?.removeEventListener('scroll', handleScroll);
+    }, []);
+
     // Initialize local users state from props
     useEffect(() => {
         setLocalUsers(users);
@@ -554,7 +570,7 @@ export default function UserTable({
                 <div className="w-full">
                     <div className="py-2 align-middle px-4">
                         <div className="shadow-sm border-b border-gray-200 dark:border-gray-700 rounded-lg">
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto" ref={containerRef}>
                                 <table
                                     className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed md:table-auto">
                                     <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
@@ -608,10 +624,10 @@ export default function UserTable({
                                         filteredUsers.map((user) => (
                                             <tr
                                                 key={user.id}
-                                                className="hover:bg-gray-50 dark:hover:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-800/50"
+                                                className="hover:bg-gray-50 bg-white dark:hover:bg-gray-800 even:bg-gray-50 dark:even:bg-gray-800/50"
                                             >
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center">
+                                                <td className={`sticky px-2 py-2 ${scrolled && 'absolute'} left-0 border-r border-gray-200  whitespace-nowrap  bg-inherit`}>
+                                                    <div className={`inline-flex items-center`}>
                                                         <div>
                                                             <div
                                                                 className="text-sm font-medium text-gray-900 dark:text-white">
@@ -649,7 +665,7 @@ export default function UserTable({
                                                         : "Never"}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                                    <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                                                    <div className="flex flex-w rap items-center gap-2 md:gap-3">
                                                         <button
                                                             onClick={() => handleViewUser(user)}
                                                             className="inline-flex items-center px-2 py-1 text-sm rounded-md text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200"

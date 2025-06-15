@@ -100,9 +100,19 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
 
         // If only one team is selected, skip the range selection step
         if (selectedTeams.length === 1) {
-            setSelectedTeam(selectedTeams[0]);
+            // Format the result in the new structure
+            const teamId = selectedTeams[0];
+            const result = [{
+                teamId: teamId,
+                boxes: availableBoxes.filter(box => true) // Include all available boxes for single team
+                    .map(box => ({
+                        lot: box.lot, serials: box.serials,
+                    }))
+            }];
+
+            setSelectedTeam(teamId); // For backward compatibility
             onClose();
-            resolve(selectedTeams[0]);
+            resolve(result);
             return;
         }
 
@@ -245,11 +255,41 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
             return;
         }
 
-        // Return selected teams with their ranges
-        const result = {
-            teams: selectedTeams,
-            ranges: teamRanges
-        };
+        // Format the result in the new structure
+        const result = selectedTeams.map(teamId => {
+            // Get the range for this team
+            const range = teamRanges[teamId];
+
+            // Find the start and end indices
+            const startIdx = availableSerials.findIndex(s => s.value === range.startRange);
+            const endIdx = availableSerials.findIndex(s => s.value === range.endRange);
+
+            // Get all serials in this range
+            const teamSerials = availableSerials.slice(
+                Math.min(startIdx, endIdx), 
+                Math.max(startIdx, endIdx) + 1
+            );
+
+            // Group serials by lot
+            const serialsByLot = {};
+            teamSerials.forEach(serial => {
+                if (!serialsByLot[serial.lot]) {
+                    serialsByLot[serial.lot] = [];
+                }
+                serialsByLot[serial.lot].push(serial.value);
+            });
+
+            // Create boxes from the grouped serials
+            const boxes = Object.entries(serialsByLot).map(([lot, serials]) => ({
+                lot,
+                serials
+            }));
+
+            return {
+                teamId,
+                boxes
+            };
+        });
 
         setSelectedTeam(selectedTeams[0]); // For backward compatibility
         onClose();
@@ -1123,13 +1163,30 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
             }
         }
 
-        // Return selected teams with their ranges
-        const result = {
-            teams: selectedTeams,
-            ranges: teamRanges,
-            boxAssignments: boxAssignments
-        };
+        // Get all serials from available boxes
+        const allSerials = availableBoxes.flatMap(box => box.serials);
 
+        // Group boxes by team
+        const teamBoxesMap = {};
+        selectedTeams.forEach(teamId => {
+            teamBoxesMap[teamId] = [];
+        });
+
+        // Assign boxes to teams based on boxAssignments
+        Object.entries(boxAssignments).forEach(([boxNumber, teamId]) => {
+            if (teamId && selectedTeams.includes(teamId)) {
+                teamBoxesMap[teamId].push(boxNumber);
+            }
+        });
+
+        // Format the result in the new structure
+        const result = selectedTeams.map(teamId => ({
+            teamId: teamId,
+            boxes: availableBoxes.filter(box => teamBoxesMap[teamId].includes(box.boxNumber))
+                .map(box => ({
+                    lot: box.lot, serials: box.serials,
+                }))
+        }));
         setSelectedTeam(selectedTeams[0]); // For backward compatibility
         onClose();
         resolve(result);

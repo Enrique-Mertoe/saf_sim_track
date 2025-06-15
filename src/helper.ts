@@ -212,54 +212,20 @@ export type Filter =
     | [string, string, any]                              // eq, gt, lt, in, is...
     | [string, 'not', string, any];                      // not('col', 'is', null)
 
-// export const applyFilters = <T>(q: T, filters: Filter[]): T => {
-//     for (const filter of filters) {
-//         if (filter.length === 2) {
-//             const [col, val] = filter;
-//             q = (q as any).eq(col, val);
-//         } else if (filter.length === 3) {
-//             const [col, op, val] = filter;
-//             if (op === 'in' && Array.isArray(val)) {
-//                 q = (q as any).in(col, val);
-//             } else if (op === 'is') {
-//                 q = (q as any).is(col, val);
-//             } else {
-//                 q = (q as any)[op](col, val);
-//             }
-//         } else if (filter.length === 4 && filter[1] === 'not') {
-//             const [col, , op, val] = filter;
-//             q = (q as any).not(col, op, val);
-//         }
-//     }
-//
-//     return q;
-// };
-export const applyFilters = <T>(q: T, filters: Filter[], useWave = true): T => {
-    if (useWave)
-        filters = [wave(), ...filters]
+export const applyFilters = <T>(q: T, filters: Filter[]): T => {
     for (const filter of filters) {
         if (filter.length === 2) {
             const [col, val] = filter;
-
-            if (col === 'or' && typeof val === 'string') {
-                q = (q as any).or(val);
-            } else {
-                q = (q as any).eq(col, val);
-            }
-
+            q = (q as any).eq(col, val);
         } else if (filter.length === 3) {
             const [col, op, val] = filter;
-
-            if (col === 'or' && typeof val === 'string') {
-                q = (q as any).or(val, {foreignTable: op}); // when needed
-            } else if (op === 'in' && Array.isArray(val)) {
+            if (op === 'in' && Array.isArray(val)) {
                 q = (q as any).in(col, val);
             } else if (op === 'is') {
                 q = (q as any).is(col, val);
             } else {
                 q = (q as any)[op](col, val);
             }
-
         } else if (filter.length === 4 && filter[1] === 'not') {
             const [col, , op, val] = filter;
             q = (q as any).not(col, op, val);
@@ -268,6 +234,40 @@ export const applyFilters = <T>(q: T, filters: Filter[], useWave = true): T => {
 
     return q;
 };
+// export const applyFilters = <T>(q: T, filters: Filter[], useWave = true): T => {
+//     if (useWave)
+//         filters = [wave(), ...filters]
+//     for (const filter of filters) {
+//         if (filter.length === 2) {
+//             const [col, val] = filter;
+//
+//             if (col === 'or' && typeof val === 'string') {
+//                 q = (q as any).or(val);
+//             } else {
+//                 q = (q as any).eq(col, val);
+//             }
+//
+//         } else if (filter.length === 3) {
+//             const [col, op, val] = filter;
+//
+//             if (col === 'or' && typeof val === 'string') {
+//                 q = (q as any).or(val, {foreignTable: op}); // when needed
+//             } else if (op === 'in' && Array.isArray(val)) {
+//                 q = (q as any).in(col, val);
+//             } else if (op === 'is') {
+//                 q = (q as any).is(col, val);
+//             } else {
+//                 q = (q as any)[op](col, val);
+//             }
+//
+//         } else if (filter.length === 4 && filter[1] === 'not') {
+//             const [col, , op, val] = filter;
+//             q = (q as any).not(col, op, val);
+//         }
+//     }
+//
+//     return q;
+// };
 
 
 export function parseDateToYMD(input: string | number | Date | null | undefined): string | null {
