@@ -28,6 +28,7 @@ const BatchTeamsList: React.FC<BatchTeamsListProps> = ({ batchId, user }) => {
         ]);
 
         if (error) {
+          //@ts-ignore
           throw new Error(error);
         }
 
@@ -59,7 +60,8 @@ const BatchTeamsList: React.FC<BatchTeamsListProps> = ({ batchId, user }) => {
               const teamSims = await simService.getSIMCardsByTeamId(teamId, user);
               if (teamSims.length > 0 && teamSims[0].team_id) {
                 const teamName = typeof teamSims[0].team_id === 'string' 
-                  ? 'Unknown Team' 
+                  ? 'Unknown Team'
+                    //@ts-ignore
                   : teamSims[0].team_id.name || 'Unknown Team';
 
                 return {
