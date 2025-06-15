@@ -24,6 +24,26 @@ const SimCardScanner = ({ onClose }) => {
         };
     }, []);
 
+    // Ensure video is properly initialized when scanning starts
+    useEffect(() => {
+        if (isScanning && videoRef.current && videoRef.current.srcObject) {
+            console.log('Video element initialized with stream');
+
+            // Force a redraw of the video element
+            const video = videoRef.current;
+            const currentDisplay = video.style.display;
+            video.style.display = 'none';
+            // Force a reflow
+            void video.offsetHeight;
+            video.style.display = currentDisplay;
+
+            // Ensure video is playing
+            video.play().catch(err => {
+                console.error('Error playing video in useEffect:', err);
+            });
+        }
+    }, [isScanning]);
+
     const checkCameraAvailability = async () => {
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -53,7 +73,20 @@ const SimCardScanner = ({ onClose }) => {
             streamRef.current = stream;
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.play();
+
+                // Ensure video plays and is visible
+                const playPromise = videoRef.current.play();
+
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log('Camera stream started successfully');
+                        })
+                        .catch(error => {
+                            console.error('Error playing video:', error);
+                            setError('Error starting video stream. Please try again.');
+                        });
+                }
             }
             setIsScanning(true);
         } catch (error) {
@@ -291,14 +324,16 @@ const SimCardScanner = ({ onClose }) => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <div className="relative bg-black rounded-lg overflow-hidden">
+                                <div className="relative bg-black rounded-lg overflow-hidden" style={{ minHeight: '250px' }}>
                                     <video
                                         ref={videoRef}
                                         className="w-full h-64 object-cover"
                                         playsInline
                                         muted
+                                        autoPlay
+                                        style={{ zIndex: 1, display: 'block' }}
                                     />
-                                    <div className="absolute inset-0 border-2 border-dashed border-white/50 m-4 rounded-lg flex items-center justify-center">
+                                    <div className="absolute inset-0 border-2 border-dashed border-white/50 m-4 rounded-lg flex items-center justify-center pointer-events-none" style={{ backgroundColor: 'rgba(0, 0, 0, 0.1)' }}>
                                         <div className="text-white text-center">
                                             <Scan size={32} className="mx-auto mb-2" />
                                             <p>Position barcodes within the frame</p>
@@ -326,7 +361,7 @@ const SimCardScanner = ({ onClose }) => {
                             </div>
                         )}
 
-                        <canvas ref={canvasRef} className="hidden" />
+                        <canvas ref={canvasRef} className="hidden" width="1280" height="720" />
                     </div>
                 ) : (
                     <div className="space-y-4">
