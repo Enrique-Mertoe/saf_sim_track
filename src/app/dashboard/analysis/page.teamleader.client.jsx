@@ -763,7 +763,7 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     // Show loading skeleton when data is being fetched
     if (isLoading) {
         return (
-            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
                 <div className="relative bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
                     <button
                         onClick={onClose}
@@ -829,13 +829,13 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     const getSeverityStyles = (severity) => {
         switch (severity) {
             case 'low':
-                return 'bg-green-50 border-l-green-500 text-green-700';
+                return 'bg-green-50 dark:bg-green-900/20 border-l-green-500 text-green-700 dark:text-green-300';
             case 'medium':
-                return 'bg-green-100 border-l-green-600 text-green-800';
+                return 'bg-green-100 dark:bg-green-800/20 border-l-green-600 text-green-800 dark:text-green-200';
             case 'high':
-                return 'bg-green-200 border-l-green-700 text-green-900';
+                return 'bg-green-200 dark:bg-green-700/20 border-l-green-700 text-green-900 dark:text-green-100';
             default:
-                return 'bg-green-50 border-l-green-500 text-green-700';
+                return 'bg-green-50 dark:bg-green-900/20 border-l-green-500 text-green-700 dark:text-green-300';
         }
     };
 
@@ -844,7 +844,7 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
             {/* Header */}
             <div className="relative bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
                 <button
@@ -869,11 +869,12 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
             {/* Content */}
             <div className="p-6">
                 {/* Summary Stats */}
-                <div className="bg-green-50 rounded-lg p-4 mb-6 border border-green-200">
+                <div
+                    className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-6 border border-green-200 dark:border-green-700">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-green-800">Total Issues</p>
-                            <p className="text-2xl font-bold text-green-700">{total}</p>
+                            <p className="text-sm font-medium text-green-800 dark:text-green-200">Total Issues</p>
+                            <p className="text-2xl font-bold text-green-700 dark:text-green-300">{total}</p>
                         </div>
                         <div className="bg-green-600 p-3 rounded-full">
                             <TrendingUp size={20} className="text-white"/>
@@ -889,17 +890,18 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
 
                         return (
                             <div key={item.id}
-                                 className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                                 className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                                 <div className="flex items-center space-x-2">
-                                    <Icon size={16} className="text-green-600"/>
-                                    <span className="text-gray-700 text-sm font-medium">{item.label}</span>
+                                    <Icon size={16} className="text-green-600 dark:text-green-400"/>
+                                    <span
+                                        className="text-gray-700 dark:text-gray-300 text-sm font-medium">{item.label}</span>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-xs text-gray-500">{percentage}</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">{percentage}</span>
                                     <span
-                                        className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                      {item.value}
-                                    </span>
+                                        className="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                                  {item.value}
+                                </span>
                                 </div>
                             </div>
                         );
@@ -907,9 +909,10 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
                 </div>
 
                 {/* Visual Summary */}
-                <div className="mt-6 bg-gray-50 rounded-lg p-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribution Overview</h4>
-                    <div className="flex rounded-full overflow-hidden h-3 bg-gray-200">
+                <div className="mt-6 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Distribution
+                        Overview</h4>
+                    <div className="flex rounded-full overflow-hidden h-3 bg-gray-200 dark:bg-gray-600">
                         {breakdownData.map((item, index) => (
                             <div
                                 key={item.id}
@@ -922,7 +925,7 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
                             />
                         ))}
                     </div>
-                    <div className="flex justify-between mt-2 text-xs text-gray-600">
+                    <div className="flex justify-between mt-2 text-xs text-gray-600 dark:text-gray-400">
                         <span>Low Impact</span>
                         <span>High Impact</span>
                     </div>
@@ -930,9 +933,9 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
             </div>
 
             {/* Footer */}
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
+            <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-t border-gray-100 dark:border-gray-600">
                 <div className="flex items-center justify-between">
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                         Last updated: {new Date().toLocaleDateString()}
                     </div>
                     <button
