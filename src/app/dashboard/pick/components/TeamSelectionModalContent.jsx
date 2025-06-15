@@ -1399,7 +1399,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                 key={box.boxNumber}
                                                 className={`p-2 border rounded cursor-pointer ${
                                                     isSelected
-                                                        ? 'border-blue-500 bg-blue-50'
+                                                        ? 'border-green-500 bg-green-50'
                                                         : isAssigned
                                                             ? 'border-green-500 bg-green-50'
                                                             : 'border-gray-200 hover:bg-gray-50'
@@ -1410,7 +1410,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                             >
                                                 <div className="text-xs font-medium">
                                                     Box <span
-                                                    className="text-blue-600 font-semibold">&lt;&lt;{box.lot}&gt;&gt;</span>
+                                                    className="text-green-600 font-semibold">&lt;&lt;{box.lot}&gt;&gt;</span>
                                                 </div>
                                                 <div className="text-xs text-gray-500 ">
                                                     Start: {box.startRange}
@@ -1485,7 +1485,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                     <h4 className="text-sm font-medium">{team.name}</h4>
                                                     <p className="text-xs text-gray-500">Leader: {team.leader || 'No leader'}</p>
                                                 </div>
-                                                <div className="text-xs font-medium text-blue-600">
+                                                <div className="text-xs font-medium text-green-600">
                                                     {assignedBoxCount} boxes
                                                 </div>
                                             </div>
@@ -1634,7 +1634,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                             <div className="flex items-center gap-2">
                                 <div className="flex items-center space-x-1">
                                     {vCount ? <span
-                                        className="text-sm text-blue-500 px-3 py-1 bg-blue-200 rounded-full">
+                                        className="text-sm text-green-500 px-3 py-1 bg-green-200 rounded-full">
                                         {boxMode ? `${Math.floor(vCount / 100)} boxes` : `${vCount} SIMs`} each
                                     </span> : null}
                                 </div>
@@ -1953,7 +1953,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                         className={`px-2 py-1 text-xs rounded ${
                                                             !range.startRange || isDisabled
                                                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                                : 'bg-green-100 text-green-700 hover:bg-green-200'
                                                         }`}
                                                         disabled={!range.startRange || isDisabled}
                                                     >
@@ -1993,7 +1993,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                         className={`px-2 py-1 text-xs rounded ${
                                                             !range.startRange || !range.count || isDisabled
                                                                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                                                : 'bg-green-100 text-green-700 hover:bg-green-200'
                                                         }`}
                                                         disabled={!range.startRange || !range.count || isDisabled}
                                                     >
@@ -2070,7 +2070,7 @@ const TeamSelectionModalContent = ({teams, setSelectedTeam, onClose, resolve, re
                                                                 const nextTeam = teams.find(t => t.id === nextTeamId);
                                                                 const nextStart = availableSerials[nextStartIdx].value;
                                                                 return (
-                                                                    <span className="text-blue-600">
+                                                                    <span className="text-green-600">
                                                                         Next team will start at: {nextStart}
                                                                     </span>
                                                                 );

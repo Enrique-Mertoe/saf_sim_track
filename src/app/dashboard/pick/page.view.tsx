@@ -21,12 +21,15 @@ import Signal from "@/lib/Signal";
 import {showModal} from "@/ui/shortcuts";
 import BatchMetadataModalContent from "@/app/dashboard/pick/components/BatchMetaDataForm";
 import TeamSelectionModalContent from "@/app/dashboard/pick/components/TeamSelectionModalContent";
+import BatchTeamSerials from "@/app/dashboard/pick/components/BatchTeamSerials";
 import {extractSerialsWithLots} from "@/app/dashboard/pick/utility";
 
 // Using shared types from types.ts
 
 function BatchTeam({team, batch, user}: any) {
     const [count, sC] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
     useEffect(() => {
         if (!user)
             return
@@ -37,10 +40,45 @@ function BatchTeam({team, batch, user}: any) {
             sC(r.count ?? 0)
         })
     }, [user]);
-    return (<span
-        className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                                                                        {team?.name || 'Unknown Team'}-{count}
-                                                                    </span>);
+
+    const handleClick = () => {
+        if (!user || isLoading) return;
+
+        setIsLoading(true);
+
+        showModal({
+            content: (onClose) => (
+                <BatchTeamSerials
+                    teamId={team.id}
+                    teamName={team?.name || 'Unknown Team'}
+                    batchId={batch}
+                    user={user}
+                    onClose={() => {
+                        setIsLoading(false);
+                        onClose();
+                    }}
+                />
+            ),
+            size: "lg",
+        });
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            disabled={isLoading}
+            className="bg-green-100 hover:bg-green-200 text-green-800 text-xs px-2 py-1 rounded cursor-pointer transition-colors flex items-center"
+        >
+            {isLoading ? (
+                <>
+                    <span className="inline-block animate-spin h-3 w-3 mr-1 border-2 border-green-600 border-t-transparent rounded-full"></span>
+                    Loading...
+                </>
+            ) : (
+                <>{team?.name || 'Unknown Team'}-{count}</>
+            )}
+        </button>
+    );
 }
 
 function AssignedSims({batch, user}: any) {
@@ -1272,7 +1310,7 @@ const SerialNumberForm: React.FC = () => {
                                 <span className="text-gray-600">{pdfProgress.toFixed(0)}%</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div className="bg-blue-600 h-2.5 rounded-full"
+                                <div className="bg-green-600 h-2.5 rounded-full"
                                      style={{width: `${pdfProgress}%`}}></div>
                             </div>
                         </div>
@@ -1291,7 +1329,7 @@ const SerialNumberForm: React.FC = () => {
                                 initial={{opacity: 0, y: -10}}
                                 animate={{opacity: 1, y: 0}}
                                 exit={{opacity: 0}}
-                                className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 text-blue-700"
+                                className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 text-green-700"
                             >
                                 {uploadMessage}
                             </motion.div>
@@ -1419,9 +1457,9 @@ const SerialNumberForm: React.FC = () => {
                                         className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span> Already exists: {existingCount}
                                 </span>
                                 <span
-                                    className="inline-flex items-center bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200">
+                                    className="inline-flex items-center bg-green-50 text-green-600 px-2 py-1 rounded border border-green-200">
                                     <span
-                                        className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> Checking: {checkingCount}
+                                        className="w-2 h-2 bg-green-500 rounded-full mr-1"></span> Checking: {checkingCount}
                                 </span>
                                 <span
                                     className="inline-flex items-center bg-purple-50 text-purple-600 px-2 py-1 rounded border border-purple-200">
@@ -1540,7 +1578,7 @@ const SerialNumberForm: React.FC = () => {
                                                     </div>
                                                     <div className="flex flex-col md:flex-row items-center">
                                                         <span
-                                                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-md">
+                                                            className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-md">
                                                             {batch.sim_count} SIM cards
                                                         </span>
 
