@@ -7,6 +7,7 @@ import {
     Filter,
     Loader2,
     Package,
+    Scan,
     Search,
     UserPlus,
     Users,
@@ -21,6 +22,7 @@ import {useDialog} from "@/app/_providers/dialog";
 import MaterialSelect from "@/ui/components/MaterialSelect";
 import {showModal} from "@/ui/shortcuts";
 import simService from "@/services/simService";
+import SimCardScanner from "@/ui/components/SimCardScanner";
 
 const supabase = createSupabaseClient();
 
@@ -84,17 +86,17 @@ const SimManagementPage = () => {
 
     // Calculate stats
     const [stats1, sSt] = useState({total: 0, assigned: 0, unassigned: 0, sold: 0})
-    const stats =  {
-            total: stats1.total,
-            assigned: stats1.assigned,
-            unassigned: stats1.total - stats1.assigned,
-            sold: stats1.sold
-        };
+    const stats = {
+        total: stats1.total,
+        assigned: stats1.assigned,
+        unassigned: stats1.total - stats1.assigned,
+        sold: stats1.sold
+    };
 
     useEffect(() => {
-        if (!user || ! user.team_id) return
-        simService.countQuery(user,[
-            ["team_id",user.team_id]
+        if (!user || !user.team_id) return
+        simService.countQuery(user, [
+            ["team_id", user.team_id]
         ]).then(r => {
             sSt(prev => ({...prev, total: r.count ?? 0}))
         });
@@ -103,7 +105,7 @@ const SimManagementPage = () => {
         });
         simService.countQuery(user, [
             ["assigned_to_user_id", "not", "is", null],
-            ["team_id",user.team_id]
+            ["team_id", user.team_id]
         ]).then(r => {
             sSt(prev => ({...prev, assigned: r.count ?? 0}))
         });
@@ -406,6 +408,32 @@ const SimManagementPage = () => {
                             </div>
                         </div>
                     </div>
+                </div>
+                <div className={"py-2"}>
+                    <button
+                        onClick={()=>{
+                            // Usage example
+                            showModal({
+                                content: onClose => (
+                                    <SimCardScanner
+                                        onClose={(result:any) => {
+                                            if (result) {
+                                                // Handle the scanned results
+                                                console.log('Scanned results:', result);
+                                                // Show assignment interface or handle the matched SIM cards
+                                            }
+                                            onClose(); // Close the modal
+                                        }}
+                                    />
+                                )
+                            });
+                        }}
+                        className={"flex rounded-sm px-4 py-2 items-center justify-center gap-1 bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer"}>
+                        {/*scann icon*/}
+                        <Scan className={"h-4 w-4 mr-1"}/>
+
+                        Scan
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
