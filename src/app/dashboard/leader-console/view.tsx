@@ -409,7 +409,7 @@ const SimManagementPage = () => {
                         </div>
                     </div>
                 </div>
-                <div className={"py-2"}>
+                <div className={"py-2 hidden"}>
                     <button
                         onClick={()=>{
                             // Usage example
