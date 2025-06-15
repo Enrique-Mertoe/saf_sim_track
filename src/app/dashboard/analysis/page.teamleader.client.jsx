@@ -41,6 +41,8 @@ export default function TeamSIMAnalysisPage() {
     const [userStats, setUserStats] = useState([]);
     const [startDate, setStartDate] = useState(DateTime.now().minus({days: 30}).toISODate());
     const [endDate, setEndDate] = useState(DateTime.now().toISODate());
+    //non-quality not assigned
+    const [nonQualityUnref, setNonQualityUnref] = useState(0);
     const [totalMetrics, setTotalMetrics] = useState({
         totalRecorded: 0,
         totalMatched: 0,
@@ -158,6 +160,15 @@ export default function TeamSIMAnalysisPage() {
             if (dateFilters && dateFilters.endDate) {
                 dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
             }
+
+            //non-quality not assigned but registered
+            simService.countAll(user,[
+                ["quality", SIMStatus.NONQUALITY],
+                ["assigned_to_user_id", "is", null],
+                ["registered_on", "not", "is", null],
+                ...(dateConditions)]).then(res => {
+                setNonQualityUnref(res.count ?? 0)
+            })
             const [reg, qlty, mtc] = await Promise.all([
                 simService.countReg(user, teamId, [
                     ...dateConditions
@@ -555,11 +566,18 @@ export default function TeamSIMAnalysisPage() {
                     <Card className={"w-ful h-full bg-white dark:bg-gray-800 !border-gray-200"}>
                         <CardHeader className={"border border-transparent border-b-gray-200 !p-1"}>
                             <span className={"font-bold text-2md"}>Staff Analysis</span>
+                            {nonQualityUnref > 0 && (
+                                <span className={"text-xs flex items-center gap-1 text-red-500 bg-red-100 py-2 px-4 rounded-sm font-medium"}>
+                                    <AlertTriangle className={"w-4 h-4 mr-1"}/>
+                                    Non-Quality not assigned : <span
+                                    className={"bg-red-200 px-4 rounded-full text-red-500"}>{nonQualityUnref}</span></span>
+                            )}
                         </CardHeader>
                         <CardContent className={"overflow-y-auto"}>
                             {
                                 userStats.map(userstat => (
-                                    <UserStat key={userstat.id}  dateRange={getDateFilters()} user={user} stat={userstat}/>
+                                    <UserStat key={userstat.id} dateRange={getDateFilters()} user={user}
+                                              stat={userstat}/>
                                 ))
                             }
 
@@ -592,15 +610,15 @@ const UserStat = ({user, stat, dateRange}) => {
 
         Promise.all([
             simService.countAll(user, [
-                ["assigned_to_user_id", stat.id],...dateConditions
+                ["assigned_to_user_id", stat.id], ...dateConditions
             ]),
             simService.countAll(user, [
                 ["assigned_to_user_id", stat.id],
-                ["registered_on", "not", "is", null],...dateConditions
+                ["registered_on", "not", "is", null], ...dateConditions
             ]),
             simService.countAll(user, [
-                ["quality", SIMStatus.QUALITY],
-                ["assigned_to_user_id", stat.id],...dateConditions
+                ["quality", SIMStatus.NONQUALITY],
+                ["assigned_to_user_id", stat.id], ...dateConditions
             ])
         ]).then(([r1, r2, qualityRes]) => {
             sS({
@@ -613,7 +631,7 @@ const UserStat = ({user, stat, dateRange}) => {
             console.error("Error fetching user stats:", err)
             setIsLoading(false)
         })
-    }, [user, stat.id,dateRange]);
+    }, [user, stat.id, dateRange]);
 
     // Skeleton loader when data is loading
     if (isLoading) {
@@ -687,7 +705,7 @@ const UserStat = ({user, stat, dateRange}) => {
     )
 }
 
-const UserStartDetails = ({onClose,dateFilters, userName, userId}) => {
+const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     const {user} = useApp();
     const [isLoading, setIsLoading] = useState(true);
     const [topUpCategories, setTopUpCategories] = useState(null);
@@ -704,7 +722,7 @@ const UserStartDetails = ({onClose,dateFilters, userName, userId}) => {
             dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
         }
         simService.countTopUpCategories(user, [
-            ["assigned_to_user_id", userId],...dateConditions
+            ["assigned_to_user_id", userId], ...dateConditions
         ])
             .then(data => {
                 setTopUpCategories(data);
@@ -714,7 +732,7 @@ const UserStartDetails = ({onClose,dateFilters, userName, userId}) => {
                 console.error("Error fetching top-up categories:", err);
                 setIsLoading(false);
             });
-    }, [user, userId,dateFilters]);
+    }, [user, userId, dateFilters]);
 
     // Show loading skeleton when data is being fetched
     if (isLoading) {
