@@ -589,10 +589,9 @@ export default function TeamSIMAnalysisPage() {
     );
 }
 
-
 const UserStat = ({user, stat, dateRange}) => {
     const [stats, sS] = useState({total: 0, registered: 0})
-    const completionRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
+    const qualityRate = Math.floor(stats?.total > 0 ? (stats.registered / stats.total) * 100 : 0);
     const [nQ, sNq] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
 
@@ -636,6 +635,58 @@ const UserStat = ({user, stat, dateRange}) => {
         })
     }, [user, stat.id, dateRange]);
 
+    // Get quality-based styles
+    const getQualityStyles = (rate) => {
+        if (rate >= 95) {
+            return {
+                background: "bg-green-50 dark:bg-green-900/20",
+                progressBar: "bg-green-500",
+                badge: "bg-green-500 text-white",
+                nonQualityBadge: "bg-green-200 dark:bg-green-800 text-green-700 dark:text-green-200",
+                icon: <CheckCircle className="w-3 h-3 text-white"/>,
+                showIcon: true
+            };
+        } else if (rate >= 85) {
+            return {
+                background: "bg-blue-50 dark:bg-blue-900/20",
+                progressBar: "bg-blue-500",
+                badge: "bg-blue-500 text-white",
+                nonQualityBadge: "bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-200",
+                icon: null,
+                showIcon: false
+            };
+        } else if (rate >= 70) {
+            return {
+                background: "bg-yellow-50 dark:bg-yellow-900/20",
+                progressBar: "bg-yellow-500",
+                badge: "bg-yellow-500 text-white",
+                nonQualityBadge: "bg-yellow-200 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-200",
+                icon: null,
+                showIcon: false
+            };
+        } else if (rate >= 50) {
+            return {
+                background: "bg-orange-50 dark:bg-orange-900/20",
+                progressBar: "bg-orange-500",
+                badge: "bg-orange-500 text-white",
+                nonQualityBadge: "bg-orange-200 dark:bg-orange-800 text-orange-700 dark:text-orange-200",
+                icon: null,
+                showIcon: false
+            };
+        } else {
+            return {
+                background: "bg-red-50 dark:bg-red-900/20",
+                progressBar: "bg-red-500",
+                badge: "bg-red-500 text-white",
+                nonQualityBadge: "bg-red-200 dark:bg-red-800 text-red-700 dark:text-red-200",
+                icon: null,
+                showIcon: false
+            };
+        }
+    };
+
+    const qualityStyles = getQualityStyles(qualityRate);
+
     // Skeleton loader when data is loading
     if (isLoading) {
         return (
@@ -660,13 +711,18 @@ const UserStat = ({user, stat, dateRange}) => {
             {
                 stats.assigned > 0 ? (
                     <div
-                        className={`flex  ${
-                            stats.assigned === 0 && "bg-amber-100 dark:bg-gray-800"
-                        } items-center justify-between border-b border-gray-100 py-3 px-2 last:border-b-0 dark:border-gray-800`}>
+                        className={`flex ${qualityStyles.background} items-center justify-between border-b border-gray-100 py-3 px-2 last:border-b-0 dark:border-gray-800`}>
                         <div className="flex items-center ">
                             <div>
-                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <p className="text-sm font-medium relative text-gray-700 dark:text-gray-300">
                                     {stat.full_name}
+                                    {
+                                        qualityStyles.showIcon && (
+                                            <p className="flex mt-1 absolute -top-2 -right-4 bg-green-500 rounded-full p-[2px] text-xs items-center gap-1">
+                                                {qualityStyles.icon}
+                                            </p>
+                                        )
+                                    }
                                 </p>
                                 <div className={"flex"}>
                                     <p
@@ -680,8 +736,9 @@ const UserStat = ({user, stat, dateRange}) => {
                                                 />
                                             })
                                         }}
-                                        className={"text-xs font-bold cursor-pointer bg-blue-200 text-blue-500 rounded-sm px-4"}>{nQ} Non-Quality</p>
+                                        className={`text-xs font-bold cursor-pointer ${qualityStyles.nonQualityBadge} rounded-sm px-4`}>{nQ} Non-Quality</p>
                                 </div>
+
                             </div>
                         </div>
                         <div className="group  relative">
@@ -691,8 +748,8 @@ const UserStat = ({user, stat, dateRange}) => {
                                 <div
                                     className="relative block h-1 w-full max-w-[100px] rounded-sm bg-gray-200 dark:bg-gray-800">
                                     <div
-                                        className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-green-500 text-xs font-medium text-white"
-                                        style={{width: `${completionRate}%`}}
+                                        className={`absolute left-0 top-0 flex h-full items-center justify-center rounded-sm ${qualityStyles.progressBar} text-xs font-medium text-white`}
+                                        style={{width: `${qualityRate}%`}}
                                     ></div>
                                 </div>
                                 <div className="absolute bottom-full right-5 mb-2 hidden group-hover:block">
@@ -705,7 +762,7 @@ const UserStat = ({user, stat, dateRange}) => {
                                 </div>
 
                                 <p className="text-xs font-medium text-gray-700 dark:text-gray-400">
-                                    {completionRate}% quality score
+                                    {qualityRate}% quality score
                                 </p>
                             </div>
                         </div>
@@ -719,7 +776,8 @@ const UserStat = ({user, stat, dateRange}) => {
                                     {stat.full_name}
                                 </p>
                             </div>
-                            <span className={"flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300"}>
+                            <span
+                                className={"flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300"}>
                                 <AlertTriangle className="w-4 h-4 text-orange-500"/>
                                 <span>No assigned lines found</span>
                             </span>
