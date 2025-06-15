@@ -818,6 +818,41 @@ export const simCardService = {
             .order('created_at', {ascending: false});
 
     },
+    streamChunks: async (
+        user: User,
+        onChunk: (chunk: SIMCard[], end: boolean) => void,
+        options: {
+            chunkSize?: number,
+            filters?: Filter[]
+        } = {}
+    ): Promise<void> => {
+        const client = createSupabaseClient();
+        let page = 0;
+        const chunkSize = options.chunkSize ?? 500;
+        const filters = options.filters ?? [];
+        const admin = await admin_id(user);
+        while (true) {
+            const from = page * chunkSize;
+            const to = from + chunkSize - 1;
+
+            const {data, error} = await applyFilters(client
+                .from('sim_cards')
+                .select('*')
+                .eq("admin_id", admin)
+                .range(from, to), filters);
+
+            if (error) {
+                console.error('Fetch error:', error);
+                break;
+            }
+
+            if (!data?.length) break;
+            onChunk(data, false);
+            page++;
+        }
+        onChunk([], true)
+    },
+
     async getInBatched(user: User, key: keyof SIMCard, values: string[], chunkSize = 500) {
         const supabase = createSupabaseClient();
         const admin = await admin_id(user);
@@ -825,12 +860,12 @@ export const simCardService = {
 
         for (let i = 0; i < values.length; i += chunkSize) {
             const chunk = values.slice(i, i + chunkSize);
-            const { data, error } = await supabase
+            const {data, error} = await supabase
                 .from('sim_cards')
                 .select('*')
                 .eq("admin_id", admin)
                 .in(key as string, chunk)
-                .order('created_at', { ascending: false });
+                .order('created_at', {ascending: false});
 
             if (error) {
                 console.error('Error fetching chunk:', error);
