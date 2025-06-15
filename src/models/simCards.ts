@@ -3,6 +3,7 @@ import {SIMStatus} from "@/models/types";
 export interface SIMCard {
     id: string;
     created_at: string;
+    batch_id?:string;
     assigned_on?: string;
     registered_on?: string;
     serial_number: string;
