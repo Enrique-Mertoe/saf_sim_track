@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {AlertCircle, Camera, Check, Loader2, Scan, Upload, X} from 'lucide-react';
+import Script from 'next/script';
 
 const SimCardScanner = ({ onClose }) => {
     const [scanMode, setScanMode] = useState('camera'); // 'camera' or 'upload'
@@ -90,7 +91,7 @@ const SimCardScanner = ({ onClose }) => {
         try {
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             await scanCanvasImageData(imageData);
-        } catch (error) {
+        } catch (_) {
             console.log('Client-side scanning failed, using server-side processing');
         }
     };
@@ -219,7 +220,10 @@ const SimCardScanner = ({ onClose }) => {
     return (
         <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
             {/* Load jsQR library for client-side scanning */}
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+            <Script 
+                src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"
+                strategy="afterInteractive"
+            />
 
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
