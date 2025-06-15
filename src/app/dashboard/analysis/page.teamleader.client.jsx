@@ -711,7 +711,7 @@ const UserStat = ({user, stat, dateRange}) => {
             {
                 stats.assigned > 0 ? (
                     <div
-                        className={`flex ${qualityStyles.background} items-center justify-between border-b border-gray-100 py-3 px-2 last:border-b-0 dark:border-gray-800`}>
+                        className={`flex  items-center justify-between border-b border-gray-100 py-3 px-2 last:border-b-0 dark:border-gray-800`}>
                         <div className="flex items-center ">
                             <div>
                                 <p className="text-sm font-medium relative text-gray-700 dark:text-gray-300">
@@ -736,7 +736,7 @@ const UserStat = ({user, stat, dateRange}) => {
                                                 />
                                             })
                                         }}
-                                        className={`text-xs font-bold cursor-pointer ${qualityStyles.nonQualityBadge} rounded-sm px-4`}>{nQ} Non-Quality</p>
+                                        className={`text-xs font-bold cursor-pointer bg-gray-200 text-gray-600 rounded-sm px-4`}>{nQ} Non-Quality</p>
                                 </div>
 
                             </div>
