@@ -143,62 +143,59 @@ export async function POST(request) {
         let serials = result.map(e => e.code).filter(e => e.length > 0)
 
         // If zbar didn't work, try alternative methods
-        if (serials.length === 0) {
-            try {
-                serials = await scanWithNode(processedImage);
-            } catch (error) {
-                console.log('Alternative scanning failed:', error);
-            }
-        }
+        // if (serials.length === 0) {
+        //     try {
+        //         serials = await scanWithNode(processedImage);
+        //     } catch (error) {
+        //         console.log('Alternative scanning failed:', error);
+        //     }
+        // }
+        // if (serials.length === 0) {
+        //     const regions = [
+        //         {top: 0, left: 0, width: 1, height: 0.5}, // Top half
+        //         {top: 0.5, left: 0, width: 1, height: 0.5}, // Bottom half
+        //         {top: 0, left: 0, width: 0.5, height: 1}, // Left half
+        //         {top: 0, left: 0.5, width: 0.5, height: 1}, // Right half
+        //     ];
+        //
+        //     for (const region of regions) {
+        //         try {
+        //             const metadata = await sharp(buffer).metadata();
+        //             const {width, height} = metadata;
+        //
+        //             const regionBuffer = await sharp(buffer)
+        //                 .extract({
+        //                     left: Math.floor(region.left * width),
+        //                     top: Math.floor(region.top * height),
+        //                     width: Math.floor(region.width * width),
+        //                     height: Math.floor(region.height * height)
+        //                 })
+        //                 .grayscale()
+        //                 .normalize()
+        //                 .sharpen()
+        //                 .png()
+        //                 .toBuffer();
+        //
+        //             const regionPath = path.join(tmpdir(), `region_${Date.now()}.png`);
+        //             writeFileSync(regionPath, regionBuffer);
+        //
+        //             try {
+        //                 const regionSerials = await scanWithZbar(regionPath);
+        //                 serials.push(...regionSerials);
+        //                 unlinkSync(regionPath);
+        //             } catch (regionError) {
+        //                 try {
+        //                     unlinkSync(regionPath);
+        //                 } catch {
+        //                 }
+        //                 continue;
+        //             }
+        //         } catch (regionError) {
+        //             continue;
+        //         }
+        //     }
+        // }
 
-        // Try scanning different regions if no barcodes found
-        if (serials.length === 0) {
-            const regions = [
-                {top: 0, left: 0, width: 1, height: 0.5}, // Top half
-                {top: 0.5, left: 0, width: 1, height: 0.5}, // Bottom half
-                {top: 0, left: 0, width: 0.5, height: 1}, // Left half
-                {top: 0, left: 0.5, width: 0.5, height: 1}, // Right half
-            ];
-
-            for (const region of regions) {
-                try {
-                    const metadata = await sharp(buffer).metadata();
-                    const {width, height} = metadata;
-
-                    const regionBuffer = await sharp(buffer)
-                        .extract({
-                            left: Math.floor(region.left * width),
-                            top: Math.floor(region.top * height),
-                            width: Math.floor(region.width * width),
-                            height: Math.floor(region.height * height)
-                        })
-                        .grayscale()
-                        .normalize()
-                        .sharpen()
-                        .png()
-                        .toBuffer();
-
-                    const regionPath = path.join(tmpdir(), `region_${Date.now()}.png`);
-                    writeFileSync(regionPath, regionBuffer);
-
-                    try {
-                        const regionSerials = await scanWithZbar(regionPath);
-                        serials.push(...regionSerials);
-                        unlinkSync(regionPath);
-                    } catch (regionError) {
-                        try {
-                            unlinkSync(regionPath);
-                        } catch {
-                        }
-                        continue;
-                    }
-                } catch (regionError) {
-                    continue;
-                }
-            }
-        }
-
-        // Clean up and return results
         const uniqueSerials = [...new Set(serials.map(s => s.trim()).filter(s => s.length > 0))];
 
         return NextResponse.json({
