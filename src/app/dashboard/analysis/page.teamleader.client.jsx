@@ -162,7 +162,7 @@ export default function TeamSIMAnalysisPage() {
             }
 
             //non-quality not assigned but registered
-            simService.countAll(user,[
+            simService.countAll(user, [
                 ["quality", SIMStatus.NONQUALITY],
                 ["assigned_to_user_id", "is", null],
                 ["registered_on", "not", "is", null],
@@ -210,8 +210,6 @@ export default function TeamSIMAnalysisPage() {
                 unknown,
                 breakdown: breakdownData
             };
-
-            // Fetch user stats for the team
             const {data: usersData, error: usersError} = await userService.getStaffUsers(
                 user.team_id,
                 user,
@@ -567,7 +565,8 @@ export default function TeamSIMAnalysisPage() {
                         <CardHeader className={"border border-transparent border-b-gray-200 !p-1"}>
                             <span className={"font-bold text-2md"}>Staff Analysis</span>
                             {nonQualityUnref > 0 && (
-                                <span className={"text-xs flex items-center gap-1 text-red-500 bg-red-100 py-2 px-4 rounded-sm font-medium"}>
+                                <span
+                                    className={"text-xs flex items-center gap-1 dark:bg-red-900 dark:text-red-200 text-red-500 bg-red-100 py-2 px-4 rounded-sm font-medium"}>
                                     <AlertTriangle className={"w-4 h-4 mr-1"}/>
                                     Non-Quality not assigned : <span
                                     className={"bg-red-200 px-4 rounded-full text-red-500"}>{nonQualityUnref}</span></span>
