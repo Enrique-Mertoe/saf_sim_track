@@ -576,7 +576,7 @@ const SimManagementPage = () => {
                                                     </button>
                                                 </div>
 
-                                                <div className="flex space-x-2">
+                                                <div className="grid sm:grid-cols-3 gap-2 grid-cols-2">
                                                     <input
                                                         type="text"
                                                         placeholder="Start serial"
@@ -585,7 +585,7 @@ const SimManagementPage = () => {
                                                             ...prev,
                                                             start: e.target.value
                                                         }))}
-                                                        className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+                                                        className="px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
                                                     />
                                                     <input
                                                         type="text"
@@ -599,7 +599,7 @@ const SimManagementPage = () => {
                                                     />
                                                     <button
                                                         onClick={selectSimsByRange}
-                                                        className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                                        className="px-3 py-1 max-sm:col-span-2 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
                                                     >
                                                         Range
                                                     </button>
