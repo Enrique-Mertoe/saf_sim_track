@@ -590,7 +590,7 @@ const TeamLeaderDashboardView = () => {
             </div>
             {/* Footer navigation for screens smaller than lg */}
             {
-                dimen.isMobile && (
+                dimen.isMobile || !dimen.lg && (
                     <Fixed>
                         <div
                             className="lg:hidden md:ml-64 fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
