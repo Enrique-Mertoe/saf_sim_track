@@ -49,7 +49,7 @@ function createStyle(classes: string): StyleDefinition {
  */
 export class Theme {
     // Main Button Styles
-    static readonly Button = createStyle('inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none');
+    static readonly Button = createStyle('inline-flex items-center justify-center rounded-full border border-gray-500 px-4 py-1 text-sm cursor-pointer hover:border-green-600  border-1 font-medium hover:bg-gray-50 transition-all transform hover:scale-105 duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none');
     static readonly BtnPrimary = createStyle('bg-green-600 text-white hover:bg-green-700');
     static readonly BtnSecondary = createStyle('bg-green-100 text-green-900 hover:bg-green-200');
     static readonly BtnOutline = createStyle('border border-green-600 text-green-700 hover:bg-green-50');

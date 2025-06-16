@@ -1,6 +1,6 @@
 // app/admin/users/components/UserFilters.tsx
 import {useEffect, useState} from 'react';
-import {Team} from "@/models";
+import {Team, UserStatus} from "@/models";
 import {teamService} from "@/services";
 
 type UserFiltersProps = {
@@ -56,9 +56,8 @@ export default function UserFilters({
 
     const statuses = [
         {value: '', label: 'All Statuses'},
-        {value: 'ACTIVE', label: 'Active'},
-        {value: 'SUSPENDED', label: 'Suspended'},
-        {value: 'PENDING_APPROVAL', label: 'Pending Approval'},
+        {value: UserStatus.ACTIVE, label: 'Active'},
+        {value: UserStatus.SUSPENDED, label: 'Suspended'},
     ];
 
     // Calculate the number of visible filters to adjust the grid
@@ -80,13 +79,10 @@ export default function UserFilters({
         : '';
 
     return (
-        <div className="mb-6 p-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-300">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Filter Users</h2>
+        <div className="mb-6 py-2 px-6 bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-300">
             <div className={`grid ${gridCols} gap-6`}>
                 {availableFilters.showSearch && (
                     <div className="relative">
-                        <label htmlFor="search"
-                               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Search</label>
                         <div className="relative">
                             <input
                                 type="text"
@@ -107,8 +103,6 @@ export default function UserFilters({
 
                 {availableFilters.showRoleFilter && (
                     <div>
-                        <label htmlFor="role"
-                               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Role</label>
                         <select
                             id="role"
                             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
@@ -126,8 +120,6 @@ export default function UserFilters({
 
                 {availableFilters.showTeamFilter && (
                     <div>
-                        <label htmlFor="team"
-                               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Team</label>
                         <select
                             id="team"
                             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"
@@ -146,8 +138,6 @@ export default function UserFilters({
 
                 {availableFilters.showStatusFilter && (
                     <div>
-                        <label htmlFor="status"
-                               className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Status</label>
                         <select
                             id="status"
                             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500/30 focus:border-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-200"

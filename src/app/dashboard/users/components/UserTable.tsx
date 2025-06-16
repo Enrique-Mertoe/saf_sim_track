@@ -2,7 +2,7 @@
 import {useEffect, useMemo, useRef, useState} from "react";
 import {User, UserRole, UserStatus, UserUpdate} from "@/models";
 import {formatDate} from "@/helper";
-import {CheckCircle, Edit, Eye, Loader2, MoreHorizontal, Search, Trash2, Undo, X} from "lucide-react";
+import {CheckCircle, Edit, Eye, Loader2, MoreHorizontal, Trash2, Undo, X} from "lucide-react";
 import {AnimatePresence, motion} from "framer-motion";
 import toast from "react-hot-toast";
 import {userService} from "@/services";
@@ -37,7 +37,6 @@ export default function UserTable({
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [localUsers, setLocalUsers] = useState<User[]>([]);
-    const [searchTerm, setSearchTerm] = useState<string>("");
     const [isMobileView, setIsMobileView] = useState(false);
     const [visibleUsers, setVisibleUsers] = useState<number>(10);
     const [hasMore, setHasMore] = useState(true);
@@ -65,20 +64,10 @@ export default function UserTable({
         setLocalUsers(users);
     }, [users]);
 
-    // Filter users based on search term
+    // Use localUsers directly as they are already filtered by the parent component
     const filteredUsers = useMemo(() => {
-        if (!searchTerm.trim()) return localUsers;
-
-        const lowerCaseSearch = searchTerm.toLowerCase();
-        return localUsers.filter(user =>
-            user.full_name.toLowerCase().includes(lowerCaseSearch) ||
-            user.email.toLowerCase().includes(lowerCaseSearch) ||
-            user.phone_number.toLowerCase().includes(lowerCaseSearch) ||
-            user.id_number.toLowerCase().includes(lowerCaseSearch) ||
-            user.role.toLowerCase().includes(lowerCaseSearch) ||
-            user.status.toLowerCase().includes(lowerCaseSearch)
-        );
-    }, [localUsers, searchTerm]);
+        return localUsers;
+    }, [localUsers]);
 
     // Update scroll position when user scrolls
     useEffect(() => {
@@ -548,22 +537,6 @@ export default function UserTable({
             className="w-full bg-white dark:bg-gray-800 rounded-lg relative"
             ref={tableRef}
         >
-            {/* Search Bar */}
-            <div
-                className="p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-20">
-                <div className="relative max-w-md mx-auto sm:max-w-full transition-all duration-200">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-gray-400 dark:text-gray-500"/>
-                    </div>
-                    <input
-                        type="text"
-                        placeholder="Search users by anything..."
-                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-200 sm:text-sm shadow-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
 
             {/* Desktop View - Table */}
             {!isMobileView && (
@@ -615,9 +588,7 @@ export default function UserTable({
                                                 colSpan={6}
                                                 className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
                                             >
-                                                {searchTerm
-                                                    ? "No matching users found"
-                                                    : "No users found"}
+                                                No users found
                                             </td>
                                         </tr>
                                     ) : (
@@ -707,7 +678,7 @@ export default function UserTable({
                         <div
                             className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center shadow-sm border border-gray-200 dark:border-gray-700">
                             <p className="text-gray-500 dark:text-gray-400">
-                                {searchTerm ? "No matching users found" : "No users found"}
+                                No users found
                             </p>
                         </div>
                     ) : (
