@@ -318,7 +318,7 @@ const BarcodeScanner = ({onClose,tab}) => {
     }, []);
 
     return (
-        <div className="w-full max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div className="w-full max-w-4xl max-lg:min-h-screen  mx-auto bg-white dark:bg-gray-800 md:rounded-lg md:shadow-lg">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
