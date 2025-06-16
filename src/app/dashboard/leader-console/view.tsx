@@ -711,7 +711,8 @@ const SimManagementPage = () => {
             </div>
             {/* Footer navigation for screens smaller than lg */}
             <Fixed>
-                <div className="lg:hidden md:ml-64 fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+                <div
+                    className="lg:hidden md:ml-64 fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
                     <div className="flex justify-around items-center h-16 max-w-7xl mx-auto">
                         <button
                             onClick={() => setActiveTab('home')}
@@ -719,7 +720,11 @@ const SimManagementPage = () => {
                                 activeTab === 'home' ? 'text-green-600' : 'text-gray-600'
                             }`}
                         >
-                            <Home className="h-6 w-6"/>
+                            <span className={`rounded-full px-6 py-1 ${
+                                activeTab === 'home' ? 'bg-green-100' : 'bg-gray-100'
+                            } text-xs`}>
+                                <Home className="h-6 w-6"/>
+                            </span>
                             <span className="text-xs mt-1">Assigned SIMs</span>
                         </button>
                         <button
@@ -728,7 +733,12 @@ const SimManagementPage = () => {
                                 activeTab === 'stats' ? 'text-green-600' : 'text-gray-600'
                             }`}
                         >
-                            <Package className="h-6 w-6"/>
+                            <span className={`rounded-full px-6 py-1 ${
+                                activeTab === 'stats' ? 'bg-green-100' : 'bg-gray-100'
+                            } text-xs`}>
+                                <Package className="h-6 w-6"/>
+                            </span>
+
                             <span className="text-xs mt-1">Unassigned SIMs</span>
                         </button>
                     </div>
