@@ -382,7 +382,7 @@ const SimManagementPage = () => {
 
                         {/* Stats Cards */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            <div className="bg-green-50 rounded-lg p-4">
+                            <div className="bg-green-50 shadow-sm rounded-lg p-4">
                                 <div className="flex items-center">
                                     <Package className="h-8 w-8 text-green-600"/>
                                     <div className="ml-3">
@@ -392,7 +392,7 @@ const SimManagementPage = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-green-50 rounded-lg p-4">
+                            <div className="bg-green-50 shadow-sm rounded-lg p-4">
                                 <div className="flex items-center">
                                     <Users className="h-8 w-8 text-green-600"/>
                                     <div className="ml-3">
@@ -402,7 +402,7 @@ const SimManagementPage = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-orange-50 rounded-lg p-4">
+                            <div className="bg-orange-50 shadow-sm rounded-lg p-4">
                                 <div className="flex items-center">
                                     <Package className="h-8 w-8 text-orange-600"/>
                                     <div className="ml-3">
@@ -412,7 +412,7 @@ const SimManagementPage = () => {
                                 </div>
                             </div>
 
-                            <div className="bg-purple-50 rounded-lg p-4">
+                            <div className="bg-purple-50 shadow-sm rounded-lg p-4">
                                 <div className="flex items-center">
                                     <CheckCircle className="h-8 w-8 text-purple-600"/>
                                     <div className="ml-3">
@@ -528,29 +528,31 @@ const SimManagementPage = () => {
 
                                 {/* Unassigned SIMs - shown when activeTab is 'stats' on mobile, always shown on large screens */}
                                 {(activeTab === 'stats' || dimen.lg) && (
-                                    <div className="bg-white rounded-lg shadow-sm">
-                                        <div className="p-4 border-b border-gray-200">
-                                            <div className="flex items-center gap-2  justify-between">
+                                    <div className="bg-white relative rounded-lg shadow-sm">
+                                        <div className="p-4  border-b border-gray-200">
+                                            <div className="flex flex-col md:flex-row md:items-center gap-2  md:justify-between">
                                                 <h2 className="text-lg font-semibold text-gray-900">Unassigned SIMs</h2>
 
-                                                <ScanButton
-                                                    showModal={showModal}
-                                                    filteredUnassigned={filteredUnassigned}
-                                                    setSelectedSims={setSelectedSims}
-                                                    alert={alert}
-                                                    Theme={Theme}
-                                                    BarcodeScanner={BarcodeScanner}
-                                                    className="ms-auto"
-                                                />
-                                                {selectedSims.length > 0 && (
-                                                    <button
-                                                        onClick={showDialog}
-                                                        className={`${Theme.Button}`}
-                                                    >
-                                                        <UserPlus className="h-4 w-4 mr-1"/>
-                                                        Assign ({selectedSims.length})
-                                                    </button>
-                                                )}
+                                                <div className="flex gap-2 md:ms-auto">
+                                                    <ScanButton
+                                                        showModal={showModal}
+                                                        filteredUnassigned={filteredUnassigned}
+                                                        setSelectedSims={setSelectedSims}
+                                                        alert={alert}
+                                                        Theme={Theme}
+                                                        BarcodeScanner={BarcodeScanner}
+                                                        className="min-w-[120px] md:min-w-[180px]"
+                                                    />
+                                                    {selectedSims.length > 0 && (
+                                                        <button
+                                                            onClick={showDialog}
+                                                            className={`${Theme.Button}`}
+                                                        >
+                                                            <UserPlus className="h-4 w-4 mr-1"/>
+                                                            Assign ({selectedSims.length})
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             <div className="mt-3 space-y-2">
