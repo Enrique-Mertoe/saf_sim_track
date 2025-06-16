@@ -541,7 +541,7 @@ const SimManagementPage = () => {
                                                         alert={alert}
                                                         Theme={Theme}
                                                         BarcodeScanner={BarcodeScanner}
-                                                        className="min-w-[120px] md:min-w-[180px]"
+                                                        className="min-w-[150px] md:min-w-[180px]"
                                                     />
                                                     {selectedSims.length > 0 && (
                                                         <button
