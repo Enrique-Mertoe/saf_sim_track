@@ -371,14 +371,14 @@ const SimManagementPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 md:p-4">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="sm:bg-white sm:rounded-lg sm:shadow-sm sm:p-4 p-2 mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">SIM Card Management</h1>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         <div className="bg-green-50 rounded-lg p-4">
                             <div className="flex items-center">
                                 <Package className="h-8 w-8 text-green-600"/>
