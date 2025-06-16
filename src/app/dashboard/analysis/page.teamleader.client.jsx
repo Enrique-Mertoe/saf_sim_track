@@ -792,7 +792,7 @@ const UserStat = ({user, stat, dateRange}) => {
 
 const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     useEffect(() => {
-        const themeColor = "#169243"; // Between green-600 and green-700
+        const themeColor = "#00a63e"; // Between green-600 and green-700
         let meta = document.querySelector("meta[name='theme-color']");
         if (!meta) {
             meta = document.createElement("meta");
