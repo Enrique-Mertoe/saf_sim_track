@@ -6,7 +6,8 @@ import Create from "@/app/dashboard/team/create";
 import Edit from "@/app/dashboard/team/edit";
 import ViewTeamDetails from "@/app/dashboard/team/view";
 import {v4 as uuidv4} from "uuid";
-import {cn} from "@/lib/utils"; // npm install uuid
+import {cn} from "@/lib/utils";
+import {useDimensions} from "@/ui/library/smv-ui/src/framework/utility/Screen"; // npm install uuid
 
 type ModalEntry = {
     id: string;
@@ -152,16 +153,36 @@ const ScrollableDialog = ({id, onDismiss, children, className = "", size = "lg",
             onDismiss();
         }
     };
+    const dimen = useDimensions()
 
     React.useEffect(() => {
-        // Hide body overflow when modal is mounted
+        // Lock scroll
         document.body.style.overflow = 'hidden';
 
-        // Cleanup: restore body overflow when modal is unmounted
+        const stateKey = `modal-${id}`;
+        if (!window.history.state?.modal) {
+            window.history.pushState({modal: stateKey}, "");
+        }
+
+
+        const handlePopState = (e: PopStateEvent) => {
+            // Intercept back button → close modal
+            if (onDismiss) {
+                e.preventDefault();
+                onDismiss();
+                window.history.go(1);
+            }
+        };
+
+        window.addEventListener("popstate", handlePopState);
+
+
         return () => {
             document.body.style.overflow = '';
+            window.removeEventListener("popstate", handlePopState);
         };
     }, []);
+
     const sizeClasses = {
         xs: "w-80",      // 320px
         sm: "w-96",      // 384px

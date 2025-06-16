@@ -33,6 +33,21 @@ export default function ReportDateRangeTemplate({
                                                     minDate,
                                                     className = "",
                                                 }: Props) {
+    useEffect(() => {
+        const themeColor = "#00a63e"; // Between green-600 and green-700
+        let meta = document.querySelector("meta[name='theme-color']");
+        if (!meta) {
+            meta = document.createElement("meta");
+            meta.setAttribute("name", "theme-color");
+            document.head.appendChild(meta);
+        }
+        meta.setAttribute("content", themeColor);
+
+        return () => {
+            // Reset if needed
+            meta?.setAttribute("content", "#ffffff");
+        };
+    }, []);
     const [dateSelection, setDateSelection] = useState<DateSelection>(
         defaultSelection || {
             type: 'range',
@@ -60,9 +75,9 @@ export default function ReportDateRangeTemplate({
         if (!defaultSelection) {
             handleQuickSelect("last-30-days");
         }
-    // We're intentionally not including handleQuickSelect in the deps array
-    // as it would cause the effect to run on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // We're intentionally not including handleQuickSelect in the deps array
+        // as it would cause the effect to run on every render
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [defaultSelection]);
 
     // Responsive handling for calendar view
@@ -301,7 +316,6 @@ export default function ReportDateRangeTemplate({
         {id: "previous-month", label: "Previous Month", icon: "⏮️", type: "range"},
         {id: "last-30-days", label: "Last 30 Days", icon: "🔄", type: "range"},
         {id: "last-90-days", label: "Last 90 Days", icon: "📊", type: "range"},
-        {id: "mar-1-30", label: "March 1-30", icon: "🗓️", type: "range"},
     ];
 
     const isSelectionValid = () => {
@@ -314,10 +328,10 @@ export default function ReportDateRangeTemplate({
 
     return (
         <div
-            className={`w-full flex flex-col h-full max-h-[80vh] mx-auto bg-white dark:bg-gray-900 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+            className={`w-full min-h-full max-sm:min-h-screen flex flex-col h-full max-h-[80vh] mx-auto bg-white dark:bg-gray-900 sm:rounded-md sm:shadow-lg border border-gray-200 dark:border-gray-700 ${className}`}>
             {/* Header with title, selection type toggle and close button */}
             <div
-                className="px-6 py-4  bg-gradient-to-r from-green-500 to-indigo-600 dark:from-green-800 dark:to-indigo-900">
+                className="p-2  bg-gradient-to-r from-green-600 to-green-700 dark:from-green-800 dark:to-green-900">
                 <div className="flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-semibold text-white">Select Date</h3>
@@ -334,29 +348,31 @@ export default function ReportDateRangeTemplate({
                 </div>
 
                 {/* Selection type toggle */}
-                <div className="mt-3 flex items-center justify-between">
-                    <div className="bg-white/20 backdrop-blur-sm rounded-md p-1 flex">
-                        <button
-                            onClick={() => dateSelection.type !== 'single' && toggleSelectionType()}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                dateSelection.type === 'single'
-                                    ? 'bg-white text-green-700'
-                                    : 'text-white hover:bg-white/10'
-                            }`}
-                        >
-                            Single Date
-                        </button>
-                        <button
-                            onClick={() => dateSelection.type !== 'range' && toggleSelectionType()}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                dateSelection.type === 'range'
-                                    ? 'bg-white text-green-700'
-                                    : 'text-white hover:bg-white/10'
-                            }`}
-                        >
-                            Date Range
-                        </button>
-                    </div>
+                <div className="mt-3 flex md:flex-row flex-col gap-2  md:items-center md:justify-between">
+                   <div className="flex">
+                       <div className="bg-white/20 backdrop-blur-sm rounded-md p-1 flex">
+                           <button
+                               onClick={() => dateSelection.type !== 'single' && toggleSelectionType()}
+                               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                   dateSelection.type === 'single'
+                                       ? 'bg-white text-green-700'
+                                       : 'text-white hover:bg-white/10'
+                               }`}
+                           >
+                               Single Date
+                           </button>
+                           <button
+                               onClick={() => dateSelection.type !== 'range' && toggleSelectionType()}
+                               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                   dateSelection.type === 'range'
+                                       ? 'bg-white text-green-700'
+                                       : 'text-white hover:bg-white/10'
+                               }`}
+                           >
+                               Date Range
+                           </button>
+                       </div>
+                   </div>
 
                     {/* Date selection summary */}
                     <div className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg flex items-center gap-2">
@@ -367,8 +383,9 @@ export default function ReportDateRangeTemplate({
                     </div>
                 </div>
             </div>
-            <div className="flex-grow scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500 overflow-y-auto">
-                <div className="p-6">
+            <div
+                className="flex-grow scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500 overflow-y-auto">
+                <div className="p-2">
                     {/* Quick selection buttons */}
                     <div className="mb-6">
                         <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Quick Select</h4>
