@@ -39,6 +39,7 @@ const SimManagementPage = () => {
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all'); // all, sold, unsold
     const [isLoading, setIsLoading] = useState(true);
+    const [simLoading, setSimLoading] = useState(true);
     const [isAssigning, setIsAssigning] = useState(false);
     const [rangeSelection, setRangeSelection] = useState({
         start: "",
@@ -52,7 +53,7 @@ const SimManagementPage = () => {
     // Load data on initial render
     useEffect(() => {
         if (user) {
-            fetchData();
+            fetchData().then();
         }
     }, [user]);
 
@@ -70,13 +71,22 @@ const SimManagementPage = () => {
 
             if (staffError) throw staffError;
             setStaffMembers(staffData || []);
-
-            // Fetch all SIM cards
-            const {data: simData, error: simError} = await simService.getAllSimCards(user)
-
-            if (simError) throw simError;
-            setSimCards(simData || []);
-
+            new Promise((resolve: (e: SIMCard[]) => void) => {
+                const chunks: SIMCard[] = [];
+                simService.streamChunks(user, (chunk, end) => {
+                        chunks.push(...chunk)
+                        if (end) {
+                            resolve(chunks)
+                        }
+                    },
+                    {
+                        filters: [["team_id", user.team_id]]
+                    }
+                )
+            }).then(simData => {
+                setSimCards(simData || []);
+                setSimLoading(false);
+            });
         } catch (error) {
             console.error("Error fetching data:", error);
             alert.error("Failed to load data. Please try again.");
@@ -411,297 +421,318 @@ const SimManagementPage = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Assigned SIMs */}
-                    <div className="bg-white sticky top-0 rounded-lg shadow-sm">
-                        <div className="p-4 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900">Assigned SIMs</h2>
-                                <div className="flex items-center space-x-2">
-                                    <Filter className="h-4 w-4 text-gray-500"/>
-                                    <select
-                                        value={filterStatus}
-                                        onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="text-sm border border-gray-300 rounded px-2 py-1"
-                                    >
-                                        <option value="all">All</option>
-                                        <option value="sold">Sold Only</option>
-                                        <option value="unsold">Unsold Only</option>
-                                    </select>
-                                </div>
+                {
+                    simLoading ? (
+                        <div className="bg-gray-50 flex items-center justify-center">
+                            <div className="flex items-center space-x-2">
+                                <Loader2 className="h-6 w-6 animate-spin text-green-600"/>
+                                <span className="text-gray-600">Loading SIM data...</span>
                             </div>
                         </div>
-
-                        <div className="max-h-96 overflow-y-auto">
-                            {Object.entries(assignedByMember).length === 0 ? (
-                                <div className="p-8 text-center text-gray-500">
-                                    <Users className="h-12 w-12 mx-auto mb-3 text-gray-300"/>
-                                    <p>No SIMs assigned yet</p>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Assigned SIMs */}
+                            <div className="bg-white sticky top-0 rounded-lg shadow-sm">
+                                <div className="p-4 border-b border-gray-200">
+                                    <div className="flex items-center justify-between">
+                                        <h2 className="text-lg font-semibold text-gray-900">Assigned SIMs</h2>
+                                        <div className="flex items-center space-x-2">
+                                            <Filter className="h-4 w-4 text-gray-500"/>
+                                            <select
+                                                value={filterStatus}
+                                                onChange={(e) => setFilterStatus(e.target.value)}
+                                                className="text-sm border border-gray-300 rounded px-2 py-1"
+                                            >
+                                                <option value="all">All</option>
+                                                <option value="sold">Sold Only</option>
+                                                <option value="unsold">Unsold Only</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                            ) : (
-                                Object.entries(assignedByMember).map(([memberId, data]: any) => (
-                                    <div key={memberId} className="border-b border-gray-100 last:border-b-0">
-                                        <div
-                                            className="p-4 hover:bg-gray-50 cursor-pointer flex items-center justify-between"
-                                            onClick={() => toggleMemberExpansion(memberId)}
-                                        >
-                                            <div className="flex items-center">
-                                                {expandedMembers.has(memberId) ?
-                                                    <ChevronDown className="h-4 w-4 text-gray-500"/> :
-                                                    <ChevronRight className="h-4 w-4 text-gray-500"/>
-                                                }
-                                                <div className="ml-2">
-                                                    <p className="font-medium text-gray-900">{data.name}</p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {data.total} total • {data.sold} sold
-                                                        • {data.total - data.sold} unsold
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex space-x-2">
+
+                                <div className="max-h-96 overflow-y-auto">
+                                    {Object.entries(assignedByMember).length === 0 ? (
+                                        <div className="p-8 text-center text-gray-500">
+                                            <Users className="h-12 w-12 mx-auto mb-3 text-gray-300"/>
+                                            <p>No SIMs assigned yet</p>
+                                        </div>
+                                    ) : (
+                                        Object.entries(assignedByMember).map(([memberId, data]: any) => (
+                                            <div key={memberId} className="border-b border-gray-100 last:border-b-0">
+                                                <div
+                                                    className="p-4 hover:bg-gray-50 cursor-pointer flex items-center justify-between"
+                                                    onClick={() => toggleMemberExpansion(memberId)}
+                                                >
+                                                    <div className="flex items-center">
+                                                        {expandedMembers.has(memberId) ?
+                                                            <ChevronDown className="h-4 w-4 text-gray-500"/> :
+                                                            <ChevronRight className="h-4 w-4 text-gray-500"/>
+                                                        }
+                                                        <div className="ml-2">
+                                                            <p className="font-medium text-gray-900">{data.name}</p>
+                                                            <p className="text-sm text-gray-500">
+                                                                {data.total} total • {data.sold} sold
+                                                                • {data.total - data.sold} unsold
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex space-x-2">
                         <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                           {data.total}
                         </span>
-                                                <span
-                                                    className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                                        <span
+                                                            className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                           {data.sold}
                         </span>
-                                            </div>
-                                        </div>
+                                                    </div>
+                                                </div>
 
-                                        {expandedMembers.has(memberId) && (
-                                            <div className="px-4 pb-4">
-                                                <div className="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto">
-                                                    {getFilteredAssignedSims(data.sims).map((sim: any) => (
-                                                        <div key={sim.id}
-                                                             className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded text-sm">
-                                                            <span className="font-mono">{sim.serial_number}</span>
-                                                            <div className="flex items-center space-x-2">
+                                                {expandedMembers.has(memberId) && (
+                                                    <div className="px-4 pb-4">
+                                                        <div
+                                                            className="grid grid-cols-1 gap-1 max-h-40 overflow-y-auto">
+                                                            {getFilteredAssignedSims(data.sims).map((sim: any) => (
+                                                                <div key={sim.id}
+                                                                     className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded text-sm">
+                                                                    <span
+                                                                        className="font-mono">{sim.serial_number}</span>
+                                                                    <div className="flex items-center space-x-2">
                                 <span className="text-xs text-gray-500">
                                   {sim.assigned_on ? new Date(sim.assigned_on).toLocaleDateString() : 'N/A'}
                                 </span>
-                                                                {sim.status === SIMStatus.SOLD ?
-                                                                    <CheckCircle className="h-4 w-4 text-green-500"/> :
-                                                                    <XCircle className="h-4 w-4 text-gray-400"/>
-                                                                }
-                                                            </div>
+                                                                        {sim.status === SIMStatus.SOLD ?
+                                                                            <CheckCircle
+                                                                                className="h-4 w-4 text-green-500"/> :
+                                                                            <XCircle className="h-4 w-4 text-gray-400"/>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            ))}
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                    </div>
+                                                )}
                                             </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Unassigned SIMs */}
+                            <div className="bg-white rounded-lg shadow-sm">
+                                <div className="p-4 border-b border-gray-200">
+                                    <div className="flex items-center gap-2  justify-between">
+                                        <h2 className="text-lg font-semibold text-gray-900">Unassigned SIMs</h2>
+
+                                        {/*<button*/}
+                                        {/*    onClick={() => {*/}
+                                        {/*        showModal({*/}
+                                        {/*            content: onClose => (*/}
+                                        {/*                <BarcodeScanner*/}
+                                        {/*                    onClose={(scannedSerials: string[] | undefined) => {*/}
+                                        {/*                        if (scannedSerials && scannedSerials.length > 0) {*/}
+                                        {/*                            // Find matching SIM cards in the unassigned list*/}
+                                        {/*                            const matchedSimIds = filteredUnassigned*/}
+                                        {/*                                .filter(sim => scannedSerials.includes(sim.serial))*/}
+                                        {/*                                .map(sim => sim.id);*/}
+
+                                        {/*                            if (matchedSimIds.length > 0) {*/}
+                                        {/*                                // Select the matched SIM cards*/}
+                                        {/*                                setSelectedSims(prevSelected => {*/}
+                                        {/*                                    // Create a new Set with all previously selected SIMs*/}
+                                        {/*                                    const newSelection = new Set(prevSelected);*/}
+
+                                        {/*                                    // Add all matched SIMs*/}
+                                        {/*                                    matchedSimIds.forEach(id => newSelection.add(id));*/}
+
+                                        {/*                                    // Convert back to array*/}
+                                        {/*                                    return Array.from(newSelection);*/}
+                                        {/*                                });*/}
+
+                                        {/*                                alert.success(`Selected ${matchedSimIds.length} SIM cards from scan`);*/}
+                                        {/*                            } else {*/}
+                                        {/*                                alert.warning('No matching SIM cards found for the scanned serials');*/}
+                                        {/*                            }*/}
+                                        {/*                        }*/}
+                                        {/*                        onClose(); // Close the modal*/}
+                                        {/*                    }}*/}
+                                        {/*                />*/}
+                                        {/*            )*/}
+                                        {/*        });*/}
+                                        {/*    }}*/}
+                                        {/*    className={`${Theme.Button} ms-auto`}>*/}
+                                        {/*    <Scan className={"h-4 w-4 mr-1"}/>*/}
+                                        {/*    Scan*/}
+                                        {/*</button>*/}
+                                        <ScanButton
+                                            showModal={showModal}
+                                            filteredUnassigned={filteredUnassigned}
+                                            setSelectedSims={setSelectedSims}
+                                            alert={alert}
+                                            Theme={Theme}
+                                            BarcodeScanner={BarcodeScanner}
+                                            className="ms-auto"
+                                        />
+                                        {selectedSims.length > 0 && (
+                                            <button
+                                                onClick={showDialog}
+                                                className={`${Theme.Button}`}
+                                            >
+                                                <UserPlus className="h-4 w-4 mr-1"/>
+                                                Assign ({selectedSims.length})
+                                            </button>
                                         )}
                                     </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
 
-                    {/* Unassigned SIMs */}
-                    <div className="bg-white rounded-lg shadow-sm">
-                        <div className="p-4 border-b border-gray-200">
-                            <div className="flex items-center gap-2  justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900">Unassigned SIMs</h2>
+                                    <div className="mt-3 space-y-2">
+                                        <div className="flex space-x-2">
+                                            <div className="relative flex-1">
+                                                <Search
+                                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"/>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search SIM serials..."
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={selectSimsBySearch}
+                                                className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                                            >
+                                                Select All
+                                            </button>
+                                        </div>
 
-                                {/*<button*/}
-                                {/*    onClick={() => {*/}
-                                {/*        showModal({*/}
-                                {/*            content: onClose => (*/}
-                                {/*                <BarcodeScanner*/}
-                                {/*                    onClose={(scannedSerials: string[] | undefined) => {*/}
-                                {/*                        if (scannedSerials && scannedSerials.length > 0) {*/}
-                                {/*                            // Find matching SIM cards in the unassigned list*/}
-                                {/*                            const matchedSimIds = filteredUnassigned*/}
-                                {/*                                .filter(sim => scannedSerials.includes(sim.serial))*/}
-                                {/*                                .map(sim => sim.id);*/}
+                                        <div className="flex space-x-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Start serial"
+                                                value={rangeSelection.start}
+                                                onChange={(e) => setRangeSelection(prev => ({
+                                                    ...prev,
+                                                    start: e.target.value
+                                                }))}
+                                                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder="End serial"
+                                                value={rangeSelection.end}
+                                                onChange={(e) => setRangeSelection(prev => ({
+                                                    ...prev,
+                                                    end: e.target.value
+                                                }))}
+                                                className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
+                                            />
+                                            <button
+                                                onClick={selectSimsByRange}
+                                                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
+                                            >
+                                                Range
+                                            </button>
+                                        </div>
 
-                                {/*                            if (matchedSimIds.length > 0) {*/}
-                                {/*                                // Select the matched SIM cards*/}
-                                {/*                                setSelectedSims(prevSelected => {*/}
-                                {/*                                    // Create a new Set with all previously selected SIMs*/}
-                                {/*                                    const newSelection = new Set(prevSelected);*/}
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => handleSelectRange(0, Math.min(9, paginatedUnassigned.length - 1))}
+                                                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                            >
+                                                Select 10
+                                            </button>
+                                            <button
+                                                onClick={clearSelections}
+                                                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                            >
+                                                Clear All
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                {/*                                    // Add all matched SIMs*/}
-                                {/*                                    matchedSimIds.forEach(id => newSelection.add(id));*/}
+                                <div className="max-h-96 overflow-y-auto">
+                                    {paginatedUnassigned.length === 0 ? (
+                                        <div className="p-8 text-center text-gray-500">
+                                            <Package className="h-12 w-12 mx-auto mb-3 text-gray-300"/>
+                                            <p>No unassigned SIMs found</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 gap-1 p-4">
+                                            {paginatedUnassigned.map((sim, index) => (
+                                                <div
+                                                    key={sim.id}
+                                                    className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+                                                        selectedSims.includes(sim.id)
+                                                            ? 'bg-green-100 border border-green-300'
+                                                            : 'hover:bg-gray-50'
+                                                    }`}
+                                                    onClick={() => handleSelectSim(sim.id)}
+                                                >
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedSims.includes(sim.id)}
+                                                            onChange={() => {
+                                                            }}
+                                                            className="mr-3 h-4 w-4 text-green-600 rounded"
+                                                        />
+                                                        <span className="font-mono text-sm">{sim.serial_number}</span>
+                                                    </div>
+                                                    <span
+                                                        className="text-xs text-gray-500">#{(currentPage - 1) * itemsPerPage + index + 1}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
 
-                                {/*                                    // Convert back to array*/}
-                                {/*                                    return Array.from(newSelection);*/}
-                                {/*                                });*/}
-
-                                {/*                                alert.success(`Selected ${matchedSimIds.length} SIM cards from scan`);*/}
-                                {/*                            } else {*/}
-                                {/*                                alert.warning('No matching SIM cards found for the scanned serials');*/}
-                                {/*                            }*/}
-                                {/*                        }*/}
-                                {/*                        onClose(); // Close the modal*/}
-                                {/*                    }}*/}
-                                {/*                />*/}
-                                {/*            )*/}
-                                {/*        });*/}
-                                {/*    }}*/}
-                                {/*    className={`${Theme.Button} ms-auto`}>*/}
-                                {/*    <Scan className={"h-4 w-4 mr-1"}/>*/}
-                                {/*    Scan*/}
-                                {/*</button>*/}
-                                <ScanButton
-                                    showModal={showModal}
-                                    filteredUnassigned={filteredUnassigned}
-                                    setSelectedSims={setSelectedSims}
-                                    alert={alert}
-                                    Theme={Theme}
-                                    BarcodeScanner={BarcodeScanner}
-                                    className="ms-auto"
-                                />
-                                {selectedSims.length > 0 && (
-                                    <button
-                                        onClick={showDialog}
-                                        className={`${Theme.Button}`}
-                                    >
-                                        <UserPlus className="h-4 w-4 mr-1"/>
-                                        Assign ({selectedSims.length})
-                                    </button>
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+                                        <p className="text-sm text-gray-500">
+                                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUnassigned.length)} of {filteredUnassigned.length}
+                                        </p>
+                                        <div className="flex space-x-1">
+                                            <button
+                                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                                disabled={currentPage === 1}
+                                                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
+                                            >
+                                                Prev
+                                            </button>
+                                            {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                                                const page = i + Math.max(1, currentPage - 2);
+                                                if (page > totalPages) return null;
+                                                return (
+                                                    <button
+                                                        key={page}
+                                                        onClick={() => setCurrentPage(page)}
+                                                        className={`px-3 py-1 text-sm rounded ${
+                                                            currentPage === page
+                                                                ? 'bg-green-600 text-white'
+                                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                        }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                );
+                                            })}
+                                            <button
+                                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
-
-                            <div className="mt-3 space-y-2">
-                                <div className="flex space-x-2">
-                                    <div className="relative flex-1">
-                                        <Search
-                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"/>
-                                        <input
-                                            type="text"
-                                            placeholder="Search SIM serials..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={selectSimsBySearch}
-                                        className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
-                                    >
-                                        Select All
-                                    </button>
-                                </div>
-
-                                <div className="flex space-x-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Start serial"
-                                        value={rangeSelection.start}
-                                        onChange={(e) => setRangeSelection(prev => ({...prev, start: e.target.value}))}
-                                        className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="End serial"
-                                        value={rangeSelection.end}
-                                        onChange={(e) => setRangeSelection(prev => ({...prev, end: e.target.value}))}
-                                        className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500"
-                                    />
-                                    <button
-                                        onClick={selectSimsByRange}
-                                        className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
-                                    >
-                                        Range
-                                    </button>
-                                </div>
-
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={() => handleSelectRange(0, Math.min(9, paginatedUnassigned.length - 1))}
-                                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                                    >
-                                        Select 10
-                                    </button>
-                                    <button
-                                        onClick={clearSelections}
-                                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                                    >
-                                        Clear All
-                                    </button>
-                                </div>
-                            </div>
                         </div>
+                    )
 
-                        <div className="max-h-96 overflow-y-auto">
-                            {paginatedUnassigned.length === 0 ? (
-                                <div className="p-8 text-center text-gray-500">
-                                    <Package className="h-12 w-12 mx-auto mb-3 text-gray-300"/>
-                                    <p>No unassigned SIMs found</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-1 p-4">
-                                    {paginatedUnassigned.map((sim, index) => (
-                                        <div
-                                            key={sim.id}
-                                            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
-                                                selectedSims.includes(sim.id)
-                                                    ? 'bg-green-100 border border-green-300'
-                                                    : 'hover:bg-gray-50'
-                                            }`}
-                                            onClick={() => handleSelectSim(sim.id)}
-                                        >
-                                            <div className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedSims.includes(sim.id)}
-                                                    onChange={() => {
-                                                    }}
-                                                    className="mr-3 h-4 w-4 text-green-600 rounded"
-                                                />
-                                                <span className="font-mono text-sm">{sim.serial_number}</span>
-                                            </div>
-                                            <span
-                                                className="text-xs text-gray-500">#{(currentPage - 1) * itemsPerPage + index + 1}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="p-4 border-t border-gray-200 flex items-center justify-between">
-                                <p className="text-sm text-gray-500">
-                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUnassigned.length)} of {filteredUnassigned.length}
-                                </p>
-                                <div className="flex space-x-1">
-                                    <button
-                                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                                        disabled={currentPage === 1}
-                                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
-                                    >
-                                        Prev
-                                    </button>
-                                    {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                                        const page = i + Math.max(1, currentPage - 2);
-                                        if (page > totalPages) return null;
-                                        return (
-                                            <button
-                                                key={page}
-                                                onClick={() => setCurrentPage(page)}
-                                                className={`px-3 py-1 text-sm rounded ${
-                                                    currentPage === page
-                                                        ? 'bg-green-600 text-white'
-                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                            >
-                                                {page}
-                                            </button>
-                                        );
-                                    })}
-                                    <button
-                                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                                        disabled={currentPage === totalPages}
-                                        className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                }
             </div>
         </div>
     );
