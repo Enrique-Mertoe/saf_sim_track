@@ -495,7 +495,7 @@ export default function NotificationsPage() {
           </div>
 
           {/* Notifications list */}
-          <div className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[calc(100vh-300px)] overflow-y-auto">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700 min-h-[calc(100vh-300px)] overflow-y-auto">
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <Loader2 size={32} className="animate-spin text-green-600" />

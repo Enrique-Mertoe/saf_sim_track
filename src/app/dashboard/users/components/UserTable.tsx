@@ -1,8 +1,8 @@
 "use client"
-import {useEffect, useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {User, UserRole, UserStatus, UserUpdate} from "@/models";
 import {formatDate} from "@/helper";
-import {CheckCircle, Edit, Eye, Loader2, MoreHorizontal, Trash2, Undo, X} from "lucide-react";
+import {CheckCircle, Edit, Eye, Loader2, MoreHorizontal, MoreVertical, Trash2, Undo, X} from "lucide-react";
 import {AnimatePresence, motion} from "framer-motion";
 import toast from "react-hot-toast";
 import {userService} from "@/services";
@@ -10,9 +10,11 @@ import {useDialog} from "@/app/_providers/dialog";
 import useApp from "@/ui/provider/AppProvider";
 import {showModal} from "@/ui/shortcuts";
 import alert from "@/ui/alert";
+import Dropdown from "@/ui/materia_screen/components/Dropdown";
 
 type UserTableProps = {
     users: User[];
+    isAdmin?: boolean;
     onStatusChange: (userId: string, status: UserStatus) => void;
     onDeleteUser: (userId: string) => void;
 };
@@ -21,6 +23,7 @@ export default function UserTable({
                                       users,
                                       onStatusChange,
                                       onDeleteUser,
+                                      isAdmin = false,
                                   }: UserTableProps) {
     const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const [viewUser, setViewUser] = useState<User | null>(null);
@@ -560,12 +563,16 @@ export default function UserTable({
                                         >
                                             ID Number
                                         </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                                        >
-                                            Role
-                                        </th>
+                                        {
+                                            isAdmin && (
+                                                <th
+                                                    scope="col"
+                                                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                                                >
+                                                    Role
+                                                </th>
+                                            )
+                                        }
                                         <th
                                             scope="col"
                                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -604,6 +611,7 @@ export default function UserTable({
                                                                 className="text-sm font-medium text-gray-900 dark:text-white">
                                                                 {user.full_name}
                                                             </div>
+                                                            <p className={"text-xs text-gray-500"}>Identity: {user.email ?? user.phone_number ?? user.username}</p>
                                                             <div
                                                                 className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span
@@ -624,12 +632,16 @@ export default function UserTable({
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                     {user.id_number}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              <span
-                                  className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                                {user.role}
-                              </span>
-                                                </td>
+                                                {
+                                                    isAdmin && (
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                          <span
+                                                              className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                                            {user.role}
+                                                          </span>
+                                                        </td>
+                                                    )
+                                                }
                                                 <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                                     {user.last_login_at
                                                         ? formatDate(user.last_login_at)
@@ -644,20 +656,42 @@ export default function UserTable({
                                                             <Eye size={16} className="mr-1"/>
                                                             View
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleEditUser(user)}
-                                                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
-                                                        >
-                                                            <Edit size={16} className="mr-1"/>
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteClick(user)}
-                                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center"
-                                                        >
-                                                            <Trash2 size={16} className="mr-1"/>
-                                                            Delete
-                                                        </button>
+                                                        <Dropdown
+                                                            trigger={<button
+                                                                className={`inline-flex cursor-pointer items-center px-2 py-1 text-sm rounded-md text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors duration-200`}>
+                                                                <MoreVertical className="h-4 w-4 mr-1"/>
+                                                            </button>}
+                                                            //@ts-ignore
+                                                            options={[
+                                                                {
+                                                                    key: 'edit',
+                                                                    value: 'edit',
+                                                                    label: 'Edit User',
+                                                                    className: "text-sm text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center",
+                                                                    icon: <Edit className={"h-4 w-4"}/>,
+                                                                },
+                                                                {
+                                                                    key: 'del',
+                                                                    value: 'del',
+                                                                    label: 'Delete User',
+                                                                    className: "text-sm text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center",
+                                                                    icon: <Trash2 className={"h-4 w-4"}/>,
+                                                                }
+                                                            ] as any}
+                                                            onSelect={(option: any) => {
+                                                                (
+                                                                    {
+                                                                        def: () => {
+                                                                        },
+                                                                        edit: handleEditUser,
+                                                                        del: handleEditUser,
+                                                                    } as any
+                                                                )[option.value ?? 'def']?.(user);
+                                                            }}
+                                                            position="bottom-right"
+                                                            dropdownClassName="min-w-[260px]"
+                                                            zIndex={100}
+                                                        />
                                                     </div>
                                                 </td>
                                             </tr>
@@ -763,24 +797,29 @@ export default function UserTable({
                                                     {user.status}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center">
-                                                <span
-                                                    className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
-                                                    {user.role}
-                                                </span>
-                                            </div>
+                                            {
+                                                user.role === UserRole.TEAM_LEADER && (
+                                                    <div className="flex items-center">
+                                                        <span
+                                                            className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs">
+                                                            {user.role}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            }
                                         </div>
 
                                         <div className="flex items-center text-xs">
-                                            <span className="text-gray-700 dark:text-gray-300 font-medium">ID:</span>
+                                            <span className="text-gray-700 dark:text-gray-300 font-medium">ID Number:</span>
                                             <span
                                                 className="ml-1 text-gray-600 dark:text-gray-400">{user.id_number}</span>
                                         </div>
 
                                         <div className="flex items-center text-xs">
-                                            <span className="text-gray-700 dark:text-gray-300 font-medium">Email:</span>
                                             <span
-                                                className="ml-1 text-gray-600 dark:text-gray-400 truncate">{user.email}</span>
+                                                className="text-gray-700 dark:text-gray-300 font-medium">Identity:</span>
+                                            <span
+                                                className="ml-1 text-gray-600 dark:text-gray-400 truncate">{user.email ?? user.phone_number ?? user.username}</span>
                                         </div>
 
                                         <div className="flex items-center text-xs">
