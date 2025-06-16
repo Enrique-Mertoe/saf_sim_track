@@ -7,7 +7,6 @@ import {
     Filter,
     Loader2,
     Package,
-    Scan,
     Search,
     UserPlus,
     Users,
@@ -22,7 +21,9 @@ import {useDialog} from "@/app/_providers/dialog";
 import MaterialSelect from "@/ui/components/MaterialSelect";
 import {showModal} from "@/ui/shortcuts";
 import simService from "@/services/simService";
-import SimCardScanner from "@/ui/components/SimCardScanner";
+import BarcodeScanner from "@/ui/components/BarcodeScanner";
+import Theme from "@/ui/Theme";
+import ScanButton from "@/ui/components/ScanButton";
 
 const supabase = createSupabaseClient();
 
@@ -409,32 +410,6 @@ const SimManagementPage = () => {
                         </div>
                     </div>
                 </div>
-                <div className={"py-2 hidden"}>
-                    <button
-                        onClick={()=>{
-                            // Usage example
-                            showModal({
-                                content: onClose => (
-                                    <SimCardScanner
-                                        onClose={(result:any) => {
-                                            if (result) {
-                                                // Handle the scanned results
-                                                console.log('Scanned results:', result);
-                                                // Show assignment interface or handle the matched SIM cards
-                                            }
-                                            onClose(); // Close the modal
-                                        }}
-                                    />
-                                )
-                            });
-                        }}
-                        className={"flex rounded-sm px-4 py-2 items-center justify-center gap-1 bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer"}>
-                        {/*scann icon*/}
-                        <Scan className={"h-4 w-4 mr-1"}/>
-
-                        Scan
-                    </button>
-                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Assigned SIMs */}
@@ -524,12 +499,62 @@ const SimManagementPage = () => {
                     {/* Unassigned SIMs */}
                     <div className="bg-white rounded-lg shadow-sm">
                         <div className="p-4 border-b border-gray-200">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2  justify-between">
                                 <h2 className="text-lg font-semibold text-gray-900">Unassigned SIMs</h2>
+
+                                {/*<button*/}
+                                {/*    onClick={() => {*/}
+                                {/*        showModal({*/}
+                                {/*            content: onClose => (*/}
+                                {/*                <BarcodeScanner*/}
+                                {/*                    onClose={(scannedSerials: string[] | undefined) => {*/}
+                                {/*                        if (scannedSerials && scannedSerials.length > 0) {*/}
+                                {/*                            // Find matching SIM cards in the unassigned list*/}
+                                {/*                            const matchedSimIds = filteredUnassigned*/}
+                                {/*                                .filter(sim => scannedSerials.includes(sim.serial))*/}
+                                {/*                                .map(sim => sim.id);*/}
+
+                                {/*                            if (matchedSimIds.length > 0) {*/}
+                                {/*                                // Select the matched SIM cards*/}
+                                {/*                                setSelectedSims(prevSelected => {*/}
+                                {/*                                    // Create a new Set with all previously selected SIMs*/}
+                                {/*                                    const newSelection = new Set(prevSelected);*/}
+
+                                {/*                                    // Add all matched SIMs*/}
+                                {/*                                    matchedSimIds.forEach(id => newSelection.add(id));*/}
+
+                                {/*                                    // Convert back to array*/}
+                                {/*                                    return Array.from(newSelection);*/}
+                                {/*                                });*/}
+
+                                {/*                                alert.success(`Selected ${matchedSimIds.length} SIM cards from scan`);*/}
+                                {/*                            } else {*/}
+                                {/*                                alert.warning('No matching SIM cards found for the scanned serials');*/}
+                                {/*                            }*/}
+                                {/*                        }*/}
+                                {/*                        onClose(); // Close the modal*/}
+                                {/*                    }}*/}
+                                {/*                />*/}
+                                {/*            )*/}
+                                {/*        });*/}
+                                {/*    }}*/}
+                                {/*    className={`${Theme.Button} ms-auto`}>*/}
+                                {/*    <Scan className={"h-4 w-4 mr-1"}/>*/}
+                                {/*    Scan*/}
+                                {/*</button>*/}
+                                <ScanButton
+                                    showModal={showModal}
+                                    filteredUnassigned={filteredUnassigned}
+                                    setSelectedSims={setSelectedSims}
+                                    alert={alert}
+                                    Theme={Theme}
+                                    BarcodeScanner={BarcodeScanner}
+                                    className="ms-auto"
+                                />
                                 {selectedSims.length > 0 && (
                                     <button
                                         onClick={showDialog}
-                                        className="flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                        className={`${Theme.Button}`}
                                     >
                                         <UserPlus className="h-4 w-4 mr-1"/>
                                         Assign ({selectedSims.length})
