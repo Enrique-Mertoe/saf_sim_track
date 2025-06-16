@@ -75,7 +75,7 @@ const TeamLeaderDashboardView = () => {
 
                 // Get team hierarchy to get staff members
                 // const {data: hierarchy, error: hierarchyError} = await teamService.getTeamHierarchy(user.team_id);
-                const {data:staff,error:hierarchyError} = await userService.getStaffUsers(user.team_id,user)
+                const {data: staff, error: hierarchyError} = await userService.getStaffUsers(user.team_id, user)
                 if (hierarchyError) throw hierarchyError;
 
                 // Extract staff members from hierarchy
@@ -263,12 +263,17 @@ const TeamLeaderDashboardView = () => {
     }, [simCards, selectedDate]);
 
 
-
+    const formattedDate = (new Date()).toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
                 <motion.div
-                    className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-2 mb-8 shadow-lg"
+                    className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-2 mb-4 shadow-lg"
                     initial={{opacity: 0, scale: 0.96}}
                     animate={{opacity: 1, scale: 1}}
                     transition={{duration: 0.5}}
@@ -277,7 +282,9 @@ const TeamLeaderDashboardView = () => {
                     <div className="relative z-10">
                         <div className="flex flex-col md:flex-row justify-between items-start">
                             <div>
-                                <h2 className="text-2xl font-bold text-white">Welcome <span className={"text-green-200"}>{user?.full_name}!</span></h2>
+                                <p className="text-indigo-100 font-bold dark:text-indigo-200 mt-1">{formattedDate}</p>
+                                <h2 className="text-2xl font-bold text-white">Welcome <span
+                                    className={"text-green-200"}>{user?.full_name}!</span></h2>
                                 <p className="text-indigo-100 dark:text-indigo-200 mt-1">Monitor daily SIM card sales
                                     and team performance</p>
                             </div>
@@ -299,7 +306,8 @@ const TeamLeaderDashboardView = () => {
                                     {teamData?.van_number_plate && (
                                         <div className="flex items-center">
                                             <span className="text-indigo-100">Van:</span>
-                                            <span className="ml-1 uppercase bg-yellow-500 rounded-sm  px-4 text-gray-700 font-medium">{teamData.van_number_plate}</span>
+                                            <span
+                                                className="ml-1 uppercase bg-yellow-500 rounded-sm  px-4 text-gray-700 font-medium">{teamData.van_number_plate}</span>
                                         </div>
                                     )}
                                     <div className="flex items-center">
@@ -319,6 +327,38 @@ const TeamLeaderDashboardView = () => {
                     </div>
                 </motion.div>
 
+
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
+                    <TeamLeaderStatCard
+                        title="Total Allocated"
+                        subtitle="SIM cards received"
+                        icon={Phone}
+                        color="blue"
+                        dataType={"total"}
+                    />
+                    <TeamLeaderStatCard
+                        title="Registered Today"
+                        subtitle={`Date: ${formatDate(selectedDate)}`}
+                        icon={CheckCircle2}
+                        color="green"
+                        dataType={"registered-today"}
+                    />
+                    <TeamLeaderStatCard
+                        title="Total Registered"
+                        subtitle={`${stats.registrationRate}% of allocated`}
+                        icon={TrendingUp}
+                        dataType={"registered"}
+                        color="purple"
+                    />
+                    <TeamLeaderStatCard
+                        title="Unassigned"
+                        subtitle="Available for assignment"
+                        icon={AlertTriangle}
+                        color="orange"
+                        dataType={"unassigned"}
+                    />
+                </div>
                 {/* Date and View Mode Controls */}
                 <div
                     className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow-sm border border-gray-200 dark:border-gray-700">
@@ -351,7 +391,9 @@ const TeamLeaderDashboardView = () => {
 
                         <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-gray-500 dark:text-gray-400"/>
-                            <MaterialSelect options={teamStaff} onChange={v=>setSelectedStaff(v)} placeholder={"Filter by team member"} className={"min-w-[260px]"} displayKey={"name"} valueKey={"id"}/>
+                            <MaterialSelect options={teamStaff} onChange={v => setSelectedStaff(v)}
+                                            placeholder={"Filter by team member"} className={"min-w-[260px]"}
+                                            displayKey={"name"} valueKey={"id"}/>
                         </div>
 
                         {isLoading && (
@@ -362,38 +404,6 @@ const TeamLeaderDashboardView = () => {
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <TeamLeaderStatCard
-                        title="Total Allocated"
-                        subtitle="SIM cards received"
-                        icon={Phone}
-                        color="blue"
-                        dataType={"total"}
-                    />
-                    <TeamLeaderStatCard
-                        title="Registered Today"
-                        subtitle={`Date: ${formatDate(selectedDate)}`}
-                        icon={CheckCircle2}
-                        color="green"
-                        dataType={"registered-today"}
-                    />
-                    <TeamLeaderStatCard
-                        title="Total Registered"
-                        subtitle={`${stats.registrationRate}% of allocated`}
-                        icon={TrendingUp}
-                        dataType={"registered"}
-                        color="purple"
-                    />
-                    <TeamLeaderStatCard
-                        title="Unassigned"
-                        subtitle="Available for assignment"
-                        icon={AlertTriangle}
-                        color="orange"
-                        dataType={"unassigned"}
-                    />
                 </div>
 
                 {/* Tabs */}
@@ -554,12 +564,14 @@ const TeamLeaderDashboardView = () => {
                                 itemsPerPage={12}
                                 onUnassign={(selectedSimIds) => {
                                     showModal({
-                                        content: onClose => <UnassignSimCard onClose={onClose} simCards={selectedSimIds} />
+                                        content: onClose => <UnassignSimCard onClose={onClose}
+                                                                             simCards={selectedSimIds}/>
                                     })
                                 }}
                                 onTransfer={(selectedSimIds) => {
                                     showModal({
-                                        content: onClose => <TransferSimCard user={user} onClose={onClose} simCards={selectedSimIds} />
+                                        content: onClose => <TransferSimCard user={user} onClose={onClose}
+                                                                             simCards={selectedSimIds}/>
                                     })
                                 }}
                             />
@@ -575,7 +587,8 @@ const TeamLeaderDashboardView = () => {
                                 itemsPerPage={12}
                                 onAssign={(selectedSimIds) => {
                                     showModal({
-                                        content: onClose => <AssignSimCard user={user} onClose={onClose} simCards={selectedSimIds}/>
+                                        content: onClose => <AssignSimCard user={user} onClose={onClose}
+                                                                           simCards={selectedSimIds}/>
                                     })
                                 }}
                             />
