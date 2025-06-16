@@ -24,6 +24,7 @@ import {showModal} from "@/ui/shortcuts";
 import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {format, isToday, isYesterday} from "date-fns";
 import {formatLocalDate} from "@/helper";
+import Theme from "@/ui/Theme";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -355,7 +356,6 @@ export default function TeamSIMAnalysisPage() {
                     <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-orange-500'} dark:text-white`}>
                         {typeof value === 'number' ? value.toLocaleString() : value}
                     </p>
-                    {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
                 </div>
                 <div
                     className={`p-3 rounded-full ${color === 'green' ? 'bg-green-100 dark:bg-green-900' : color === 'red' ? 'bg-red-100 dark:bg-red-900' : 'bg-orange-100 dark:bg-orange-900'}`}>
@@ -363,6 +363,7 @@ export default function TeamSIMAnalysisPage() {
                         className={`h-6 w-6 ${color === 'green' ? 'text-green-600 dark:text-green-400' : color === 'red' ? 'text-red-500 dark:text-red-400' : 'text-orange-500 dark:text-orange-400'}`}/>
                 </div>
             </div>
+            {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
             {trend && (
                 <div className="flex items-center mt-4">
                     {trend > 0 ? (
@@ -379,10 +380,10 @@ export default function TeamSIMAnalysisPage() {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 md:py-6 p-2">
             {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center justify-between">
+            <div className="mb-2">
+                <div className="flex md:flex-row flex-col md:items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analysis</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-2">Performance metrics for your team</p>
@@ -420,14 +421,14 @@ export default function TeamSIMAnalysisPage() {
                                     size: "lg",
                                 });
                             }}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2">
+                            className={`${Theme.Button}`}>
                             <Calendar className="h-4 w-4"/>
                             <span>{formatDateRangeForDisplay()}</span>
                         </button>
                         <button
                             onClick={handleRefresh}
                             disabled={isLoading || isRefreshing}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 disabled:opacity-50"
+                            className={`${Theme.Button}`}
                         >
                             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}/>
                             <span>Refresh</span>
@@ -440,7 +441,7 @@ export default function TeamSIMAnalysisPage() {
             {isLoading ? (
                 <LoadingSkeleton/>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-1 mb-8">
                     <MetricCard
                         title="Total Recorded"
                         value={totalMetrics.totalRecorded}
