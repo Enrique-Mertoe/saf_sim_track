@@ -791,6 +791,21 @@ const UserStat = ({user, stat, dateRange}) => {
 }
 
 const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
+    useEffect(() => {
+        const themeColor = "#169243"; // Between green-600 and green-700
+        let meta = document.querySelector("meta[name='theme-color']");
+        if (!meta) {
+            meta = document.createElement("meta");
+            meta.setAttribute("name", "theme-color");
+            document.head.appendChild(meta);
+        }
+        meta.setAttribute("content", themeColor);
+
+        return () => {
+            // Reset if needed
+            meta?.setAttribute("content", "#ffffff");
+        };
+    }, []);
     const {user} = useApp();
     const [isLoading, setIsLoading] = useState(true);
     const [topUpCategories, setTopUpCategories] = useState(null);
@@ -822,7 +837,8 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     // Show loading skeleton when data is being fetched
     if (isLoading) {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
+            <div
+                className="bg-white dark:bg-gray-800 max-sm:min-h-screen sm:rounded-xl sm:shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
                 <div className="relative bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
                     <button
                         onClick={onClose}
@@ -902,8 +918,11 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
         return `${(value / total) * 100}%`;
     };
 
+
+
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full mx-auto overflow-hidden">
+        <div
+            className="bg-white dark:bg-gray-800 sm:rounded-xl sm:shadow-2xl max-sm:min-h-screen max-w-lg w-full mx-auto overflow-hidden">
             {/* Header */}
             <div className="relative bg-gradient-to-r from-green-600 to-green-700 px-6 py-5">
                 <button
