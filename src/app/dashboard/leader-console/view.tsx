@@ -144,7 +144,7 @@ const SimManagementPage = () => {
             //@ts-ignore
             grouped[sim.assigned_to_user_id].total++;
             //@ts-ignore
-            if (sim.status === SIMStatus.SOLD) grouped[sim.assigned_to_user_id].sold++;
+            if (sim.registered_on !== null) grouped[sim.assigned_to_user_id].sold++;
             //@ts-ignore
             grouped[sim.assigned_to_user_id].sims.push(sim);
         });
