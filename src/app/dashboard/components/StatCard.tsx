@@ -268,7 +268,7 @@ function StatCard({
 
     return (
         <div
-            className={`${colorClasses[color].bg} p-5 w-full rounded-lg transition-all duration-200 transform ${
+            className={`${colorClasses[color].bg} p-5 w-full rounded-lg !shadow-none border border-gray-300 transition-all duration-200 transform ${
                 isAnimating ? 'scale-105' : ''
             } ${isRefreshing ? 'opacity-70' : 'opacity-100'} shadow-sm hover:shadow-md ${
                 expandable ? 'cursor-pointer' : ''

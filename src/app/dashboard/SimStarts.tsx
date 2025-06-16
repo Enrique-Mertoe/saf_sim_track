@@ -189,7 +189,7 @@ export default function SimStats({refreshing = false}) {
                     <span className="text-xs text-gray-600 dark:text-gray-400">Refresh</span>
                 </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-6">
                 {isLoading && !isRefreshing ? (
                     <LoadingSkeleton/>
                 ) : (

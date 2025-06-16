@@ -198,7 +198,7 @@ export default function SafaricomDashboard() {
 
     return (
         <Dashboard>
-            <div className="p-6 w-full min-h-screen">
+            <div className="md:p-6 p-2 w-full min-h-screen">
                 <div className="max-w-7xl mx-auto">
                     {/* Dashboard Header */}
                     <div className="flex justify-between items-center mb-6">
@@ -207,8 +207,8 @@ export default function SafaricomDashboard() {
                             animate={{opacity: 1, x: 0}}
                             transition={{duration: 0.5}}
                         >
-                            <h1 className="text-2xl font-bold dark:text-gray-50 text-gray-800">
-                                {role === 'admin' ? 'Admin Dashboard' : 'Team Leader Dashboard'}
+                            <h1 className="text-xl font-bold dark:text-gray-50 text-gray-800">
+                                {role === 'admin' ? 'Welcome' : 'Team Leader Dashboard'} {user?.full_name}!
                             </h1>
                             <p className="text-gray-500">Overview of SIM card sales and activations</p>
                         </motion.div>

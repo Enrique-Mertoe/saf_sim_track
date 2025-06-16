@@ -413,7 +413,7 @@ export default function InvoicesPageView() {
 
     return (
         <Dashboard>
-            <div className="p-6 min-h-full">
+            <div className="md:p-6 p-2 min-h-full">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 md:mb-0">
                         Invoices & Payments
@@ -428,7 +428,7 @@ export default function InvoicesPageView() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 mb-6">
                     <motion.div
                         whileHover={{y: -5}}
                         className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-green-500"
@@ -465,7 +465,7 @@ export default function InvoicesPageView() {
 
                     <motion.div
                         whileHover={{y: -5}}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-blue-500"
+                        className="bg-white max-sm:col-span-2 dark:bg-gray-800 rounded-lg shadow p-4 border-l-4 border-blue-500"
                     >
                         <div className="flex items-center">
                             <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mr-4">

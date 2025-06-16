@@ -14,6 +14,7 @@ import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {showModal} from "@/ui/shortcuts";
 import {format, isToday, isYesterday} from "date-fns";
 import {formatLocalDate} from "@/helper";
+import Theme from "@/ui/Theme";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -268,7 +269,7 @@ const SIMAnalysisPage = () => {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             {/* Header */}
             <div className="mb-8">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center gap-2 md:justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">SIM Quality Analysis</h1>
                         <p className="text-gray-600 dark:text-gray-400 mt-2">Comprehensive breakdown of team performance
@@ -307,7 +308,9 @@ const SIMAnalysisPage = () => {
                                         size: "lg",
                                     });
                             }}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2">
+                            className={`${Theme.Button} gap-2 !py-2 !text-sm`}
+                            // className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2"
+                        >
                             <Calendar className="h-4 w-4"/>
                             <span>{formatDateRangeForDisplay()}</span>
                         </button>
@@ -323,7 +326,7 @@ const SIMAnalysisPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
                 <div className="md:col-span-8">
                     {/* Key Metrics Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-1 mb-8">
                         {/*<MetricCard*/}
                         {/*    user={user}*/}
                         {/*    title="Total Recorded"*/}
@@ -353,6 +356,7 @@ const SIMAnalysisPage = () => {
                             dateFilters={getDateFilters()}
                             trend={8}
                             color="red"
+
                         />
                         <MetricCard
                             user={user}
@@ -363,6 +367,7 @@ const SIMAnalysisPage = () => {
                             icon={XCircle}
                             trend={-3}
                             color="amber"
+                            className={"max-sm:col-span-2"}
                         />
                         {/*<MetricCard*/}
                         {/*    user={user}*/}

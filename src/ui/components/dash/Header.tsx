@@ -11,6 +11,7 @@ import {useTheme} from "next-themes";
 import {notificationService} from "@/services";
 import Image from "next/image";
 import favicon from "@/app/favicon.ico"
+import Fixed from "@/ui/components/Fixed";
 
 const supabase = createSupabaseClient();
 export default function Header() {
@@ -272,7 +273,7 @@ export default function Header() {
                             transition={{duration: 0.5}}
                         >
                             <Image src={favicon} alt={"Logo"}
-                            width={34} height={34}
+                                   width={34} height={34}
                             />
                             <span className="text-gray-800  ms-2 dark:text-white">SSM</span>
                         </motion.div>
@@ -644,21 +645,23 @@ export default function Header() {
 
                                 }}
                             />
-                            <motion.div
-                                initial={{x: "-100%"}}
-                                animate={{x: 0}}
-                                exit={{x: "-100%"}}
-                                transition={{type: "tween", duration: 0.3}}
-                                className="fixed left-0 top-0 h-screen w-74 bg-white z-50 md:hidden shadow-xl"
-                            >
-                                <Sidebar/>
-                                <button
-                                    className="md:hidden p-2 fixed top-5 right-5 z-[10406757] rounded-full text-light bg-gray-500 hover:bg-green-500 transition-colors duration-200"
-                                    onClick={() => Signal.trigger("mobile-open", false)}
+                            <Fixed>
+                                <motion.div
+                                    initial={{x: "-100%"}}
+                                    animate={{x: 0}}
+                                    exit={{x: "-100%"}}
+                                    transition={{type: "tween", duration: 0.3}}
+                                    className="fixed left-0 top-0 h-screen min-h-screen w-74 bg-white z-51 md:hidden shadow-xl"
                                 >
-                                    {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
-                                </button>
-                            </motion.div>
+                                    <Sidebar/>
+                                    <button
+                                        className="md:hidden p-2 fixed top-5 right-5 rounded-full text-light bg-gray-500 hover:bg-green-500 transition-colors duration-200"
+                                        onClick={() => Signal.trigger("mobile-open", false)}
+                                    >
+                                        {isMobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                                    </button>
+                                </motion.div>
+                            </Fixed>
                         </>
                     )}
                 </AnimatePresence>

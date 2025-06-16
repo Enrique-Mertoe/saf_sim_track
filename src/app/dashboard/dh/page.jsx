@@ -590,7 +590,7 @@ const TeamLeaderDashboardView = () => {
             </div>
             {/* Footer navigation for screens smaller than lg */}
             {
-                dimen.isMobile || !dimen.lg && (
+                (dimen.isMobile || !dimen.lg) && (
                     <Fixed>
                         <div
                             className="lg:hidden md:ml-64 fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
@@ -602,6 +602,7 @@ const TeamLeaderDashboardView = () => {
                                     {id: 'unassigned', name: 'Unassigned', icon: Clock}
                                 ].map((tab) => (
                                     <button
+                                        key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={`flex flex-col items-center justify-center flex-1 h-full ${
                                             activeTab === tab.id ? 'text-green-600' : 'text-gray-600'

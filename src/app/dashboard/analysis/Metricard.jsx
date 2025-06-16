@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import simService from "@/services/simService";
 import {SIMStatus} from "@/models";
 
-export const MetricCard = ({title, value, user, dateFilters, icon: Icon, trend, color = "green", dataType = "total"}) => {
+export const MetricCard = ({title, value, user, dateFilters, icon: Icon, trend, color = "green", dataType = "total",className=''}) => {
     const [val, sV] = useState(value)
     const fetchMetrics = async () => {
         if (!user) return
@@ -32,7 +32,7 @@ export const MetricCard = ({title, value, user, dateFilters, icon: Icon, trend, 
         fetchMetrics().then()
     }, [user,dateFilters]);
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className={`bg-white dark:bg-gray-800 rounded-xl p-2 shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}>
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
