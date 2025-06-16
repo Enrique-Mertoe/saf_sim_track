@@ -662,8 +662,8 @@ const SimManagementPage = () => {
                                         {/* Pagination */}
                                         {totalPages > 1 && (
                                             <div
-                                                className="p-4 border-t border-gray-200 flex items-center justify-between">
-                                                <p className="text-sm text-gray-500">
+                                                className="p-4 border-t border-gray-200 flex flex-col md:flex-row  gap-2 md:items-center justify-between">
+                                                <p className="text-sm order-2 md:order-first text-gray-500">
                                                     Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUnassigned.length)} of {filteredUnassigned.length}
                                                 </p>
                                                 <div className="flex space-x-1">
