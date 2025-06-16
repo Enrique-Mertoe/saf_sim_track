@@ -38,7 +38,7 @@ const ScanButton = ({
                         if (scannedSerials && scannedSerials.length > 0) {
                             // Find matching SIM cards in the unassigned list
                             const matchedSimIds = filteredUnassigned
-                                .filter(sim => scannedSerials.includes(sim.serial))
+                                .filter(sim => scannedSerials.includes(sim.serial_number))
                                 .map(sim => sim.id);
 
                             if (matchedSimIds.length > 0) {
