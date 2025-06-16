@@ -15,6 +15,7 @@ import UnassignSimCard from "@/app/dashboard/dh/UnassignSimCard";
 import TransferSimCard from "@/app/dashboard/dh/TransferSimCard";
 import SimCardGrid from "@/app/dashboard/dh/SimCardGrid";
 import {TeamLeaderStatCard} from "@/app/dashboard/dh/TeamLeaderStatCard";
+import MaterialSelect from "@/ui/components/MaterialSelect";
 
 // Helper function to compare dates by day only (ignoring time)
 
@@ -267,16 +268,16 @@ const TeamLeaderDashboardView = () => {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
                 <motion.div
-                    className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-6 mb-8 shadow-lg"
+                    className="relative overflow-hidden bg-gradient-to-r from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 rounded-xl p-2 mb-8 shadow-lg"
                     initial={{opacity: 0, scale: 0.96}}
                     animate={{opacity: 1, scale: 1}}
                     transition={{duration: 0.5}}
                 >
                     <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
                     <div className="relative z-10">
-                        <div className="flex justify-between items-start">
+                        <div className="flex flex-col md:flex-row justify-between items-start">
                             <div>
-                                <h2 className="text-2xl font-bold text-white">Team Performance Dashboard</h2>
+                                <h2 className="text-2xl font-bold text-white">Welcome <span className={"text-green-200"}>{user?.full_name}!</span></h2>
                                 <p className="text-indigo-100 dark:text-indigo-200 mt-1">Monitor daily SIM card sales
                                     and team performance</p>
                             </div>
@@ -298,7 +299,7 @@ const TeamLeaderDashboardView = () => {
                                     {teamData?.van_number_plate && (
                                         <div className="flex items-center">
                                             <span className="text-indigo-100">Van:</span>
-                                            <span className="ml-1 font-medium">{teamData.van_number_plate}</span>
+                                            <span className="ml-1 uppercase bg-yellow-500 rounded-sm  px-4 text-gray-700 font-medium">{teamData.van_number_plate}</span>
                                         </div>
                                     )}
                                     <div className="flex items-center">
@@ -309,7 +310,7 @@ const TeamLeaderDashboardView = () => {
                                     </span>
                                     </div>
                                     <div className="flex items-center col-span-2">
-                                        <span className="text-indigo-100">Created:</span>
+                                        <span className="text-indigo-100">Since:</span>
                                         <span className="ml-1 font-medium">{formatDate(teamData?.created_at)}</span>
                                     </div>
                                 </div>
@@ -350,16 +351,7 @@ const TeamLeaderDashboardView = () => {
 
                         <div className="flex items-center gap-2">
                             <Users className="w-4 h-4 text-gray-500 dark:text-gray-400"/>
-                            <select
-                                value={selectedStaff}
-                                onChange={(e) => setSelectedStaff(e.target.value)}
-                                className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md px-3 py-2 text-sm"
-                            >
-                                <option value="all">All Staff</option>
-                                {teamStaff.map(staff => (
-                                    <option key={staff.id} value={staff.id}>{staff.name}</option>
-                                ))}
-                            </select>
+                            <MaterialSelect options={teamStaff} onChange={v=>setSelectedStaff(v)} placeholder={"Filter by team member"} className={"min-w-[260px]"} displayKey={"name"} valueKey={"id"}/>
                         </div>
 
                         {isLoading && (
