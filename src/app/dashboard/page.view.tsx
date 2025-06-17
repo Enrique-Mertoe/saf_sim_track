@@ -433,7 +433,7 @@ const BottomNav = ({onTab, currentTab}: any) => {
                             <div key={tab.id} className="relative flex-1">
                                 {tab.id === 'add' && showCreateMenu && (
                                     <div
-                                        className="fixed inset-0 bg-gray-50/20 dark:bg-gray-800/20 z-40"
+                                        className="fixed inset-0 bg-gray-50/50 dark:bg-gray-800/50 z-40"
                                         onClick={() => setShowCreateMenu(false)}
                                     />
                                 )}
