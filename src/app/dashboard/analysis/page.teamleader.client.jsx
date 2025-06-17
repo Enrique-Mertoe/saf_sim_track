@@ -156,10 +156,10 @@ export default function TeamSIMAnalysisPage() {
             const dateFilters = getDateFilters();
             const dateConditions = [];
             if (dateFilters && dateFilters.startDate) {
-                dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+                dateConditions.push(["activation_date", "gte", dateFilters.startDate]);
             }
             if (dateFilters && dateFilters.endDate) {
-                dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+                dateConditions.push(["activation_date", "lte", dateFilters.endDate]);
             }
 
             //non-quality not assigned but registered
@@ -816,13 +816,13 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
         setIsLoading(true);
         const dateConditions = [];
         if (dateFilters && dateFilters.startDate) {
-            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+            dateConditions.push(["activation_date", "gte", dateFilters.startDate]);
         }
         if (dateFilters && dateFilters.endDate) {
-            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+            dateConditions.push(["activation_date", "lte", dateFilters.endDate]);
         }
         simService.countTopUpCategories(user, [
-            ["assigned_to_user_id", userId], ...dateConditions
+            ["assigned_to_user_id", userId], ["quality", SIMStatus.NONQUALITY], ...dateConditions
         ])
             .then(data => {
                 setTopUpCategories(data);
@@ -917,7 +917,6 @@ const UserStartDetails = ({onClose, dateFilters, userName, userId}) => {
     const getProgressWidth = (value) => {
         return `${(value / total) * 100}%`;
     };
-
 
 
     return (
