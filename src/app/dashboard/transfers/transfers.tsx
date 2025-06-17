@@ -3,7 +3,7 @@ import React, {useEffect, useState} from 'react';
 import {batchMetadataService, simCardTransferService, teamService} from "@/services";
 import useApp from "@/ui/provider/AppProvider";
 import {BatchMetadata, SimCardTransfer, Team as TeamX, TransferStatus, User} from "@/models";
-import {AlertTriangle, ArrowLeftRight, Calendar, Database, X} from 'lucide-react';
+import {AlertTriangle, ArrowLeftRight, Calendar, CheckCircle2, Database, X} from 'lucide-react';
 import {useSupabaseSignal} from "@/lib/supabase/event";
 import alert from "@/ui/alert";
 import {showModal} from "@/ui/shortcuts";
@@ -15,6 +15,9 @@ import Stats from "@/app/dashboard/transfers/Stats";
 import LineBreakDown from "@/app/dashboard/transfers/LineBreakDown";
 import {showDialog, TransferRequestDetails} from "@/app/dashboard/transfers/utility";
 import ClientApi from "@/lib/utils/ClientApi";
+import Fixed from "@/ui/components/Fixed";
+import {useDimensions} from "@/ui/library/smv-ui/src/framework/utility/Screen";
+import Theme from "@/ui/Theme";
 
 type Team = TeamX & {
     batches: BatchMetadata[],
@@ -24,7 +27,7 @@ const AdminTransfersPage = () => {
     const {user} = useApp();
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
+    const dimen = useDimensions();
     // Main tab navigation
     const [mainTab, setMainTab] = useState<'transfers' | 'general' | 'allocations'>('allocations');
 
@@ -103,7 +106,6 @@ const AdminTransfersPage = () => {
             endDate: endDate.toISOString()
         };
     };
-
 
 
     // Fetch transfers
@@ -375,7 +377,7 @@ const AdminTransfersPage = () => {
         try {
             setIsLoading(true);
 
-            const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
+            const {data, error} = await new Promise<{ data: any, error: any }>((resolve, reject) => {
                 ClientApi.of("transfer").get()
                     .approve_transfer_request({id: transfer.id, admin_id: user.id})
                     .then(res => {
@@ -384,8 +386,8 @@ const AdminTransfersPage = () => {
                         else
                             resolve({error: res.error, data: null})
                     }).catch(err => {
-                        resolve({error: err.message, data: null})
-                    })
+                    resolve({error: err.message, data: null})
+                })
             });
 
             if (error) throw error;
@@ -429,10 +431,10 @@ const AdminTransfersPage = () => {
         try {
             setIsLoading(true);
 
-            const {data, error} = await new Promise<{data:any, error:any}>((resolve, reject) => {
+            const {data, error} = await new Promise<{ data: any, error: any }>((resolve, reject) => {
                 ClientApi.of("transfer").get()
                     .reject_transfer_request({
-                        id: selectedTransfer.id, 
+                        id: selectedTransfer.id,
                         admin_id: user.id,
                         reason: rejectReason
                     })
@@ -442,8 +444,8 @@ const AdminTransfersPage = () => {
                         else
                             resolve({error: res.error, data: null})
                     }).catch(err => {
-                        resolve({error: err.message, data: null})
-                    })
+                    resolve({error: err.message, data: null})
+                })
             });
 
             if (error) throw error;
@@ -584,7 +586,7 @@ const AdminTransfersPage = () => {
     const viewTransferDetails = (transfer: SimCardTransfer) => {
         showDialog({
             title: 'Transfer Request Details',
-            message: <TransferRequestDetails transfer={transfer} getTeamName={getTeamName} />,
+            message: <TransferRequestDetails transfer={transfer} getTeamName={getTeamName}/>,
             type: 'info'
         });
     };
@@ -624,11 +626,11 @@ const AdminTransfersPage = () => {
 
     return (
         <>
-            <div className="min-h-screen bg-gray-50 p-6">
+            <div className="min-h-screen bg-gray-50 md:p-6 p-2 pb-20 ">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col md:flex-row md:items-center gap-2  md:justify-between">
                             <p className="text-gray-600">Manage SIM card transfers and distribution across teams</p>
                             <div>
                                 <button
@@ -656,7 +658,7 @@ const AdminTransfersPage = () => {
                                             size: "lg",
                                         });
                                     }}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2"
+                                    className={`${Theme.Button} py-2 gap-2`}
                                 >
                                     <Calendar className="h-4 w-4"/>
                                     <span>{formatDateRangeForDisplay()}</span>
@@ -664,7 +666,7 @@ const AdminTransfersPage = () => {
                             </div>
                         </div>
                     </div>
-                    <Stats dateRange={getDateFilters()}user={user}/>
+                    <Stats dateRange={getDateFilters()} user={user}/>
 
                     {/* Error message */}
                     {error && (
@@ -682,47 +684,51 @@ const AdminTransfersPage = () => {
                     )}
 
                     {/* Main Tab Navigation */}
-                    <div className="mb-6 flex border-b border-gray-200">
-                        <button
-                            onClick={() => setMainTab('allocations')}
-                            className={`px-4 py-2 font-medium text-sm border-b-2 ${
-                                mainTab === 'allocations'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                        >
-                            <div className="flex items-center">
-                                <ArrowLeftRight className="w-4 h-4 mr-2"/>
-                                Allocation
+                    {
+                        dimen.md && (
+                            <div className="mb-6 flex border-b border-gray-200">
+                                <button
+                                    onClick={() => setMainTab('allocations')}
+                                    className={`px-4 py-2 font-medium text-sm border-b-2 ${
+                                        mainTab === 'allocations'
+                                            ? 'border-blue-500 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center">
+                                        <ArrowLeftRight className="w-4 h-4 mr-2"/>
+                                        Allocation
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setMainTab('transfers')}
+                                    className={`px-4 py-2 font-medium text-sm border-b-2 ${
+                                        mainTab === 'transfers'
+                                            ? 'border-blue-500 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center">
+                                        <ArrowLeftRight className="w-4 h-4 mr-2"/>
+                                        Transfer Requests
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={() => setMainTab('general')}
+                                    className={`px-4 py-2 font-medium text-sm border-b-2 ${
+                                        mainTab === 'general'
+                                            ? 'border-blue-500 text-blue-600'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center">
+                                        <Database className="w-4 h-4 mr-2"/>
+                                        General SIM Management
+                                    </div>
+                                </button>
                             </div>
-                        </button>
-                        <button
-                            onClick={() => setMainTab('transfers')}
-                            className={`px-4 py-2 font-medium text-sm border-b-2 ${
-                                mainTab === 'transfers'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                        >
-                            <div className="flex items-center">
-                                <ArrowLeftRight className="w-4 h-4 mr-2"/>
-                                Transfer Requests
-                            </div>
-                        </button>
-                        <button
-                            onClick={() => setMainTab('general')}
-                            className={`px-4 py-2 font-medium text-sm border-b-2 ${
-                                mainTab === 'general'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                        >
-                            <div className="flex items-center">
-                                <Database className="w-4 h-4 mr-2"/>
-                                General SIM Management
-                            </div>
-                        </button>
-                    </div>
+                        )
+                    }
                     {
                         mainTab === 'allocations' && (
                             <LineBreakDown dateRange={getDateFilters()} user={user}/>
@@ -760,6 +766,37 @@ const AdminTransfersPage = () => {
                     )}
                 </div>
             </div>
+            {
+                (dimen.isMobile || !dimen.lg) && (
+                    <Fixed>
+                        <div
+                            className="lg:hidden md:ml-64 fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+                            <div className="flex w-full max-w-[600px] justify-around items-center h-16 mx-auto">
+                                {([
+                                    {id: 'allocations', name: 'Allocation', icon: CheckCircle2},
+                                    {id: 'transfers', name: 'Transfers', icon: ArrowLeftRight},
+                                    {id: 'general', name: 'General', icon: Database},
+                                ] as any).map((tab: any) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setMainTab(tab.id)}
+                                        className={`flex flex-col items-center justify-center flex-1 h-full ${
+                                            mainTab === tab.id ? 'text-green-600' : 'text-gray-600'
+                                        }`}
+                                    >
+                            <span className={`rounded-full px-6 py-1 ${
+                                mainTab === tab.id ? 'bg-green-100' : 'bg-gray-100'
+                            } text-xs`}>
+                                <tab.icon className="h-6 w-6"/>
+                            </span>
+                                        <span className="text-xs mt-1 truncate w-full text-center px-1">{tab.name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </Fixed>
+                )
+            }
         </>
     );
 };

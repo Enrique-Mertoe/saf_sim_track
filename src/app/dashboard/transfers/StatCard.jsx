@@ -79,7 +79,7 @@ const StatCard = ({
                 //     }
                 // }}
 
-                className={`${textColor} border border-gray-500 rounded-2xl px-6 py-2 transition-all duration-300 cursor-pointer ${className}`}>
+                className={`${textColor} border border-gray-500 rounded-2xl max-sm:p-2 px-6 py-2 transition-all duration-300 cursor-pointer ${className}`}>
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-medium opacity-90">{title}</h3>
                     <div
@@ -89,7 +89,7 @@ const StatCard = ({
                     </div>
                 </div>
                 <div className="mb-3">
-                    <span className="text-4xl font-bold">{value}</span>
+                    <span className="text-4xl max-sm:text-xl font-bold">{value}</span>
                 </div>
                 {/*<div className="flex items-center text-xs opacity-75">*/}
                 {/*    {trend === 'up' && <TrendingUp className="w-3 h-3 mr-1"/>}*/}
