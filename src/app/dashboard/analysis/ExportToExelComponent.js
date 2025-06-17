@@ -1,5 +1,5 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {Download, Users, FileText, Check, Loader2, X, ArrowLeft, Calendar} from 'lucide-react';
+import React, {useCallback, useState} from 'react';
+import {ArrowLeft, Calendar, Check, Download, FileText, Loader2, Users, X} from 'lucide-react';
 import {teamService} from "@/services";
 import Theme from "@/ui/Theme";
 import {DateTime} from "luxon";
@@ -9,16 +9,23 @@ import {formatLocalDate} from "@/helper";
 import {format, isToday, isYesterday} from "date-fns";
 import ClientApi from "@/lib/utils/ClientApi";
 
-export default function ExportToExelComponent({onClose, onProcess, user}) {
+export default function ExportToExelComponent({
+                                                  onClose,
+                                                  onProcess,
+                                                  user,
+                                                  selectedPeriod: p1,
+                                                  startDate: d1,
+                                                  endDate: d2
+                                              }) {
     const [step, setStep] = useState('select');
     const [teams, setTeams] = useState([]);
     const [selectedTeams, setSelectedTeams] = useState([]);
     const [loadingTeams, setLoadingTeams] = useState(false);
     const [processingTeams, setProcessingTeams] = useState([]);
     const [completedTeams, setCompletedTeams] = useState([]);
-    const [selectedPeriod, setSelectedPeriod] = useState('last-30-days');
-    const [startDate, setStartDate] = useState(DateTime.now().minus({days: 30}).toISODate());
-    const [endDate, setEndDate] = useState(DateTime.now().toISODate());
+    const [selectedPeriod, setSelectedPeriod] = useState(p1 ?? 'last-30-days');
+    const [startDate, setStartDate] = useState(d1 ?? DateTime.now().minus({days: 30}).toISODate());
+    const [endDate, setEndDate] = useState(d2 ?? DateTime.now().toISODate());
 
     const loadTeams = async () => {
         setLoadingTeams(true);
@@ -45,12 +52,12 @@ export default function ExportToExelComponent({onClose, onProcess, user}) {
                         else
                             resolve({error: res.error, data: null})
                     }).catch(err => {
-                        resolve({error: err.message, data: null})
-                    });
+                    resolve({error: err.message, data: null})
+                });
             });
             if (error) throw new Error(error);
             const buffer = data.buffer;
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const blob = new Blob([buffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
 
             // Create a download link
             const url = window.URL.createObjectURL(blob);
@@ -167,15 +174,15 @@ export default function ExportToExelComponent({onClose, onProcess, user}) {
                             else
                                 resolve({error: res.error, data: null})
                         }).catch(err => {
-                            resolve({error: err.message, data: null})
-                        });
+                        resolve({error: err.message, data: null})
+                    });
                 });
 
                 if (error) throw new Error(error);
 
                 // Create a Blob from the buffer
                 const buffer = data.buffer;
-                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const blob = new Blob([buffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
 
                 // Create a download link
                 const url = window.URL.createObjectURL(blob);
@@ -262,45 +269,45 @@ export default function ExportToExelComponent({onClose, onProcess, user}) {
                                     <p className="text-gray-600">Select how you'd like to export your data</p>
                                 </div>
                                 <div className="flex flex-col">
-                                   <div>
-                                       <button
-                                           onClick={() => {
-                                               showModal({
-                                                   content: onClose => (<ReportDateRangeTemplate
-                                                       onConfirm={selection => {
-                                                           if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
-                                                               // Convert Date objects to ISO strings for our date state
-                                                               const newStartDate = formatLocalDate(selection.range.startDate);
-                                                               const newEndDate = formatLocalDate(selection.range.endDate);
-                                                               // Update state with the selected dates
-                                                               setStartDate(newStartDate);
-                                                               setEndDate(newEndDate);
-                                                               setSelectedPeriod('custom');
+                                    <div>
+                                        <button
+                                            onClick={() => {
+                                                showModal({
+                                                    content: onClose => (<ReportDateRangeTemplate
+                                                        onConfirm={selection => {
+                                                            if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
+                                                                // Convert Date objects to ISO strings for our date state
+                                                                const newStartDate = formatLocalDate(selection.range.startDate);
+                                                                const newEndDate = formatLocalDate(selection.range.endDate);
+                                                                // Update state with the selected dates
+                                                                setStartDate(newStartDate);
+                                                                setEndDate(newEndDate);
+                                                                setSelectedPeriod('custom');
 
-                                                               // Fetch data with the new date range
-                                                               // fetchData(true);
-                                                           } else if (selection.type === 'single' && selection.single) {
-                                                               // Handle single date selection
-                                                               const newDate = selection.single.toISOString().split('T')[0];
-                                                               setStartDate(newDate);
-                                                               setEndDate(newDate);
-                                                               setSelectedPeriod('custom');
+                                                                // Fetch data with the new date range
+                                                                // fetchData(true);
+                                                            } else if (selection.type === 'single' && selection.single) {
+                                                                // Handle single date selection
+                                                                const newDate = selection.single.toISOString().split('T')[0];
+                                                                setStartDate(newDate);
+                                                                setEndDate(newDate);
+                                                                setSelectedPeriod('custom');
 
-                                                               // Fetch data with the new date
-                                                               // fetchData(true);
-                                                           }
-                                                           onClose();
-                                                       }}
-                                                       onClose={() => onClose()}/>),
-                                                   size: "lg",
-                                               });
-                                           }}
-                                           className={`${Theme.Button} gap-2 !py-2 !text-sm`}
-                                       >
-                                           <Calendar className="h-4 w-4"/>
-                                           <span>{formatDateRangeForDisplay()}</span>
-                                       </button>
-                                   </div>
+                                                                // Fetch data with the new date
+                                                                // fetchData(true);
+                                                            }
+                                                            onClose();
+                                                        }}
+                                                        onClose={() => onClose()}/>),
+                                                    size: "lg",
+                                                });
+                                            }}
+                                            className={`${Theme.Button} gap-2 !py-2 !text-sm`}
+                                        >
+                                            <Calendar className="h-4 w-4"/>
+                                            <span>{formatDateRangeForDisplay()}</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

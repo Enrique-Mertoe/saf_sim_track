@@ -33,7 +33,6 @@ const SIMAnalysisPage = () => {
     const [teamData, setTeamData] = useState([]);
     const [startDate, setStartDate] = useState(DateTime.now().minus({days: 30}).toISODate());
     const [endDate, setEndDate] = useState(DateTime.now().toISODate());
-    const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
     const [totalMetrics, setTotalMetrics] = useState({
         totalRecorded: 0,
         totalMatched: 0,
@@ -316,7 +315,7 @@ const SIMAnalysisPage = () => {
                             <span>{formatDateRangeForDisplay()}</span>
                         </button>
                         <button
-                            onClick={() => ExportToExel({user})}
+                            onClick={() => ExportToExel({user, selectedPeriod, startDate, endDate})}
                             className={`${Theme.Button} gap-2 py-2`}>
                             <Download className="h-4 w-4"/>
                             <span>Export</span>

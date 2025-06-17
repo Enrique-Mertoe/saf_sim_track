@@ -2,7 +2,7 @@ import ExportToExelComponent from "./ExportToExelComponent";
 import {showModal} from "@/ui/shortcuts";
 import alert from "@/ui/alert";
 
-export default function ExportToExel({user}) {
+export default function ExportToExel({user, selectedPeriod, startDate, endDate}) {
     function onProcess() {
 
     }
@@ -12,6 +12,7 @@ export default function ExportToExel({user}) {
     }
 
     showModal({
-        content: onClose => <ExportToExelComponent onClose={onClose} onProcess={onProcess} user={user}/>,
+        content: onClose => <ExportToExelComponent onClose={onClose} onProcess={onProcess} user={user}  selectedPeriod={selectedPeriod}
+                                                   startDate={startDate} endDate={endDate}/>,
     })
 }

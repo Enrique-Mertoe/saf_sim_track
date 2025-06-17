@@ -1,8 +1,9 @@
 import {useEffect, useState} from "react";
 import {AlertCircle, ChevronUp, RefreshCw} from "lucide-react";
 import simService from "@/services/simService";
+import {SIMStatus} from "@/models";
 
-export default function LineBreakDown({user,dateRange}) {
+export default function LineBreakDown({user, dateRange}) {
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [selectedBatch, setSelectedBatch] = useState(null);
     const [view, setView] = useState('teams');
@@ -115,14 +116,14 @@ export default function LineBreakDown({user,dateRange}) {
             setError(null);
 
             try {
-                const dateFilterStrings = getDateFilterStrings();
-
                 const {data, error} = await simService.getBatchStatsForTeam(
                     selectedTeam,
                     user,
                 );
 
-                if (error) throw error;
+                // const data = new Promise((resolve, reject) => {
+                //
+                // })
                 if (!data) throw new Error('No data returned');
 
                 setBatchStats(data);
@@ -267,7 +268,8 @@ export default function LineBreakDown({user,dateRange}) {
             ) : (
                 <div className="grid gap-2 sm:grid-cols-4">
                     {teamStats.map(team => (
-                        <TeamCard dateRange={dateRange} setSelectedTeam={setSelectedTeam} setView={setView} key={team.id} user={user}
+                        <TeamCard dateRange={dateRange} setSelectedTeam={setSelectedTeam} setView={setView}
+                                  key={team.id} user={user}
                                   team={team}/>
                     ))}
                 </div>
@@ -373,7 +375,7 @@ export default function LineBreakDown({user,dateRange}) {
 }
 
 // Team Card Component
-const TeamCard = ({team, user,dateRange, setSelectedTeam, setView}) => {
+const TeamCard = ({team, user, dateRange, setSelectedTeam, setView}) => {
     const [stats, sSt] = useState({total: 0, assigned: 0})
     const [isLoading, setIsLoading] = useState(true)
 
@@ -390,7 +392,7 @@ const TeamCard = ({team, user,dateRange, setSelectedTeam, setView}) => {
             if (dateRange && dateRange.endDate) {
                 dateConditions.push(["created_at", "lte", dateRange.endDate]);
             }
-            const [v1, v2] = await Promise.all([
+            const [v1, v2, v3] = await Promise.all([
                 simService.countAll(user, [
                     ["team_id", team.id],
                     ...(dateConditions || [])
@@ -400,15 +402,22 @@ const TeamCard = ({team, user,dateRange, setSelectedTeam, setView}) => {
                     ["team_id", team.id],
                     ...(dateConditions || [])
                 ]),
+                simService.countAll(user, [
+                    ["activation_date", "not", "is", null],
+                    ["status", SIMStatus.ACTIVATED],
+                    ["team_id", team.id],
+                    ...(dateConditions || [])
+                ]),
             ])
             sSt({
                 total: v1.count ?? 0,
                 assigned: v2.count ?? 0,
+                sold: v3.count ?? 0,
             })
             setIsLoading(false)
         }
         fetchData().then()
-    }, [user,dateRange]);
+    }, [user, dateRange]);
 
 
     return (
@@ -432,7 +441,7 @@ const TeamCard = ({team, user,dateRange, setSelectedTeam, setView}) => {
                 )}
             </div>
 
-            <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                     <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Total</p>
                     {isLoading ? (
@@ -455,6 +464,14 @@ const TeamCard = ({team, user,dateRange, setSelectedTeam, setView}) => {
                         <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                     ) : (
                         <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.assigned}</p>
+                    )}
+                </div>
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Stock</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.sold}</p>
                     )}
                 </div>
             </div>
@@ -512,6 +529,14 @@ const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
                         <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                     ) : (
                         <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.assigned}</p>
+                    )}
+                </div>
+                <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">Stock</p>
+                    {isLoading ? (
+                        <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                    ) : (
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.sold}</p>
                     )}
                 </div>
             </div>
