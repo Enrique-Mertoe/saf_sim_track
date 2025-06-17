@@ -15,6 +15,7 @@ import {showModal} from "@/ui/shortcuts";
 import {format, isToday, isYesterday} from "date-fns";
 import {formatLocalDate} from "@/helper";
 import Theme from "@/ui/Theme";
+import ExportToExel from "@/app/dashboard/analysis/Utility";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -114,8 +115,8 @@ const SIMAnalysisPage = () => {
     // Generate cache key
     const getCacheKey = useCallback(() => {
         // Include custom date range in the cache key when custom period is selected
-        const dateKey = selectedPeriod === 'custom' 
-            ? `${startDate}_${endDate}` 
+        const dateKey = selectedPeriod === 'custom'
+            ? `${startDate}_${endDate}`
             : selectedPeriod;
         return `analysis_${user?.id || 'guest'}_${dateKey}_${selectedTeam}`;
     }, [user, selectedPeriod, selectedTeam, startDate, endDate]);
@@ -275,38 +276,38 @@ const SIMAnalysisPage = () => {
                         <p className="text-gray-600 dark:text-gray-400 mt-2">Comprehensive breakdown of team performance
                             and quality metrics</p>
                     </div>
-                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4">
+                    <div className="grid grid-cols-2 gap-2">
                         <button
-                            onClick={()=>{
-                                    showModal({
-                                        content: onClose=>(<ReportDateRangeTemplate
-                                            onConfirm={selection => {
-                                                if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
-                                                    // Convert Date objects to ISO strings for our date state
-                                                    const newStartDate = formatLocalDate(selection.range.startDate);
-                                                    const newEndDate = formatLocalDate(selection.range.endDate);
-                                                    // Update state with the selected dates
-                                                    setStartDate(newStartDate);
-                                                    setEndDate(newEndDate);
-                                                    setSelectedPeriod('custom');
+                            onClick={() => {
+                                showModal({
+                                    content: onClose => (<ReportDateRangeTemplate
+                                        onConfirm={selection => {
+                                            if (selection.type === 'range' && selection.range.startDate && selection.range.endDate) {
+                                                // Convert Date objects to ISO strings for our date state
+                                                const newStartDate = formatLocalDate(selection.range.startDate);
+                                                const newEndDate = formatLocalDate(selection.range.endDate);
+                                                // Update state with the selected dates
+                                                setStartDate(newStartDate);
+                                                setEndDate(newEndDate);
+                                                setSelectedPeriod('custom');
 
-                                                    // Fetch data with the new date range
-                                                    fetchData(true);
-                                                } else if (selection.type === 'single' && selection.single) {
-                                                    // Handle single date selection
-                                                    const newDate = selection.single.toISOString().split('T')[0];
-                                                    setStartDate(newDate);
-                                                    setEndDate(newDate);
-                                                    setSelectedPeriod('custom');
+                                                // Fetch data with the new date range
+                                                fetchData(true);
+                                            } else if (selection.type === 'single' && selection.single) {
+                                                // Handle single date selection
+                                                const newDate = selection.single.toISOString().split('T')[0];
+                                                setStartDate(newDate);
+                                                setEndDate(newDate);
+                                                setSelectedPeriod('custom');
 
-                                                    // Fetch data with the new date
-                                                    fetchData(true);
-                                                }
-                                                onClose();
-                                            }}
-                                            onClose={() => onClose()}/>),
-                                        size: "lg",
-                                    });
+                                                // Fetch data with the new date
+                                                fetchData(true);
+                                            }
+                                            onClose();
+                                        }}
+                                        onClose={() => onClose()}/>),
+                                    size: "lg",
+                                });
                             }}
                             className={`${Theme.Button} gap-2 !py-2 !text-sm`}
                             // className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2"
@@ -315,7 +316,8 @@ const SIMAnalysisPage = () => {
                             <span>{formatDateRangeForDisplay()}</span>
                         </button>
                         <button
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2">
+                            onClick={() => ExportToExel({user})}
+                            className={`${Theme.Button} gap-2 py-2`}>
                             <Download className="h-4 w-4"/>
                             <span>Export</span>
                         </button>
@@ -393,9 +395,9 @@ const SIMAnalysisPage = () => {
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Detailed Team Analysis</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2">
                     {teamData.map(team => (
-                        <TeamBreakdownCard 
-                            user={user} 
-                            key={team.id} 
+                        <TeamBreakdownCard
+                            user={user}
+                            key={team.id}
                             team={team}
                             dateFilters={getDateFilters()}
                         />

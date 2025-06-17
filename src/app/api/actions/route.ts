@@ -3,6 +3,7 @@ import {NextRequest} from "next/server";
 import AdminActions, {Logs} from "@/app/api/actions/admin-actions";
 import TransferActions from "@/app/api/actions/transfer-actions";
 import SimActions from "@/app/api/actions/sim-actions";
+import ReportActions from "@/app/api/actions/report-actions";
 import {createSuperClient} from "@/lib/supabase/server";
 import Accounts from "@/lib/accounts";
 
@@ -64,7 +65,7 @@ interface ApiRequest {
 }
 
 class ApiHandler {
-    static ALLOWED = ["admin", "profile", "transfer", "sim"]
+    static ALLOWED = ["admin", "profile", "transfer", "sim", "report"]
 
     static async builder(action: string, data: any, target?: string) {
         if (this.ALLOWED.includes(action) && !target)
@@ -80,6 +81,8 @@ class ApiHandler {
                 return await TransferActions.builder(target as string, data);
             case "sim":
                 return await SimActions.builder(target as string, data);
+            case "report":
+                return await ReportActions.builder(target as string, data);
             default:
                 return await this._b(action, data)
         }

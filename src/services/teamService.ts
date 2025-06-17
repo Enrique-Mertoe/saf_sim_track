@@ -1,6 +1,7 @@
 import {createSupabaseClient} from "@/lib/supabase/client";
 import {TeamCreate, TeamUpdate, User, UserRole} from "@/models";
 import {admin_id} from "@/services/helper";
+import {applyFilters, Filter} from "@/helper";
 
 async function admin(supabase: any) {
     const {data: currentUser} = await supabase.auth.getUser();
@@ -23,7 +24,7 @@ export const teamService = {
         return query.order('name');
     },
     // Get all teams
-    async getAllTeams(userDetails: User | undefined = undefined) {
+    async getAllTeams(userDetails: User | undefined = undefined, filters: Filter[] = []) {
         const supabase = createSupabaseClient();
         let user: User;
         if (!userDetails) {
@@ -38,16 +39,16 @@ export const teamService = {
             if (userDetails1) {
                 user = userDetails1 as User;
             } else {
-                return {data:null,error:{} as any}
+                return {data: null, error: {} as any}
             }
         } else {
             user = userDetails
         }
 
         // Base query
-        let query = supabase
+        let query = applyFilters(supabase
             .from('teams')
-            .select('*, users!leader_id(*)').eq('admin_id', await admin_id(user));
+            .select('*, users!leader_id(*)').eq('admin_id', await admin_id(user)), filters, false);
 
 
         return query.order('name');

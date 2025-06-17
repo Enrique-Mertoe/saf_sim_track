@@ -5,6 +5,7 @@ type ApiType = {
     admin: ClientAdmin;
     sim: ClientSim;
     transfer: ClientTransfer;
+    report: ClientReport;
 }
 
 const dispatcher = <T>(type: keyof ApiType, target: string, data: any) => $.post<T>({
@@ -54,6 +55,16 @@ class ClientTransfer {
     }
 }
 
+class ClientReport {
+    generate_excel_report(data: any) {
+        return dispatcher("report", "generate_excel_report", data)
+    }
+
+    generate_team_excel_report(data: any) {
+        return dispatcher("report", "generate_team_excel_report", data)
+    }
+}
+
 class ClientApi<T> {
     private readonly instance: T;
 
@@ -77,6 +88,7 @@ const apiTypeMap: ApiType = {
     admin: new ClientAdmin(),
     sim: new ClientSim(),
     transfer: new ClientTransfer(),
+    report: new ClientReport(),
 };
 // ClientApi.of("admin").get()
 
