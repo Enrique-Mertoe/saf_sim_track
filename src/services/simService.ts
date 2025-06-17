@@ -1010,6 +1010,48 @@ export const simCardService = {
 
         return {data: null, error: "Invalid user role", count: 0}
     },
+    countActivated: async (user: User, filters: Filter[] = []) => {
+        const supabase = createSupabaseClient();
+        if (user.role === UserRole.ADMIN) {
+            return applyFilters(supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .not("activation_date", "is", null)
+                .eq("status", SIMStatus.ACTIVATED)
+                .eq("admin_id", await admin_id(user)), filters);
+        }
+        if (user.role === UserRole.TEAM_LEADER) {
+            return applyFilters(supabase
+                .from('sim_cards')
+                .select('id', {count: "exact"})
+                .not("activation_date", "is", null)
+                .eq("status", SIMStatus.ACTIVATED)
+                .eq("team_id", user.team_id)
+                .eq("admin_id", await admin_id(user)), filters);
+        }
+
+        // if (user.role === UserRole.STAFF) {
+        //     return supabase
+        //         .from('sim_cards')
+        //
+        //         .select('*,team_id(*,leader_id(full_name)), sold_by_user_id(*,full_name)')
+        //         .eq('sold_by_user_id', user.id)
+        //         .eq("admin_id", await admin_id(user))
+        //         .order('registered_on', {ascending: false});
+        // }
+        // if (user.role === UserRole.TEAM_LEADER) {
+        //     return supabase
+        //         .from('sim_cards')
+        //         .select('*, sold_by_user_id(*),team_id(*,leader_id(full_name))')
+        //         .eq("admin_id", await admin_id(user))
+        //         .eq("team_id", user.team_id)
+        //         // .or(`team_id.eq.${user.team_id},sold_by_user_id.team_id.eq.${user.team_id}`)
+        //         .order('registered_on', {ascending: false});
+        // }
+
+        return {data: null, error: "Invalid user role", count: 0}
+    },
+
     countQuality: async (user: User, teamId: string | null = null, filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {

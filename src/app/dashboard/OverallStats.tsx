@@ -1,5 +1,5 @@
 import React from 'react';
-import {ArrowUpRightSquare, Smartphone, TrendingUp, WifiOff, Zap} from 'lucide-react';
+import {ArrowUpRightSquare, Package, ShoppingCart, Smartphone, TrendingUp, UsersRound} from 'lucide-react';
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
 import {to2dp} from "@/helper";
@@ -156,7 +156,20 @@ const fetchAssignedData = async (user: any) => {
 const fetchUnhandledData = async (user: any) => {
     const [v1, v2] = await Promise.all([
         simService.countAll(user),
-        simService.countAssigned(user)
+        simService.countActivated(user)
+    ])
+
+    const [all, assigned] = [v1.count ?? 0, v2.count ?? 0]
+    const value = all - assigned
+    return {value: value, percentage: to2dp((value / all) * 100) || 0,}
+};
+const fetchSoldUnassiged = async (user: any) => {
+    const [v1, v2] = await Promise.all([
+        simService.countActivated(user),
+        simService.countActivated(user, [
+            ["assigned_to_user_id", "is", null],
+            ["batch_id", "neq", "BATCH-UNKNOWN"]
+        ])
     ])
 
     const [all, assigned] = [v1.count ?? 0, v2.count ?? 0]
@@ -226,7 +239,7 @@ const SimAllocationCard: React.FC = () => {
             {/* Header */}
             <div className="relative z-10 mb-6">
                 <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-start space-x-3">
                         <div
                             className="w-10 h-10 bg-gradient-to-br from-white/20 to-white/10 dark:from-blue-500 dark:to-purple-600 backdrop-blur-sm border border-white/20 dark:border-0 rounded-xl flex items-center justify-center shadow-lg">
                             <Smartphone className="w-5 h-5 text-white"/>
@@ -234,6 +247,19 @@ const SimAllocationCard: React.FC = () => {
                         <div>
                             <h3 className="text-white font-bold text-lg">SIM Allocations</h3>
                             <p className="text-white/60 text-sm">Real-time distribution</p>
+                            <div className={"mt-4 relative z-10 flex"}>
+                                <button
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        Signal.trigger("app-page-loading", true)
+                                        router.push("/dashboard/transfers", {scroll: false});
+                                    }}
+
+                                    className={"text-white cursor-pointer flex items-center justify-center gap-2  rounded-sm ms-auto bg-black/20 px-4 py-2"}>
+                                    View more
+                                    <ArrowUpRightSquare className="w-5 h-5"/>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div className="text-right">
@@ -245,15 +271,18 @@ const SimAllocationCard: React.FC = () => {
                         ) : (
                             <div className={"bg-black/20 p-2 rounded"}>
                                 <div className="text-4xl font-bold text-white tracking-tight">
-                                    {totalSims?.toLocaleString()} <span className="text-white/80 text-sm font-medium">Lines</span>
+                                    {totalSims?.toLocaleString()} <span
+                                    className="text-white/80 text-sm font-medium">Lines</span>
                                 </div>
                                 <div className="flex flex-col gap-1 mt-3">
-                                    <div className="text-white/70 text-sm flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-md backdrop-blur-sm">
+                                    <div
+                                        className="text-white/70 text-sm flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-md backdrop-blur-sm">
                                         <TrendingUp className="w-4 h-4 text-emerald-400"/>
                                         <span className="font-medium">Picklist:</span>
                                         <span className="text-green-200 font-semibold">{picklist}</span>
                                     </div>
-                                    <div className="text-white/70 text-sm flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-md backdrop-blur-sm">
+                                    <div
+                                        className="text-white/70 text-sm flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-md backdrop-blur-sm">
                                         <TrendingUp className="w-4 h-4 text-blue-400"/>
                                         <span className="font-medium">Extra sources:</span>
                                         <span className="text-blue-200 font-semibold">{extra}</span>
@@ -270,30 +299,24 @@ const SimAllocationCard: React.FC = () => {
                 <BreakdownItem
                     label="Assigned SIMs"
                     color="#fed7aa"
-                    icon={<WifiOff className="w-4 h-4"/>}
+                    icon={<UsersRound className="w-4 h-4"/>}
                     dataFetcher={() => fetchAssignedData(user)}
                 />
 
                 <BreakdownItem
-                    label="Unhandled SIMs"
+                    label="Stock"
                     color="#e0e7ff"
-                    icon={<Zap className="w-4 h-4"/>}
+                    icon={<Package className="w-4 h-4"/>}
                     dataFetcher={() => fetchUnhandledData(user)}
                 />
+                <BreakdownItem
+                    label="Sold but not assigned"
+                    color="#e0e7ff"
+                    icon={<ShoppingCart className="w-4 h-4"/>}
+                    dataFetcher={() => fetchSoldUnassiged(user)}
+                />
             </div>
-            <div className={"mt-4 relative z-10 flex"}>
-                <button
-                    onClick={e=>{
-                        e.stopPropagation();
-                        Signal.trigger("app-page-loading", true)
-                        router.push("/dashboard/transfers", {scroll: false});
-                    }}
 
-                    className={"text-white cursor-pointer flex items-center justify-center gap-2  rounded-sm ms-auto bg-black/20 px-4 py-2"}>
-                    see distribution
-                    <ArrowUpRightSquare className="w-5 h-5"/>
-                </button>
-            </div>
 
             {/* Subtle glow effect */}
             <div
