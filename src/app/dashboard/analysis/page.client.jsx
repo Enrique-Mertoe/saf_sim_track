@@ -422,10 +422,10 @@ const ContactsBySource = ({user, dateFilters}) => {
         const conditions = [["quality", SIMStatus.NONQUALITY], ["status", SIMStatus.ACTIVATED]];
 
         if (dateFilters && dateFilters.startDate) {
-            conditions.push(["registered_on", "gte", dateFilters.startDate]);
+            conditions.push(["activation_date", "gte", dateFilters.startDate]);
         }
         if (dateFilters && dateFilters.endDate) {
-            conditions.push(["registered_on", "lte", dateFilters.endDate]);
+            conditions.push(["activation_date", "lte", dateFilters.endDate]);
         }
 
         const data = await simService.countTopUpCategories(user, conditions);

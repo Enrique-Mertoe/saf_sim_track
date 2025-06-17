@@ -16,10 +16,10 @@ const TeamBreakdownCard = ({team, user, dateFilters}) => {
         // Create date filter conditions for API queries
         const dateConditions = [];
         if (dateFilters && dateFilters.startDate) {
-            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+            dateConditions.push(["activation_date", "gte", dateFilters.startDate]);
         }
         if (dateFilters && dateFilters.endDate) {
-            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+            dateConditions.push(["activation_date", "lte", dateFilters.endDate]);
         }
         // console.log("dte",dateConditions)
 
@@ -51,10 +51,10 @@ const TeamBreakdownCard = ({team, user, dateFilters}) => {
         const conditions = [["team_id", teamId], ["quality", SIMStatus.NONQUALITY], ["status", SIMStatus.ACTIVATED]];
 
         if (dateFilters && dateFilters.startDate) {
-            conditions.push(["registered_on", "gte", dateFilters.startDate]);
+            conditions.push(["activation_date", "gte", dateFilters.startDate]);
         }
         if (dateFilters && dateFilters.endDate) {
-            conditions.push(["registered_on", "lte", dateFilters.endDate]);
+            conditions.push(["activation_date", "lte", dateFilters.endDate]);
         }
 
         const data = await simService.countTopUpCategories(user, conditions);

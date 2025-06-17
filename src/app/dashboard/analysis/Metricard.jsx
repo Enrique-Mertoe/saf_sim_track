@@ -8,10 +8,10 @@ export const MetricCard = ({title, value, user, dateFilters, icon: Icon, trend, 
         if (!user) return
         const dateConditions = [];
         if (dateFilters && dateFilters.startDate) {
-            dateConditions.push(["registered_on", "gte", dateFilters.startDate]);
+            dateConditions.push(["activation_date", "gte", dateFilters.startDate]);
         }
         if (dateFilters && dateFilters.endDate) {
-            dateConditions.push(["registered_on", "lte", dateFilters.endDate]);
+            dateConditions.push(["activation_date", "lte", dateFilters.endDate]);
         }
         const [reg] = await Promise.all([
             simService.countReg(user, null, [
