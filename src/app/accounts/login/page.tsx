@@ -343,7 +343,7 @@ export default function LoginPage() {
 
     return (
         <>
-            <div className="w-full min-h-full flex flex-col gap-2 justify-center items-center p-6 dark:bg-gray-900">
+            <div className="w-full min-h-full flex flex-col gap-2 justify-center items-center md:p-6 dark:bg-gray-900">
                 <div
                     className="md:bg-white md:dark:bg-gray-800 w-full md:max-w-md md:p-8 md:rounded-xl md:shadow-lg"
                     style={{
@@ -414,7 +414,7 @@ export default function LoginPage() {
                                         <div
                                             key={account.id}
                                             onClick={() => handleSelectAccount(account)}
-                                            className="flex items-center p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-600"
+                                            className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-600"
                                         >
                                             <div className="bg-green-100 dark:bg-green-800 p-2 rounded-full mr-3">
                                                 <UserCircle className="h-6 w-6 text-green-600 dark:text-green-400"/>
@@ -432,7 +432,7 @@ export default function LoginPage() {
                                             </div>
                                             {account.hasStoredTokens && (
                                                 <div
-                                                    className="flex items-center text-xs text-green-600 dark:text-green-400">
+                                                    className="md:flex hidden items-center text-xs text-green-600 dark:text-green-400">
                                                     <CheckCircle className="h-4 w-4 mr-1"/>
                                                     Quick sign-in
                                                 </div>
@@ -460,7 +460,7 @@ export default function LoginPage() {
                                 className="mb-6"
                             >
                                 <div
-                                    className="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                                    className="flex items-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                                     <div className="bg-green-100 dark:bg-green-800 p-2 rounded-full mr-3">
                                         <UserCircle className="h-6 w-6 text-green-600 dark:text-green-400"/>
                                     </div>
