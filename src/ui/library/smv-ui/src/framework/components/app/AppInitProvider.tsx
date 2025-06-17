@@ -28,7 +28,7 @@ export const SMVAppProvider: React.FC<ComponentActivityProps> = ({children, clas
         <AppInitContext.Provider value={lifecycle}>
             <ScreenProvider>
                 <div
-                    className={`smv-activity bg-gray-50 dark:bg-gray-900 max-w-screen min-h-screen min-w-screen ${className || ''}`}>
+                    className={`bg-gray-50 m-0 dark:bg-gray-900 w-full min-h-screen ${className || ''}`}>
                     {children}
                 </div>
             </ScreenProvider>

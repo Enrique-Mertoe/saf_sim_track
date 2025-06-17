@@ -421,14 +421,31 @@ export default function TeamSIMAnalysisPage() {
                                     size: "lg",
                                 });
                             }}
-                            className={`${Theme.Button}`}>
+                            className={`${Theme.Button} gap-2`}>
                             <Calendar className="h-4 w-4"/>
                             <span>{formatDateRangeForDisplay()}</span>
                         </button>
+                        {
+                            selectedPeriod !== "last-30-days" && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedPeriod('last-30-days');
+                                        setStartDate(DateTime.now().minus({days: 30}).toISODate());
+                                        setEndDate(DateTime.now().toISODate());
+                                    }}
+                                    disabled={isLoading || isRefreshing}
+                                    className={`${Theme.Button}`}
+                                >
+                                    <span>Clear filter</span>
+                                    <X className={`h-4 w-4`}/>
+                                </button>
+                            )
+                        }
+
                         <button
                             onClick={handleRefresh}
                             disabled={isLoading || isRefreshing}
-                            className={`${Theme.Button}`}
+                            className={`${Theme.Button} gap-2`}
                         >
                             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}/>
                             <span>Refresh</span>
