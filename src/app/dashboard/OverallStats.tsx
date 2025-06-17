@@ -173,8 +173,8 @@ const fetchSoldUnassiged = async (user: any) => {
     ])
 
     const [all, assigned] = [v1.count ?? 0, v2.count ?? 0]
-    const value = all - assigned
-    return {value: value, percentage: to2dp((value / all) * 100) || 0,}
+    // const value = all - assigned
+    return {value: assigned, percentage: to2dp((assigned / all) * 100) || 0,}
 };
 
 // Main SIM Allocation Card
