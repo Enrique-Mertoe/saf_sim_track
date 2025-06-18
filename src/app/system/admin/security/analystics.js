@@ -1,4 +1,6 @@
 import {useEffect, useState} from "react";
+import {CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis} from "recharts";
+import {Brain} from "lucide-react";
 
 export // =============================================
 // MACHINE LEARNING ANOMALY DETECTION
