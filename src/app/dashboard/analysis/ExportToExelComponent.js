@@ -9,6 +9,7 @@ import {formatLocalDate} from "@/helper";
 import {format, isToday, isYesterday} from "date-fns";
 import ClientApi from "@/lib/utils/ClientApi";
 import ExcelPreview from "@/ui/office/ExcelPreview";
+import {UserRole} from "@/models";
 
 export default function ExportToExelComponent({
                                                   onClose,
@@ -28,6 +29,7 @@ export default function ExportToExelComponent({
     const [selectedPeriod, setSelectedPeriod] = useState(p1 ?? 'last-30-days');
     const [startDate, setStartDate] = useState(d1 ?? DateTime.now().minus({days: 30}).toISODate());
     const [endDate, setEndDate] = useState(d2 ?? DateTime.now().toISODate());
+    const isAdmin = user.role === UserRole.ADMIN;
 
     const loadTeams = async () => {
         setLoadingTeams(true);
@@ -41,25 +43,51 @@ export default function ExportToExelComponent({
         try {
             const dateFilters = getDateFilters();
 
-            const {data, error} = await new Promise((resolve, reject) => {
-                ClientApi.of("report").get()
-                    .generate_excel_report({
-                        startDate: dateFilters.startDate,
-                        endDate: dateFilters.endDate,
-                        user
-                    })
-                    .then(res => {
-                        if (res.ok)
-                            resolve({error: null, data: res.data})
-                        else
-                            resolve({error: res.error, data: null})
-                    }).catch(err => {
-                    resolve({error: err.message, data: null})
+            if (isAdmin) {
+                const {data, error} = await new Promise((resolve, reject) => {
+                    ClientApi.of("report").get()
+                        .generate_excel_report({
+                            startDate: dateFilters.startDate,
+                            endDate: dateFilters.endDate,
+                            user
+                        })
+                        .then(res => {
+                            if (res.ok)
+                                resolve({error: null, data: res.data})
+                            else
+                                resolve({error: res.error, data: null})
+                        }).catch(err => {
+                        resolve({error: err.message, data: null})
+                    });
                 });
-            });
-            if (error) throw new Error(error);
-            setPreview(data)
-            setStep("preview");
+                if (error) throw new Error(error);
+                setPreview(data)
+                setStep("preview");
+            } else {
+                const {data:team,error:e1} = await teamService.byId(user, user.team_id);
+                const {data, error} = await new Promise((resolve, reject) => {
+                    ClientApi.of("report").get()
+                        .generate_team_excel_report({
+                            startDate: dateFilters.startDate,
+                            endDate: dateFilters.endDate,
+                            userId: user.id,
+                            teamId: team.id,
+                            teamName: team.name
+                        })
+                        .then(res => {
+                            if (res.ok)
+                                resolve({error: null, data: res.data})
+                            else
+                                resolve({error: res.error, data: null})
+                        }).catch(err => {
+                        resolve({error: err.message, data: null})
+                    });
+                });
+
+                if (error) throw new Error(error);
+                setPreview(data)
+                setStep("preview");
+            }
         } catch (error) {
             console.error('Error generating Excel report:', error);
         }
@@ -301,49 +329,79 @@ export default function ExportToExelComponent({
                                 </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-2">
-                                {/* Export All Option */}
-                                <button
-                                    onClick={handleExportAll}
-                                    className="group relative bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 hover:border-green-400 rounded-xl p-2 transition-all duration-300 hover:shadow-lg hover:scale-105"
-                                >
-                                    <div className="flex flex-col items-center text-center space-y-3">
-                                        <div
-                                            className="bg-green-600 p-3 rounded-full group-hover:bg-green-700 transition-colors">
-                                            <Download className="w-8 h-8 text-white"/>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-gray-800 mb-1">Export All</h4>
-                                            <p className="text-sm text-gray-600">Download complete dataset in one
-                                                file</p>
-                                        </div>
-                                    </div>
-                                    <div
-                                        className="absolute inset-0 bg-green-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
-                                </button>
+                            {
+                                isAdmin ? (
+                                        <div className="grid md:grid-cols-2 gap-2">
+                                            {/* Export All Option */}
+                                            <button
+                                                onClick={handleExportAll}
+                                                className="group relative bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 hover:border-green-400 rounded-xl p-2 transition-all duration-300 hover:shadow-sm"
+                                            >
+                                                <div className="flex flex-col items-center text-center space-y-3">
+                                                    <div
+                                                        className="bg-green-600 p-3 rounded-full group-hover:bg-green-700 transition-colors">
+                                                        <Download className="w-8 h-8 text-white"/>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800 mb-1">Export All</h4>
+                                                        <p className="text-sm text-gray-600">Download complete dataset in
+                                                            one
+                                                            file</p>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    className="absolute inset-0 bg-green-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
+                                            </button>
 
-                                {/* Export Per Team Option */}
-                                <button
-                                    onClick={() => {
-                                        setStep('teams');
-                                        loadTeams().then();
-                                    }}
-                                    className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-400 rounded-xl p-2 transition-all duration-300 hover:shadow-lg hover:scale-105"
-                                >
-                                    <div className="flex flex-col items-center text-center space-y-3">
-                                        <div
-                                            className="bg-blue-600 p-3 rounded-full group-hover:bg-blue-700 transition-colors">
-                                            <Users className="w-8 h-8 text-white"/>
+                                            {/* Export Per Team Option */}
+                                            <button
+                                                onClick={() => {
+                                                    setStep('teams');
+                                                    loadTeams().then();
+                                                }}
+                                                className="group relative bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-400 rounded-xl p-2 transition-all duration-300 hover:shadow-sm"
+                                            >
+                                                <div className="flex flex-col items-center text-center space-y-3">
+                                                    <div
+                                                        className="bg-blue-600 p-3 rounded-full group-hover:bg-blue-700 transition-colors">
+                                                        <Users className="w-8 h-8 text-white"/>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-800 mb-1">Export Per
+                                                            Team</h4>
+                                                        <p className="text-sm text-gray-600">Select specific teams to
+                                                            export</p>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
+                                            </button>
                                         </div>
-                                        <div>
-                                            <h4 className="font-semibold text-gray-800 mb-1">Export Per Team</h4>
-                                            <p className="text-sm text-gray-600">Select specific teams to export</p>
-                                        </div>
+                                    )
+                                    : <div className="flex gap-2">
+                                        {/* Export All Option */}
+                                        <button
+                                            onClick={handleExportAll}
+                                            className={`group ${Theme.Button}`}
+                                        >
+                                            <div className="flex gap-2 items-center justify-center text-center">
+                                                <Download className="w-4 h-4 "/>
+                                                <h4 className="font-semibold text-gray-800">Export All</h4>
+
+                                            </div>
+                                            <div
+                                                className="absolute inset-0 bg-green-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
+                                        </button>
+                                        <button
+                                            onClick={handleExportAll}
+                                            className={`group ${Theme.Button}`}
+                                        >
+                                            <h4 className="font-semibold text-gray-800">Cancel</h4>
+                                            <div
+                                                className="absolute inset-0 bg-gray-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
+                                        </button>
                                     </div>
-                                    <div
-                                        className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-5 rounded-xl transition-opacity"></div>
-                                </button>
-                            </div>
+                            }
                         </div>
                     )}
 

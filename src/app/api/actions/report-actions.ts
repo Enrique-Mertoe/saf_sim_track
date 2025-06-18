@@ -91,6 +91,10 @@ class ReportActions {
                 ok: true,
                 data: {
                     buffer: Buffer.from(report.rawData).toString('base64'),
+                    raw: {
+                        data: processedReport,
+                        cols
+                    }
                 },
                 message: `Excel report for team ${teamName} generated successfully`
             });

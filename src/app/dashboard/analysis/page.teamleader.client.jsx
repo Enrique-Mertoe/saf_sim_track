@@ -6,6 +6,7 @@ import {
     AlertTriangle,
     Calendar,
     CheckCircle,
+    Download,
     RefreshCw,
     Smartphone,
     TrendingDown,
@@ -25,6 +26,7 @@ import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {format, isToday, isYesterday} from "date-fns";
 import {formatLocalDate} from "@/helper";
 import Theme from "@/ui/Theme";
+import ExportToExel from "@/app/dashboard/analysis/Utility";
 
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -163,7 +165,7 @@ export default function TeamSIMAnalysisPage() {
             }
 
             //non-quality not assigned but registered
-            simService.countAll(user, [
+            simService.countActivated(user, [
                 ["quality", SIMStatus.NONQUALITY],
                 ["assigned_to_user_id", "is", null],
                 ["registered_on", "not", "is", null],
@@ -171,21 +173,21 @@ export default function TeamSIMAnalysisPage() {
                 setNonQualityUnref(res.count ?? 0)
             })
             const [reg, qlty, mtc] = await Promise.all([
-                simService.countReg(user, teamId, [
+                simService.countActivated(user, [
                     ...dateConditions
                 ]),
-                simService.countQuality(user, teamId, [["registered_on", "not", "is", null], ...(dateConditions)]),
-                simService.countMatch(user, teamId, [["registered_on", "not", "is", null], ...dateConditions]),
+                simService.countActivated(user, [["quality", SIMStatus.QUALITY], ...(dateConditions)]),
+                simService.countActivated(user, [["assigned_to_user_id", "is", null], ['batch_id', "neq", 'BATCH-UNKNOWN'], ...dateConditions]),
             ]);
 
             // Process team data
             const totalRecorded = reg.count ?? 0;
-            const matched = mtc.count ?? 0;
+            const unassigned = mtc.count ?? 0;
             const quality = qlty.count ?? 0;
-            const matchRate = totalRecorded > 0 ? ((matched / totalRecorded) * 100).toFixed(2) : 0;
-            let qualityRate = matched > 0 ? ((quality / matched) * 100).toFixed(2) : 0;
-            const nonQuality = matched - quality;
-            const unknown = totalRecorded - matched;
+            const matchRate = totalRecorded > 0 ? ((unassigned / totalRecorded) * 100).toFixed(2) : 0;
+            let qualityRate = quality > 0 ? ((quality / totalRecorded) * 100).toFixed(2) : 0;
+            const nonQuality = totalRecorded - quality;
+            const unknown = unassigned;
             qualityRate = Math.min(Math.max(qualityRate, 0), 100);
             if (qualityRate >= 10) {
                 qualityRate = Math.ceil(qualityRate);
@@ -203,7 +205,7 @@ export default function TeamSIMAnalysisPage() {
                 id: teamId,
                 name: "teamData.name",
                 totalRecorded,
-                matched,
+                matched: unassigned,
                 matchRate: parseFloat(matchRate),
                 quality,
                 qualityRate: parseFloat(qualityRate),
@@ -221,7 +223,7 @@ export default function TeamSIMAnalysisPage() {
             // Calculate total metrics
             const newTotalMetrics = {
                 totalRecorded,
-                totalMatched: matched,
+                totalMatched: unassigned,
                 totalQuality: quality,
                 totalNonQuality: nonQuality,
                 totalUnknown: unknown
@@ -450,6 +452,12 @@ export default function TeamSIMAnalysisPage() {
                             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}/>
                             <span>Refresh</span>
                         </button>
+                        <button
+                            onClick={() => ExportToExel({user, selectedPeriod, startDate, endDate})}
+                            className={`${Theme.Button} gap-2 py-2`}>
+                            <Download className="h-4 w-4"/>
+                            <span>Export</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -481,9 +489,9 @@ export default function TeamSIMAnalysisPage() {
                         color="red"
                     />
                     <MetricCard
-                        title="Unknown Status"
+                        title="Unknown BA"
                         value={totalMetrics.totalUnknown}
-                        subtitle={`${((totalMetrics.totalUnknown / (totalMetrics.totalRecorded || 1)) * 100).toFixed(1)}% unmatched`}
+                        subtitle={`${((totalMetrics.totalUnknown / (totalMetrics.totalRecorded || 1)) * 100).toFixed(1)}% was never assigned`}
                         icon={AlertTriangle}
                         color="orange"
                     />

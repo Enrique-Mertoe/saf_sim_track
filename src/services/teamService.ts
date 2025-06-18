@@ -23,6 +23,14 @@ export const teamService = {
 
         return query.order('name');
     },
+    async byId(user: User, teamId: any) {
+        if (!user) return {data: null, error: true}
+        return createSupabaseClient()
+            .from('teams')
+            .select('*, users!leader_id(*)')
+            .eq('admin_id', await admin_id(user))
+            .eq('id', teamId).single();
+    },
     // Get all teams
     async getAllTeams(userDetails: User | undefined = undefined, filters: Filter[] = []) {
         const supabase = createSupabaseClient();
