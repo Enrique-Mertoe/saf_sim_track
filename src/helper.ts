@@ -17,13 +17,6 @@ export function makeResponse({
                                  ...kwargs
                              }: JsonResponse): JsonResponse {
 
-    console.log("id", {
-        ok,
-        error,
-        message,
-        data,
-        ...kwargs
-    })
     return NextResponse.json({
         ok,
         error,

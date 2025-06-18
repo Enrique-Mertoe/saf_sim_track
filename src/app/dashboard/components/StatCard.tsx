@@ -3,6 +3,8 @@ import {TrendingDown, TrendingUp} from 'lucide-react';
 import {SIMStatus, User} from "@/models";
 import {admin_id} from "@/services/helper";
 import {DateTime} from "luxon";
+import simService from "@/services/simService";
+import {Filter} from "@/helper";
 
 interface StatData {
     total: number;
@@ -46,9 +48,11 @@ function StatCard({
                       teamId,
                       refreshTrigger = 0
                   }: StatCardProps) {
-    const [data, setData] = useState<StatData>({total: 0, today: 0,
-        pick:0,pickToday:0,
-        week: 0, lastFetched: 0});
+    const [data, setData] = useState<StatData>({
+        total: 0, today: 0,
+        pick: 0, pickToday: 0,
+        week: 0, lastFetched: 0
+    });
     const [isLoading, setIsLoading] = useState(!!user);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -58,33 +62,28 @@ function StatCard({
     // Generate cache key
     const getCacheKey = () => `${dataType}_${teamId || 'all'}`;
 
-    // Get filter conditions based on data type
-    const getFilterConditions = (adminId: any) => {
-        if (!user) return null;
 
-        // Create a fresh query builder each time
-        let query = supabase
-            .from('sim_cards')
-            .select('*', {count: 'exact', head: true})
-            .eq("admin_id", adminId);
-
-        if (teamId) {
-            query = query.eq('team_id', teamId);
-        }
-
+    function getFilters(extraFilters: Filter[] = []): Filter[] {
+        let filters: Filter[] = []
         switch (dataType) {
             case 'activated':
-                return query.eq('status', SIMStatus.ACTIVATED);
+                filters = [['status', SIMStatus.ACTIVATED], ["activation_date", "not", "is", null]];
+                break;
             case 'unmatched':
-                return query.eq('match', SIMStatus.UNMATCH);
+                filters = [['match', SIMStatus.UNMATCH]];
+                break;
             case 'quality':
-                return query.eq('quality', SIMStatus.QUALITY);
+                filters = [['quality', SIMStatus.QUALITY]];
+                break;
             case 'registered':
-                return query.not('registered_on', "is", null);
+                filters = [['registered_on', "not", "is", null]];
+                break;
             default:
-                return query;
+                filters = [];
+                break;
         }
-    };
+        return [...filters, ...extraFilters]
+    }
 
     // Fetch data with optimized queries
     const fetchData = useCallback(async (force = false) => {
@@ -107,28 +106,32 @@ function StatCard({
             setError(null);
             if (!isLoading) setIsRefreshing(true);
 
-            // const today = TodayDaTe();
-            // const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            // const startOfWeek = new Date(today);
-            // startOfWeek.setDate(today.getDate() - 7);
-
             const today = DateTime.now().setZone("Africa/Nairobi");
             const startOfToday = today.startOf("day").toJSDate();
             const startOfWeek = today.minus({days: 7}).startOf("day").toJSDate();
 
             // Execute queries in parallel - each gets a fresh query builder
-            const [totalResult, todayResult, weekResult,pickResult,pickToday] = await Promise.all([
-                getFilterConditions(adminId),
-                getFilterConditions(adminId)?.gte('registered_on', startOfToday.toISOString()),
-                getFilterConditions(adminId)?.gte('registered_on', startOfWeek.toISOString()),
-                getFilterConditions(adminId)?.neq('batch_id', "BATCH-UNKNOWN"),
-                getFilterConditions(adminId)?.neq('batch_id',  "BATCH-UNKNOWN")?.gte('registered_on', startOfToday.toISOString()),
+            const [totalResult, todayResult, weekResult, pickResult, pickToday] = await Promise.all([
+                simService.countAll(user, getFilters()),
+                simService.countAll(user, getFilters([
+                    ["registered_on", "gte", startOfToday.toISOString()]
+                ])),
+                simService.countAll(user, getFilters([
+                    ["registered_on", "gte", startOfWeek.toISOString()]
+                ])),
+                simService.countAll(user, getFilters([
+                    ["batch_id", "neq", "BATCH-UNKNOWN"]
+                ])),
+                simService.countAll(user, getFilters([
+                    ["batch_id", "neq", "BATCH-UNKNOWN"],
+                    ["registered_on", "gte", startOfToday.toISOString()],
+                ])),
             ]);
 
             if (totalResult.error) throw totalResult.error;
             if (todayResult.error) throw todayResult.error;
             if (weekResult.error) throw weekResult.error;
-            if (pickResult.error) throw pickResult.err;
+            if (pickResult.error) throw pickResult.error;
             if (pickToday.error) throw pickToday.error;
 
             const newData: StatData = {
@@ -314,16 +317,16 @@ function StatCard({
                         "grid-cols-2"
                     ][tabs.length]} mb-2 border-b border-gray-200 dark:border-gray-700`}>
                         {
-                            tabs.map((tab,index) => {
+                            tabs.map((tab, index) => {
                                 if (tab == "today")
                                     return (<button key={index}
-                                        className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
-                                            activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
-                                        }`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveTab('today');
-                                        }}
+                                                    className={`px-3 py-1 text-xs font-medium rounded-t-md w-full text-center transition-colors ${
+                                                        activeTab === 'today' ? colorClasses[color].tabActive : colorClasses[color].tabInactive
+                                                    }`}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setActiveTab('today');
+                                                    }}
                                     >
                                         Today
                                     </button>)
@@ -364,7 +367,8 @@ function StatCard({
                             isRefreshing || isLoading ? '' :
 
                                 (<TreeDiagram picklist={getActivePick()}
-                                              extra={(getActiveValue() -  getActivePick()).toLocaleString()} theme={color}/>)
+                                              extra={(getActiveValue() - getActivePick()).toLocaleString()}
+                                              theme={color}/>)
                         }
                     </div>
 
@@ -428,11 +432,11 @@ const TreeDiagram = ({picklist, extra, theme = "blue"}: any) => {
     const current = themes[theme] || themes.green;
 
     return (
-        <svg width="150" height="80" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", margin: "auto" }}>
+        <svg width="150" height="80" xmlns="http://www.w3.org/2000/svg" style={{display: "block", margin: "auto"}}>
             <defs>
                 <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor={current.gradient[0]} />
-                    <stop offset="100%" stopColor={current.gradient[1]} />
+                    <stop offset="0%" stopColor={current.gradient[0]}/>
+                    <stop offset="100%" stopColor={current.gradient[1]}/>
                 </linearGradient>
                 {/*<filter id={filterId} x="-50%" y="-50%" width="200%" height="200%">*/}
                 {/*    <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />*/}
@@ -463,17 +467,19 @@ const TreeDiagram = ({picklist, extra, theme = "blue"}: any) => {
             />
 
             {/* Radio-style Dots */}
-            <circle cx="60" cy="26" r="6" fill="white" stroke={current.picklist} strokeWidth="2" />
-            <circle cx="60" cy="26" r="2" fill={current.picklist} />
+            <circle cx="60" cy="26" r="6" fill="white" stroke={current.picklist} strokeWidth="2"/>
+            <circle cx="60" cy="26" r="2" fill={current.picklist}/>
 
-            <circle cx="60" cy="54" r="6" fill="white" stroke={current.extra} strokeWidth="2" />
-            <circle cx="60" cy="54" r="2" fill={current.extra} />
+            <circle cx="60" cy="54" r="6" fill="white" stroke={current.extra} strokeWidth="2"/>
+            <circle cx="60" cy="54" r="2" fill={current.extra}/>
 
             {/* Top Label */}
-            <text x="70" y="31" fontSize="10" fill={current.picklist} fontWeight="bold" fontFamily="Arial, sans-serif"> Picklist: {picklist || 0}</text>
+            <text x="70" y="31" fontSize="10" fill={current.picklist} fontWeight="bold"
+                  fontFamily="Arial, sans-serif"> Picklist: {picklist || 0}</text>
 
             {/* Bottom Label */}
-            <text x="70" y="59" fontSize="10" fill={current.extra} fontWeight="bold" fontFamily="Arial, sans-serif"> Extra:{extra || 0}</text>
+            <text x="70" y="59" fontSize="10" fill={current.extra} fontWeight="bold"
+                  fontFamily="Arial, sans-serif"> Extra:{extra || 0}</text>
         </svg>
     );
 };

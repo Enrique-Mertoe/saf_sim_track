@@ -259,7 +259,7 @@ const runParallelSync = async (
 
 // Bulk update optimization (if your API supports it)
 const bulkUpdateSIMCards = async (
-    updates: Array<{id: string, fields: any}>,
+    updates: Array<{ id: string, fields: any }>,
     user: User,
     semaphore: Semaphore
 ): Promise<void> => {
@@ -373,7 +373,7 @@ export const processReport = async (
 
             return {
                 teamName,
-                records,
+                records: records.filter(r => r.quality == "N"),
                 matchedCount,
                 qualityCount,
             };

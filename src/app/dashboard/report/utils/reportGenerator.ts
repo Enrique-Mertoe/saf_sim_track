@@ -2,10 +2,24 @@
 import ExcelJS from 'exceljs';
 import {ProcessedRecord, ProcessedReport, TeamReport} from '../types';
 
+const columns = [
+    {header: 'Serial', key: 'simSerialNumber', width: 25},
+    {header: 'Team', key: 'team', width: 25},
+    {header: 'Activation Date', key: 'activationDate', width: 18},
+    {header: 'Top Up Date', key: 'topUpDate', width: 15},
+    {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
+    {header: 'Bundle Purchase Date', key: 'bundlePurchaseDate', width: 20},
+    {header: 'Bundle Amount', key: 'bundleAmount', width: 15},
+    {header: 'Usage', key: 'cumulativeUsage', width: 15},
+    {header: 'Till/Mobigo MSISDN', key: 'agentMSISDN', width: 20},
+    {header: 'BA MSISDN', key: 'ba', width: 15},
+];
 /**
  * Generate Excel reports from processed data with enhanced formatting using ExcelJS
  */
-export const generateTeamReports = async (processedReport: ProcessedReport): Promise<{ rawData: ArrayBuffer }> => {
+export const generateTeamReports = async (processedReport: ProcessedReport, cols = columns): Promise<{
+    rawData: ArrayBuffer
+}> => {
     // Create a new workbook
     const workbook = new ExcelJS.Workbook();
 
@@ -59,7 +73,7 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
         fill: {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: {argb: 'FF1F497D'} // Blue with alpha channel
+            fgColor: {argb: '00a540'}
         },
         font: {
             color: {argb: 'FFFFFFFF'}, // White
@@ -83,26 +97,27 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
             tabColor: {argb: 'FF' + baseTabColors['Raw Data']}
         }
     });
-    await populateRawDataWorksheet(rawDataSheet, processedReport.rawRecords, headerStyle, teamColors);
+    await populateRawDataWorksheet(rawDataSheet, processedReport.rawRecords, headerStyle, teamColors, cols);
 
-    // Create Summary worksheet
-    const summarySheet = workbook.addWorksheet('Summary', {
-        properties: {
-            tabColor: {argb: 'FF' + baseTabColors['Summary']}
-        }
-    });
-    await populateSummaryWorksheet(summarySheet, processedReport, headerStyle, teamColors);
+    // // Create Summary worksheet
+    // const summarySheet = workbook.addWorksheet('Summary', {
+    //     properties: {
+    //         tabColor: {argb: 'FF' + baseTabColors['Summary']}
+    //     }
+    // });
+    // await populateSummaryWorksheet(summarySheet, processedReport, headerStyle, teamColors, cols);
 
     // Create Team worksheets
     processedReport.teamReports.forEach((teamReport) => {
         if (teamReport.teamName !== 'Unknown' && teamReport.records.length > 0) {
-            const sheetName = `Team - ${teamReport.teamName}`;
+            const sheetName = `${teamReport.teamName}`;
             const teamSheet = workbook.addWorksheet(sheetName, {
                 properties: {
                     tabColor: {argb: 'FF' + teamColors[teamReport.teamName]}
                 }
             });
-            populateTeamWorksheet(teamSheet, teamReport, headerStyle);
+            teamReport.records = teamReport.records.filter(r => r.quality == "N")
+            populateTeamWorksheet(teamSheet, teamReport, headerStyle, cols);
         }
     });
 
@@ -114,17 +129,17 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
                 tabColor: {argb: 'FF' + baseTabColors['Unknown SIMs']}
             }
         });
-        populateTeamWorksheet(unknownSheet, unknownTeamReport, headerStyle);
+        populateTeamWorksheet(unknownSheet, unknownTeamReport, headerStyle, cols);
     }
 
     // Inside the generateTeamReports function, add this before the return statement:
 
-    const performanceSheet = workbook.addWorksheet('%Performance', {
-        properties: {
-            tabColor: {argb: 'FF92D050'}
-        }
-    });
-    populatePerformanceWorksheet(performanceSheet, headerStyle, processedReport);
+    // const performanceSheet = workbook.addWorksheet('%Performance', {
+    //     properties: {
+    //         tabColor: {argb: 'FF92D050'}
+    //     }
+    // });
+    // populatePerformanceWorksheet(performanceSheet, headerStyle, processedReport);
 
     // Generate the Excel file
     const buffer = await workbook.xlsx.writeBuffer();
@@ -134,19 +149,6 @@ export const generateTeamReports = async (processedReport: ProcessedReport): Pro
 };
 
 
-const columns = [
-    {header: 'Serial', key: 'simSerialNumber', width: 25},
-    {header: 'Team', key: 'team', width: 25},
-    {header: 'Activation Date', key: 'activationDate', width: 18},
-    {header: 'Top Up Date', key: 'topUpDate', width: 15},
-    {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
-    {header: 'Bundle Purchase Date', key: 'bundlePurchaseDate', width: 20},
-    {header: 'Bundle Amount', key: 'bundleAmount', width: 15},
-    {header: 'Usage', key: 'cumulativeUsage', width: 15},
-    {header: 'Till/Mobigo MSISDN', key: 'agentMSISDN', width: 20},
-    {header: 'BA MSISDN', key: 'ba', width: 15},
-];
-
 /**
  * Populate Raw Data worksheet with all records
  */
@@ -154,7 +156,8 @@ const populateRawDataWorksheet = async (
     worksheet: ExcelJS.Worksheet,
     records: ProcessedRecord[],
     headerStyle: any,
-    teamColors: { [key: string]: string }
+    teamColors: { [key: string]: string },
+    cols: any
 ): Promise<void> => {
     // Sort by team
     const sortedRecords = [...records].sort((a, b) =>
@@ -162,7 +165,7 @@ const populateRawDataWorksheet = async (
     );
 
     // Add columns to the worksheet
-    worksheet.columns = columns;
+    worksheet.columns = cols;
 
     // Apply header styles
     worksheet.getRow(1).eachCell((cell) => {
@@ -229,6 +232,7 @@ const populateRawDataWorksheet = async (
             };
         });
 
+
         // Add border when team changes
         if (record.team !== currentTeam) {
             if (currentTeam !== '') {
@@ -252,9 +256,10 @@ const populateRawDataWorksheet = async (
         },
         to: {
             row: 1,
-            column: columns.length
+            column: cols.length
         }
     };
+
 };
 
 /**
@@ -263,9 +268,9 @@ const populateRawDataWorksheet = async (
 const populateTeamWorksheet = (
     worksheet: ExcelJS.Worksheet,
     teamReport: TeamReport,
-    headerStyle: any
+    headerStyle: any, cols: any
 ): void => {
-    worksheet.columns = columns;
+    worksheet.columns = cols;
 
     // Apply header styles
     worksheet.getRow(1).eachCell((cell) => {
@@ -315,7 +320,7 @@ const populateTeamWorksheet = (
         },
         to: {
             row: 1,
-            column: columns.length
+            column: cols.length
         }
     };
 };
@@ -327,28 +332,12 @@ const populateSummaryWorksheet = async (
     worksheet: ExcelJS.Worksheet,
     processedReport: ProcessedReport,
     headerStyle: any,
-    teamColors: { [key: string]: string }
+    teamColors: { [key: string]: string },
+    cols: any
 ): Promise<void> => {
-    // Define summary columns
-    const columns = [
-        {header: 'Team', key: 'team', width: 20},
-        {header: 'Total Records', key: 'totalRecords', width: 15},
-        {header: 'Matched Records', key: 'matchedRecords', width: 18},
-        {header: 'Match Rate (%)', key: 'matchRate', width: 15},
-        {header: 'Quality SIMs', key: 'qualitySims', width: 15},
-        {header: 'Quality Rate (%)', key: 'qualityRate', width: 18},
-        {header: 'Fraud Flagged', key: 'fraudFlagged', width: 15},
-        {header: 'Fraud Rate (%)', key: 'fraudRate', width: 15},
-        {header: 'Total Commission', key: 'totalCommission', width: 18},
-        {header: 'Total Usage', key: 'totalUsage', width: 15},
-        {header: 'Avg Commission', key: 'avgCommission', width: 18},
-        {header: 'Avg Usage', key: 'avgUsage', width: 15},
-        {header: 'Top Region', key: 'topRegion', width: 20},
-        {header: 'Region Count', key: 'regionCount', width: 15}
-    ];
 
     // Add columns to the worksheet
-    worksheet.columns = columns;
+    worksheet.columns = cols;
 
     // Apply header styles
     worksheet.getRow(1).eachCell((cell) => {
@@ -451,7 +440,7 @@ const populateSummaryWorksheet = async (
         },
         to: {
             row: 1,
-            column: columns.length
+            column: cols.length
         }
     };
 };
@@ -467,7 +456,8 @@ const populatePerformanceWorksheet = (
     processedReport: ProcessedReport
 ): void => {
     // Define performance columns
-    const columns = [
+    // Add columns to the worksheet
+    worksheet.columns = [
         {header: 'Team', key: 'team', width: 20},
         {header: 'Total activation', key: 'totalActivation1', width: 15},
         {header: 'Quality', key: 'quality1', width: 15},
@@ -481,9 +471,6 @@ const populatePerformanceWorksheet = (
         {header: 'Comment', key: 'comment', width: 15}
     ];
 
-    // Add columns to the worksheet
-    worksheet.columns = columns;
-
     // Add header row
     const headerRow = worksheet.addRow([
         'Team', 'Total activation', 'Quality', 'Percentage performance',
@@ -496,7 +483,7 @@ const populatePerformanceWorksheet = (
         cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: {argb: 'FF00FF00'} // Green color with alpha
+            fgColor: {argb: '00a540'} // Green color with alpha
         };
         cell.font = {bold: true};
         cell.alignment = {horizontal: 'center', vertical: 'middle'};
@@ -517,7 +504,7 @@ const populatePerformanceWorksheet = (
         cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: {argb: 'FF00FF00'} // Green color
+            fgColor: {argb: '00a540'} // Green color
         };
         cell.font = {bold: true};
         cell.alignment = {horizontal: 'center', vertical: 'middle'};
@@ -560,8 +547,8 @@ const populatePerformanceWorksheet = (
     const performanceData = teamReports.map(team => {
         const totalActivation = team.matchedCount;
         const quality = team.qualityCount;
-        const percentagePerformance = totalActivation > 0 
-            ? (quality / totalActivation) * 100 
+        const percentagePerformance = totalActivation > 0
+            ? (quality / totalActivation) * 100
             : 0;
 
         // For simplicity, we'll use the same values for all three periods
@@ -623,7 +610,7 @@ const populatePerformanceWorksheet = (
     monthlyHeader.getCell(2).fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: {argb: 'FF00FF00'} // Green color
+        fgColor: {argb: '00a540'} // Green color
     };
     monthlyHeader.getCell(2).font = {bold: true};
     monthlyHeader.getCell(2).alignment = {horizontal: 'center', vertical: 'middle'};
@@ -642,7 +629,7 @@ const populatePerformanceWorksheet = (
             cell.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: {argb: 'FF00FF00'} // Green color
+                fgColor: {argb: '00a540'} // Green color
             };
             cell.font = {bold: true};
             cell.alignment = {horizontal: 'center', vertical: 'middle'};
@@ -660,7 +647,7 @@ const populatePerformanceWorksheet = (
     marDateHeader.getCell(2).fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: {argb: 'FF00FF00'} // Green color
+        fgColor: {argb: '00a540'} // Green color
     };
     marDateHeader.getCell(2).font = {bold: true};
     marDateHeader.getCell(2).alignment = {horizontal: 'center', vertical: 'middle'};
@@ -676,8 +663,8 @@ const populatePerformanceWorksheet = (
     const monthlyData = teamReports.map(team => {
         const totalActivation = team.matchedCount;
         const quality = team.qualityCount;
-        const percentagePerformance = totalActivation > 0 
-            ? (quality / totalActivation) * 100 
+        const percentagePerformance = totalActivation > 0
+            ? (quality / totalActivation) * 100
             : 0;
 
         return [
@@ -688,7 +675,6 @@ const populatePerformanceWorksheet = (
         ];
     });
 
-    // Add monthly data rows
     monthlyData.forEach((rowData) => {
         const row = worksheet.addRow(rowData);
 

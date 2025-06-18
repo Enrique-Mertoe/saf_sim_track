@@ -20,7 +20,8 @@ export interface SIMCard {
     bundle_purchase_date?: number;
     bundle_amount?: number;
     usage?: string;
-    ba_msisdn?: number;
+    ba_msisdn?: string;
+    mobigo?: string;
     top_up_date?: string;
     first_usage_date?: string;
     first_usage_amount?: number;

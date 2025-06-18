@@ -818,11 +818,12 @@ export const simCardService = {
             .order('created_at', {ascending: false});
 
     },
-    streamChunks: async (
+    streamChunks: async <T extends object = {}>(
         user: User,
-        onChunk: (chunk: SIMCard[], end: boolean) => void,
+        onChunk: (chunk: (SIMCard & T)[], end: boolean) => void,
         options: {
             chunkSize?: number,
+            selection?: ((keyof (SIMCard & T)) | string)[],
             filters?: Filter[]
         } = {}
     ): Promise<void> => {
@@ -830,6 +831,7 @@ export const simCardService = {
         let page = 0;
         const chunkSize = options.chunkSize ?? 500;
         const filters = options.filters ?? [];
+        const selection = options.selection ?? [];
         const admin = await admin_id(user);
         while (true) {
             const from = page * chunkSize;
@@ -837,7 +839,7 @@ export const simCardService = {
 
             const {data, error} = await applyFilters(client
                 .from('sim_cards')
-                .select('*')
+                .select(['*', ...selection].join(','))
                 .eq("admin_id", admin)
                 .range(from, to), filters);
 
@@ -847,7 +849,7 @@ export const simCardService = {
             }
 
             if (!data?.length) break;
-            onChunk(data, false);
+            onChunk(data as any, false);
             page++;
         }
         onChunk([], true)

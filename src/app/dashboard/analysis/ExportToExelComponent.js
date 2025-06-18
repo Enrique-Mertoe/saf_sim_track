@@ -8,6 +8,7 @@ import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
 import {formatLocalDate} from "@/helper";
 import {format, isToday, isYesterday} from "date-fns";
 import ClientApi from "@/lib/utils/ClientApi";
+import ExcelPreview from "@/ui/office/ExcelPreview";
 
 export default function ExportToExelComponent({
                                                   onClose,
@@ -19,6 +20,7 @@ export default function ExportToExelComponent({
                                               }) {
     const [step, setStep] = useState('select');
     const [teams, setTeams] = useState([]);
+    const [preview, setPreview] = useState(null)
     const [selectedTeams, setSelectedTeams] = useState([]);
     const [loadingTeams, setLoadingTeams] = useState(false);
     const [processingTeams, setProcessingTeams] = useState([]);
@@ -56,28 +58,13 @@ export default function ExportToExelComponent({
                 });
             });
             if (error) throw new Error(error);
-            const buffer = data.buffer;
-            const blob = new Blob([buffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-
-            // Create a download link
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-
-            // Generate filename with date range
-            const dateRange = formatDateRangeForDisplay().replace(/\s/g, '_');
-            link.download = `All_Teams_Report_${dateRange}.xlsx`;
-
-            // Trigger download
-            document.body.appendChild(link);
-            link.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(link);
+            setPreview(data)
+            setStep("preview");
         } catch (error) {
             console.error('Error generating Excel report:', error);
         }
 
-        onClose();
+        // onClose();
     };
     const formatDateForDisplay = (dateString) => {
         const date = new Date(dateString);
@@ -478,8 +465,122 @@ export default function ExportToExelComponent({
                             </div>
                         </div>
                     )}
+                    {
+                        step === "preview" && (
+                            <PreviewData formatDateRangeForDisplay={formatDateRangeForDisplay} preview={preview}/>)
+                    }
                 </div>
             </div>
         </>
     );
+}
+
+
+const PreviewData = ({preview, formatDateRangeForDisplay}) => {
+    const downLoad = () => {
+        const byteArray = Uint8Array.from(atob(preview.buffer), c => c.charCodeAt(0));
+        const blob = new Blob([byteArray], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Generate filename with date range
+        const dateRange = formatDateRangeForDisplay().replace(/\s/g, '_');
+        link.download = `All_Teams_Report_${dateRange}.xlsx`;
+
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+    }
+    const cols = (preview?.raw?.cols) || []
+    const keys = cols.map(col => col.key);
+    const header = cols.map(col => col.header);
+    const rawRecords = preview?.raw?.data?.rawRecords || [];
+    const teamGroups = preview?.raw?.data?.teamReports || [];
+    const rawData = [
+        header,
+        ...rawRecords.map(record => keys.map(key => record[key])).slice(0, 100)
+    ];
+    const baseColors = ['blue', 'green', 'yellow', 'purple', 'pink', 'teal', 'red', 'indigo', 'orange', 'cyan'];
+    const teamTabStyles = new Map();
+
+    teamGroups.forEach((group, index) => {
+        const color = baseColors[index % baseColors.length];
+        const style = `bg-${color}-200 text-${color}-800 hover:bg-${color}-300`;
+        teamTabStyles.set(group.teamName, style);
+    });
+    const headerStyle = "bg-green-100 font-bold text-blue-800";
+    const sampleData = [
+        {
+            name: "Raw Data",
+            hasHeaders: true,
+            headerStyle,
+            tabStyle: "bg-blue-200 text-blue-800 hover:bg-blue-300",
+            data: rawData,
+        },
+        ...teamGroups.map((group) => {
+            const tabStyle = teamTabStyles.get(group.teamName) ?? "bg-gray-200 text-gray-800 hover:bg-gray-300";
+            const data = [
+                header,
+                ...group.records.map(record => keys.map(key => record[key] ?? ''))
+            ];
+
+            return {
+                name: group.teamName,
+                hasHeaders: true,
+                headerStyle,
+                tabStyle,
+                data
+            };
+        })
+    ];
+    const config = {
+        showDownloadButton: true,
+        showCellAddress: true,
+        showSheetInfo: true,
+        maxHeight: "32rem",
+        cellWidth: "min-w-40",
+        theme: {
+            primary: "emerald",
+            headerBg: "slate-100",
+            cellBorder: "slate-300",
+            selectedCell: "emerald-100",
+            selectedBorder: "emerald-400"
+        },
+        styling: {
+            enableCellColors: true,
+            enableTabColors: true,
+            enableHeaderColors: true,
+            enableBorders: true,
+            enableHover: true
+        },
+        title: "Preview Data"
+    };
+    const handleDownload = (data, activeSheet) => {
+        downLoad();
+    };
+
+    const handleCellClick = (row, col, data, address) => {
+        console.log(`Cell clicked: ${address}`, {row, col, data});
+    };
+
+    const handleSheetChange = (sheetIndex, sheetData) => {
+        console.log(`Sheet changed to: ${sheetData.name}`);
+    };
+    return (
+        <>
+            <div className="space-y-6">
+                <ExcelPreview
+                    data={sampleData}
+                    config={config}
+                    onDownload={handleDownload}
+                    onCellClick={handleCellClick}
+                />
+            </div>
+        </>
+    )
 }

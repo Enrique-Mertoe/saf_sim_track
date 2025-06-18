@@ -1,0 +1,105 @@
+🚀 Key Features
+1. Fully Configurable Props
+javascript<ExcelPreview
+  data={yourData}           // Your sheet data
+  config={customConfig}     // Styling & behavior config
+  onDownload={handleDownload}  // Download callback
+  onCellClick={handleCellClick} // Cell click callback
+  onSheetChange={handleSheetChange} // Sheet change callback
+  className="custom-class"  // Additional CSS classes
+/>
+2. Advanced Data Structure Support
+javascriptconst data = [
+  {
+    name: "Sheet Name",
+    hasHeaders: true,
+    headerStyle: "bg-blue-100 font-bold text-blue-800", // Custom header styling
+    tabStyle: "bg-blue-200 text-blue-800",              // Custom tab styling
+    data: [
+      ["Header1", "Header2"],
+      ["Value1", { value: "Styled Value", style: "bg-green-100 text-green-800" }]
+    ]
+  }
+];
+3. Comprehensive Configuration Options
+javascriptconst config = {
+  // UI Controls
+  showDownloadButton: true,
+  showCellAddress: true,
+  showSheetInfo: true,
+  maxHeight: "32rem",
+  cellWidth: "min-w-40",
+  
+  // Theme System
+  theme: {
+    primary: "emerald",           // Button colors
+    headerBg: "slate-100",        // Header background
+    cellBorder: "slate-300",      // Border colors
+    selectedCell: "emerald-100",  // Selected cell bg
+    selectedBorder: "emerald-400" // Selected cell border
+  },
+  
+  // Styling Capabilities
+  styling: {
+    enableCellColors: true,    // Individual cell styling
+    enableTabColors: true,     // Custom tab colors
+    enableHeaderColors: true,  // Custom header styling
+    enableBorders: true,       // Show/hide borders
+    enableHover: true         // Hover effects
+  }
+};
+🎨 Styling Capabilities
+1. Cell-Level Styling
+javascript// Individual cell with custom style
+{ value: "High Priority", style: "bg-red-100 text-red-800 font-bold" }
+2. Header Styling
+javascriptheaderStyle: "bg-purple-100 font-bold text-purple-800 border-2 border-purple-300"
+3. Tab Styling
+javascripttabStyle: "bg-gradient-to-r from-blue-400 to-purple-500 text-white hover:from-blue-500"
+4. Theme Colors
+
+Support for any Tailwind color: blue, red, green, purple, emerald, slate, etc.
+
+📊 Callback Functions
+1. Download Handler
+javascriptconst handleDownload = (allData, currentSheetIndex) => {
+  const currentSheet = allData[currentSheetIndex];
+  // Your Excel generation logic here
+  generateExcel(currentSheet);
+};
+2. Cell Click Handler
+javascriptconst handleCellClick = (rowIndex, colIndex, cellData, cellAddress) => {
+  console.log(`Clicked cell ${cellAddress}:`, cellData);
+  // Custom cell interaction logic
+};
+3. Sheet Change Handler
+javascriptconst handleSheetChange = (sheetIndex, sheetData) => {
+  console.log(`Switched to: ${sheetData.name}`);
+  // Track sheet navigation
+};
+🛠 Usage Examples
+Basic Usage
+javascript<ExcelPreview data={yourSheets} />
+With Custom Theme
+javascript<ExcelPreview
+  data={sheets}
+  config={{
+    theme: { primary: "purple" },
+    maxHeight: "40rem"
+  }}
+/>
+With All Features
+javascript<ExcelPreview
+  data={coloredSheets}
+  config={{
+    styling: {
+      enableCellColors: true,
+      enableTabColors: true,
+      enableHeaderColors: true
+    },
+    theme: { primary: "emerald" }
+  }}
+  onDownload={handleDownload}
+  onCellClick={handleCellClick}
+  className="my-custom-class"
+/>

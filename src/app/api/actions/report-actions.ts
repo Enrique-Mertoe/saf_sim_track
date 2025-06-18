@@ -1,9 +1,11 @@
 import {makeResponse} from "@/helper";
 import Accounts from "@/lib/accounts";
-import {SIMCard, SIMStatus, User} from "@/models";
+import {SIMCard, SIMStatus, Team, User} from "@/models";
 import {generateTeamReports} from "@/app/dashboard/report/utils/reportGenerator";
 import {DateTime} from "luxon";
 import simService from "@/services/simService";
+import {supabaseAdmin} from "@/lib/supabase/server";
+import {admin_id} from "@/services/helper";
 
 class ReportActions {
     static async generate_excel_report(data: any) {
@@ -11,30 +13,60 @@ class ReportActions {
             // Get the current user
             const user = await Accounts.user();
             if (!user) {
-                return makeResponse({ error: "User not authenticated" });
+                return makeResponse({error: "User not authenticated"});
             }
 
-            const { startDate, endDate } = data;
+            const {startDate, endDate} = data;
 
             // Fetch SIM cards data with date filters
-            const simCards = await ReportActions.fetchSimCards(user, startDate, endDate);
+            const simCards = (await ReportActions.fetchSimCards(user, startDate, endDate))
+                .map(sim => ({
+                    simSerialNumber: sim.serial_number,
+                    dateId: sim.created_at,
+                    topUpAmount: sim.top_up_amount,
+                    bundleAmount: '-',
+                    bundlePurchaseDate: '-',
+                    agentMSISDN: '-',
+                    ba: sim.ba_msisdn,
+                    //@ts-ignore
+                    mobigo: sim.mobigo,
+                    team_id: sim.team_id,
+                    cumulativeUsage: parseFloat(sim.usage ?? '') || 0,
+                    quality: sim.quality === SIMStatus.QUALITY ? 'Y' : 'N',
+                }));
 
             // Process the data for the report
             const processedReport = await ReportActions.processReportData(simCards, user);
-
+            const cols = [
+                {header: 'Serial', key: 'simSerialNumber', width: 25},
+                {header: 'Team', key: 'team', width: 25},
+                {header: 'Activation Date', key: 'activationDate', width: 18},
+                {header: 'Top Up Date', key: 'topUpDate', width: 15},
+                {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
+                {header: 'Usage', key: 'cumulativeUsage', width: 15},
+                {header: 'BA', key: 'ba', width: 15},
+                {header: 'Till/Mobigo', key: 'mobigo', width: 15},
+                {header: 'Quality', key: 'quality', width: 15},
+            ];
             // Generate the Excel report
-            const report = await generateTeamReports(processedReport as any);
-
+            const report = await generateTeamReports(processedReport as any,
+                    cols
+                )
+            ;
             return makeResponse({
                 ok: true,
                 data: {
-                    buffer: report.rawData
+                    buffer: Buffer.from(report.rawData).toString('base64'),
+                    raw: {
+                        data: processedReport,
+                        cols
+                    }
                 },
                 message: "Excel report generated successfully"
             });
         } catch (error) {
             console.error("Error generating Excel report:", error);
-            return makeResponse({ error: (error as Error).message });
+            return makeResponse({error: (error as Error).message});
         }
     }
 
@@ -43,16 +75,17 @@ class ReportActions {
             // Get the current user
             const user = await Accounts.user();
             if (!user) {
-                return makeResponse({ error: "User not authenticated" });
+                return makeResponse({error: "User not authenticated"});
             }
 
-            const { startDate, endDate, teamId, teamName } = data;
+            const {startDate, endDate, teamId, teamName} = data;
 
             // Fetch SIM cards data with date filters
             const simCards = await ReportActions.fetchSimCards(user, startDate, endDate);
 
+
             // Filter by team
-            const teamSimCards = simCards.filter((sim: any) => 
+            const teamSimCards = simCards.filter((sim: any) =>
                 sim.team_id && sim.team_id.id === teamId
             );
 
@@ -71,7 +104,7 @@ class ReportActions {
             });
         } catch (error) {
             console.error("Error generating team Excel report:", error);
-            return makeResponse({ error: (error as Error).message });
+            return makeResponse({error: (error as Error).message});
         }
     }
 
@@ -81,9 +114,9 @@ class ReportActions {
         const dateEnd = DateTime.fromISO(endDate).endOf('day');
 
         // Fetch SIM cards using the simService
-        return await new Promise<SIMCard[]>((resolve) => {
-            const cards: SIMCard[] = [];
-            simService.streamChunks(user, (simCards, end) => {
+        return await new Promise<(SIMCard & { team: Team })[]>((resolve) => {
+            const cards: any = [];
+            simService.streamChunks<{ team: Team }>(user, (simCards, end) => {
                 cards.push(...simCards);
                 if (end) {
                     resolve(cards);
@@ -102,20 +135,29 @@ class ReportActions {
     // Helper method to process report data
     private static async processReportData(simCards: any[], user: User) {
         // Group SIM cards by team
-        const teamGroups: { [key: string]: any } = {};
+        const teamGroups: { [teamName: string]: { quality: any[]; nonQuality: any[] } } = {};
         const unknownSims: any[] = [];
 
-        simCards.forEach((sim: any) => {
-            const teamName = sim.team_id && sim.team_id.name ? sim.team_id.name : 'Unknown';
+        // Get all team records for name lookup
+        const {data: teams, error} = await supabaseAdmin
+            .from('teams')
+            .select('*, users!leader_id(*)').eq('admin_id', await admin_id(user));
+
+        // Create a fast lookup map from team ID to name
+        const teamMap = new Map<string, string>();
+        for (const team of teams ?? []) {
+            teamMap.set(team.id, team.name);
+        }
+
+        for (const sim of simCards) {
+            const teamName = teamMap.get(sim.team_id) || 'Unknown';
+            sim.team = teamName;
 
             if (teamName === 'Unknown') {
                 unknownSims.push(sim);
             } else {
                 if (!teamGroups[teamName]) {
-                    teamGroups[teamName] = {
-                        quality: [],
-                        nonQuality: []
-                    };
+                    teamGroups[teamName] = {quality: [], nonQuality: []};
                 }
 
                 if (sim.quality === SIMStatus.QUALITY) {
@@ -124,9 +166,9 @@ class ReportActions {
                     teamGroups[teamName].nonQuality.push(sim);
                 }
             }
-        });
+        }
 
-        // Create team reports
+        // Build the team reports
         const teamReports = Object.entries(teamGroups).map(([teamName, data]) => {
             const qualityCount = data.quality.length;
             const nonQualityCount = data.nonQuality.length;
@@ -134,13 +176,13 @@ class ReportActions {
 
             return {
                 teamName,
-                records: [...data.quality, ...data.nonQuality],
+                records: [...data.quality, ...data.nonQuality].filter(r => r.quality == "N"),
                 qualityCount,
                 matchedCount: totalCount
             };
         });
 
-        // Add unknown team if needed
+        // Add unknown team report
         if (unknownSims.length > 0) {
             teamReports.push({
                 teamName: 'Unknown',
@@ -162,6 +204,7 @@ class ReportActions {
         };
     }
 
+
     static async builder(target: string, data: any) {
         try {
             const action = (ReportActions as any)[target];
@@ -171,7 +214,7 @@ class ReportActions {
                 throw new Error(`Action '${target}' is not a function`);
             }
         } catch (error) {
-            return makeResponse({ error: (error as Error).message });
+            return makeResponse({error: (error as Error).message});
         }
     }
 }
