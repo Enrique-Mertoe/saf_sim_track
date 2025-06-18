@@ -172,12 +172,13 @@ export default function TeamSIMAnalysisPage() {
                 ...(dateConditions)]).then(res => {
                 setNonQualityUnref(res.count ?? 0)
             })
-            const [reg, qlty, mtc] = await Promise.all([
+            const [reg, qlty, mtc, stock] = await Promise.all([
                 simService.countActivated(user, [
                     ...dateConditions
                 ]),
                 simService.countActivated(user, [["quality", SIMStatus.QUALITY], ...(dateConditions)]),
                 simService.countActivated(user, [["assigned_to_user_id", "is", null], ['batch_id', "neq", 'BATCH-UNKNOWN'], ...dateConditions]),
+                simService.countAll(user, [["registered_on", "is", null], ['batch_id', "neq", 'BATCH-UNKNOWN']]),
             ]);
 
             // Process team data
@@ -208,6 +209,7 @@ export default function TeamSIMAnalysisPage() {
                 matched: unassigned,
                 matchRate: parseFloat(matchRate),
                 quality,
+                stock: stock.count ?? 0,
                 qualityRate: parseFloat(qualityRate),
                 nonQuality,
                 unknown,
@@ -540,8 +542,10 @@ export default function TeamSIMAnalysisPage() {
                                         <p className="text-xl font-bold text-gray-900 dark:text-white">{teamData.totalRecorded.toLocaleString()}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Match Rate</p>
-                                        <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.matchRate}%</p>
+                                        <span className={"flex"}>
+                                            <p className="text-sm rounded-full px-4 py-1text-amber-500 bg-amber-100 dark:text-amber-700">Stock</p>
+                                        </span>
+                                        <p className="text-xl font-bold text-green-600 dark:text-green-400">{teamData.stock}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">Quality</p>
