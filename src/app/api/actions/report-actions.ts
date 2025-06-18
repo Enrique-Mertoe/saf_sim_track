@@ -1,4 +1,4 @@
-import {makeResponse} from "@/helper";
+import {Filter, makeResponse} from "@/helper";
 import Accounts from "@/lib/accounts";
 import {SIMCard, SIMStatus, Team, User} from "@/models";
 import {generateTeamReports} from "@/app/dashboard/report/utils/reportGenerator";
@@ -19,21 +19,7 @@ class ReportActions {
             const {startDate, endDate} = data;
 
             // Fetch SIM cards data with date filters
-            const simCards = (await ReportActions.fetchSimCards(user, startDate, endDate))
-                .map(sim => ({
-                    simSerialNumber: sim.serial_number,
-                    dateId: sim.created_at,
-                    topUpAmount: sim.top_up_amount,
-                    bundleAmount: '-',
-                    bundlePurchaseDate: '-',
-                    agentMSISDN: '-',
-                    ba: sim.ba_msisdn,
-                    //@ts-ignore
-                    mobigo: sim.mobigo,
-                    team_id: sim.team_id,
-                    cumulativeUsage: parseFloat(sim.usage ?? '') || 0,
-                    quality: sim.quality === SIMStatus.QUALITY ? 'Y' : 'N',
-                }));
+            const simCards = await ReportActions.fetchSimCards(user, startDate, endDate);
 
             // Process the data for the report
             const processedReport = await ReportActions.processReportData(simCards, user);
@@ -81,24 +67,30 @@ class ReportActions {
             const {startDate, endDate, teamId, teamName} = data;
 
             // Fetch SIM cards data with date filters
-            const simCards = await ReportActions.fetchSimCards(user, startDate, endDate);
-
-
-            // Filter by team
-            const teamSimCards = simCards.filter((sim: any) =>
-                sim.team_id && sim.team_id.id === teamId
-            );
+            const teamSimCards = await ReportActions.fetchSimCards(user, startDate, endDate, [
+                ["team_id", teamId]
+            ]);
 
             // Process the data for the report
             const processedReport = await ReportActions.processReportData(teamSimCards, user);
-
+            const cols = [
+                {header: 'Serial', key: 'simSerialNumber', width: 25},
+                {header: 'Team', key: 'team', width: 25},
+                {header: 'Activation Date', key: 'activationDate', width: 18},
+                {header: 'Top Up Date', key: 'topUpDate', width: 15},
+                {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
+                {header: 'Usage', key: 'cumulativeUsage', width: 15},
+                {header: 'BA', key: 'ba', width: 15},
+                {header: 'Till/Mobigo', key: 'mobigo', width: 15},
+                {header: 'Quality', key: 'quality', width: 15},
+            ]
             // Generate the Excel report
-            const report = await generateTeamReports(processedReport as any);
+            const report = await generateTeamReports(processedReport as any, cols);
 
             return makeResponse({
                 ok: true,
                 data: {
-                    buffer: report.rawData
+                    buffer: Buffer.from(report.rawData).toString('base64'),
                 },
                 message: `Excel report for team ${teamName} generated successfully`
             });
@@ -109,7 +101,7 @@ class ReportActions {
     }
 
     // Helper method to fetch SIM cards with date filters
-    private static async fetchSimCards(user: User, startDate: string, endDate: string) {
+    private static async fetchSimCards(user: User, startDate: string, endDate: string, filters: Filter[] = []) {
         const dateStart = DateTime.fromISO(startDate).startOf('day');
         const dateEnd = DateTime.fromISO(endDate).endOf('day');
 
@@ -119,14 +111,28 @@ class ReportActions {
             simService.streamChunks<{ team: Team }>(user, (simCards, end) => {
                 cards.push(...simCards);
                 if (end) {
-                    resolve(cards);
+                    resolve(cards.map((sim: any) => ({
+                        simSerialNumber: sim.serial_number,
+                        dateId: sim.created_at,
+                        topUpAmount: sim.top_up_amount,
+                        bundleAmount: '-',
+                        bundlePurchaseDate: '-',
+                        agentMSISDN: '-',
+                        ba: sim.ba_msisdn,
+                        //@ts-ignore
+                        mobigo: sim.mobigo,
+                        team_id: sim.team_id,
+                        cumulativeUsage: parseFloat(sim.usage ?? '') || 0,
+                        quality: sim.quality === SIMStatus.QUALITY ? 'Y' : 'N',
+                    })));
                 }
             }, {
                 filters: [
                     ["activation_date", "not", "is", null],
                     ["status", SIMStatus.ACTIVATED],
                     ["activation_date", "gte", dateStart.toISO()],
-                    ["activation_date", "lte", dateEnd.toISO()]
+                    ["activation_date", "lte", dateEnd.toISO()],
+                    ...filters
                 ]
             });
         });

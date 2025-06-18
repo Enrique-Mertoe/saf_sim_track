@@ -247,7 +247,7 @@ const ExcelPreview = ({
                     {mergedConfig.showDownloadButton && (
                         <button
                             onClick={handleDownload}
-                            className={`flex items-center space-x-2 bg-${theme.primary}-600 hover:bg-${theme.primary}-700 text-white px-4 py-1 rounded-full transition-colors`}
+                            className={`flex disabled:bg-gray-200 items-center space-x-2 bg-${theme.primary}-600 hover:bg-${theme.primary}-700 text-white px-4 py-1 rounded-full transition-colors`}
                         >
                             <Download className="w-4 h-4"/>
                             <span>Download Excel</span>

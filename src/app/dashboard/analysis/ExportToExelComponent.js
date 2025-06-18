@@ -168,9 +168,12 @@ export default function ExportToExelComponent({
                 if (error) throw new Error(error);
 
                 // Create a Blob from the buffer
-                const buffer = data.buffer;
-                const blob = new Blob([buffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-
+                // const buffer = data.buffer;
+                // const blob = new Blob([buffer], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+                const byteArray = Uint8Array.from(atob(data.buffer), c => c.charCodeAt(0));
+                const blob = new Blob([byteArray], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
                 // Create a download link
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
