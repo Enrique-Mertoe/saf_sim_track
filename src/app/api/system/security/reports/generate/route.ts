@@ -158,7 +158,7 @@ async function generateThreatIntelligenceReport(timeRange: string) {
 
 
 // Generate compliance report (SOC2, ISO27001, etc.)
-export async function generateComplianceReport(timeRange: string) {
+async function generateComplianceReport(timeRange: string) {
     const startDate = getStartDate(timeRange);
     const endDate = new Date().toISOString();
 
@@ -309,7 +309,7 @@ export async function generateComplianceReport(timeRange: string) {
 }
 
 // Generate PDF report from data
-export async function generatePDFReport(data: any, reportType: string): Promise<Buffer> {
+async function generatePDFReport(data: any, reportType: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         try {
             const doc = new PDFDocument({margin: 50});
@@ -460,7 +460,7 @@ export async function generatePDFReport(data: any, reportType: string): Promise<
 }
 
 // Generate Excel report from data
-export async function generateExcelReport(data: any, reportType: string): Promise<Buffer> {
+async function generateExcelReport(data: any, reportType: string): Promise<Buffer> {
     try {
         const workbook = XLSX.utils.book_new();
 
@@ -537,7 +537,7 @@ export async function generateExcelReport(data: any, reportType: string): Promis
 // DATE AND TIME UTILITIES
 // =============================================
 
-export function getStartDate(timeRange: string): string {
+function getStartDate(timeRange: string): string {
     const now = new Date();
     let startDate: Date;
 
@@ -568,7 +568,7 @@ export function getStartDate(timeRange: string): string {
 // DATA ANALYSIS FUNCTIONS
 // =============================================
 
-export async function generateExecutiveSummary(metrics: any) {
+async function generateExecutiveSummary(metrics: any) {
     if (!metrics) return 'No data available for the selected period.';
 
     const {
@@ -600,7 +600,7 @@ The security posture remains ${activeThreats > 10 ? 'elevated' : 'stable'} with 
   `.trim();
 }
 
-export async function getThreatLandscapeData(startDate: string) {
+async function getThreatLandscapeData(startDate: string) {
     try {
         const {data: threatData} = await supabaseAdmin.rpc('get_threat_landscape_analysis', {
             start_date: startDate
@@ -644,7 +644,7 @@ export async function getThreatLandscapeData(startDate: string) {
     }
 }
 
-export async function getIncidentOverviewData(startDate: string) {
+async function getIncidentOverviewData(startDate: string) {
     try {
         const {data: incidents} = await supabaseAdmin
             .from('security_incidents')
@@ -698,7 +698,7 @@ export async function getIncidentOverviewData(startDate: string) {
     }
 }
 
-export async function getPerformanceMetricsData(startDate: string) {
+async function getPerformanceMetricsData(startDate: string) {
     try {
         const {data: performanceData} = await supabaseAdmin.rpc('get_performance_metrics', {
             start_date: startDate
@@ -744,7 +744,7 @@ export async function getPerformanceMetricsData(startDate: string) {
     }
 }
 
-export async function generateSecurityRecommendations(metrics: any) {
+async function generateSecurityRecommendations(metrics: any) {
     const recommendations = [];
 
     if (!metrics) {
@@ -804,7 +804,7 @@ export async function generateSecurityRecommendations(metrics: any) {
 // STATISTICAL AND ANALYTICAL FUNCTIONS
 // =============================================
 
-export function groupBy<T>(array: T[], key: string): Record<string, T[]> {
+function groupBy<T>(array: T[], key: string): Record<string, T[]> {
     return array.reduce((groups, item) => {
         const group = (item as any)[key] || 'unknown';
         groups[group] = groups[group] || [];
@@ -813,7 +813,7 @@ export function groupBy<T>(array: T[], key: string): Record<string, T[]> {
     }, {} as Record<string, T[]>);
 }
 
-export function calculateAverageResolutionTime(incidents: any[]): number {
+function calculateAverageResolutionTime(incidents: any[]): number {
     if (!incidents || incidents.length === 0) return 0;
 
     const resolvedIncidents = incidents.filter(incident =>
@@ -832,7 +832,7 @@ export function calculateAverageResolutionTime(incidents: any[]): number {
     return Math.round(totalResolutionTime / resolvedIncidents.length / (1000 * 60));
 }
 
-export async function analyzeTrends(incidents: any[]) {
+async function analyzeTrends(incidents: any[]) {
     if (!incidents || incidents.length === 0) {
         return {
             overall: 'stable',
@@ -890,7 +890,7 @@ export async function analyzeTrends(incidents: any[]) {
     };
 }
 
-export function getTopAttackVectors(incidents: any[]): Array<{ vector: string, count: number, percentage: number }> {
+function getTopAttackVectors(incidents: any[]): Array<{ vector: string, count: number, percentage: number }> {
     if (!incidents || incidents.length === 0) return [];
 
     const vectorCounts = incidents.reduce((counts, incident) => {
@@ -913,7 +913,7 @@ export function getTopAttackVectors(incidents: any[]): Array<{ vector: string, c
         .slice(0, 10); // Top 10
 }
 
-export function generateIncidentRecommendations(analysis: {
+function generateIncidentRecommendations(analysis: {
     totalIncidents: number;
     avgResolutionTime: number;
     bySeverity: Record<string, any[]>;
@@ -1196,7 +1196,7 @@ async function checkDataRetentionCompliance() {
 // TOP THREATS ANALYSIS
 // =============================================
 
-export async function getTopThreats(startDate: string) {
+async function getTopThreats(startDate: string) {
     try {
         const endDate = new Date().toISOString();
 
@@ -1357,7 +1357,7 @@ export async function getTopThreats(startDate: string) {
 // GEOGRAPHIC THREAT ANALYSIS
 // =============================================
 
-export async function getGeographicThreatAnalysis(startDate: string) {
+async function getGeographicThreatAnalysis(startDate: string) {
     try {
         const endDate = new Date().toISOString();
 
@@ -1517,7 +1517,7 @@ export async function getGeographicThreatAnalysis(startDate: string) {
 // ATTACK PATTERN ANALYSIS
 // =============================================
 
-export async function getAttackPatternAnalysis(startDate: string) {
+async function getAttackPatternAnalysis(startDate: string) {
     try {
         const endDate = new Date().toISOString();
 
@@ -1588,7 +1588,7 @@ export async function getAttackPatternAnalysis(startDate: string) {
 // INDICATORS OF COMPROMISE (IOC)
 // =============================================
 
-export async function getIndicatorsOfCompromise(startDate: string) {
+async function getIndicatorsOfCompromise(startDate: string) {
     try {
         const endDate = new Date().toISOString();
 
