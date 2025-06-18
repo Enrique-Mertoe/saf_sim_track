@@ -1,9 +1,9 @@
 "use client"
 import React, {useState} from 'react';
 import {AlertTriangle, Bell, Brain} from 'lucide-react';
-import {IncidentManagementDashboard} from "./incident";
-import {AnomalyDetectionDashboard} from "./analystics";
-import AlertManagementCenter from "./alertmanagement";
+import {IncidentManagementDashboard} from "../incident";
+import {AnomalyDetectionDashboard} from "../analystics";
+import AlertManagementCenter from "../alertmanagement";
 
 
 // =============================================
