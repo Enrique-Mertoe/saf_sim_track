@@ -118,7 +118,7 @@ interface RequestInterface<T> {
     complete?: () => void;
 }
 
-type DeferredObject<T> = {
+export interface DeferredObject<T> {
     then: (fn: (response: RequestResponse<T>) => void) => DeferredObject<T>;
     catch: (fn: (error: RequestError) => void) => DeferredObject<T>;
     done: (fn: () => void) => DeferredObject<T>;
@@ -232,7 +232,7 @@ export const $ = {
     post,
     get,
     ajax,
-    JSON: "application/json"
+    JSON: "application/json",
 }
 
 export default request;

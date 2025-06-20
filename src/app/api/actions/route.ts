@@ -6,6 +6,9 @@ import SimActions from "@/app/api/actions/sim-actions";
 import ReportActions from "@/app/api/actions/report-actions";
 import {createSuperClient} from "@/lib/supabase/server";
 import Accounts from "@/lib/accounts";
+import UserActions from "@/app/api/actions/user-actions";
+import TeamActions from "@/app/api/actions/team-actions";
+import BatchActions from "@/app/api/actions/batch-actions";
 
 // Profile actions class for handling user profile updates
 class ProfileActions {
@@ -81,6 +84,13 @@ class ApiHandler {
                 return await TransferActions.builder(target as string, data);
             case "sim":
                 return await SimActions.builder(target as string, data);
+            case "user":
+                return await UserActions.builder(target as string, data);
+
+            case "team":
+                return await TeamActions.builder(target as string, data);
+            case "batch":
+                return await BatchActions.builder(target as string, data);
             case "report":
                 return await ReportActions.builder(target as string, data);
             default:
