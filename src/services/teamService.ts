@@ -1,5 +1,5 @@
 import {createSupabaseClient} from "@/lib/supabase/client";
-import {TeamCreate, TeamUpdate, User, UserRole} from "@/models";
+import {SIMCard, TeamCreate, TeamUpdate, User, UserRole} from "@/models";
 import {admin_id} from "@/services/helper";
 import {applyFilters, Filter} from "@/helper";
 
@@ -57,6 +57,23 @@ export const teamService = {
         let query = applyFilters(supabase
             .from('teams')
             .select('*, users!leader_id(*)').eq('admin_id', await admin_id(user)), filters, false);
+
+
+        return query.order('name');
+    },
+    getAllTeamsV2: async <T extends object = {}>(user: User, options: {
+        chunkSize?: number,
+        selection?: ((keyof (SIMCard & T)) | string)[],
+        filters?: Filter[]
+    } = {}) => {
+        const supabase = createSupabaseClient();
+        const filters = options.filters ?? [];
+        const selection = options.selection ?? [];
+        // Base query
+        let query = applyFilters(supabase
+            .from('teams')
+            .select(['*', 'users!leader_id(*)', ...selection].join(','))
+            .eq('admin_id', await admin_id(user)), filters, false);
 
 
         return query.order('name');

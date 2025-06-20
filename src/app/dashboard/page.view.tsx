@@ -1,7 +1,6 @@
 "use client"
 import React, {useCallback, useEffect, useState} from 'react';
-import {Activity, Calendar, Home, Plus} from 'lucide-react';
-import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {Calendar, Home, Plus} from 'lucide-react';
 import {motion} from 'framer-motion';
 import Dashboard from "@/ui/components/dash/Dashboard";
 import {SIMStatus} from "@/models";
@@ -11,13 +10,15 @@ import Signal from "@/lib/Signal";
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
 import SIMActivationChart from './components/ActivationStatusChart';
-import TeamPerformanceChart from './components/TeamPerformanceChart';
+// import TeamPerformanceChart from './components/TeamPerformanceChart';
 import TimeActivityChart from './components/TimeActivityChart';
 import OverallStats from "@/app/dashboard/OverallStats";
 import Fixed from "@/ui/components/Fixed";
 import {useDimensions} from "@/ui/library/smv-ui/src/framework/utility/Screen";
 import {CreateUser} from "@/ui/shortcuts";
 import {useDialog} from "@/app/_providers/dialog";
+import SIMPerformanceChart from "@/app/dashboard/SIMPerformanceChart";
+import TeamPerformanceChart from "@/app/dashboard/TeamPerfomanceChart";
 
 export default function SafaricomDashboard() {
     const [role, setRole] = useState('admin');
@@ -235,56 +236,10 @@ export default function SafaricomDashboard() {
                                 initial={{opacity: 0, y: 20}}
                                 animate={{opacity: 1, y: 0}}
                                 transition={{duration: 0.6, delay: 0.1}}
-                                className="bg-white col-span-12 md:col-span-8 dark:bg-gray-800 p-2 rounded-lg shadow-md"
+                                className="col-span-12 md:col-span-8 "
                             >
-                                <h2 className="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
-                                    <Activity size={18} className="mr-2 text-indigo-600 dark:text-indigo-400"/>
-                                    SIM Sales & Activations
-                                </h2>
-                                <div className="h-72">
-                                    {loading ? (
-                                        <div className="h-full flex items-center justify-center">
-                                            <p className="text-gray-500 dark:text-gray-400">Loading chart data...</p>
-                                        </div>
-                                    ) : salesData.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={salesData}
-                                                       margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>
-                                                <XAxis dataKey="name" stroke="#888"/>
-                                                <YAxis stroke="#888"/>
-                                                <Tooltip
-                                                    contentStyle={{backgroundColor: '#ffffff', color: '#000000'}}
-                                                    wrapperStyle={{backgroundColor: 'transparent'}}
-                                                    labelStyle={{color: '#000000'}}
-                                                />
-                                                <Legend/>
-                                                <Line
-                                                    type="monotone"
-                                                    dataKey="sales"
-                                                    stroke="#4F46E5"
-                                                    strokeWidth={2}
-                                                    dot={{r: 4}}
-                                                    activeDot={{r: 6}}
-                                                    animationDuration={1500}
-                                                />
-                                                <Line
-                                                    type="monotone"
-                                                    dataKey="activations"
-                                                    stroke="#10B981"
-                                                    strokeWidth={2}
-                                                    dot={{r: 4}}
-                                                    activeDot={{r: 6}}
-                                                    animationDuration={1500}
-                                                />
-                                            </LineChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center">
-                                            <p className="text-gray-500 dark:text-gray-400">No data available</p>
-                                        </div>
-                                    )}
-                                </div>
+                                <SIMPerformanceChart user={user}/>
+
                             </motion.div>
 
                             {/* Quick Actions */}
@@ -298,9 +253,9 @@ export default function SafaricomDashboard() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                             {/* Activation Status Pie Chart */}
                             <SIMActivationChart/>
-
+                            <TeamPerformanceChart user={user}/>
                             {/* Team Performance Chart */}
-                            <TeamPerformanceChart data={teamPerformance} loading={loading}/>
+                            {/*<TeamPerformanceChart data={teamPerformance} loading={loading}/>*/}
                         </div>
 
                         {/* Time Activity Heatmap */}

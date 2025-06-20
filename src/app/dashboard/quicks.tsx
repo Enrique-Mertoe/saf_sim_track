@@ -152,39 +152,12 @@ export const UserStatistics: FC = () => {
     }, [user]);
 
     // Animation for counting up
-    const Counter: FC<CounterProps> = ({end, duration = 2000}) => {
-        const [count, setCount] = useState<number>(0);
 
-        useEffect(() => {
-            if (!animate) return;
-
-            let startTime: number | null = null;
-            let animationFrameId: number;
-
-            const step = (timestamp: number): void => {
-                if (!startTime) startTime = timestamp;
-                const progress = Math.min((timestamp - startTime) / duration, 1);
-                setCount(Math.floor(progress * end));
-
-                if (progress < 1) {
-                    animationFrameId = requestAnimationFrame(step);
-                }
-            };
-
-            animationFrameId = requestAnimationFrame(step);
-
-            return () => {
-                cancelAnimationFrame(animationFrameId);
-            };
-        }, [end, duration]);
-
-        return <span>{count}</span>;
-    };
 
     if (loading) {
         return (
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                <div className="flex justify-center items-center h-64">
+            <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md">
+                <div className="flex justify-center items-center ">
                     <div
                         className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 dark:border-indigo-400"></div>
                 </div>
@@ -198,58 +171,6 @@ export const UserStatistics: FC = () => {
     const progressStaff = totalUsers > 0 ? (userStats.staff / totalUsers) * 100 : 0;
     const progressActive = totalUsers > 0 ? (userStats.active / totalUsers) * 100 : 0;
 
-    const StatCard: FC<StatCardProps> = ({
-                                             index,
-                                             icon,
-                                             iconBg,
-                                             iconColor,
-                                             title,
-                                             subtitle,
-                                             value,
-                                             progress
-                                         }) => {
-        const cardClasses = `
-      transform transition-all duration-500 ease-out
-      ${cardVisible[index] ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
-      flex flex-col px-4 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500
-    `;
-
-        return (
-            <div className={cardClasses}>
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center">
-                        <div
-                            className={`p-2 ${iconBg.replace('bg-', 'bg-')} dark:${iconBg.replace('bg-', 'bg-').replace('100', '800')} rounded-full mr-4 transform transition-transform duration-300 hover:scale-110`}>
-                            {icon}
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">{title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
-                        </div>
-                    </div>
-                    <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                        <Counter end={value}/>
-                    </div>
-                </div>
-
-                <div className="mt-2">
-                    <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                        <div
-                            className={`h-2 rounded-full ${iconColor.replace('text', 'bg')}`}
-                            style={{
-                                width: `${progress}%`,
-                                transition: 'width 1.5s ease-in-out'
-                            }}
-                        ></div>
-                    </div>
-                    <div className="flex justify-end mt-1">
-                        <span
-                            className="text-xs text-gray-500 dark:text-gray-400">{Math.round(progress)}% of total</span>
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     return (
         <div
@@ -274,7 +195,9 @@ export const UserStatistics: FC = () => {
                     iconColor="text-blue-600 dark:text-blue-400"
                     title="Team Leaders"
                     subtitle="Management users"
+                    animate={animate}
                     value={userStats.teamLeaders}
+                    cardVisible={cardVisible}
                     progress={progressTeamLeaders}
                 />
 
@@ -286,8 +209,94 @@ export const UserStatistics: FC = () => {
                     title="Staff Users"
                     subtitle="Field agents"
                     value={userStats.staff}
+                    animate={animate}
                     progress={progressStaff}
+                    cardVisible={cardVisible}
                 />
+            </div>
+        </div>
+    );
+};
+
+const Counter: FC<CounterProps & {animate:any}> = ({end,animate, duration = 2000}:any) => {
+    const [count, setCount] = useState<number>(0);
+
+    useEffect(() => {
+        if (!animate) return;
+
+        let startTime: number | null = null;
+        let animationFrameId: number;
+
+        const step = (timestamp: number): void => {
+            if (!startTime) startTime = timestamp;
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            setCount(Math.floor(progress * end));
+
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(step);
+            }
+        };
+
+        animationFrameId = requestAnimationFrame(step);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [end, duration]);
+
+    return <span>{count}</span>;
+};
+
+const StatCard: FC<StatCardProps & {cardVisible:any,animate:any}> = ({
+                                         index,
+                                         icon,
+                                         iconBg,
+                                         iconColor,
+                                         title,
+                                         subtitle,
+                                         value,
+                                         progress,
+                                         cardVisible,
+                                                             animate
+                                     }) => {
+    const cardClasses = `
+      transform transition-all duration-500 ease-out
+      ${cardVisible[index] ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}
+      flex flex-col px-4 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600 hover:border-gray-200 dark:hover:border-gray-500
+    `;
+
+    return (
+        <div className={cardClasses}>
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                    <div
+                        className={`p-2 ${iconBg.replace('bg-', 'bg-')} dark:${iconBg.replace('bg-', 'bg-').replace('100', '800')} rounded-full mr-4 transform transition-transform duration-300 hover:scale-110`}>
+                        {icon}
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{title}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
+                    </div>
+                </div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <Counter animate={animate} end={value}/>
+                </div>
+            </div>
+
+            <div className="mt-2">
+                <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div
+                        className={`h-2 rounded-full ${iconColor.replace('text', 'bg')}`}
+                        style={{
+                            width: `${progress}%`,
+                            transition: 'width 1.5s ease-in-out'
+                        }}
+                    ></div>
+                </div>
+                <div className="flex justify-end mt-1">
+                        <span
+                            className="text-xs text-gray-500 dark:text-gray-400">{Math.round(progress)}% of total</span>
+                </div>
             </div>
         </div>
     );

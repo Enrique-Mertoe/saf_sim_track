@@ -64,8 +64,8 @@ const BreakdownItem: React.FC<BreakdownItemProps> = ({
             }
         };
 
-        fetchData();
-    }, [dataFetcher, label]);
+        fetchData().then();
+    }, []);
 
     if (isLoading) return <BreakdownSkeleton/>;
     if (error) return (
