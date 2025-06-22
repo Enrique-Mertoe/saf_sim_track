@@ -1,0 +1,424 @@
+SIM Card Management System Documentation
+System Overview
+The SIM Card Management System is a web-based application designed to track SIM card sales by various teams and match them against Safaricom activation reports. The system helps distributors monitor which sold SIM cards have been activated, their top-up status, and generates performance reports for team evaluation.
+Business Context
+The system is designed for Safaricom distributors who need to track SIM card sales across multiple sales teams. Teams record SIM cards they've sold, then later match these against official Safaricom reports to determine activation status and quality metrics. Each team has a leader responsible for onboarding new staff and monitoring their performance. The application tracks quality metrics and generates periodic reports.
+Key Workflow
+SIM Card Recording: Teams record serial numbers of SIM cards they've sold
+Report Upload: Admin/Team Leaders upload Safaricom reports containing activation data
+Matching Process: System matches recorded SIM serials against the report data
+Performance Tracking: System identifies "matched" SIMs (sold and activated) and "quality" SIMs (activated with top-up ≥ 50 KES)
+Reporting: System generates performance reports by team based on match rates and quality metrics
+System Architecture
+Recommended Stack
+Frontend: React.js with Tailwind CSS
+Backend: Node.js/Express.js or Django/Python
+Database: PostgreSQL or MongoDB
+Authentication: JWT with role-based access control
+File Storage: AWS S3 or equivalent for ID document storage
+Hosting: AWS, Azure, or similar cloud platform
+Data Model
+1. Users
+{
+  "userId": "UUID",
+  "fullName": "String",
+  "idNumber": "String",
+  "phoneNumber": "String",
+  "mobigoNumber": "String (if applicable)",
+  "role": "Enum [ADMIN, TEAM_LEADER, VAN_STAFF, MPESA_ONLY_AGENT, NON_MPESA_AGENT]",
+  "team": "Reference to Team (if applicable)",
+  "idFrontUrl": "String (URL to S3 storage)",
+  "idBackUrl": "String (URL to S3 storage)",
+  "status": "Enum [ACTIVE, SUSPENDED, PENDING_APPROVAL]",
+  "createdAt": "DateTime",
+  "createdBy": "Reference to User",
+  "lastLogin": "DateTime",
+  "vanNumber": "String (if applicable)",
+  "vanLocation": "String (if applicable)"
+}
+
+2. Teams
+{
+  "teamId": "UUID",
+  "teamName": "String",
+  "teamLeader": "Reference to User",
+  "region": "String (optional)",
+  "territory": "String (optional)",
+  "cluster": "String (optional)",
+  "createdAt": "DateTime",
+  "status": "Enum [ACTIVE, INACTIVE]"
+}
+
+3. SIM Cards
+{
+  "simId": "UUID",
+  "simSerialNumber": "String",
+  "recordedBy": "Reference to User",
+  "recordedByTeam": "Reference to Team",
+  "recordedDate": "DateTime",
+  "matchStatus": "Enum [UNMATCHED, MATCHED]",
+  "qualityStatus": "Enum [NOT_QUALITY, QUALITY]",
+
+  // Fields populated after matching with Safaricom report
+  "dealer": {
+    "shortcode": "String",
+    "name": "String"
+  },
+  "activationDate": "DateTime",
+  "agentMSISDN": "String",
+  "baMSISDN": "String",
+  "topUp": {
+    "date": "DateTime",
+    "amount": "Number"
+  },
+  "bundlePurchase": {
+    "date": "DateTime",
+    "amount": "Number"
+  },
+  "usage": "Number",
+  "commission": "Number",
+  "fraudDetails": {
+    "flagged": "Boolean",
+    "suspensionDate": "DateTime",
+    "reason": "String"
+  },
+  "region": "String",
+  "territory": "String",
+  "cluster": "String",
+  "role": "String",
+  "createdAt": "DateTime",
+  "updatedAt": "DateTime"
+}
+
+4. Report Uploads
+{
+  "reportId": "UUID",
+  "uploadedBy": "Reference to User",
+  "uploadDate": "DateTime",
+  "fileUrl": "String",
+  "reportPeriod": {
+    "startDate": "DateTime",
+    "endDate": "DateTime"
+  },
+  "processingStatus": "Enum [PROCESSING, COMPLETED, FAILED]",
+  "totalRecords": "Number",
+  "matchedRecords": "Number",
+  "qualityRecords": "Number"
+}
+
+5. User Onboarding Requests
+{
+  "requestId": "UUID",
+  "requestType": "Enum [ONBOARDING, DELETION]",
+  "requestedBy": "Reference to User",
+  "targetUser": "Reference to User (if deletion)",
+  "userData": {
+    "fullName": "String",
+    "idNumber": "String",
+    "phoneNumber": "String",
+    "mobigoNumber": "String",
+    "role": "String",
+    "team": "Reference to Team"
+  },
+  "idFrontUrl": "String",
+  "idBackUrl": "String",
+  "status": "Enum [PENDING, APPROVED, REJECTED]",
+  "reviewedBy": "Reference to User",
+  "reviewDate": "DateTime",
+  "createdAt": "DateTime"
+}
+
+6. Activity Logs
+{
+  "logId": "UUID",
+  "userId": "Reference to User",
+  "action": "String",
+  "details": "String",
+  "ipAddress": "String",
+  "timestamp": "DateTime"
+}
+
+User Roles and Permissions
+1. Admin
+Onboard/delete team leaders or any other user
+Approve onboarding/deletion requests from team leaders
+View team leader login activities
+Suspend/unsuspend team leaders
+Upload Safaricom reports and trigger matching process
+View recorded SIM serials by different teams
+Generate and view performance reports
+Access system-wide dashboard
+2. Team Leader
+Submit onboarding/deletion requests for staff
+Record SIM serial numbers or upload batch files
+Upload team-specific Safaricom reports
+View serials recorded by their team members
+Track team performance metrics
+View individual staff performance
+Generate team-specific reports
+3. Van Staff / MpesaOnlyAgent / NonMpesaAgent
+Record SIM card serial numbers
+View personal performance metrics
+View assigned tasks
+Core System Features
+SIM Card Recording Module
+SIM Serial Recording
+
+
+Record individual SIM serial numbers
+Bulk upload via CSV/Excel
+QR code scanning option for fast entry
+Data validation and error handling
+Registered SIM Cards Page
+
+
+List of recorded SIM cards with filters
+Status indicators (matched/unmatched, quality/non-quality)
+Search and filter capabilities
+Export functionality
+Report Upload and Matching Module
+Safaricom Report Upload
+
+
+Upload interface for Safaricom reports
+File validation and error handling
+Processing status tracking
+Matching statistics display
+Matching Process
+
+
+Automatic matching of recorded serials against report data
+Status update for matched SIMs
+Quality determination based on top-up amount (≥ 50 KES)
+Match result summary
+Reporting Module
+Performance Reports
+
+
+Team performance summaries
+Match rates and quality percentages
+Individual staff metrics
+Comparison across teams
+Operational Reports
+
+
+SIM activation rates
+Top-up patterns
+Regional performance breakdown
+Quality metrics over time
+Export Capabilities
+
+
+Excel/CSV export options
+PDF report generation
+Customizable report templates
+API Endpoints
+Authentication
+POST /api/auth/login - User login
+POST /api/auth/logout - User logout
+POST /api/auth/reset-password - Password reset request
+PUT /api/auth/change-password - Change password
+User Management
+POST /api/users - Create new user
+GET /api/users - List all users (with filtering)
+GET /api/users/{userId} - Get user details
+PUT /api/users/{userId} - Update user
+DELETE /api/users/{userId} - Delete user
+PUT /api/users/{userId}/status - Change user status
+Team Management
+POST /api/teams - Create new team
+GET /api/teams - List all teams
+GET /api/teams/{teamId} - Get team details
+PUT /api/teams/{teamId} - Update team
+GET /api/teams/{teamId}/members - List team members
+GET /api/teams/{teamId}/performance - Get team performance
+SIM Card Management
+POST /api/sim-cards - Record new SIM serial
+POST /api/sim-cards/bulk - Bulk SIM serial recording
+GET /api/sim-cards - List SIM cards (with filtering)
+GET /api/sim-cards/{simId} - Get SIM details
+PUT /api/sim-cards/{simId} - Update SIM details
+GET /api/sim-cards/metrics - Get SIM metrics
+Report Upload and Matching
+POST /api/reports/upload - Upload Safaricom report
+GET /api/reports - List report uploads
+GET /api/reports/{reportId} - Get report details
+POST /api/reports/{reportId}/process - Process/match report
+GET /api/reports/{reportId}/results - Get matching results
+Performance Reports
+GET /api/performance/team - Get team performance report
+GET /api/performance/quality-metrics - Get quality metrics report
+GET /api/performance/match-trends - Get match rate trends
+POST /api/performance/custom - Generate custom report
+File Formats and Data Import/Export
+SIM Card Data Import Format
+The system should accept CSV/Excel files with a list of SIM card serial numbers:
+Sim Serial Number
+89254021374259301001
+89254021374259301002
+...
+
+Safaricom Report Import Format
+The system should accept CSV/Excel files with the following columns:
+TM Date, ID Date, ID Month, Dealer Shortcode, Dealer Name, Sim Serial Number,
+Top Up Date, Top Up Amount, Agent MSISDN, BA MSISDN, Region, Territory,
+Cluster, Cumulative Usage, Cumulative Commission, Fraud Flagged,
+Fraud Suspension Date, Fraud Reason, Role, Quality
+
+Performance Report Export Format
+The system should export performance reports in Excel format with the following structure:
+Team | Total Recorded | Matched | Match Rate | Quality | Quality Rate | Comment
+-----------------------------------------------------------------------------------
+Team A | 2800 | 2608 | 93.14% | 2365 | 90.68% | Improve
+Team B | 2000 | 1865 | 93.25% | 1702 | 91.26% | Improve
+Team C | 2900 | 2674 | 92.21% | 2508 | 93.79% | Well done
+
+User Interfaces
+Registered SIM Cards Page
+Key components:
+SIM serial number list with pagination
+Status indicators (Matched/Unmatched, Quality/Non-Quality)
+Filters (by team, date range, status)
+Search functionality
+Bulk actions
+Export option
+Report Upload Interface
+Key components:
+File upload area
+Report period selection
+Processing status indicator
+Match results summary
+Error display (if applicable)
+Team Performance Dashboard
+Key components:
+Match rate metrics
+Quality percentage tracker
+Performance over time charts
+Team comparison graphs
+Individual staff performance table
+Data Processing Logic
+Matching Logic
+A SIM card is considered "Matched" when:
+Its serial number exists in both the system's recorded SIMs and the Safaricom report
+Quality Determination Logic
+A SIM card is considered "Quality" when:
+It has been matched (exists in Safaricom report)
+A top-up has been performed
+The top-up amount is at least 50 KES
+No fraud flags are present
+Performance Calculation
+Team match rate is calculated as:
+Match Rate % = (Matched SIMs / Total Recorded SIMs) * 100
+Team quality rate is calculated as:
+Quality Rate % = (Quality SIMs / Matched SIMs) * 100
+Performance Rating Logic
+Team performance comments are determined as:
+≥ 95%: "Well done"
+≥ 90% and < 95%: "Improve"
+< 90%: "Needs immediate attention"
+Security Considerations
+Authentication & Authorization
+
+
+JWT-based authentication
+Role-based access control
+Session timeout controls
+Password complexity requirements
+Data Protection
+
+
+Encryption of sensitive data (ID numbers)
+Hashed passwords with salt
+Secure storage of ID document images
+Data access audit logs
+API Security
+
+
+Rate limiting
+CORS configuration
+Input validation
+SQL injection prevention
+Database Schema
+Users Table
+CREATE TABLE users (
+  user_id UUID PRIMARY KEY,
+  full_name VARCHAR(100) NOT NULL,
+  id_number VARCHAR(20) UNIQUE NOT NULL,
+  phone_number VARCHAR(15) UNIQUE NOT NULL,
+  mobigo_number VARCHAR(15),
+  role VARCHAR(20) NOT NULL,
+  team_id UUID REFERENCES teams(team_id),
+  id_front_url VARCHAR(255),
+  id_back_url VARCHAR(255),
+  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_by UUID REFERENCES users(user_id),
+  last_login TIMESTAMP,
+  van_number VARCHAR(20),
+  van_location VARCHAR(100),
+  password_hash VARCHAR(255) NOT NULL
+);
+
+Teams Table
+CREATE TABLE teams (
+  team_id UUID PRIMARY KEY,
+  team_name VARCHAR(100) NOT NULL UNIQUE,
+  team_leader_id UUID REFERENCES users(user_id),
+  region VARCHAR(100),
+  territory VARCHAR(100),
+  cluster VARCHAR(100),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+);
+
+SIM Cards Table
+CREATE TABLE sim_cards (
+  sim_id UUID PRIMARY KEY,
+  sim_serial_number VARCHAR(30) UNIQUE NOT NULL,
+  recorded_by UUID REFERENCES users(user_id),
+  recorded_by_team UUID REFERENCES teams(team_id),
+  recorded_date DATE NOT NULL,
+  match_status VARCHAR(20) DEFAULT 'UNMATCHED',
+  quality_status VARCHAR(20) DEFAULT 'NOT_QUALITY',
+
+  -- Fields populated after matching
+  dealer_shortcode VARCHAR(20),
+  dealer_name VARCHAR(100),
+  activation_date DATE,
+  agent_msisdn VARCHAR(15),
+  ba_msisdn VARCHAR(15),
+  top_up_date DATE,
+  top_up_amount DECIMAL(10,2),
+  bundle_purchase_date DATE,
+  bundle_amount DECIMAL(10,2),
+  usage DECIMAL(10,2),
+  commission DECIMAL(10,2),
+  fraud_flagged BOOLEAN DEFAULT FALSE,
+  fraud_suspension_date DATE,
+  fraud_reason VARCHAR(255),
+  region VARCHAR(100),
+  territory VARCHAR(100),
+  cluster VARCHAR(100),
+  role VARCHAR(50),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+Report Uploads Table
+CREATE TABLE report_uploads (
+  report_id UUID PRIMARY KEY,
+  uploaded_by UUID REFERENCES users(user_id) NOT NULL,
+  upload_date TIMESTAMP NOT NULL DEFAULT NOW(),
+  file_url VARCHAR(255) NOT NULL,
+  start_period DATE,
+  end_period DATE,
+  processing_status VARCHAR(20) DEFAULT 'PROCESSING',
+  total_records INTEGER DEFAULT 0,
+  matched_records INTEGER DEFAULT 0,
+  quality_records INTEGER DEFAULT 0
+);
+
+Conclusion
+This SIM Card Management System provides a comprehensive solution for recording and tracking SIM card sales across different teams. The system allows for matching recorded SIMs against Safaricom reports to determine activation status and quality metrics, with robust reporting capabilities to support business decision-making.
+The primary workflow involves recording SIM serials, uploading Safaricom reports, matching the data, and generating performance metrics - all designed to help distributors track team performance and ensure quality activations.
+

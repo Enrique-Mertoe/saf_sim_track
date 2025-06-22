@@ -25,11 +25,11 @@ interface EnhancedUserAccount extends UserAccount {
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingAccountId, setLoadingAccountId] = useState<string | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [animationComplete, setAnimationComplete] = useState(false);
     const [redirectParams, setRedirectParams] = useState({redirect: '', plan: ''});
     const [previousAccounts, setPreviousAccounts] = useState<EnhancedUserAccount[]>([]);
-    const [showPreviousAccounts, setShowPreviousAccounts] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<EnhancedUserAccount | null>(null);
     const [authState, setAuthState] = useState<'loading' | 'selectAccount' | 'newLogin' | 'passwordRequired' | 'authenticating'>('loading');
     const [signInMethod, setSignInMethod] = useState('email');
@@ -253,15 +253,14 @@ export default function LoginPage() {
         // If account has stored tokens, try seamless login
         if (account.hasStoredTokens && account.accessToken && account.refreshToken) {
             try {
-                setAuthState('authenticating');
-                setIsLoading(true);
+                setLoadingAccountId(account.id);
                 await performTokenLogin(account);
             } catch (err: any) {
                 // Seamless login failed, require password verification
                 setAuthState('passwordRequired');
                 toast.error('Please verify your password to continue');
             } finally {
-                setIsLoading(false);
+                setLoadingAccountId(null);
             }
         } else {
             // No stored tokens, require password input
@@ -278,7 +277,7 @@ export default function LoginPage() {
 
         try {
             setIsLoading(true);
-            setAuthState('authenticating');
+            // setAuthState('authenticating');
 
             if (signInMethod === 'phone') {
                 await performLogin(formValues.phone, formValues.password, true);
@@ -375,27 +374,6 @@ export default function LoginPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* Authenticating State */}
-                    <AnimatePresence>
-                        {authState === 'authenticating' && (
-                            <motion.div
-                                initial={{opacity: 0}}
-                                animate={{opacity: 1}}
-                                exit={{opacity: 0}}
-                                className="text-center py-8"
-                            >
-                                <div
-                                    className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-800 rounded-full mb-4">
-                                    <div
-                                        className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                                </div>
-                                <p className="text-gray-600 dark:text-gray-400">
-                                    Signing you
-                                    in{selectedAccount ? ` as ${selectedAccount.fullName || selectedAccount.email}` : ''}...
-                                </p>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
 
                     {/* Account Selection */}
                     <AnimatePresence>
@@ -413,11 +391,19 @@ export default function LoginPage() {
                                     {previousAccounts.map((account) => (
                                         <div
                                             key={account.id}
-                                            onClick={() => handleSelectAccount(account)}
-                                            className="flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-600"
+                                            onClick={() => !loadingAccountId && handleSelectAccount(account)}
+                                            className={`flex items-center p-2 rounded-lg transition-colors border border-gray-200 dark:border-gray-600 hover:border-green-300 dark:hover:border-green-600 ${
+                                                loadingAccountId ? 'cursor-not-allowed opacity-60' : 
+                                                loadingAccountId === account.id ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600' :
+                                                'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700'
+                                            }`}
                                         >
                                             <div className="bg-green-100 dark:bg-green-800 p-2 rounded-full mr-3">
-                                                <UserCircle className="h-6 w-6 text-green-600 dark:text-green-400"/>
+                                                {loadingAccountId === account.id ? (
+                                                    <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                                                ) : (
+                                                    <UserCircle className="h-6 w-6 text-green-600 dark:text-green-400"/>
+                                                )}
                                             </div>
                                             <div className="flex-1">
                                                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -427,10 +413,10 @@ export default function LoginPage() {
                                                     {account.email}
                                                 </p>
                                                 <p className="text-xs text-gray-400 dark:text-gray-500">
-                                                    Last login: {new Date(account.lastLogin).toLocaleDateString()}
+                                                    {loadingAccountId === account.id ? 'Signing in...' : `Last login: ${new Date(account.lastLogin).toLocaleDateString()}`}
                                                 </p>
                                             </div>
-                                            {account.hasStoredTokens && (
+                                            {account.hasStoredTokens && loadingAccountId !== account.id && (
                                                 <div
                                                     className="md:flex hidden items-center text-xs text-green-600 dark:text-green-400">
                                                     <CheckCircle className="h-4 w-4 mr-1"/>
@@ -659,12 +645,19 @@ export default function LoginPage() {
                                         </div>
                                     )}
 
-                                    {errors.general && (
-                                        <div className="mt-1 flex items-center text-red-500 text-sm">
-                                            <AlertCircle className="h-4 w-4 mr-1"/>
-                                            {errors.general}
-                                        </div>
-                                    )}
+                                    <AnimatePresence>
+                                        {errors.general && (
+                                            <motion.div 
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="mt-3 flex items-center text-red-500 text-sm overflow-hidden"
+                                            >
+                                                <AlertCircle className="h-4 w-4 mr-1 flex-shrink-0"/>
+                                                <span>{errors.general}</span>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
 
                                     <div className={"mt-5"}>
                                         <Button
