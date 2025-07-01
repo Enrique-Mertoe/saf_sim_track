@@ -10,6 +10,12 @@ import UserActions from "@/app/api/actions/user-actions";
 import TeamActions from "@/app/api/actions/team-actions";
 import BatchActions from "@/app/api/actions/batch-actions";
 
+export const config = {
+    api: {
+        bodyParser: false
+    }
+}
+
 // Profile actions class for handling user profile updates
 class ProfileActions {
     // static async supabase() {
