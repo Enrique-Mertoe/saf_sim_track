@@ -230,6 +230,7 @@ export const processReport = async (
             const qualitySim = record.quality == "Y";
             return {
                 ...record,
+
                 matched,
                 qualitySim,
                 team: dbRecord?.team || 'Unknown',
