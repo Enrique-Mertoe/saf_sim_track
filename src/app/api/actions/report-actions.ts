@@ -61,9 +61,10 @@ class ReportActions {
                 ok: true,
                 data: {
                     buffer: Buffer.from(report.rawData).toString('base64'),
-                    raw: {
-                        data: processedReport,
-                        cols
+                    summary: {
+                        totalRecords: processedReport.matchedCount,
+                        qualityCount: processedReport.qualityCount,
+                        teamCount: processedReport.teamReports.length
                     }
                 },
                 message: "Excel report generated successfully"
@@ -109,9 +110,10 @@ class ReportActions {
                 ok: true,
                 data: {
                     buffer: Buffer.from(report.rawData).toString('base64'),
-                    raw: {
-                        data: processedReport,
-                        cols
+                    summary: {
+                        totalRecords: processedReport.matchedCount,
+                        qualityCount: processedReport.qualityCount,
+                        teamName: teamName
                     }
                 },
                 message: `Excel report for team ${teamName} generated successfully`
@@ -232,7 +234,7 @@ class ReportActions {
         };
     }
 
-    // Start streaming sync task (fetch-process-fetch pattern)
+    // Start streaming sync task (fetch-process-fetch pattern) with chunked processing
     private static async sync(data: { simSerialNumbers: string[], records: SafaricomRecord[] }) {
         try {
             const user = await Accounts.user();
@@ -241,6 +243,14 @@ class ReportActions {
             }
 
             const { simSerialNumbers, records } = data;
+            
+            // Limit payload size - chunk large datasets
+            const MAX_RECORDS_PER_BATCH = 5000;
+            if (records.length > MAX_RECORDS_PER_BATCH) {
+                return makeResponse({ 
+                    error: `Dataset too large. Maximum ${MAX_RECORDS_PER_BATCH} records allowed per batch. Current: ${records.length}` 
+                });
+            }
             
             // Generate unique task ID
             const taskId = `sync_${Date.now()}_${user.id}`;
@@ -255,7 +265,7 @@ class ReportActions {
                 startTime: new Date(),
                 userId: user.id,
                 metadata: {
-                    recordCount: records.length,
+                    recordCount: Math.min(records.length, MAX_RECORDS_PER_BATCH),
                     serialNumberCount: simSerialNumbers.length
                 }
             };
@@ -839,6 +849,137 @@ class ReportActions {
             return makeResponse({ ok: true, message: "Cleanup completed" });
         } catch (e) {
             return makeResponse({error: (e as Error).message});
+        }
+    }
+
+    // Generate Excel report with chunked processing for large datasets
+    static async generate_chunked_excel_report(data: any) {
+        try {
+            const user = await Accounts.user();
+            if (!user) {
+                return makeResponse({error: "User not authenticated"});
+            }
+
+            const {startDate, endDate, chunkSize = 1000} = data;
+            
+            // Validate chunk size
+            const maxChunkSize = 2000;
+            const actualChunkSize = Math.min(chunkSize, maxChunkSize);
+
+            // Fetch SIM cards data with date filters in chunks
+            const simCards = await ReportActions.fetchSimCards(user, startDate, endDate);
+            
+            if (simCards.length > actualChunkSize) {
+                // Process in chunks and return task ID for streaming
+                const taskId = `report_${Date.now()}_${user.id}`;
+                
+                // Start background processing
+                ReportActions.processLargeReportBackground(taskId, simCards, user)
+                    .catch(error => {
+                        console.error('Background report generation failed:', error);
+                    });
+                
+                return makeResponse({
+                    ok: true,
+                    data: { 
+                        taskId,
+                        totalRecords: simCards.length,
+                        chunked: true 
+                    },
+                    message: "Large report processing started in background"
+                });
+            } else {
+                // Process normally for small datasets
+                const processedReport = await ReportActions.processReportData(simCards, user);
+                const cols = [
+                    {header: 'Serial', key: 'simSerialNumber', width: 25},
+                    {header: 'Team', key: 'team', width: 25},
+                    {header: 'Activation Date', key: 'activationDate', width: 18},
+                    {header: 'Top Up Date', key: 'topUpDate', width: 15},
+                    {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
+                    {header: 'Usage', key: 'cumulativeUsage', width: 15},
+                    {header: 'BA', key: 'ba', width: 15},
+                    {header: 'Till/Mobigo', key: 'mobigo', width: 15},
+                    {header: 'Quality', key: 'quality', width: 15},
+                ];
+                
+                const report = await generateTeamReports(processedReport as any, cols);
+                
+                return makeResponse({
+                    ok: true,
+                    data: {
+                        buffer: Buffer.from(report.rawData).toString('base64'),
+                        summary: {
+                            totalRecords: processedReport.matchedCount,
+                            qualityCount: processedReport.qualityCount,
+                            teamCount: processedReport.teamReports.length
+                        }
+                    },
+                    message: "Excel report generated successfully"
+                });
+            }
+        } catch (error) {
+            console.error("Error generating chunked Excel report:", error);
+            return makeResponse({error: (error as Error).message});
+        }
+    }
+
+    // Background processing for large reports
+    private static async processLargeReportBackground(taskId: string, simCards: any[], user: User) {
+        const task: SyncTask = {
+            id: taskId,
+            status: 'running',
+            progress: 0,
+            total: simCards.length,
+            processed: 0,
+            startTime: new Date(),
+            userId: user.id,
+            metadata: { type: 'report_generation' }
+        };
+        
+        activeTasks.set(taskId, task);
+        
+        try {
+            // Process data
+            const processedReport = await ReportActions.processReportData(simCards, user);
+            task.progress = 80;
+            
+            // Generate report
+            const cols = [
+                {header: 'Serial', key: 'simSerialNumber', width: 25},
+                {header: 'Team', key: 'team', width: 25},
+                {header: 'Activation Date', key: 'activationDate', width: 18},
+                {header: 'Top Up Date', key: 'topUpDate', width: 15},
+                {header: 'Top Up Amount', key: 'topUpAmount', width: 15},
+                {header: 'Usage', key: 'cumulativeUsage', width: 15},
+                {header: 'BA', key: 'ba', width: 15},
+                {header: 'Till/Mobigo', key: 'mobigo', width: 15},
+                {header: 'Quality', key: 'quality', width: 15},
+            ];
+            
+            const report = await generateTeamReports(processedReport as any, cols);
+            
+            // Store result in task metadata
+            task.metadata = {
+                ...task.metadata,
+                result: {
+                    buffer: Buffer.from(report.rawData).toString('base64'),
+                    summary: {
+                        totalRecords: processedReport.matchedCount,
+                        qualityCount: processedReport.qualityCount,
+                        teamCount: processedReport.teamReports.length
+                    }
+                }
+            };
+            
+            task.status = 'completed';
+            task.progress = 100;
+            task.endTime = new Date();
+            
+        } catch (error) {
+            task.status = 'failed';
+            task.error = error instanceof Error ? error.message : 'Unknown error';
+            task.endTime = new Date();
         }
     }
 

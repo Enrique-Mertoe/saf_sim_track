@@ -132,37 +132,65 @@ export const processReport = async (
 
     // Extract all SIM serial numbers for batch lookup
     const simSerialNumbers = report.records.map(record => record.simSerialNumber);
+    
+    // Chunk large datasets to avoid 413 errors
+    const MAX_RECORDS_PER_CHUNK = 5000;
+    const recordChunks = [];
+    const serialChunks = [];
+    
+    for (let i = 0; i < report.records.length; i += MAX_RECORDS_PER_CHUNK) {
+        recordChunks.push(report.records.slice(i, i + MAX_RECORDS_PER_CHUNK));
+        serialChunks.push(simSerialNumbers.slice(i, i + MAX_RECORDS_PER_CHUNK));
+    }
 
     // Update progress
     progressCallback(10);
-    Signal.trigger("add-process", "Checking SIM cards...");
+    Signal.trigger("add-process", `Processing ${recordChunks.length} chunk(s)...`);
 
     try {
-        Signal.trigger("add-process", "Starting streaming sync...");
+        const taskIds: string[] = [];
+        
+        // Process each chunk separately
+        for (let chunkIndex = 0; chunkIndex < recordChunks.length; chunkIndex++) {
+            const recordChunk = recordChunks[chunkIndex];
+            const serialChunk = serialChunks[chunkIndex];
+            
+            Signal.trigger("add-process", `Starting sync for chunk ${chunkIndex + 1}/${recordChunks.length}...`);
 
-        // Start optimized streaming sync (fetch-process-fetch pattern)
-        const syncResponse = await new Promise<{taskId: string}>((resolve, reject) => {
-            $.post({
-                url: "/api/actions",
-                contentType: $.JSON,
-                data: {
-                    action: "report",
-                    target: "sync",
+            // Start optimized streaming sync (fetch-process-fetch pattern)
+            const syncResponse = await new Promise<{taskId: string}>((resolve, reject) => {
+                $.post({
+                    url: "/api/actions",
+                    contentType: $.JSON,
                     data: {
-                        simSerialNumbers,
-                        records: report.records,
+                        action: "report",
+                        target: "sync",
+                        data: {
+                            simSerialNumbers: serialChunk,
+                            records: recordChunk,
+                        }
                     }
-                }
-            }).then(res => {
-                if (res.ok)
-                    resolve(res.data as {taskId: string})
-                else reject(res.data)
-            }).catch(reject)
-        });
+                }).then(res => {
+                    if (res.ok)
+                        resolve(res.data as {taskId: string})
+                    else reject(res.data)
+                }).catch(reject)
+            });
+            
+            if (syncResponse.taskId) {
+                taskIds.push(syncResponse.taskId);
+            }
+        }
 
-        if (syncResponse.taskId) {
-            // Poll for task status
-            await pollTaskStatus(syncResponse.taskId, progressCallback);
+        // Poll all tasks for completion
+        if (taskIds.length > 0) {
+            await Promise.all(taskIds.map(taskId => 
+                pollTaskStatus(taskId, (progress) => {
+                    // Adjust progress for multiple chunks
+                    const adjustedProgress = 30 + ((progress - 30) / taskIds.length);
+                    progressCallback(Math.floor(adjustedProgress));
+                })
+            ));
         }
 
         // After sync is complete, we need to fetch the processed database records for UI display
@@ -196,7 +224,6 @@ export const processReport = async (
         progressCallback(85);
 
         // Process each record
-        let un = 0
         const processedRecords: ProcessedRecord[] = report.records.map(record => {
             const dbRecord = simDataMap.get(record.simSerialNumber);
             const matched = !!dbRecord;
