@@ -789,9 +789,10 @@ export const simCardService = {
     // New service function to fetch SIM cards by batch of serial numbers
     getSimCardsBySerialBatch: async (
         user: User,
-        serialNumbers: string[]
+        serialNumbers: string[],
+        sb: any = createSupabaseClient()
     ) => {
-        const supabase = createSupabaseClient();
+        const supabase = sb;
         const adminId = await admin_id(user);
         // Common query parts: include relations and admin filter
         const query = supabase
