@@ -792,7 +792,6 @@ class ReportActions {
                         console.warn(`Batch ${batchIndex} failed:`, error);
                         continue;
                     }
-
                     const simData = data as any[];
                     const batchMatches = simData.map((sim) => ({
                         simSerialNumber: sim.serial_number,
