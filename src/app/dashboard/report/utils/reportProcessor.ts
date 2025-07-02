@@ -50,6 +50,7 @@ class Semaphore {
         }
     }
 }
+
 // Poll task status with progress updates
 const pollTaskStatus = async (taskId: string, progressCallback: (progress: number) => void): Promise<void> => {
     const pollInterval = 2000; // Poll every 2 seconds
@@ -65,7 +66,7 @@ const pollTaskStatus = async (taskId: string, progressCallback: (progress: numbe
                         data: {
                             action: "report",
                             target: "sync_status",
-                            data: { taskId }
+                            data: {taskId}
                         }
                     }).then(result => {
                         if (result.ok) res(result.data);
@@ -73,7 +74,7 @@ const pollTaskStatus = async (taskId: string, progressCallback: (progress: numbe
                     }).catch(rej);
                 });
 
-                const { status, progress, error } = response;
+                const {status, progress, error} = response;
 
                 // Update progress smoothly
                 if (progress > lastProgress) {
@@ -81,7 +82,7 @@ const pollTaskStatus = async (taskId: string, progressCallback: (progress: numbe
                     const mappedProgress = 30 + ((progress / 100) * 55);
                     progressCallback(Math.floor(mappedProgress));
                     lastProgress = mappedProgress;
-                    
+
                     Signal.trigger("add-process", `Syncing records... ${progress}%`);
                 }
 
@@ -91,18 +92,18 @@ const pollTaskStatus = async (taskId: string, progressCallback: (progress: numbe
                         Signal.trigger("add-process", "Sync completed successfully");
                         resolve();
                         return;
-                        
+
                     case 'failed':
                         Signal.trigger("add-process", `Sync failed: ${error || 'Unknown error'}`);
                         reject(new Error(`Sync failed: ${error || 'Unknown error'}`));
                         return;
-                        
+
                     case 'pending':
                     case 'running':
                         // Continue polling
                         setTimeout(poll, pollInterval);
                         break;
-                        
+
                     default:
                         reject(new Error(`Unknown task status: ${status}`));
                         return;
@@ -132,12 +133,12 @@ export const processReport = async (
 
     // Extract all SIM serial numbers for batch lookup
     const simSerialNumbers = report.records.map(record => record.simSerialNumber);
-    
+
     // Chunk large datasets to avoid 413 errors
     const MAX_RECORDS_PER_CHUNK = 5000;
     const recordChunks = [];
     const serialChunks = [];
-    
+
     for (let i = 0; i < report.records.length; i += MAX_RECORDS_PER_CHUNK) {
         recordChunks.push(report.records.slice(i, i + MAX_RECORDS_PER_CHUNK));
         serialChunks.push(simSerialNumbers.slice(i, i + MAX_RECORDS_PER_CHUNK));
@@ -145,20 +146,26 @@ export const processReport = async (
 
     // Update progress
     progressCallback(10);
-    Signal.trigger("add-process", `Processing ${recordChunks.length} chunk(s)...`);
+    Signal.trigger("add-process", `Processing ${report.records.length} record(s). This might take a while...`);
+    // Signal.trigger("add-process", `Processing ${recordChunks.length} chunk(s)...`);
 
     try {
         const taskIds: string[] = [];
-        
+        const startProgress = 11;
+        const endProgress = 84;
+        const progressRange = endProgress - startProgress;
+        const perChunkProgress = Math.floor(progressRange * 0.4); // Let's say 40% of the range is uploading
+        const chunkProgressStep = perChunkProgress / recordChunks.length;
+
         // Process each chunk separately
         for (let chunkIndex = 0; chunkIndex < recordChunks.length; chunkIndex++) {
             const recordChunk = recordChunks[chunkIndex];
             const serialChunk = serialChunks[chunkIndex];
-            
+
             Signal.trigger("add-process", `Starting sync for chunk ${chunkIndex + 1}/${recordChunks.length}...`);
 
             // Start optimized streaming sync (fetch-process-fetch pattern)
-            const syncResponse = await new Promise<{taskId: string}>((resolve, reject) => {
+            const syncResponse = await new Promise<{ taskId: string }>((resolve, reject) => {
                 $.post({
                     url: "/api/actions",
                     contentType: $.JSON,
@@ -172,22 +179,32 @@ export const processReport = async (
                     }
                 }).then(res => {
                     if (res.ok)
-                        resolve(res.data as {taskId: string})
+                        resolve(res.data as { taskId: string })
                     else reject(res.data)
                 }).catch(reject)
             });
-            
+
             if (syncResponse.taskId) {
                 taskIds.push(syncResponse.taskId);
             }
+            const currentProgress = startProgress + Math.floor((chunkIndex + 1) * chunkProgressStep);
+            progressCallback(currentProgress);
         }
+        const remainingProgress = progressRange - perChunkProgress;
+        const perTaskStep = remainingProgress / taskIds.length;
 
         // Poll all tasks for completion
         if (taskIds.length > 0) {
-            await Promise.all(taskIds.map(taskId => 
-                pollTaskStatus(taskId, (progress) => {
+            await Promise.all(taskIds.map((taskId, taskIndex) =>
+                pollTaskStatus(taskId, (internalProgress) => {
                     // Adjust progress for multiple chunks
-                    const adjustedProgress = 30 + ((progress - 30) / taskIds.length);
+                    // const adjustedProgress = 30 + ((progress - 30) / taskIds.length);
+                    // progressCallback(Math.floor(adjustedProgress));
+                    const taskStart = startProgress + perChunkProgress + (taskIndex * perTaskStep);
+                    const taskEnd = taskStart + perTaskStep;
+
+                    // Scale internalProgress (0–100) to global range
+                    const adjustedProgress = taskStart + ((internalProgress / 100) * perTaskStep);
                     progressCallback(Math.floor(adjustedProgress));
                 })
             ));
@@ -195,7 +212,7 @@ export const processReport = async (
 
         // After sync is complete, we need to fetch the processed database records for UI display
         Signal.trigger("add-process", "Fetching final database records...");
-        const databaseResponse = await new Promise<{databaseRecords: DatabaseRecord[]}>((resolve, reject) => {
+        const databaseResponse = await new Promise<{ databaseRecords: DatabaseRecord[] }>((resolve, reject) => {
             $.post({
                 url: "/api/actions",
                 contentType: $.JSON,
@@ -208,7 +225,7 @@ export const processReport = async (
                 }
             }).then(res => {
                 if (res.ok)
-                    resolve(res.data as {databaseRecords: DatabaseRecord[]})
+                    resolve(res.data as { databaseRecords: DatabaseRecord[] })
                 else reject(res.data)
             }).catch(reject)
         });

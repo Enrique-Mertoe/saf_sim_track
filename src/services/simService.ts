@@ -790,17 +790,20 @@ export const simCardService = {
     getSimCardsBySerialBatch: async (
         user: User,
         serialNumbers: string[],
-        sb: any = createSupabaseClient()
+        sb: any = createSupabaseClient(),
+        filters: Filter[] = []
     ) => {
         const supabase = sb;
         const adminId = await admin_id(user);
         // Common query parts: include relations and admin filter
-        const query = supabase
-            .from('sim_cards')
-            .select('*, sold_by_user_id(*), team_id(*, leader_id(full_name))')
-            .eq('admin_id', adminId)
-            .in('serial_number', serialNumbers)
-            .order('created_at', {ascending: false});
+        const query = applyFilters(
+            supabase
+                .from('sim_cards')
+                .select('*, sold_by_user_id(*), team_id(*, leader_id(full_name))')
+                .eq('admin_id', adminId)
+                .in('serial_number', serialNumbers)
+                .order('created_at', {ascending: false}), filters, false
+        );
 
         // Filter for admin role
         if (user.role === UserRole.ADMIN) {
@@ -971,12 +974,12 @@ export const simCardService = {
         //         .order('registered_on', {ascending: false});
         // }
         if (user.role === UserRole.TEAM_LEADER) {
-            const q = supabase
+            const q = applyFilters(supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("registered_on", "is", null)
                 .eq("admin_id", await admin_id(user))
-                .eq("team_id", user.team_id)
+                .eq("team_id", user.team_id),[])
             return applyFilters(q, filters)
         }
 
@@ -985,11 +988,11 @@ export const simCardService = {
     countAssigned: async (user: User) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
-            return supabase
+            return applyFilters(supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("assigned_to_user_id", "is", null)
-                .eq("admin_id", await admin_id(user));
+                .eq("admin_id", await admin_id(user)),[]);
         }
 
         // if (user.role === UserRole.STAFF) {
