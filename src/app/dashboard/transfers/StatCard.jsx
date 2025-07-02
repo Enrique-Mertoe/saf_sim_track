@@ -88,8 +88,8 @@ const StatCard = ({
                         <ArrowUpRight className="w-4 h-4 opacity-50"/>
                     </div>
                 </div>
-                <div className="mb-3">
-                    <span className="text-4xl max-sm:text-xl font-bold">{value}</span>
+                <div className="">
+                    <span className="text-xl max-sm:text-xl font-bold">{value}</span>
                 </div>
                 {/*<div className="flex items-center text-xs opacity-75">*/}
                 {/*    {trend === 'up' && <TrendingUp className="w-3 h-3 mr-1"/>}*/}

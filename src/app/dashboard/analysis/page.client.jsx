@@ -328,16 +328,6 @@ const SIMAnalysisPage = () => {
                 <div className="md:col-span-8">
                     {/* Key Metrics Overview */}
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-1 mb-8">
-                        {/*<MetricCard*/}
-                        {/*    user={user}*/}
-                        {/*    title="Total Recorded"*/}
-                        {/*    value={0}*/}
-                        {/*    dataType={"total"}*/}
-                        {/*    subtitle="Across all teams"*/}
-                        {/*    icon={Smartphone}*/}
-                        {/*    trend={12}*/}
-                        {/*    color="green"*/}
-                        {/*/>*/}
                         <MetricCard
                             user={user}
                             title="Total Quality"

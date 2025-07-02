@@ -47,7 +47,7 @@ export const MetricCard = ({
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-                    <p className={`text-3xl font-bold ${color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-amber-500'} dark:text-white`}>
+                    <p className={`text-xl font-bold ${color === 'green' ? 'text-green-600' : color === 'red' ? 'text-red-500' : 'text-amber-500'} dark:text-white`}>
                         {typeof val === 'number' ? val.toLocaleString() : val}
                     </p>
                     {/*{subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}*/}
