@@ -954,11 +954,11 @@ export const simCardService = {
     countReg: async (user: User, teamId: string | null = null, filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
-            let q = supabase
+            let q = applyFilters(supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("registered_on", "is", null)
-                .eq("admin_id", await admin_id(user));
+                .eq("admin_id", await admin_id(user)),filters);
             if (teamId)
                 q = q.eq("team_id", teamId)
             return applyFilters(q, filters)
