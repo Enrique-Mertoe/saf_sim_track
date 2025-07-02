@@ -15,6 +15,7 @@ import Fixed from "@/ui/components/Fixed";
 import {admin_id} from "@/services/helper";
 import {showModal} from "@/ui/shortcuts";
 import SearchResult from "@/ui/components/search/SearchResult";
+import AIIconButton from "@/ui/components/dash/AiButton";
 
 const supabase = createSupabaseClient();
 export default function Header() {
@@ -145,17 +146,17 @@ export default function Header() {
                         .not('batch_id', 'is', null)
                         .limit(5)
                         .then(({data: simData}) => {
-                        const data = (simData ?? []).map(sim => ({
-                            id: sim.id,
-                            title: `SIM #${sim.serial_number.slice(-5)}`,
-                            fullTitle: sim.serial_number,
-                            category: 'SIM',
-                            url: `/sim/${sim.id}`
-                        }));
-                        count -= 1;
-                        sIs(count > 0);
-                        setSearchResults((prev: any) => [...prev, ...data])
-                    });
+                            const data = (simData ?? []).map(sim => ({
+                                id: sim.id,
+                                title: `SIM #${sim.serial_number.slice(-5)}`,
+                                fullTitle: sim.serial_number,
+                                category: 'SIM',
+                                url: `/sim/${sim.id}`
+                            }));
+                            count -= 1;
+                            sIs(count > 0);
+                            setSearchResults((prev: any) => [...prev, ...data])
+                        });
 
                     // Search for teams
                     supabase
@@ -353,9 +354,9 @@ export default function Header() {
 
     const processSearch = (results: any) => {
         if (results.category !== 'Page') {
-                showModal({
-                    content:onClose => <SearchResult onClose={onClose} result={results}/>
-                })
+            showModal({
+                content: onClose => <SearchResult onClose={onClose} result={results}/>
+            })
         }
     }
 
@@ -381,6 +382,7 @@ export default function Header() {
                     <div className="flex items-center space-x-4">
                         {user && (
                             <>
+                                <AIIconButton/>
                                 {/* Enhanced Search - Desktop Card Style */}
                                 <div ref={searchRef}
                                      className={`relative bg-gray-100 dark:bg-gray-700 transition-all duration-200 rounded-full justify-center items-center flex ${isSearchOpen ? 'rounded-md' : 'rounded-full'}`}>
