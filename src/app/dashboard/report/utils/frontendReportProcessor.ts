@@ -183,6 +183,7 @@ async function fetchDatabaseRecords(simSerialNumbers: string[]): Promise<{ datab
             if (res.ok) {
                 resolve(res.data as { databaseRecords: DatabaseRecord[] });
             } else {
+                //@ts-ignore
                 reject(new Error(res.data || 'Failed to fetch database records'));
             }
         }).catch(reject);
