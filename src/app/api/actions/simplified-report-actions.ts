@@ -72,6 +72,7 @@ class SimplifiedReportActions {
           }
         } catch (error) {
           errorCount++;
+          //@ts-ignore
           errors.push(`Error processing ${dbRecord.simSerialNumber}: ${error.message}`);
           console.error(`Error processing record ${dbRecord.simSerialNumber}:`, error);
         }
@@ -97,7 +98,8 @@ class SimplifiedReportActions {
 
     } catch (error) {
       console.error("Chunk processing error:", error);
-      return makeResponse({ 
+      return makeResponse({
+        //@ts-ignore
         error: `Chunk processing failed: ${error.message}` 
       });
     }
