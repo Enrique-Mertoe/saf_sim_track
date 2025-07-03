@@ -254,8 +254,10 @@ class FrontendTaskProcessor {
           resolve({ success: true });
         } else {
           resolve({ 
-            success: false, 
+            success: false,
+            //@ts-ignore
             error: result.data || 'API error',
+            //@ts-ignore
             retryable: result.status !== 400 // Don't retry validation errors
           });
         }
