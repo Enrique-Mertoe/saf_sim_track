@@ -210,6 +210,7 @@ class DirectiveEngine {
       const event = new Event('change', { bubbles: true });
       targetElement.dispatchEvent(event);
     } else if (targetElement.tagName === 'SELECT') {
+      //@ts-ignore
       (targetElement as HTMLSelectElement).value = value;
       
       const event = new Event('change', { bubbles: true });
