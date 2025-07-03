@@ -68,6 +68,7 @@ export default function Home() {
     ];
 
     // AI Demo Functions
+    //@ts-ignore
     const handleAIDemoMessage = (message) => {
         setAiDemoMessages(prev => [...prev, { type: 'user', content: message }]);
         
