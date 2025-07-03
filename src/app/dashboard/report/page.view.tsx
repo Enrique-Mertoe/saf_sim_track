@@ -131,7 +131,8 @@ const Reports: React.FC = () => {
                 reportData, 
                 user!, 
                 (progress) => {
-                    setProcessingProgress(progress);
+                    //@ts-ignore
+                    setProcessingProgress(Number(progress).toFixed(1));
                 },
                 startDate,
                 endDate

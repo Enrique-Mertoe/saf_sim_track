@@ -1,7 +1,10 @@
-import {DatabaseRecord, ProcessedRecord, ProcessedReport, Report, TeamReport} from '../types';
+import {DatabaseRecord, ProcessedRecord, ProcessedReport, Report, SafaricomRecord, TeamReport} from '../types';
+import simService from "@/services/simService";
+import simCardService from "@/services/simService";
 import {SIMCard, Team, User} from "@/models";
+import {SIMStatus} from "@/models/types";
 import Signal from "@/lib/Signal";
-import {$} from "@/lib/request";
+import {chunkArray, parseDateToYMD} from "@/helper";
 
 type SimAdapter = SIMCard & {
     team_id: Team;
@@ -51,72 +54,255 @@ class Semaphore {
     }
 }
 
-// Poll task status with progress updates
-const pollTaskStatus = async (taskId: string, progressCallback: (progress: number) => void): Promise<void> => {
-    const pollInterval = 2000; // Poll every 2 seconds
-    let lastProgress = 30; // Start from where database fetch ended
+const mapProgressToRange = (naturalProgress: number, min = 11, max = 29) => {
+    return min + ((naturalProgress / 100) * (max - min));
+};
 
-    return new Promise((resolve, reject) => {
-        const poll = async () => {
-            try {
-                const response = await new Promise<any>((res, rej) => {
-                    $.post({
-                        url: "/api/actions",
-                        contentType: $.JSON,
-                        data: {
-                            action: "report",
-                            target: "sync_status",
-                            data: {taskId}
-                        }
-                    }).then(result => {
-                        if (result.ok) res(result.data);
-                        else rej(result.data);
-                    }).catch(rej);
-                });
+const fetchSimCardDataFromDatabase = async ({
+                                                progressCallback,
+                                                simSerialNumbers,
+                                                user
+                                            }: {
+                                                progressCallback: (progress: number) => void,
+                                                simSerialNumbers: string[];
+                                                user: User
+                                            }
+): Promise<DatabaseRecord[]> => {
+    const batchSize = 1000; // Reduced batch size
+    const results: DatabaseRecord[] = [];
+    const totalBatches = Math.ceil(simSerialNumbers.length / batchSize);
 
-                const {status, progress, error} = response;
+    for (let i = 0; i < simSerialNumbers.length; i += batchSize) {
+        const batchIndex = Math.floor(i / batchSize);
+        const batch = simSerialNumbers.slice(i, i + batchSize);
+        const naturalProgress = ((batchIndex + 0.5) / totalBatches) * 100;
 
-                // Update progress smoothly
-                if (progress > lastProgress) {
-                    // Map progress from 0-100 to 30-85
-                    const mappedProgress = 30 + ((progress / 100) * 55);
-                    progressCallback(Math.floor(mappedProgress));
-                    lastProgress = mappedProgress;
+        progressCallback(mapProgressToRange(naturalProgress));
 
-                    Signal.trigger("add-process", `Syncing records... ${progress}%`);
-                }
-
-                switch (status) {
-                    case 'completed':
-                        progressCallback(85);
-                        Signal.trigger("add-process", "Sync completed successfully");
-                        resolve();
-                        return;
-
-                    case 'failed':
-                        Signal.trigger("add-process", `Sync failed: ${error || 'Unknown error'}`);
-                        reject(new Error(`Sync failed: ${error || 'Unknown error'}`));
-                        return;
-
-                    case 'pending':
-                    case 'running':
-                        // Continue polling
-                        setTimeout(poll, pollInterval);
-                        break;
-
-                    default:
-                        reject(new Error(`Unknown task status: ${status}`));
-                        return;
-                }
-            } catch (error) {
-                console.error('Error polling task status:', error);
-                reject(error);
+        try {
+            const {data, error} = await simService.getSimCardsBySerialBatch(user, batch);
+            if (error || !data) {
+                console.warn(`Batch ${batchIndex} failed:`, error);
+                continue;
             }
-        };
 
-        // Start polling
-        poll();
-    });
+            const simData = data as SimAdapter[];
+
+            const batchMatches = simData.map((sim) => ({
+                simSerialNumber: sim.serial_number,
+                simId: sim.id,
+                team: sim.team_id.name,
+                uploadedBy: sim?.assigned_to_user_id?.full_name ?? "Not assigned",
+                createdAt: new Date(sim.created_at).toISOString(),
+            }));
+
+            results.push(...batchMatches);
+
+            // Add small delay between batches to prevent overwhelming the server
+            if (batchIndex < totalBatches - 1) {
+                await sleep(100);
+            }
+        } catch (error) {
+            console.error(`Error processing batch ${batchIndex}:`, error);
+            // Continue with next batch instead of failing completely
+        }
+    }
+
+    progressCallback(30);
+    return results;
+};
+
+const syncMatch = async (
+    databaseRecords: DatabaseRecord[],
+    records: SafaricomRecord[],
+    progressCallback: () => void,
+    user: User,
+    semaphore: Semaphore
+) => {
+    const recordMap = new Map(
+        records.filter(r => r.simSerialNumber).map(r => [r.simSerialNumber, r])
+    );
+
+    // Process records in smaller chunks with controlled concurrency
+    const chunkSize = 500; // Process 50 records at a time
+    const chunks = chunkArray(databaseRecords, chunkSize);
+
+    for (const chunk of chunks) {
+        const All = await simCardService.DB
+            .from('sim_cards')
+            .select('status, activation_date,registered_on,usage,serial_number')
+            .in('serial_number', chunk.map(r => r.simSerialNumber));
+
+        // convert to map
+        const AllMap = new Map(All.data?.map(item => [item.serial_number, item]));
+        await Promise.allSettled(chunk.map(async (record) => {
+            return semaphore.execute(async () => {
+                const sourceRecord = recordMap.get(record.simSerialNumber);
+                if (!sourceRecord) {
+                    progressCallback();
+                    return;
+                }
+
+                try {
+                    const isQuality = sourceRecord.quality == "Y";
+                    const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
+
+                    const simId = record.simId;
+
+                    // Add retry logic for database operations
+                    let retries = 3;
+                    let existingSim;
+                    let error;
+
+                    while (retries > 0) {
+                        // const result = await simCardService.DB
+                        //     .from('sim_cards')
+                        //     .select('status, activation_date,registered_on,usage')
+                        //     .eq('id', simId)
+                        //     .single();
+                        const result = AllMap.get(simId);
+
+                        if (result) {
+                            existingSim = result;
+                            error = null;
+                            break;
+                        }
+
+                        error = "";
+                        retries--;
+
+                        if (retries > 0) {
+                            await sleep(1000 * (4 - retries)); // Exponential backoff
+                        }
+                    }
+
+                    if (error || !existingSim) {
+                        console.warn(`Failed to fetch SIM ${simId} after retries:`, error);
+                        return;
+                    }
+
+                    const updateFields: any = {
+                        match: SIMStatus.MATCH,
+                        quality: qualityStatus,
+                        top_up_amount: +sourceRecord.topUpAmount || null,
+                        usage: +sourceRecord.cumulativeUsage || null
+                    };
+
+                    const parsedDate = parseDateToYMD(sourceRecord.dateId);
+
+                    if (!existingSim.activation_date) {
+                        updateFields.activation_date = parsedDate;
+                    }
+
+                    if (!existingSim.registered_on) {
+                        const date = new Date(sourceRecord.tmDate);
+                        updateFields.registered_on = date.toISOString().split('T')[0];
+                    }
+
+                    if (existingSim.status !== SIMStatus.ACTIVATED) {
+                        updateFields.status = SIMStatus.ACTIVATED;
+                    }
+
+                    if (Object.keys(updateFields).length > 0) {
+                        // Add retry logic for updates too
+                        retries = 3;
+                        while (retries > 0) {
+                            try {
+                                await simService.updateSIMCard(simId, updateFields, user);
+                                break;
+                            } catch (updateError) {
+                                retries--;
+                                if (retries > 0) {
+                                    await sleep(1000 * (4 - retries));
+                                } else {
+                                    console.error(`Failed to update SIM ${simId}:`, updateError);
+                                }
+                            }
+                        }
+                    }
+
+                } catch (err) {
+                    console.error(`Error processing record ${record.simSerialNumber}:`, err);
+                } finally {
+                    progressCallback();
+                }
+            });
+        }));
+
+        // Small delay between chunks
+        await sleep(200);
+    }
+};
+
+const runParallelSync = async (
+    databaseRecords: DatabaseRecord[],
+    records: SafaricomRecord[],
+    progressCallback: (progress: number) => void,
+    user: User
+) => {
+    // Limit concurrent requests to prevent resource exhaustion
+    const semaphore = new Semaphore(10); // Max 10 concurrent requests
+    const batchSize = 1000; // Smaller batches
+    const batches = chunkArray(databaseRecords, batchSize);
+    const totalRecords = databaseRecords.length;
+
+    let processed = 0;
+
+    const updateProgress = () => {
+        processed += 1;
+        const percent = Math.floor(30 + ((processed / totalRecords) * 50)); // Progress from 30% to 80%
+        progressCallback(percent);
+    };
+
+    // Process batches sequentially to avoid overwhelming resources
+    for (const batch of batches) {
+        await syncMatch(batch, records, updateProgress, user, semaphore);
+
+        // Brief pause between batches
+        await sleep(100);
+    }
+
+    progressCallback(80);
+};
+
+// Bulk update optimization (if your API supports it)
+const bulkUpdateSIMCards = async (
+    updates: Array<{ id: string, fields: any }>,
+    user: User,
+    semaphore: Semaphore
+): Promise<void> => {
+    const batchSize = 100;
+    const batches = chunkArray(updates, batchSize);
+
+    for (const batch of batches) {
+        await semaphore.execute(async () => {
+            try {
+                // If your API supports bulk updates, use this approach
+                // Otherwise, fall back to individual updates with controlled concurrency
+
+                await Promise.allSettled(batch.map(async (update) => {
+                    let retries = 3;
+                    while (retries > 0) {
+                        try {
+                            await simService.updateSIMCard(update.id, update.fields, user);
+                            break;
+                        } catch (error) {
+                            retries--;
+                            if (retries > 0) {
+                                await sleep(1000 * (4 - retries));
+                            } else {
+                                console.error(`Failed to update SIM ${update.id}:`, error);
+                            }
+                        }
+                    }
+                }));
+            } catch (error) {
+                console.error('Bulk update batch failed:', error);
+            }
+        });
+
+        await sleep(500); // Longer delay between bulk batches
+    }
 };
 
 /**
@@ -134,110 +320,29 @@ export const processReport = async (
     // Extract all SIM serial numbers for batch lookup
     const simSerialNumbers = report.records.map(record => record.simSerialNumber);
 
-    // Chunk large datasets to avoid 413 errors
-    const MAX_RECORDS_PER_CHUNK = 5000;
-    const recordChunks = [];
-    const serialChunks = [];
-
-    for (let i = 0; i < report.records.length; i += MAX_RECORDS_PER_CHUNK) {
-        recordChunks.push(report.records.slice(i, i + MAX_RECORDS_PER_CHUNK));
-        serialChunks.push(simSerialNumbers.slice(i, i + MAX_RECORDS_PER_CHUNK));
-    }
-
     // Update progress
     progressCallback(10);
-    Signal.trigger("add-process", `Processing ${report.records.length} record(s). This might take a while...`);
-    // Signal.trigger("add-process", `Processing ${recordChunks.length} chunk(s)...`);
+    Signal.trigger("add-process", "Checking SIM cards...");
 
     try {
-        const taskIds: string[] = [];
-        const startProgress = 11;
-        const endProgress = 84;
-        const progressRange = endProgress - startProgress;
-        const perChunkProgress = Math.floor(progressRange * 0.4); // Let's say 40% of the range is uploading
-        const chunkProgressStep = perChunkProgress / recordChunks.length;
-
-        // Process each chunk separately
-        for (let chunkIndex = 0; chunkIndex < recordChunks.length; chunkIndex++) {
-            const recordChunk = recordChunks[chunkIndex];
-            const serialChunk = serialChunks[chunkIndex];
-
-            Signal.trigger("add-process", `Starting sync for chunk ${chunkIndex + 1}/${recordChunks.length}...`);
-
-            // Start optimized streaming sync (fetch-process-fetch pattern)
-            const syncResponse = await new Promise<{ taskId: string }>((resolve, reject) => {
-                $.post({
-                    url: "/api/actions",
-                    contentType: $.JSON,
-                    data: {
-                        action: "report",
-                        target: "sync",
-                        data: {
-                            simSerialNumbers: serialChunk,
-                            records: recordChunk,
-                        }
-                    }
-                }).then(res => {
-                    if (res.ok)
-                        resolve(res.data as { taskId: string })
-                    else reject(res.data)
-                }).catch(reject)
-            });
-
-            if (syncResponse.taskId) {
-                taskIds.push(syncResponse.taskId);
-            }
-            const currentProgress = startProgress + Math.floor((chunkIndex + 1) * chunkProgressStep);
-            progressCallback(currentProgress);
-        }
-        const remainingProgress = progressRange - perChunkProgress;
-        const perTaskStep = remainingProgress / taskIds.length;
-
-        // Poll all tasks for completion
-        if (taskIds.length > 0) {
-            await Promise.all(taskIds.map((taskId, taskIndex) =>
-                pollTaskStatus(taskId, (internalProgress) => {
-                    // Adjust progress for multiple chunks
-                    // const adjustedProgress = 30 + ((progress - 30) / taskIds.length);
-                    // progressCallback(Math.floor(adjustedProgress));
-                    const taskStart = startProgress + perChunkProgress + (taskIndex * perTaskStep);
-                    const taskEnd = taskStart + perTaskStep;
-
-                    // Scale internalProgress (0–100) to global range
-                    const adjustedProgress = taskStart + ((internalProgress / 100) * perTaskStep);
-                    progressCallback(Math.floor(adjustedProgress));
-                })
-            ));
-        }
-
-        // After sync is complete, we need to fetch the processed database records for UI display
-        Signal.trigger("add-process", "Fetching final database records...");
-        const databaseResponse = await new Promise<{ databaseRecords: DatabaseRecord[] }>((resolve, reject) => {
-            $.post({
-                url: "/api/actions",
-                contentType: $.JSON,
-                data: {
-                    action: "report",
-                    target: "fetch_database_records",
-                    data: {
-                        simSerialNumbers
-                    }
-                }
-            }).then(res => {
-                if (res.ok)
-                    resolve(res.data as { databaseRecords: DatabaseRecord[] })
-                else reject(res.data)
-            }).catch(reject)
+        // Fetch matching records from database
+        const databaseRecords = await fetchSimCardDataFromDatabase({
+            simSerialNumbers,
+            user,
+            progressCallback
         });
 
-        const databaseRecords = databaseResponse.databaseRecords;
         const simDataMap = new Map<string, DatabaseRecord>();
         databaseRecords.forEach(record => {
             simDataMap.set(record.simSerialNumber, record);
         });
 
-        // Update progress
+        Signal.trigger("add-process", "Uploading bundle data...");
 
+        // Run the sync process with improved resource management
+        await runParallelSync(databaseRecords, report.records, progressCallback, user);
+
+        // Update progress
         progressCallback(85);
 
         // Process each record
@@ -245,9 +350,9 @@ export const processReport = async (
             const dbRecord = simDataMap.get(record.simSerialNumber);
             const matched = !!dbRecord;
             const qualitySim = record.quality == "Y";
+
             return {
                 ...record,
-
                 matched,
                 qualitySim,
                 team: dbRecord?.team || 'Unknown',
@@ -276,7 +381,7 @@ export const processReport = async (
 
             return {
                 teamName,
-                records: records,
+                records: records.filter(r => r.quality == "N"),
                 matchedCount,
                 qualityCount,
             };
@@ -292,7 +397,6 @@ export const processReport = async (
 
         // Update progress
         progressCallback(100);
-        console.log(teamReports)
 
         return {
             rawRecords: processedRecords,
