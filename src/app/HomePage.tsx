@@ -1,50 +1,99 @@
 "use client"
 import {useEffect, useState} from "react";
 import {motion} from "framer-motion";
+import {BarChart3, Bot, MessageCircle, Mic, MicOff, Shield, Sparkles, TrendingUp, Users} from "lucide-react";
 
 export default function Home() {
     const [activeFeature, setActiveFeature] = useState(0);
+    const [showAIDemo, setShowAIDemo] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [liveStats, setLiveStats] = useState(null);
+    const [aiDemoMessages, setAiDemoMessages] = useState([
+        { type: 'ai', content: '👋 Hi! I\'m **Mantix AI**, your intelligent SIM management copilot. Ask me anything!' }
+    ]);
+    const [demoInput, setDemoInput] = useState('');
 
     const features = [
         {
-            title: "SIM Tracking",
-            description: "Real-time tracking of SIM card sales and activations",
-            icon: "📊",
+            title: "🤖 AI-Powered Insights",
+            description: "Mantix AI analyzes your data and provides intelligent recommendations",
+            icon: <Bot className="w-8 h-8" />,
+            color: "from-blue-500 to-indigo-600",
+            isAI: true
+        },
+        {
+            title: "📊 Smart SIM Tracking",
+            description: "AI-enhanced real-time tracking with predictive analytics",
+            icon: <BarChart3 className="w-8 h-8" />,
             color: "from-green-500 to-green-600"
         },
         {
-            title: "Team Analytics",
-            description: "Performance metrics and quality monitoring",
-            icon: "👥",
-            color: "from-green-500 to-green-600"
-        },
-        {
-            title: "Quality Control",
-            description: "Fraud prevention and quality assurance",
-            icon: "🛡️",
+            title: "👥 Intelligent Team Analytics",
+            description: "AI-driven performance insights and quality monitoring",
+            icon: <Users className="w-8 h-8" />,
             color: "from-purple-500 to-purple-600"
         },
         {
-            title: "Easy Reports",
-            description: "Automated reporting and data insights",
-            icon: "📈",
+            title: "🛡️ AI Quality Control",
+            description: "Automated fraud detection with machine learning",
+            icon: <Shield className="w-8 h-8" />,
+            color: "from-red-500 to-red-600"
+        },
+        {
+            title: "📈 Predictive Reports",
+            description: "AI-generated reports with trend forecasting",
+            icon: <TrendingUp className="w-8 h-8" />,
             color: "from-orange-500 to-orange-600"
+        },
+        {
+            title: "💬 Natural Language Queries",
+            description: "Ask questions in plain English and get instant answers",
+            icon: <MessageCircle className="w-8 h-8" />,
+            color: "from-teal-500 to-cyan-600"
         }
     ];
 
     const stats = [
-        {value: "99.8%", label: "Uptime", icon: "⚡"},
-        {value: "5M+", label: "SIMs Tracked", icon: "📱"},
-        {value: "500+", label: "Active Teams", icon: "🏢"},
-        {value: "93%", label: "Quality Rate", icon: "✨"}
+        {value: "99.8%", label: "AI Accuracy", icon: "🎯"},
+        {value: "5M+", label: "AI Queries Processed", icon: "🤖"},
+        {value: "500+", label: "AI-Powered Teams", icon: "🚀"},
+        {value: "85%", label: "Efficiency Boost", icon: "⚡"}
     ];
 
     const steps = [
-        {title: "Upload SIMs", desc: "Bulk upload SIM card data", icon: "📤"},
-        {title: "Track Status", desc: "Monitor activations live", icon: "📍"},
-        {title: "Check Quality", desc: "Automated quality checks", icon: "🔍"},
-        {title: "Get Reports", desc: "Instant performance reports", icon: "📋"}
+        {title: "Ask Mantix AI", desc: "Natural language queries", icon: "🤖"},
+        {title: "Get Insights", desc: "AI analyzes your data", icon: "🧠"},
+        {title: "Take Action", desc: "Smart recommendations", icon: "⚡"},
+        {title: "Track Results", desc: "AI-powered monitoring", icon: "📊"}
     ];
+
+    // AI Demo Functions
+    const handleAIDemoMessage = (message) => {
+        setAiDemoMessages(prev => [...prev, { type: 'user', content: message }]);
+        
+        // Simulate AI response
+        setTimeout(() => {
+            const responses = [
+                "📊 I found 1,247 active SIM cards with 94.2% activation rate. Your team is performing excellently!",
+                "🎯 Based on your data, I recommend focusing on the Northern region - it shows 23% growth potential.",
+                "⚡ Your current efficiency is 89%. I can help optimize your routes to reach 95%+",
+                "🚀 Great question! Your top performing team leader is Sarah with 97% quality score."
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            setAiDemoMessages(prev => [...prev, { type: 'ai', content: randomResponse }]);
+        }, 1500);
+        
+        setDemoInput('');
+    };
+
+    const startVoiceInput = () => {
+        setIsListening(true);
+        // Simulate voice input
+        setTimeout(() => {
+            setIsListening(false);
+            handleAIDemoMessage("Show me today's SIM activation performance");
+        }, 2000);
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -72,13 +121,53 @@ export default function Home() {
                         className="text-center max-w-4xl mx-auto"
                     >
                         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                            SIM Card Management
-                            <span className="block text-green-400">Made Simple</span>
+                            AI-Powered SIM Management
+                            <span className="block text-green-400 flex items-center justify-center gap-3">
+                                Made Intelligent
+                                <Sparkles className="w-8 h-8 md:w-12 md:h-12 text-yellow-400 animate-pulse" />
+                            </span>
                         </h1>
-                        <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-2xl mx-auto">
-                            Track, manage, and optimize your SIM operations with real-time insights and automated
-                            reporting
+                        <p className="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">
+                            Meet <strong className="text-green-400">Mantix AI</strong> - your intelligent copilot that understands natural language, 
+                            provides instant insights, and optimizes your SIM operations automatically
                         </p>
+
+                        {/* AI Demo Preview */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.8 }}
+                            className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 max-w-2xl mx-auto border border-white/20"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <Bot className="w-6 h-6 text-green-400" />
+                                <span className="text-green-400 font-semibold">Try Mantix AI</span>
+                                <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">LIVE DEMO</span>
+                            </div>
+                            <div className="text-left">
+                                <p className="text-sm text-slate-300 mb-3">Ask me anything about SIM management:</p>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => handleAIDemoMessage("What's my team's performance today?")}
+                                        className="text-xs bg-green-600/20 text-green-300 px-3 py-2 rounded-lg hover:bg-green-600/30 transition-colors"
+                                    >
+                                        📊 Team Performance
+                                    </button>
+                                    <button 
+                                        onClick={() => handleAIDemoMessage("Show me SIM activation trends")}
+                                        className="text-xs bg-blue-600/20 text-blue-300 px-3 py-2 rounded-lg hover:bg-blue-600/30 transition-colors"
+                                    >
+                                        📈 Activation Trends
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowAIDemo(true)}
+                                        className="text-xs bg-purple-600/20 text-purple-300 px-3 py-2 rounded-lg hover:bg-purple-600/30 transition-colors"
+                                    >
+                                        💬 Full Demo
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <motion.a
                                 href={"/subscribe"}
@@ -148,7 +237,7 @@ export default function Home() {
                         </p>
                     </motion.div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {features.map((feature, index) => (
                             <motion.div
                                 key={index}
@@ -159,13 +248,32 @@ export default function Home() {
                                 className="group"
                             >
                                 <div
-                                    className="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-slate-200 h-full">
+                                    className={`bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100 hover:border-slate-200 h-full relative overflow-hidden ${
+                                        feature.isAI ? 'ring-2 ring-green-500/20' : ''
+                                    }`}
+                                >
+                                    {feature.isAI && (
+                                        <div className="absolute top-4 right-4">
+                                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                                <Sparkles className="w-3 h-3" /> AI
+                                            </span>
+                                        </div>
+                                    )}
                                     <div
-                                        className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                                        className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform duration-300`}>
                                         {feature.icon}
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
                                     <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+                                    
+                                    {feature.isAI && (
+                                        <button 
+                                            onClick={() => setShowAIDemo(true)}
+                                            className="mt-4 text-green-600 hover:text-green-700 font-semibold text-sm flex items-center gap-2 group-hover:gap-3 transition-all"
+                                        >
+                                            Try it now <Bot className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
@@ -237,19 +345,19 @@ export default function Home() {
                     <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
                         {[
                             {
-                                quote: "Increased our quality metrics by 35% in just 3 months. The real-time tracking is game-changing.",
+                                quote: "Mantix AI revolutionized our operations! It predicted a 23% efficiency boost and delivered exactly that. Our team now saves 4 hours daily.",
                                 author: "Sarah Johnson",
                                 role: "Team Leader, Safaricom",
                                 avatar: "👩‍💼"
                             },
                             {
-                                quote: "The reporting features save us hours every week. Everything we need in one dashboard.",
+                                quote: "I just ask Mantix AI 'Show me regional performance' and get instant insights. No more manual reports - the AI does everything!",
                                 author: "Michael Ndung'u",
                                 role: "Distribution Manager",
                                 avatar: "👨‍💼"
                             },
                             {
-                                quote: "Simple to use, powerful features. Our team was up and running in minutes.",
+                                quote: "The AI catches quality issues before we even notice them. It's like having a brilliant analyst working 24/7 for our team.",
                                 author: "Alice Kamau",
                                 role: "Operations Director",
                                 avatar: "👩‍💻"
@@ -383,12 +491,30 @@ export default function Home() {
                         viewport={{once: true}}
                         className="text-center text-white"
                     >
-                        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                            Ready to Transform Your SIM Management?
+                        <h2 className="text-3xl md:text-4xl font-bold mb-6 flex items-center justify-center gap-3">
+                            Ready for AI-Powered SIM Management?
+                            <Bot className="w-8 h-8 md:w-10 md:h-10 text-green-300" />
                         </h2>
-                        <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-                            Join hundreds of teams already using our platform to streamline their operations
+                        <p className="text-xl text-green-100 mb-8 max-w-3xl mx-auto">
+                            Join hundreds of teams already using <strong>Mantix AI</strong> to get instant insights, 
+                            automate reports, and optimize operations with natural language commands
                         </p>
+                        
+                        {/* AI Features Highlight */}
+                        <div className="grid md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto">
+                            <div className="text-center">
+                                <MessageCircle className="w-12 h-12 text-green-300 mx-auto mb-3" />
+                                <p className="text-green-100">Ask questions in plain English</p>
+                            </div>
+                            <div className="text-center">
+                                <TrendingUp className="w-12 h-12 text-green-300 mx-auto mb-3" />
+                                <p className="text-green-100">Get predictive insights</p>
+                            </div>
+                            <div className="text-center">
+                                <Sparkles className="w-12 h-12 text-green-300 mx-auto mb-3" />
+                                <p className="text-green-100">Automate complex tasks</p>
+                            </div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <motion.a
                                 href={"/subscribe"}
@@ -424,6 +550,108 @@ export default function Home() {
                     </div>
                 </div>
             </footer>
+
+            {/* AI Demo Modal */}
+            {showAIDemo && (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={() => setShowAIDemo(false)}
+                >
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Demo Header */}
+                        <div className="bg-gradient-to-r from-green-600 to-indigo-600 text-white p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Bot className="w-6 h-6" />
+                                <div>
+                                    <h3 className="font-semibold">Mantix AI Demo</h3>
+                                    <p className="text-xs opacity-80">Try the AI assistant</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setShowAIDemo(false)}
+                                className="text-white/80 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Demo Messages */}
+                        <div className="h-80 overflow-y-auto p-4 space-y-4">
+                            {aiDemoMessages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[80%] p-3 rounded-lg ${
+                                        msg.type === 'user' 
+                                            ? 'bg-green-600 text-white' 
+                                            : 'bg-gray-100 text-gray-800'
+                                    }`}>
+                                        {msg.content}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Demo Input */}
+                        <div className="border-t p-4">
+                            <div className="flex gap-2">
+                                <input 
+                                    type="text"
+                                    value={demoInput}
+                                    onChange={(e) => setDemoInput(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && demoInput.trim() && handleAIDemoMessage(demoInput)}
+                                    placeholder="Ask about SIM management..."
+                                    className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                                <button
+                                    onClick={startVoiceInput}
+                                    className={`p-2 rounded-lg transition-colors ${
+                                        isListening ? 'bg-red-500 text-white' : 'bg-gray-100 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                </button>
+                                <button
+                                    onClick={() => demoInput.trim() && handleAIDemoMessage(demoInput)}
+                                    disabled={!demoInput.trim()}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                                >
+                                    Send
+                                </button>
+                            </div>
+                            
+                            {/* Quick Demo Actions */}
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {[
+                                    "Show team performance",
+                                    "What's my SIM activation rate?",
+                                    "Generate weekly report",
+                                    "Find top performing regions"
+                                ].map((prompt, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleAIDemoMessage(prompt)}
+                                        className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                                    >
+                                        {prompt}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="mt-3 text-center">
+                                <p className="text-xs text-gray-500">
+                                    This is a demo. <a href="/accounts/login" className="text-green-600 hover:text-green-700">Sign up</a> to access the full AI assistant.
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
         </div>
     );
 }

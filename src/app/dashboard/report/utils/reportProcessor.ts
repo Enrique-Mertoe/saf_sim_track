@@ -128,13 +128,18 @@ const syncMatch = async (
     const chunks = chunkArray(databaseRecords, chunkSize);
 
     for (const chunk of chunks) {
+        const serials = chunk.map(r => r.simSerialNumber);
         const All = await simCardService.DB
             .from('sim_cards')
             .select('status, activation_date,registered_on,usage,serial_number')
-            .in('serial_number', chunk.map(r => r.simSerialNumber));
-
+            .in('serial_number', serials);
+        if (All.error) {
+            console.error('Failed to fetch sim cards:', All.error.message);
+            continue;
+        }
         // convert to map
-        const AllMap = new Map(All.data?.map(item => [item.serial_number, item]));
+        const AllMap = new Map((All.data ?? []).map(item => [item.serial_number, item]));
+        const AllUpdate = [];
         await Promise.allSettled(chunk.map(async (record) => {
             return semaphore.execute(async () => {
                 const sourceRecord = recordMap.get(record.simSerialNumber);
@@ -147,7 +152,7 @@ const syncMatch = async (
                     const isQuality = sourceRecord.quality == "Y";
                     const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
 
-                    const simId = record.simSerialNumber;
+                    const serilaNumber = record.simSerialNumber;
 
                     // Add retry logic for database operations
                     let retries = 3;
@@ -160,7 +165,7 @@ const syncMatch = async (
                         //     .select('status, activation_date,registered_on,usage')
                         //     .eq('id', simId)
                         //     .single();
-                        const result = AllMap.get(simId);
+                        const result = AllMap.get(serilaNumber);
 
                         if (result) {
                             existingSim = result;
@@ -177,7 +182,7 @@ const syncMatch = async (
                     }
 
                     if (error || !existingSim) {
-                        console.warn(`Failed to fetch SIM ${simId} after retries:`, error);
+                        console.warn(`Failed to fetch SIM ${serilaNumber} after retries:`, error);
                         return;
                     }
 
@@ -208,14 +213,15 @@ const syncMatch = async (
                         retries = 3;
                         while (retries > 0) {
                             try {
-                                await simService.updateSIMCard(simId, updateFields, user);
+                                AllUpdate.push(updateFields);
+                                await simService.updateSIMCard(record.simId, updateFields, user);
                                 break;
                             } catch (updateError) {
                                 retries--;
                                 if (retries > 0) {
                                     await sleep(1000 * (4 - retries));
                                 } else {
-                                    console.error(`Failed to update SIM ${simId}:`, updateError);
+                                    console.error(`Failed to update SIM ${serilaNumber}:`, updateError);
                                 }
                             }
                         }
