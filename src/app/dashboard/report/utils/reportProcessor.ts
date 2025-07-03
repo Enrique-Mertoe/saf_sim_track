@@ -147,7 +147,7 @@ const syncMatch = async (
                     const isQuality = sourceRecord.quality == "Y";
                     const qualityStatus = isQuality ? SIMStatus.QUALITY : SIMStatus.NONQUALITY;
 
-                    const simId = record.simId;
+                    const simId = record.simSerialNumber;
 
                     // Add retry logic for database operations
                     let retries = 3;
