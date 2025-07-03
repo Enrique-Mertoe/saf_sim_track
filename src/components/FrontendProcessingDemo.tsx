@@ -69,6 +69,7 @@ const FrontendProcessingDemo: React.FC<FrontendProcessingDemoProps> = ({
         }
       );
     } catch (error) {
+      //@ts-ignore
       addLog(`Failed to start processing: ${error.message}`);
       setStatus('Failed to start');
       setIsProcessing(false);
