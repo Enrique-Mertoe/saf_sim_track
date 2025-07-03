@@ -3,6 +3,7 @@ import {createSuperClient} from '@/lib/supabase/server';
 import Accounts from '@/lib/accounts';
 import {SIMStatus, UserRole} from "@/models";
 import {applyFilters} from "@/helper";
+import {ROLE_BASED_ROUTES as ROUTES} from "@/app/api/mantix-ai/utils";
 
 // Security: Verify user authentication
 async function verifyUserAndGetContext() {
@@ -72,7 +73,7 @@ async function executeDirectiveOperation(directive: any, userContext: any) {
                 return await getQualityMetrics(supabase, userContext, directive.params);
 
             case 'navigate_to_page':
-                return await handleNavigation(directive.params);
+                return await handleNavigation(directive.params, userContext);
 
             default:
                 return {
@@ -642,39 +643,124 @@ async function getQualityMetrics(supabase: any, userContext: any, params: any) {
         summary: `Quality score: ${qualityScore}/100 (Grade ${metricsData.grade}), ${successRate}% success rate`
     };
 }
+const ROLE_BASED_ROUTES = {...ROUTES}
+
+// Get allowed routes for a specific role
+function getAllowedRoutesForRole(userRole: string): string[] {
+    const routes: string[] = [];
+
+    // Add general routes for all users
+    Object.values(ROLE_BASED_ROUTES.GENERAL).forEach(routeObj => {
+        if (!routes.includes(routeObj.route)) {
+            routes.push(routeObj.route);
+        }
+    });
+
+    switch (userRole) {
+        case UserRole.ADMIN:
+            // Admin gets access to all routes
+            Object.values(ROLE_BASED_ROUTES.ADMIN).forEach(routeObj => {
+                if (!routes.includes(routeObj.route)) routes.push(routeObj.route);
+            });
+            Object.values(ROLE_BASED_ROUTES.TEAM_LEADER).forEach(routeObj => {
+                if (!routes.includes(routeObj.route)) routes.push(routeObj.route);
+            });
+            Object.values(ROLE_BASED_ROUTES.VAN_STAFF).forEach(routeObj => {
+                if (!routes.includes(routeObj.route)) routes.push(routeObj.route);
+            });
+            break;
+        case UserRole.TEAM_LEADER:
+            Object.values(ROLE_BASED_ROUTES.TEAM_LEADER).forEach(routeObj => {
+                if (!routes.includes(routeObj.route)) routes.push(routeObj.route);
+            });
+            break;
+        case UserRole.STAFF:
+            Object.values(ROLE_BASED_ROUTES.VAN_STAFF).forEach(routeObj => {
+                if (!routes.includes(routeObj.route)) routes.push(routeObj.route);
+            });
+            break;
+        default:
+            // Return only general routes for unknown roles
+            break;
+    }
+
+    return routes;
+}
+
+// Get route information by alias for a specific role
+function getRouteByAlias(alias: string, userRole: string): { route: string; name: string } | null {
+    const allRoutes = {
+        ...ROLE_BASED_ROUTES.GENERAL
+    };
+
+    switch (userRole) {
+        case 'ADMIN':
+            Object.assign(allRoutes, ROLE_BASED_ROUTES.ADMIN, ROLE_BASED_ROUTES.TEAM_LEADER, ROLE_BASED_ROUTES.VAN_STAFF);
+            break;
+        case 'TEAM_LEADER':
+            Object.assign(allRoutes, ROLE_BASED_ROUTES.TEAM_LEADER);
+            break;
+        case 'VAN_STAFF':
+        case 'STAFF':
+            Object.assign(allRoutes, ROLE_BASED_ROUTES.VAN_STAFF);
+            break;
+    }
+    //@ts-ignore
+    const routeObj = allRoutes[alias.toLowerCase()];
+    return routeObj || null;
+}
 
 // Handle navigation requests
-async function handleNavigation(params: any) {
-    if (!params || !params.route) {
+async function handleNavigation(params: any, userContext: any) {
+    // Handle route, pageName, and alias parameters
+    let targetRoute = params.route ?? params.alias;
+    let routeName = params.name || null;
+    let customCaption = params.caption || null;
+
+    // If no direct route provided, try to resolve from pageName or alias
+    if (!targetRoute) {
+        if (params.pageName) {
+            targetRoute = `/${params.pageName}`;
+        } else if (params.alias) {
+            const routeInfo = getRouteByAlias(params.alias, userContext.role);
+            if (routeInfo) {
+                targetRoute = routeInfo.route;
+                routeName = routeName || routeInfo.name;
+            }
+        }
+    }
+
+    if (!targetRoute) {
         return {
             success: false,
             error: "Navigation route not specified",
-            summary: "Navigation request requires a valid route parameter"
+            summary: "Navigation request requires a valid route parameter or alias"
         };
     }
 
-    // Define allowed routes for security
-    const allowedRoutes = [
-        '/dashboard', '/team-performance', '/teams', '/sim-management',
-        '/reports', '/analytics', '/settings', '/profile', '/users',
-        '/inventory', '/notifications', '/help', '/support'
-    ];
+    // Get allowed routes based on user role
+    const allowedRoutes = getAllowedRoutesForRole(userContext.role);
 
-    if (!allowedRoutes.includes(params.route)) {
+    if (!allowedRoutes.includes(targetRoute)) {
         return {
             success: false,
-            error: "Invalid navigation route",
-            summary: "Navigation requested to an unauthorized or non-existent page"
+            error: "Unauthorized navigation route",
+            summary: `You don't have permission to access ${routeName || targetRoute}. Check with your administrator for access.`
         };
     }
+
+    // Generate appropriate caption/summary
+    const finalCaption = customCaption || (routeName ? `Navigating to ${routeName}` : `Navigation prepared for ${targetRoute}`);
 
     return {
         success: true,
         data: {
-            route: params.route,
-            navigationType: 'client_redirect'
+            route: targetRoute,
+            navigationType: 'client_redirect',
+            caption: customCaption,
+            routeName: routeName
         },
-        summary: `Navigation prepared for ${params.route}`
+        summary: finalCaption
     };
 }
 

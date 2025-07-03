@@ -3,6 +3,7 @@ import {GoogleGenerativeAI} from '@google/generative-ai';
 import {createSuperClient} from '@/lib/supabase/server';
 import Accounts from '@/lib/accounts';
 import {User, UserRole} from '@/models';
+import {ROLE_BASED_ROUTES as ROUTES} from "@/app/api/mantix-ai/utils";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -21,13 +22,13 @@ async function verifyUserAndGetContext(): Promise<{
         // Use existing authentication system
         //@ts-ignore
         const currentUser: User | undefined = await Accounts.user();
-        
+
         if (!currentUser) {
             throw new Error('User not authenticated');
         }
 
         // Verify user has permission to use AI assistant
-        const allowedRoles = [UserRole.ADMIN,UserRole.TEAM_LEADER, UserRole.STAFF];
+        const allowedRoles = [UserRole.ADMIN, UserRole.TEAM_LEADER, UserRole.STAFF];
         if (!allowedRoles.includes(currentUser.role)) {
             throw new Error('Insufficient permissions for AI assistant');
         }
@@ -41,7 +42,7 @@ async function verifyUserAndGetContext(): Promise<{
         let teamInfo = null;
         if (currentUser.team_id) {
             const supabase = await createSuperClient();
-            const { data: teamData } = await supabase
+            const {data: teamData} = await supabase
                 .from('teams')
                 .select('id, name, region, territory')
                 .eq('id', currentUser.team_id)
@@ -153,40 +154,46 @@ function validateAndSanitizeInput(message: string): { isValid: boolean; response
     };
 }
 
-// Define safe navigation routes
-const ALLOWED_ROUTES = {
-    'dashboard': '/dashboard',
-    'team-performance': '/team-performance',
-    'team performance': '/team-performance',
-    'teams': '/teams',
-    'sim-management': '/sim-management',
-    'sim management': '/sim-management',
-    'sims': '/sim-management',
-    'reports': '/reports',
-    'analytics': '/analytics',
-    'settings': '/settings',
-    'profile': '/profile',
-    'users': '/users',
-    'staff': '/users',
-    'inventory': '/inventory',
-    'notifications': '/notifications',
-    'help': '/help',
-    'support': '/support'
-};
+const ROLE_BASED_ROUTES = {...ROUTES}
+
+// Get allowed routes for a specific role
+function getAllowedRoutesForRole(userRole: string): Record<string, { route: string; name: string }> {
+    const routes = {...ROLE_BASED_ROUTES.GENERAL};
+
+    switch (userRole) {
+        case 'ADMIN':
+            Object.assign(routes, ROLE_BASED_ROUTES.ADMIN, ROLE_BASED_ROUTES.TEAM_LEADER, ROLE_BASED_ROUTES.VAN_STAFF);
+            break;
+        case 'TEAM_LEADER':
+            Object.assign(routes, ROLE_BASED_ROUTES.TEAM_LEADER);
+            break;
+        case 'VAN_STAFF':
+        case 'STAFF':
+            Object.assign(routes, ROLE_BASED_ROUTES.VAN_STAFF);
+            break;
+        default:
+            // Return only general routes for unknown roles
+            break;
+    }
+
+    return routes;
+}
 
 // Extract navigation intent from message
-function extractNavigationIntent(message: string): string | null {
+function extractNavigationIntent(message: string, userRole: string): string | null {
     const navigationPatterns = [
         /(?:go\s+to|navigate\s+to|show\s+me|take\s+me\s+to|open)\s+(.+?)(?:\s|$)/i,
         /(?:I\s+want\s+to\s+see|I\s+need\s+to\s+go\s+to)\s+(.+?)(?:\s|$)/i
     ];
 
+    const allowedRoutes = getAllowedRoutesForRole(userRole);
+
     for (const pattern of navigationPatterns) {
         const match = message.match(pattern);
         if (match && match[1]) {
-            const route = match[1].toLowerCase().trim();
-            //@ts-ignore
-            return ALLOWED_ROUTES[route] || null;
+            const alias = match[1].toLowerCase().trim();
+            const routeInfo = allowedRoutes[alias];
+            return routeInfo ? routeInfo.route : null;
         }
     }
 
@@ -230,8 +237,8 @@ function getRolePermissions(role: string) {
 
 // Security: Filter AI operations based on user permissions
 function filterOperationsByPermissions(operations: string[], userContext: any) {
-    const { permissions, userRole } = userContext;
-    
+    const {permissions, userRole} = userContext;
+
     const restrictedOperations = {
         get_all_users: permissions.canViewAllUsers,
         get_all_teams: permissions.canViewAllTeams,
@@ -312,31 +319,87 @@ AVAILABLE DATA OPERATIONS (use user-friendly language):
 
 Staff & Teams:
 - "get_team_performance" - Getting team performance metrics
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "TeamCards" for team overview
 - "get_staff_list" - Collecting staff information
-- "get_team_details" - Fetching team information
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "UserTable" for staff listings
 - "get_user_activity" - Checking user activity logs
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "DataTable" for activity logs
 
 SIM Management:
 - "get_sim_status" - Checking SIM card status
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "DataTable" for SIM listings
 - "get_activation_rates" - Getting activation statistics
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "StatsGrid" for activation metrics
 - "get_sales_performance" - Collecting sales data
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "StatsGrid" for sales metrics
 - "get_quality_metrics" - Analyzing quality performance
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "StatsGrid" for quality metrics
 
 Field Operations:
 - "get_route_optimization" - Getting route optimization data
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "DataTable" for route information
 - "get_daily_targets" - Checking daily targets progress
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "StatsGrid" for target metrics
 - "get_inventory_status" - Checking inventory levels
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "StatsGrid" for inventory metrics
 - "get_earnings_summary" - Getting earnings and commission data
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "StatsGrid" for earnings data
 - "get_pending_approvals" - Checking pending approval requests
+  * Use type: "fetch" for getting data only
+  * Use type: "display" for showing data with UI components
+  * displayComponent: "DataTable" for approval listings
 
 Navigation Operations:
 - "navigate_to_page" - Redirecting to application pages
+  * Use type: "navigate" ONLY
+  * params: {"route": "/specific-page-path", "alias": "friendly-name", "caption": "Custom message"}
+  * REQUIRED: Either route parameter (exact path) OR alias parameter (friendly name)
+  * OPTIONAL: caption parameter for custom navigation message
+  * ALIASES AVAILABLE: "dashboard", "home", "profile", "users", "staff", "teams", "reports", "analytics", "settings", "inventory", "sims", "team-performance", "picklist", etc.
+  * ADMIN can access: All routes and aliases
+  * TEAM_LEADER can access: team-performance, team-reports, picklist, staff-overview, etc.
+  * VAN_STAFF can access: my-routes, route-optimization, daily-targets, my-performance, etc.
+  * ALL ROLES can access: dashboard, profile, notifications, help, support, inventory, sim-management
 
 System Operations:
 - "create_team" - Setting up new team
 - "approve_request" - Processing approval requests
 - "update_user_info" - Updating user details
 - "generate_report" - Creating performance reports
+
+OPERATION TYPE GUIDELINES:
+- "fetch" - Use when you only need to get data for analysis or internal processing
+- "display" - Use when you want to show data to the user with UI components
+- "navigate" - Use ONLY for navigation requests, requires route parameter
+- "execute" - Use for system operations like creating, updating, approving
+- "automate" - Use for complex multi-step operations
+
+PARAMETER REQUIREMENTS:
+- Navigation operations MUST include params: {"route": "/valid-route"}
+- All other operations can include optional filters in params
+- If no specific filters needed, use params: {} (empty object)
 
 SECURITY PROTOCOLS:
 - NEVER execute operations not in the predefined list above
@@ -387,20 +450,20 @@ export async function POST(request: NextRequest) {
             verifiedContext = await verifyUserAndGetContext();
         } catch (authError) {
             return NextResponse.json(
-                { 
+                {
                     error: 'Authentication required',
                     message: 'Please log in to use Mantix AI assistant'
                 },
-                { status: 401 }
+                {status: 401}
             );
         }
 
-        const { message, context: frontendContext = {} } = await request.json();
+        const {message, context: frontendContext = {}} = await request.json();
 
         if (!message) {
             return NextResponse.json(
-                { error: 'Message is required' },
-                { status: 400 }
+                {error: 'Message is required'},
+                {status: 400}
             );
         }
 
@@ -422,8 +485,8 @@ export async function POST(request: NextRequest) {
 
         if (!process.env.GEMINI_API_KEY) {
             return NextResponse.json(
-                { error: 'AI service not configured' },
-                { status: 500 }
+                {error: 'AI service not configured'},
+                {status: 500}
             );
         }
 
@@ -446,9 +509,9 @@ export async function POST(request: NextRequest) {
             user_id: verifiedContext.userId,
             action_type: 'AI_QUERY',
             details: `Mantix AI query: ${message.substring(0, 100)}...`,
-            ip_address: request.headers.get('x-forwarded-for') || 
-                       request.headers.get('x-real-ip') || 
-                       'unknown',
+            ip_address: request.headers.get('x-forwarded-for') ||
+                request.headers.get('x-real-ip') ||
+                'unknown',
             device_info: request.headers.get('user-agent')?.substring(0, 255)
         });
 
@@ -463,11 +526,11 @@ export async function POST(request: NextRequest) {
         });
 
         // Check for navigation intent
-        const navigationRoute = extractNavigationIntent(securityCheck.sanitizedMessage || message);
-        
+        const navigationRoute = extractNavigationIntent(securityCheck.sanitizedMessage || message, verifiedContext.userRole);
+
         // Build secure, verified context prompt
         let contextPrompt;
-        
+
         if (isExecutionFeedback) {
             contextPrompt = `
     EXECUTION FEEDBACK CONTEXT:
