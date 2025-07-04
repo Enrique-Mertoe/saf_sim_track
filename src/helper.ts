@@ -324,6 +324,7 @@ export const thisMonth = () => {
 //     return ['or', `activation_date.is.null,activation_date.gte.${startOfMonth},activation_date.lt.${startOfNextMonth}`];
 // }
 export const wave: () => Filter = () => {
+    return [] as any;
     const zone = 'Africa/Nairobi';
     const startOfMonth = DateTime.local().setZone(zone).startOf('month').toUTC().toISO();
     const startOfNextMonth = DateTime.local().setZone(zone).plus({months: 1}).startOf('month').toUTC().toISO();
