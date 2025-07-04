@@ -2,20 +2,24 @@ import {useEffect, useState} from "react";
 import useApp from "@/ui/provider/AppProvider";
 import simService from "@/services/simService";
 import {DateTime} from "luxon";
+import {buildWave} from "@/helper";
 
 export const TeamLeaderStatCard = ({title, dataType, subtitle, icon: Icon, color = "blue"}) => {
     const [value, sV] = useState(0)
     const user = useApp().user;
 
+    const wave = buildWave()
     const fetchMetrics = async () => {
         if (!user || !user.team_id) return;
         const data = await {
-            total: simService.countAll(user),
+            total: simService.countAll(user, [wave]),
             registered: simService.countAll(user, [
-                ["registered_on", "not", "is", null]
+                ["registered_on", "not", "is", null],
+                wave
             ]),
-            unassigned: simService.countAll(user, [["assigned_to_user_id", "is", null]]),
+            unassigned: simService.countAll(user, [wave, ["assigned_to_user_id", "is", null]]),
             "registered-today": simService.countReg(user, user.team_id, [
+                wave,
                 ["registered_on", "gte", DateTime.now().setZone("Africa/Nairobi").startOf("day").toJSDate().toISOString()]
             ]),
         }[dataType || "today"]
