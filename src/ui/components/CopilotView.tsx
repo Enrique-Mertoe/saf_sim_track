@@ -269,7 +269,7 @@ export default function CopilotView({isOpen, onClose, context = {}}: CopilotView
                 });
 
                 // Handle different directive types
-                if (directive.type === 'fetch' && result.data) {
+                if (directive.type === 'display' && result.data) {
                     // Update the original AI message with smart display
                     setMessages(prev => prev.map(msg =>
                         msg.id === messageId

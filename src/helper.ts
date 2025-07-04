@@ -229,8 +229,8 @@ export type Filter =
 // };
 
 export const applyFilters = <T>(q: T, filters: Filter[], useWave = true): T => {
-    if (useWave)
-        filters = [wave(), ...filters]
+    // if (useWave)
+    //     filters = [wave(), ...filters]
     for (const filter of filters) {
         if (filter.length === 2) {
             const [col, val] = filter;
@@ -333,6 +333,39 @@ export const wave: () => Filter = () => {
         [
             'activation_date.is.null',
             `and(activation_date.gte.${startOfMonth},activation_date.lt.${startOfNextMonth})`
+        ].join(',')
+    ];
+
+};
+
+
+export const currentWave = (start?: string, end?: string): { start: string|null, end: string|null } => {
+    const zone = 'Africa/Nairobi';
+    // If start is provided → shift to start of month in Nairobi, then convert to UTC ISO
+    const startDate = start
+        ? DateTime.fromISO(start, { zone }).startOf('month')
+        : DateTime.now().setZone(zone).startOf('month');
+
+    // If end is provided → shift to start of its month in Nairobi + 1 month, then convert to UTC ISO
+    const endDate = end
+        ? DateTime.fromISO(end, { zone }).startOf('month').plus({ months: 1 })
+        : DateTime.now().setZone(zone).plus({ months: 1 }).startOf('month');
+
+    return {
+        start: startDate.toUTC().toISO({ suppressMilliseconds: true }),  // '2025-06-01T00:00:00Z'
+        end: endDate.toUTC().toISO({ suppressMilliseconds: true }),      // '2025-07-01T00:00:00Z'
+    };
+};
+
+export const buildWave: () => Filter = (start?: string, end?: string) => {
+    const zone = 'Africa/Nairobi';
+    const startOfMonth = DateTime.local().setZone(zone).startOf('month').toUTC().toISO();
+    const startOfNextMonth = DateTime.local().setZone(zone).plus({months: 1}).startOf('month').toUTC().toISO();
+    return [
+        'or',
+        [
+            'activation_date.is.null',
+            `and(activation_date.gte.${start ?? startOfMonth},activation_date.lt.${start ?? startOfNextMonth})`
         ].join(',')
     ];
 

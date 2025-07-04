@@ -2,7 +2,7 @@ import React from 'react';
 import {ArrowUpRightSquare, Package, ShoppingCart, Smartphone, TrendingUp, UsersRound} from 'lucide-react';
 import simService from "@/services/simService";
 import useApp from "@/ui/provider/AppProvider";
-import {to2dp} from "@/helper";
+import {buildWave, currentWave, to2dp} from "@/helper";
 import Signal from "@/lib/Signal";
 import {useRouter} from "next/navigation";
 
@@ -146,8 +146,8 @@ const fetchRegData = async (user: any) => {
 
 const fetchAssignedData = async (user: any) => {
     const [v1, v2] = await Promise.all([
-        simService.countAll(user),
-        simService.countAssigned(user)
+        simService.countAll(user,[buildWave()]),
+        simService.countAssigned(user,[buildWave()])
     ])
     const [all, assigned] = [v1.count ?? 0, v2.count ?? 0]
     return {value: assigned, percentage: to2dp((assigned / all) * 100) || 0,}
@@ -155,8 +155,8 @@ const fetchAssignedData = async (user: any) => {
 
 const fetchUnhandledData = async (user: any) => {
     const [v1, v2] = await Promise.all([
-        simService.countAll(user),
-        simService.countActivated(user)
+        simService.countAll(user,[buildWave()]),
+        simService.countActivated(user,[buildWave()])
     ])
 
     const [all, assigned] = [v1.count ?? 0, v2.count ?? 0]
@@ -165,10 +165,11 @@ const fetchUnhandledData = async (user: any) => {
 };
 const fetchSoldUnassiged = async (user: any) => {
     const [v1, v2] = await Promise.all([
-        simService.countActivated(user),
+        simService.countActivated(user,[buildWave()]),
         simService.countActivated(user, [
             ["assigned_to_user_id", "is", null],
-            ["batch_id", "neq", "BATCH-UNKNOWN"]
+            ["batch_id", "neq", "BATCH-UNKNOWN"],
+            buildWave()
         ])
     ])
 
@@ -185,14 +186,16 @@ const SimAllocationCard: React.FC = () => {
     const user = useApp().user
     const router = useRouter();
     const [isLoading, setIsLoading] = React.useState(!user);
+    const df = currentWave()
     React.useEffect(() => {
         const fetchTotal = async () => {
             if (!user) return
             const [v1, v2] = await Promise.all([
-                simService.countAll(user),
+                simService.countAll(user,[buildWave()]),
                 simService.countAll(user, [[
-                    "batch_id", "BATCH-UNKNOWN"
-                ]])
+                    "batch_id", "BATCH-UNKNOWN"],
+                    buildWave()
+                ])
             ])
             setTotalSims(v1.count ?? 0);
             sE(v2.count ?? 0)

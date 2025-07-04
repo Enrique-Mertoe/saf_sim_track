@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import simService from "@/services/simService";
 import {SIMStatus} from "@/models";
+import {currentWave} from "@/helper";
 
 export const MetricCard = ({
                                title,
@@ -16,13 +17,16 @@ export const MetricCard = ({
     const [val, sV] = useState(value)
     const fetchMetrics = async () => {
         if (!user) return
+        const wave = currentWave(dateFilters.startDate,dateFilters.endDate)
         const dateConditions = [];
         if (dateFilters && dateFilters.startDate) {
-            dateConditions.push(["activation_date", "gte", dateFilters.startDate]);
+            dateConditions.push(["activation_date", "gte", wave.start]);
         }
         if (dateFilters && dateFilters.endDate) {
-            dateConditions.push(["activation_date", "lte", dateFilters.endDate]);
+            dateConditions.push(["activation_date", "lte", wave.end]);
         }
+
+
         const [reg] = await Promise.all([
             simService.countReg(user, null, [
                 {
@@ -33,7 +37,7 @@ export const MetricCard = ({
 
                 }[dataType] || [],
                 ["status", SIMStatus.ACTIVATED],
-                ...dateConditions
+                ...dateConditions,
             ]),
         ]);
         sV(reg.count ?? 0)

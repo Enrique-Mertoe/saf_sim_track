@@ -25,13 +25,13 @@ const dataCache = new Map();
 
 const SIMAnalysisPage = () => {
     const {user} = useApp();
-    const [selectedPeriod, setSelectedPeriod] = useState('last-30-days');
+    const [selectedPeriod, setSelectedPeriod] = useState('current-month');
     const [selectedTeam, setSelectedTeam] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [error, setError] = useState(null);
     const [teamData, setTeamData] = useState([]);
-    const [startDate, setStartDate] = useState(DateTime.now().minus({days: 30}).toISODate());
+    const [startDate, setStartDate] = useState(DateTime.now().startOf('month').toISODate());
     const [endDate, setEndDate] = useState(DateTime.now().toISODate());
     const [totalMetrics, setTotalMetrics] = useState({
         totalRecorded: 0,
@@ -72,6 +72,9 @@ const SIMAnalysisPage = () => {
                 case 'last-90-days':
                     return 'Last 90 days';
                 case 'last-30-days':
+                    return 'Last 30 days';
+                case 'current-month':
+                    return 'Current Month';
                 default:
                     return 'Last 30 days';
             }
@@ -97,6 +100,11 @@ const SIMAnalysisPage = () => {
                     start = now.minus({days: 90}).startOf('day');
                     break;
                 case 'last-30-days':
+                    start = now.minus({days: 30}).startOf('day');
+                    break;
+                case 'current-month':
+                    start = now.startOf('month');
+                    break;
                 default:
                     start = now.minus({days: 30}).startOf('day');
                     break;

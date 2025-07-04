@@ -958,7 +958,7 @@ export const simCardService = {
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("registered_on", "is", null)
-                .eq("admin_id", await admin_id(user)),filters);
+                .eq("admin_id", await admin_id(user)), filters);
             if (teamId)
                 q = q.eq("team_id", teamId)
             return applyFilters(q, filters)
@@ -979,20 +979,20 @@ export const simCardService = {
                 .select('id', {count: "exact"})
                 .not("registered_on", "is", null)
                 .eq("admin_id", await admin_id(user))
-                .eq("team_id", user.team_id),[])
+                .eq("team_id", user.team_id), [])
             return applyFilters(q, filters)
         }
 
         return {data: null, error: "Invalid user role", count: 0}
     },
-    countAssigned: async (user: User) => {
+    countAssigned: async (user: User, filters: Filter[] = []) => {
         const supabase = createSupabaseClient();
         if (user.role === UserRole.ADMIN) {
             return applyFilters(supabase
                 .from('sim_cards')
                 .select('id', {count: "exact"})
                 .not("assigned_to_user_id", "is", null)
-                .eq("admin_id", await admin_id(user)),[]);
+                .eq("admin_id", await admin_id(user)), filters);
         }
 
         // if (user.role === UserRole.STAFF) {
