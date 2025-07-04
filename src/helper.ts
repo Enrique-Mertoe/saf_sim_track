@@ -365,7 +365,7 @@ export const buildWave: () => Filter = (start?: string, end?: string) => {
         'or',
         [
             'activation_date.is.null',
-            `and(activation_date.gte.${start ?? startOfMonth},activation_date.lt.${end ?? startOfNextMonth})`
+            `and(activation_date.gte.${start ?? startOfMonth},activation_date.lte.${end ?? startOfNextMonth})`
         ].join(',')
     ];
 
