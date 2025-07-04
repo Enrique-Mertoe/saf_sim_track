@@ -4,7 +4,7 @@ import {SIMStatus, User} from "@/models";
 import {admin_id} from "@/services/helper";
 import {DateTime} from "luxon";
 import simService from "@/services/simService";
-import {Filter} from "@/helper";
+import {buildWave, Filter} from "@/helper";
 
 interface StatData {
     total: number;
@@ -82,7 +82,7 @@ function StatCard({
                 filters = [];
                 break;
         }
-        return [...filters, ...extraFilters]
+        return [...filters, ...extraFilters,buildWave()]
     }
 
     // Fetch data with optimized queries

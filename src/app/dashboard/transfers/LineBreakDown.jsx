@@ -119,6 +119,11 @@ export default function LineBreakDown({user, dateRange}) {
                 const {data, error} = await simService.getBatchStatsForTeam(
                     selectedTeam,
                     user,
+                    // {
+                    //     startDate: localDateFilter.startDate?.toISOString().split('T')[0],
+                    //     endDate: localDateFilter.endDate?.toISOString().split('T')[0]
+                    // }
+                    dateRange
                 );
 
                 // const data = new Promise((resolve, reject) => {
@@ -384,7 +389,7 @@ const TeamCard = ({team, user, dateRange, setSelectedTeam, setView}) => {
     useEffect(() => {
         const fetchData = async () => {
             if (!user || !team.id) return
-            setIsLoading(true)
+            // setIsLoading(true)
             const dateConditions = [];
             if (dateRange && dateRange.startDate) {
                 dateConditions.push(["created_at", "gte", dateRange.startDate]);

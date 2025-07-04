@@ -55,8 +55,8 @@ const AdminTransfersPage = () => {
     const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [generalSearchTerm, setGeneralSearchTerm] = useState<string>('');
-    const [selectedPeriod, setSelectedPeriod] = useState<string>('last-30-days');
-    const [startDate, setStartDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 30)));
+    const [selectedPeriod, setSelectedPeriod] = useState<string>('current-month');
+    const [startDate, setStartDate] = useState<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
     const [endDate, setEndDate] = useState<Date>(new Date());
 
     // Setup Supabase realtime for transfers
@@ -93,6 +93,9 @@ const AdminTransfersPage = () => {
                 case 'last-90-days':
                     return 'Last 90 days';
                 case 'last-30-days':
+                    return 'Last 30 days';
+                case 'current-month':
+                    return 'Current Month';
                 default:
                     return 'Last 30 days';
             }

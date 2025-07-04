@@ -17,7 +17,7 @@ import {createSupabaseClient} from "@/lib/supabase/client";
 import {SIMCard, SIMStatus, User, UserRole} from "@/models";
 import alert from "@/ui/alert";
 import useApp from "@/ui/provider/AppProvider";
-import {now} from "@/helper";
+import {buildWave, now} from "@/helper";
 import MaterialSelect from "@/ui/components/MaterialSelect";
 import {showModal} from "@/ui/shortcuts";
 import simService from "@/services/simService";
@@ -82,7 +82,7 @@ const SimManagementPage = () => {
                         }
                     },
                     {
-                        filters: [["team_id", user.team_id]]
+                        filters: [["team_id", user.team_id],wave]
                     }
                 )
             }).then(simData => {
@@ -105,20 +105,21 @@ const SimManagementPage = () => {
         unassigned: stats1.total - stats1.assigned,
         sold: stats1.sold
     };
-
+    const wave = buildWave()
     useEffect(() => {
         if (!user || !user.team_id) return
         simService.countQuery(user, [
-            ["team_id", user.team_id]
+            ["team_id", user.team_id], wave
         ]).then(r => {
             sSt(prev => ({...prev, total: r.count ?? 0}))
         });
-        simService.countReg(user).then(r => {
+        simService.countReg(user, null, [wave]).then(r => {
             sSt(prev => ({...prev, sold: r.count ?? 0}))
         });
         simService.countQuery(user, [
             ["assigned_to_user_id", "not", "is", null],
-            ["team_id", user.team_id]
+            ["team_id", user.team_id],
+            wave
         ]).then(r => {
             sSt(prev => ({...prev, assigned: r.count ?? 0}))
         });
@@ -530,7 +531,8 @@ const SimManagementPage = () => {
                                 {(activeTab === 'stats' || dimen.lg) && (
                                     <div className="bg-white relative rounded-lg shadow-sm">
                                         <div className="p-4  border-b border-gray-200">
-                                            <div className="flex flex-col md:flex-row md:items-center gap-2  md:justify-between">
+                                            <div
+                                                className="flex flex-col md:flex-row md:items-center gap-2  md:justify-between">
                                                 <h2 className="text-lg font-semibold text-gray-900">Unassigned SIMs</h2>
 
                                                 <div className="flex gap-2 md:ms-auto">
