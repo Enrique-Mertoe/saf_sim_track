@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import simService from "@/services/simService";
 import {ArrowUpRight} from 'lucide-react';
-import {buildWave, currentWave} from "@/helper";
+import {currentWave} from "@/helper";
 
 
 const StatCard = ({
@@ -22,26 +22,27 @@ const wave = currentWave(dateRange.startDate,dateRange.endDate)
         const fetchData = async () => {
             if (!user) return
             const dateConditions = [];
-            // if (dateRange && dateRange.startDate) {
-            //     dateConditions.push(["created_at", "gte", dateRange.startDate]);
-            // }
-            // if (dateRange && dateRange.endDate) {
-            //     dateConditions.push(["created_at", "lte", dateRange.endDate]);
-            // }
+            if (dateRange && dateRange.startDate) {
+                dateConditions.push(["created_at", "gte", dateRange.startDate]);
+            }
+            if (dateRange && dateRange.endDate) {
+                dateConditions.push(["created_at", "lte", dateRange.endDate]);
+            }
             const data = await {
-                general: simService.countAll(user, [
-                    buildWave(wave.start,wave.end)
-                ]),
+                general: simService.countAll(user,[...dateConditions]),
                 assigned: simService.countAll(user, [
                     ["assigned_to_user_id", "not", "is", null],
-                    buildWave(wave.start,wave.end)
+                    ...dateConditions
+                    // buildWave(wave.start,wave.end)
                 ]), picklist: simService.countAll(user, [
                     ["batch_id", "neq", "BATCH-UNKNOWN"],
-                    buildWave(wave.start,wave.end)
+                    ...dateConditions
+                    // buildWave(wave.start,wave.end)
                 ]),
                 n_picklist: simService.countAll(user, [
                     ["batch_id", "BATCH-UNKNOWN"],
-                    buildWave(wave.start,wave.end)
+                    ...dateConditions
+                    // buildWave(wave.start,wave.end)
                 ]),
             }[dataType]
             sV(data.count ?? 0)
