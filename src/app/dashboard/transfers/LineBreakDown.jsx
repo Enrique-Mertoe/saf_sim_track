@@ -70,7 +70,7 @@ export default function LineBreakDown({user, dateRange}) {
         if (view === 'teams') {
             fetchTeamStats().then();
         }
-    }, [view, localDateFilter, viewState.teams.loaded, user]);
+    }, [view, dateRange, user]);
 
     // Fetch batch stats when a team is selected
     useEffect(() => {
@@ -86,15 +86,15 @@ export default function LineBreakDown({user, dateRange}) {
             setError(null);
 
             try {
-                const {data, error} = await simService.getBatchStatsForTeam(
-                    selectedTeam,
-                    user,
-                    // {
-                    //     startDate: localDateFilter.startDate?.toISOString().split('T')[0],
-                    //     endDate: localDateFilter.endDate?.toISOString().split('T')[0]
-                    // }
-                    dateRange
-                );
+                // const {data, error} = await simService.getBatchStatsForTeam(
+                //     selectedTeam,
+                //     user,
+                //     // {
+                //     //     startDate: localDateFilter.startDate?.toISOString().split('T')[0],
+                //     //     endDate: localDateFilter.endDate?.toISOString().split('T')[0]
+                //     // }
+                //     dateRange
+                // );
 
                 let batches = await new Promise(async resolve => {
                     const cw = currentWave(dateRange.startDate, dateRange.endDate)
@@ -135,7 +135,7 @@ export default function LineBreakDown({user, dateRange}) {
         };
 
         fetchBatchStats();
-    }, [selectedTeam, view, localDateFilter, viewState.batches.loaded, viewState.batches.teamId, user]);
+    }, [selectedTeam, view, dateRange,  viewState.batches.teamId, user]);
 
     // Fetch user stats when a batch is selected
     useEffect(() => {
