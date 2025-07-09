@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react";
 import simService from "@/services/simService";
 import {ArrowUpRight} from 'lucide-react';
-import {currentWave} from "@/helper";
+import {buildWave, currentWave} from "@/helper";
 
 
 const StatCard = ({
@@ -18,31 +18,29 @@ const StatCard = ({
                   }) => {
     const [value, sV] = useState(0)
     useEffect(() => {
-const wave = currentWave(dateRange.startDate,dateRange.endDate)
+        const range = currentWave(dateRange.startDate, dateRange.endDate),
+            wave = buildWave(range.start, range.end)
         const fetchData = async () => {
             if (!user) return
-            const dateConditions = [];
-            if (dateRange && dateRange.startDate) {
-                dateConditions.push(["created_at", "gte", dateRange.startDate]);
-            }
-            if (dateRange && dateRange.endDate) {
-                dateConditions.push(["created_at", "lte", dateRange.endDate]);
-            }
+            // const dateConditions = [];
+            // if (dateRange && dateRange.startDate) {
+            //     dateConditions.push(["created_at", "gte", range.start]);
+            // }
+            // if (dateRange && dateRange.endDate) {
+            //     dateConditions.push(["created_at", "lte", range.end]);
+            // }
             const data = await {
-                general: simService.countAll(user,[...dateConditions]),
+                general: simService.countAll(user, [wave]),
                 assigned: simService.countAll(user, [
                     ["assigned_to_user_id", "not", "is", null],
-                    ...dateConditions
-                    // buildWave(wave.start,wave.end)
+                    wave
                 ]), picklist: simService.countAll(user, [
                     ["batch_id", "neq", "BATCH-UNKNOWN"],
-                    ...dateConditions
-                    // buildWave(wave.start,wave.end)
+                    wave
                 ]),
                 n_picklist: simService.countAll(user, [
                     ["batch_id", "BATCH-UNKNOWN"],
-                    ...dateConditions
-                    // buildWave(wave.start,wave.end)
+                   wave
                 ]),
             }[dataType]
             sV(data.count ?? 0)

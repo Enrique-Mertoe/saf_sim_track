@@ -347,7 +347,7 @@ export const simCardService = {
             if (filters?.startDate || filters?.endDate) {
                 filteredCards = simCards.filter(card => {
                     //@ts-ignore
-                    const cardDate = new Date(card.registered_on || card.created_at);
+                    const cardDate = new Date(card.activation_date || card.created_at);
                     const startDate = filters?.startDate ? new Date(filters.startDate) : null;
                     const endDate = filters?.endDate ? new Date(filters.endDate) : null;
 
@@ -416,10 +416,10 @@ export const simCardService = {
 
         // Apply date filters if provided
         if (filters?.startDate) {
-            batchQuery = batchQuery.gte('registered_on', filters.startDate);
+            batchQuery = batchQuery.gte('activation_date', filters.startDate);
         }
         if (filters?.endDate) {
-            batchQuery = batchQuery.lte('registered_on', filters.endDate);
+            batchQuery = batchQuery.lte('activation_date', filters.endDate);
         }
 
         const {data: batchData, error: batchError} = await batchQuery;
@@ -445,10 +445,10 @@ export const simCardService = {
 
                     // Apply date filters if provided
                     if (filters?.startDate) {
-                        cardQuery = cardQuery.gte('registered_on', filters.startDate);
+                        cardQuery = cardQuery.gte('activation_date', filters.startDate);
                     }
                     if (filters?.endDate) {
-                        cardQuery = cardQuery.lte('registered_on', filters.endDate);
+                        cardQuery = cardQuery.lte('activation_date', filters.endDate);
                     }
                     return cardQuery
                 }
@@ -488,10 +488,10 @@ export const simCardService = {
 
             // Apply date filters if provided
             if (filters?.startDate) {
-                unassignedQuery = unassignedQuery.gte('registered_on', filters.startDate);
+                unassignedQuery = unassignedQuery.gte('activation_date', filters.startDate);
             }
             if (filters?.endDate) {
-                unassignedQuery = unassignedQuery.lte('registered_on', filters.endDate);
+                unassignedQuery = unassignedQuery.lte('activation_date', filters.endDate);
             }
             return unassignedQuery
         }

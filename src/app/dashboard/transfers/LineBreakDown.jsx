@@ -2,6 +2,8 @@ import {useEffect, useState} from "react";
 import {AlertCircle, ChevronUp, RefreshCw} from "lucide-react";
 import simService from "@/services/simService";
 import {SIMStatus} from "@/models";
+import {buildWave, currentWave} from "@/helper";
+import {teamService} from "@/services";
 
 export default function LineBreakDown({user, dateRange}) {
     const [selectedTeam, setSelectedTeam] = useState(null);
@@ -25,17 +27,6 @@ export default function LineBreakDown({user, dateRange}) {
     const startOfWeek = new Date(startOfToday);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
 
-    // Handle date filter change within the dialog
-    const handleLocalDateFilterChange = (newFilter) => {
-        setLocalDateFilter(newFilter);
-
-        // Reset view state to force reload of data with new date filter
-        setViewState({
-            teams: {loaded: false},
-            batches: {loaded: false, teamId: null},
-            users: {loaded: false, teamId: null, batchId: null}
-        });
-    };
 
     // Get team name by ID
     const getTeamName = (teamId) => {
@@ -74,11 +65,7 @@ export default function LineBreakDown({user, dateRange}) {
             setError(null);
 
             try {
-                // Use simService to get team stats based on dataType
-                const dateFilterStrings = getDateFilterStrings();
-
-                // Get the user from the StatCard component
-                const {data, error} = await simService.getTeamStats(user, dateFilterStrings);
+                const {data, error} = await teamService.teams(user)
 
                 if (error) throw error;
                 if (!data) throw new Error('No data returned');
@@ -390,28 +377,33 @@ const TeamCard = ({team, user, dateRange, setSelectedTeam, setView}) => {
         const fetchData = async () => {
             if (!user || !team.id) return
             // setIsLoading(true)
-            const dateConditions = [];
-            if (dateRange && dateRange.startDate) {
-                dateConditions.push(["created_at", "gte", dateRange.startDate]);
-            }
-            if (dateRange && dateRange.endDate) {
-                dateConditions.push(["created_at", "lte", dateRange.endDate]);
-            }
+            // const dateConditions = [];
+            // if (dateRange && dateRange.startDate) {
+            //     dateConditions.push(["created_at", "gte", dateRange.startDate]);
+            // }
+            // if (dateRange && dateRange.endDate) {
+            //     dateConditions.push(["created_at", "lte", dateRange.endDate]);
+            // }
+            const cw = currentWave(dateRange.startDate, dateRange.endDate)
+            const wave = buildWave(cw.start, cw.end)
             const [v1, v2, v3] = await Promise.all([
                 simService.countAll(user, [
                     ["team_id", team.id],
-                    ...(dateConditions || [])
+                    wave
+                    // ...(dateConditions || [])
                 ]),
                 simService.countAll(user, [
                     ["assigned_to_user_id", "not", "is", null],
                     ["team_id", team.id],
-                    ...(dateConditions || [])
+                    // ...(dateConditions || [])
+                    wave
                 ]),
                 simService.countAll(user, [
                     ["activation_date", "not", "is", null],
                     ["status", SIMStatus.ACTIVATED],
                     ["team_id", team.id],
-                    ...(dateConditions || [])
+                    // ...(dateConditions || [])
+                    wave
                 ]),
             ])
             sSt({
