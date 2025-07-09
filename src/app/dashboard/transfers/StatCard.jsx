@@ -20,15 +20,6 @@ const StatCard = ({
             wave = buildWave(range.start, range.end)
         const fetchData = async () => {
             if (!user) return
-            // const dateConditions = [];
-            // if (dateRange && dateRange.startDate) {
-            //     dateConditions.push(["activation_date", "gte", range.start]);
-            // }
-            // if (dateRange && dateRange.endDate) {
-            //     dateConditions.push(["activation_date", "lte", range.end]);
-            // }
-
-            console.log(wave)
             const data = await {
                 general: simService.countAll(user, [wave]),
                 assigned: simService.countAll(user, [

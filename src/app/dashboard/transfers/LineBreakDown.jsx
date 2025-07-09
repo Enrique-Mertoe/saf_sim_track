@@ -3,7 +3,7 @@ import {AlertCircle, ChevronUp, RefreshCw} from "lucide-react";
 import simService from "@/services/simService";
 import {SIMStatus} from "@/models";
 import {buildWave, currentWave} from "@/helper";
-import {teamService} from "@/services";
+import {batchMetadataService, teamService} from "@/services";
 
 export default function LineBreakDown({user, dateRange}) {
     const [selectedTeam, setSelectedTeam] = useState(null);
@@ -105,6 +105,7 @@ export default function LineBreakDown({user, dateRange}) {
                             resolve(sims);
                     }, {
                         filters: [
+                            ["team_id", selectedTeam],
                             buildWave(cw.start, cw.end)
                         ]
                     })
@@ -119,8 +120,6 @@ export default function LineBreakDown({user, dateRange}) {
                     acc[key].push(sim);
                     return acc;
                 }, {});
-                console.log("batches",batches)
-
                 setBatchStats(batches);
                 // Update view state to indicate batches data is loaded for this team
                 setViewState(prev => ({
@@ -305,9 +304,10 @@ export default function LineBreakDown({user, dateRange}) {
                     </div>
                 ) : (
                     <div className="grid sm:grid-cols-2 gap-2">
-                        {batchStats.map(batch => (
-                            <BatchCard key={batch.id} team={selectedTeam} user={user}
-                                       setSelectedBatch={setSelectedBatch} setView={setView} batch={batch}/>
+                        {Object.entries(batchStats).map(([batch, sims]) => (
+                            <BatchCard key={batch} team={selectedTeam} user={user}
+                                       setSelectedBatch={setSelectedBatch} setView={setView} sims={sims || []}
+                                       batch={batch}/>
                         ))}
                     </div>
                 )}
@@ -478,23 +478,38 @@ const TeamCard = ({team, user, dateRange, setSelectedTeam, setView}) => {
         </div>
     );
 }
-const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
-    const [stats,] = useState(batch.stats)
-    const [isLoading, setIsLoading] = useState(!user || !batch.id)
+const BatchCard = ({batch, sims, setSelectedBatch, setView, user, team}) => {
+    const [id, setId] = useState(null)
+    const [isLoading, setIsLoading] = useState(!user || !id)
+    const assigned = sims.filter(s => s.assigned_to_user_id != null)?.length;
+    const total = sims.length;
+    const sold = sims.filter(s => s.activation_date != null).length;
+    const completionRate = total > 0 ? (assigned / total) * 100 : 0;
 
-    const completionRate = stats.total > 0 ? (stats.assigned / stats.total) * 100 : 0;
+    // getbach metadata
+    useEffect(() => {
+        batchMetadataService.batchInfo(batch).then(({data: res}) => {
+            if (res) {
+                setId(res?.[0]?.id)
+                setIsLoading(false)
+            }
+        })
+    }, [])
+
+
     return (
         <div
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4
                        hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => {
-                setSelectedBatch(batch.id);
+                setSelectedBatch(id);
                 setView('users');
             }}
         >
             <div className="flex justify-between items-center mb-3">
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                    {batch.id === 'unassigned' ? 'Unassigned' : batch.id}
+                    {/*{id === 'unassigned' ? 'Unassigned' : id}*/}
+                    {batch}
                 </h4>
                 {isLoading ? (
                     <div className="h-5 w-12 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
@@ -512,7 +527,7 @@ const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
                     {isLoading ? (
                         <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                     ) : (
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{total}</p>
                     )}
                 </div>
                 <div>
@@ -520,7 +535,7 @@ const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
                     {isLoading ? (
                         <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                     ) : (
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.assigned}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{assigned}</p>
                     )}
                 </div>
                 <div>
@@ -528,7 +543,7 @@ const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
                     {isLoading ? (
                         <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                     ) : (
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.assigned}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{total - assigned}</p>
                     )}
                 </div>
                 <div>
@@ -536,7 +551,7 @@ const BatchCard = ({batch, setSelectedBatch, setView, user, team}) => {
                     {isLoading ? (
                         <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
                     ) : (
-                        <p className="font-semibold text-gray-900 dark:text-gray-100">{stats.total - stats.sold}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{total - sold}</p>
                     )}
                 </div>
             </div>
