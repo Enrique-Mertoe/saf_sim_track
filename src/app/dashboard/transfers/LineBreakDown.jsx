@@ -112,10 +112,6 @@ export default function LineBreakDown({user, dateRange}) {
                     // }
                     dateRange
                 );
-
-                // const data = new Promise((resolve, reject) => {
-                //
-                // })
                 if (!data) throw new Error('No data returned');
 
                 setBatchStats(data);
