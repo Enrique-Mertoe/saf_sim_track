@@ -4,7 +4,6 @@ import {batchMetadataService, simCardTransferService, teamService} from "@/servi
 import useApp from "@/ui/provider/AppProvider";
 import {BatchMetadata, SimCardTransfer, Team as TeamX, TransferStatus, User} from "@/models";
 import {AlertTriangle, ArrowLeftRight, Calendar, CheckCircle2, Database, X} from 'lucide-react';
-import {useSupabaseSignal} from "@/lib/supabase/event";
 import alert from "@/ui/alert";
 import {showModal} from "@/ui/shortcuts";
 import ReportDateRangeTemplate from "@/ui/components/ReportDateModal";
@@ -50,18 +49,10 @@ const AdminTransfersPage = () => {
         batches: [],
         simcards: []
     });
-    const [deleteOption, setDeleteOption] = useState<string>('all');
     const [deleteType, setDeleteType] = useState<'teams' | 'batches' | 'simcards' | null>(null);
-    const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [generalSearchTerm, setGeneralSearchTerm] = useState<string>('');
     const [selectedPeriod, setSelectedPeriod] = useState<string>('current-month');
     const [startDate, setStartDate] = useState<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
     const [endDate, setEndDate] = useState<Date>(new Date());
-
-    // Setup Supabase realtime for transfers
-    const transferSignal = useSupabaseSignal('sim_card_transfers', {autoConnect: true});
-
     // Format date for display
     const formatDateForDisplay = (dateString: string | Date) => {
         const date = new Date(dateString);
@@ -219,66 +210,6 @@ const AdminTransfersPage = () => {
         });
     };
 
-    // Open delete modal
-    const openDeleteModal = (type: 'teams' | 'batches' | 'simcards') => {
-        setDeleteType(type);
-        setDeleteOption('all');
-
-        showModal({
-            content(onClose) {
-                return (
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                            Delete {deleteType === 'teams' ? 'Teams' : deleteType === 'batches' ? 'Batches' : 'SIM Cards'}
-                        </h3>
-                        <p className="text-gray-600 mb-4">
-                            Are you sure you want to delete the selected {deleteType}?
-                        </p>
-
-                        {deleteType === 'simcards' && (
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Delete Options
-                                </label>
-                                <select
-                                    value={deleteOption}
-                                    onChange={(e) => setDeleteOption(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="all">Delete All Selected</option>
-                                    <option value="completed">Delete Only Completed</option>
-                                    <option value="unsold">Delete Only Unsold</option>
-                                </select>
-                            </div>
-                        )}
-
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={onClose}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    handleDeleteSelected()
-                                    onClose()
-                                }}
-                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                )
-            }
-        })
-    };
-
-    function upDateBatches(team: string) {
-
-    }
-
     // Handle deletion of selected items
     const handleDeleteSelected = async () => {
         if (!user || !deleteType) return;
@@ -340,38 +271,6 @@ const AdminTransfersPage = () => {
             setIsLoading(false);
         }
     };
-
-    // Setup realtime updates for transfers
-    useEffect(() => {
-        if (!transferSignal || !user) return;
-
-        // Handle new transfers
-        const handleInsert = (payload: any) => {
-            if (payload.new) {
-                setTransfers(prev => [payload.new, ...prev]);
-            }
-        };
-
-        // Handle updated transfers
-        const handleUpdate = (payload: any) => {
-            if (payload.new) {
-                setTransfers(prev =>
-                    prev.map(transfer => transfer.id === payload.new.id ? payload.new : transfer)
-                );
-            }
-        };
-
-        // Subscribe to events
-        transferSignal.onInsert(handleInsert);
-        transferSignal.onUpdate(handleUpdate);
-
-        // Cleanup
-        return () => {
-            transferSignal.off('INSERT', handleInsert);
-            transferSignal.off('UPDATE', handleUpdate);
-        };
-    }, [transferSignal, user]);
-
     // Handle transfer approval
     const handleApproveTransfer = async (transfer: any) => {
         if (!user || !transfer.id) return;
@@ -489,100 +388,10 @@ const AdminTransfersPage = () => {
         }
     };
 
-    // Open reject modal
-    const openRejectModal = (transfer: SimCardTransfer) => {
-        setSelectedTransfer(transfer);
-        setRejectReason('');
-
-        showModal({
-            content(onClose) {
-                return (
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Reject Transfer Request</h3>
-                        <p className="text-gray-600 mb-4">
-                            Please provide a reason for rejecting this transfer request.
-                        </p>
-
-                        <textarea
-                            value={rejectReason}
-                            onChange={(e) => setRejectReason(e.target.value)}
-                            placeholder="Reason for rejection"
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
-                            rows={3}
-                        />
-
-                        <div className="flex justify-end gap-2">
-                            <button
-                                onClick={() => {
-                                    setSelectedTransfer(null);
-                                    setRejectReason('');
-                                    onClose();
-                                }}
-                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    await handleRejectTransfer();
-                                    onClose();
-                                }}
-                                disabled={!rejectReason.trim()}
-                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Reject
-                            </button>
-                        </div>
-                    </div>
-                );
-            }
-        });
-    };
-
-    // Filter transfers based on active tab and search term
-    const filteredTransfers = transfers.filter(transfer => {
-        // Filter by tab
-        if (activeTab === 'pending' && transfer.status !== TransferStatus.PENDING) {
-            return false;
-        }
-
-        // Filter by search term
-        if (searchTerm) {
-            const sourceTeam = teams.find(team => team.id === transfer.source_team_id);
-            const destinationTeam = teams.find(team => team.id === transfer.destination_team_id);
-            const sourceTeamName = sourceTeam ? sourceTeam.name : '';
-            const destinationTeamName = destinationTeam ? destinationTeam.name : '';
-
-            return (
-                transfer.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                sourceTeamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                destinationTeamName.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        return true;
-    });
-
     // Get team name by ID
     const getTeamName = (teamId: string) => {
         const team = teams.find(team => team.id === teamId);
         return team ? team.name : 'Unknown Team';
-    };
-
-    // Get status badge color
-    const getStatusBadgeColor = (status: TransferStatus) => {
-        switch (status) {
-            case TransferStatus.PENDING:
-                return 'bg-yellow-100 text-yellow-800';
-            case TransferStatus.APPROVED:
-                return 'bg-green-100 text-green-800';
-            case TransferStatus.REJECTED:
-                return 'bg-red-100 text-red-800';
-            case TransferStatus.CANCELLED:
-                return 'bg-gray-100 text-gray-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
     };
 
     // View transfer details
@@ -592,30 +401,6 @@ const AdminTransfersPage = () => {
             message: <TransferRequestDetails transfer={transfer} getTeamName={getTeamName}/>,
             type: 'info'
         });
-    };
-
-    // Filter teams and batches based on search term
-    const filteredTeams = teams.filter(team => {
-        if (!generalSearchTerm) return true;
-        return team.name.toLowerCase().includes(generalSearchTerm.toLowerCase());
-    });
-
-    // Get counts for a team
-    const getTeamCounts = (team: Team) => {
-        const batches = team.batches
-        const totalBatches = batches.length;
-
-        // Count total simcards across all batches
-        let totalSimcards = 0;
-        let completedSimcards = 0;
-
-        batches.forEach(batch => {
-            const batchSimcards = simcards[batch.batch_id] || [];
-            totalSimcards += batchSimcards.length;
-            completedSimcards += batchSimcards.filter((card: any) => card.status === 'COMPLETED').length;
-        });
-
-        return {totalBatches, totalSimcards, completedSimcards};
     };
 
     // Get counts for a batch
@@ -648,6 +433,7 @@ const AdminTransfersPage = () => {
                                                             setEndDate(selection.range.endDate);
                                                             setSelectedPeriod('custom');
                                                         } else if (selection.type === 'single' && selection.single) {
+
                                                             // Handle single date selection
                                                             setStartDate(selection.single);
                                                             setEndDate(selection.single);

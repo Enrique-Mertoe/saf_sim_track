@@ -7,8 +7,6 @@ import {buildWave, currentWave} from "@/helper";
 const StatCard = ({
                       title,
                       user,
-                      change,
-                      trend,
                       dateRange,
                       textColor,
                       icon: Icon,
@@ -24,11 +22,13 @@ const StatCard = ({
             if (!user) return
             // const dateConditions = [];
             // if (dateRange && dateRange.startDate) {
-            //     dateConditions.push(["created_at", "gte", range.start]);
+            //     dateConditions.push(["activation_date", "gte", range.start]);
             // }
             // if (dateRange && dateRange.endDate) {
-            //     dateConditions.push(["created_at", "lte", range.end]);
+            //     dateConditions.push(["activation_date", "lte", range.end]);
             // }
+
+            console.log(wave)
             const data = await {
                 general: simService.countAll(user, [wave]),
                 assigned: simService.countAll(user, [
@@ -40,7 +40,7 @@ const StatCard = ({
                 ]),
                 n_picklist: simService.countAll(user, [
                     ["batch_id", "BATCH-UNKNOWN"],
-                   wave
+                    wave
                 ]),
             }[dataType]
             sV(data.count ?? 0)

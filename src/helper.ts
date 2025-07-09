@@ -339,34 +339,52 @@ export const wave: () => Filter = () => {
 };
 
 
-export const currentWave = (start?: string, end?: string): { start: string|null, end: string|null } => {
-    const zone = 'Africa/Nairobi';
-    // If start is provided → shift to start of month in Nairobi, then convert to UTC ISO
+export const currentWave = (start?: string, end?: string): { start: string | null, end: string | null } => {
     const startDate = start
-        ? DateTime.fromISO(start, { zone }).startOf('month')
-        : DateTime.now().setZone(zone).startOf('month');
+        ? DateTime.fromISO(start).startOf('month')
+        : DateTime.local().startOf('month');
 
-    // If end is provided → shift to start of its month in Nairobi + 1 month, then convert to UTC ISO
     const endDate = end
-        ? DateTime.fromISO(end, { zone }).startOf('month').plus({ months: 1 })
-        : DateTime.now().setZone(zone).plus({ months: 1 }).startOf('month');
+        ? DateTime.fromISO(end).startOf('month').plus({ months: 1 })
+        : DateTime.local().plus({ months: 1 }).startOf('month');
 
     return {
-        start: startDate.toUTC().toISO({ suppressMilliseconds: true }),  // '2025-06-01T00:00:00Z'
-        end: endDate.toUTC().toISO({ suppressMilliseconds: true }),      // '2025-07-01T00:00:00Z'
+        start: startDate.toISO({ suppressMilliseconds: true, includeOffset: false }),  // No 'Z'
+        end: endDate.toISO({ suppressMilliseconds: true, includeOffset: false }),
     };
 };
+export const buildWave = (start?: string, end?: string): [string, string] => {
+    const now = DateTime.local();
+    const monthStart = now.startOf('month');
+    const monthEnd = monthStart.plus({ months: 1 });
 
-export const buildWave: () => Filter = (start?: string, end?: string) => {
-    const zone = 'Africa/Nairobi';
-    const startOfMonth = DateTime.local().setZone(zone).startOf('month').toUTC().toISO();
-    const startOfNextMonth = DateTime.local().setZone(zone).plus({months: 1}).startOf('month').toUTC().toISO();
-    return [
-        'or',
-        [
-            'activation_date.is.null',
-            `and(activation_date.gte.${start ?? startOfMonth},activation_date.lte.${end ?? startOfNextMonth})`
-        ].join(',')
+    const defaultStart = monthStart.toISO({ suppressMilliseconds: true, includeOffset: false });
+    const defaultEnd = monthEnd.toISO({ suppressMilliseconds: true, includeOffset: false });
+
+    const safeStart = start ?? defaultStart;
+    const safeEnd = end ?? defaultEnd;
+
+    const safeStartDate = DateTime.fromISO(safeStart);
+    const safeEndDate = DateTime.fromISO(safeEnd);
+
+    const isCurrentMonth =
+        safeStartDate >= monthStart && safeEndDate <= monthEnd;
+
+    const conditions = [
+        // 1️⃣ SIMs activated within range
+        `and(activation_date.not.is.null,activation_date.gte.${safeStart},activation_date.lte.${safeEnd})`
     ];
 
+    if (isCurrentMonth) {
+        // 2️⃣ If within this month: include ALL unactivated SIMs (no created_at check)
+        conditions.push(`activation_date.is.null`);
+    } else {
+        // 3️⃣ Past or future: include unactivated SIMs only if created_at falls within the range
+        conditions.push(`and(activation_date.is.null,created_at.gte.${safeStart},created_at.lte.${safeEnd})`);
+    }
+
+    return [
+        'or',
+        conditions.join(',')
+    ];
 };

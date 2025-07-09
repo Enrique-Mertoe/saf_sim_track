@@ -21,27 +21,10 @@ export default function LineBreakDown({user, dateRange}) {
     const [batchStats, setBatchStats] = useState([]);
     const [userStats, setUserStats] = useState([]);
 
-    // Local now and date constants for the dialog
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(startOfToday);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-
-
     // Get team name by ID
     const getTeamName = (teamId) => {
         const team = teamStats.find(t => t.id === teamId);
         return team ? team.name : 'Unknown Team';
-    };
-
-    // Get date filter strings for API
-    const getDateFilterStrings = () => {
-        if (!localDateFilter.startDate && !localDateFilter.endDate) return undefined;
-
-        return {
-            startDate: localDateFilter.startDate?.toISOString().split('T')[0],
-            endDate: localDateFilter.endDate?.toISOString().split('T')[0]
-        };
     };
 
     // State for preserving view data to prevent frequent loading
@@ -112,9 +95,33 @@ export default function LineBreakDown({user, dateRange}) {
                     // }
                     dateRange
                 );
-                if (!data) throw new Error('No data returned');
 
-                setBatchStats(data);
+                let batches = await new Promise(async resolve => {
+                    const cw = currentWave(dateRange.startDate, dateRange.endDate)
+                    const sims = [];
+                    await simService.streamChunks(user, (chunk, end) => {
+                        sims.push(...chunk);
+                        if (end)
+                            resolve(sims);
+                    }, {
+                        filters: [
+                            buildWave(cw.start, cw.end)
+                        ]
+                    })
+                });
+
+                // group to batches
+                batches = batches.reduce((acc, sim) => {
+                    const key = sim.batch_id || 'BATCH-UNKNOWN';
+                    if (!acc[key]) {
+                        acc[key] = [];
+                    }
+                    acc[key].push(sim);
+                    return acc;
+                }, {});
+                console.log("batches",batches)
+
+                setBatchStats(batches);
                 // Update view state to indicate batches data is loaded for this team
                 setViewState(prev => ({
                     ...prev,
