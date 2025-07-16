@@ -506,11 +506,29 @@ export default function UserTable({
         setShowSuccessModal(false);
     };
 
+    //@ts-ignore
+    const toDelete = localUsers.filter(f => f.status == "PENDING DELETE").length
+
     return (
         <div
             className="w-full bg-white dark:bg-gray-800 rounded-lg relative"
             ref={tableRef}
         >
+
+            {
+                toDelete >0 && user?.role == UserRole.ADMIN && (
+                    <p className="p-4">
+                        <span className={"text-red-400 "}>{toDelete} user(s) needs deletion. </span>
+                        <a
+                            onClick={e=>{
+                                e.preventDefault()
+                                //@ts-ignore
+                                setLocalUsers( localUsers.filter(f => f.status == "PENDING DELETE"))
+                            }}
+                            href={"#"} className={"text-blue-500"}>view</a>
+                    </p>
+                )
+            }
 
             {/* Desktop View - Table */}
             {!isMobileView && (
