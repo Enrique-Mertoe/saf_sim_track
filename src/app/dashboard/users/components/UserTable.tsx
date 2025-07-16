@@ -185,9 +185,9 @@ export default function UserTable({
     const confirmDeleteUser = async (deletedUser: User) => {
         // Actually delete from database
         //@ts-ignore
-        const response = await userService.deleteUser<User>(deletedUser.id, user);
-        console.log(response)
-        if (response.data) {
+        // const response = await userService.deleteUser<User>(deletedUser.id, user);
+        const response = await UserController.delete(deletedUser.id)
+        if (response) {
             // Success - user was deleted
             setSuccessMessage(`User ${deletedUser.full_name} has been deleted successfully`);
             // Call parent's onDeleteUser to update parent state
@@ -198,13 +198,11 @@ export default function UserTable({
             return true
         } else {
             // Error - deletion failed
-            const errorMessage = response.error?.message || 'Unknown error';
+            const errorMessage = "Unable to delete user";
             toast.error(`Failed to delete user: ${errorMessage}`);
-
-            // Add the user back to the list since deletion failed
             restoreDeletedUser();
             resetDeleteState();
-            throw response.error;
+            throw errorMessage;
         }
 
     };

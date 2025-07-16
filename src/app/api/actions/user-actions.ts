@@ -186,20 +186,30 @@ class UserActions {
     }
 
     // Delete user
-    static async delete(data: { id: string }) {
+    static async delete(data: { args: string }) {
         try {
             const user = await Accounts.user();
             if (!user) {
                 return makeResponse({error: "User not authenticated"});
             }
+            const [id] = data.args
 
+            // const {error} = await supabaseAdmin
+            //     .from('users')
+            //     .delete()
+            //     .eq('id', data.id)
+            //     .eq('admin_id', await admin_id(user));
             const {error} = await supabaseAdmin
                 .from('users')
-                .delete()
-                .eq('id', data.id)
-                .eq('admin_id', await admin_id(user));
+                .update({
+                    soft_delete: true,
+                    deleted: true,
+                    status: "DELETED",
+                }).eq("id", id)
+                .eq("admin_id", await admin_id(user))
 
             if (error) {
+                console.log(error,data)
                 return makeResponse({error: error.message});
             }
 

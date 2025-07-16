@@ -13,6 +13,7 @@ export const userService = {
             .from('users')
             .select('*')
             .eq("admin_id", await admin_id(user))
+            .eq("deleted", false)
             .order('full_name');
     },
 
@@ -146,7 +147,7 @@ export const userService = {
             data['admin_id'] = await admin_id(user);
             // data['auth_user'] = user.auth_;
         }
-        return await new Promise((resolve:({data,error}:{data?:T,error?:any})=>void) => {
+        return await new Promise((resolve: ({data, error}: { data?: T, error?: any }) => void) => {
             ClientApi.of("admin")
                 .get().del_user({
                 id, ...data
