@@ -11,6 +11,7 @@ import useApp from "@/ui/provider/AppProvider";
 import {showModal} from "@/ui/shortcuts";
 import alert from "@/ui/alert";
 import Dropdown from "@/ui/materia_screen/components/Dropdown";
+import UserController from "@/controllers/UserController";
 
 type UserTableProps = {
     users: User[];
@@ -155,61 +156,30 @@ export default function UserTable({
         }
     }, [deletedUser, undoTimer]);
 
-    const handleStatusToggle = async (user: User) => {
-        try {
-            const newStatus = user.status === UserStatus.ACTIVE ? UserStatus.SUSPENDED : UserStatus.ACTIVE;
-            await onStatusChange(user.id, newStatus);
 
-            // Update local state
-            setLocalUsers(prevUsers =>
-                prevUsers.map(u => u.id === user.id ? {...u, status: newStatus} : u)
-            );
+    const handleDeleteClick = (_user: User) => {
 
-            toast.success(`User ${newStatus === UserStatus.ACTIVE ? 'activated' : 'suspended'} successfully`);
-        } catch (error) {
-            toast.error("Failed to update user status");
-            console.error(error);
-        }
-    };
-
-    const handleDeleteClick = (user: User) => {
-        // const d = dialog.create({
-        //     content: (
-        //
-        //         <div className="p-6 bg-white rounded-md dark:bg-gray-800">
-        //             <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Confirm Deletion</h3>
-        //             <p className="mb-6 text-gray-700 dark:text-gray-300">
-        //                 Are you sure you want to delete {user.full_name}?
-        //             </p>
-        //             <div className="flex justify-end space-x-3">
-        //                 <button
-        //                     onClick={() => d.dismiss()}
-        //                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-        //                 >
-        //                     Cancel
-        //                 </button>
-        //                 <button
-        //                     onClick={() => {
-        //                         d.dismiss();
-        //                         );
-        //                     }}
-        //                     className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800"
-        //                 >
-        //                     Delete
-        //                 </button>
-        //             </div>
-        //         </div>
-        //     ),
-        // });
-        // setConfirmDelete(user.id);
-        alert.confirm({
-            type: alert.ERROR,
-            message: `Confirm deletion of ${user.full_name}`,
-            title: "User Manager",
-            async task() {
-                return confirmDeleteUser(user)
-            }
-        })
+        if (user?.role === UserRole.ADMIN)
+            alert.confirm({
+                type: alert.ERROR,
+                message: `Confirm deletion of ${_user.full_name}`,
+                title: "User Manager",
+                async task() {
+                    return confirmDeleteUser(_user)
+                }
+            })
+        else if (user?.role === UserRole.TEAM_LEADER)
+            alert.confirm({
+                title: "User Management",
+                message: "Confirm deletion of this account!",
+                type: alert.WARN,
+                async task() {
+                    const res = await UserController.onBoardRequest(_user.id, "DELETE")
+                    if (!res)
+                        throw "Unable to delete user"
+                }
+            })
+        else alert.error("Not Authorised")
     };
 
     const confirmDeleteUser = async (deletedUser: User) => {
@@ -491,6 +461,7 @@ export default function UserTable({
         })
     };
 
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const {name, value} = e.target;
         setEditFormData(prev => prev ? {...prev, [name]: value} : null);
@@ -618,7 +589,7 @@ export default function UserTable({
                                         className={`px-2 py-1 rounded-full ${
                                             user.status === "ACTIVE"
                                                 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                                : user.status === "SUSPENDED"
+                                                : ["SUSPENDED", "PENDING DELETE"].includes(user.status)
                                                     ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                                                     : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
                                         }`}
@@ -684,7 +655,7 @@ export default function UserTable({
                                                                         def: () => {
                                                                         },
                                                                         edit: handleEditUser,
-                                                                        del: handleEditUser,
+                                                                        del: handleDeleteClick,
                                                                     } as any
                                                                 )[option.value ?? 'def']?.(user);
                                                             }}
@@ -790,7 +761,7 @@ export default function UserTable({
                                                     className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
                                                         user.status === "ACTIVE"
                                                             ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                                            : user.status === "SUSPENDED"
+                                                            : ["SUSPENDED", "PENDING DELETE"].includes(user.status)
                                                                 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                                                                 : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
                                                     }`}>
@@ -810,7 +781,8 @@ export default function UserTable({
                                         </div>
 
                                         <div className="flex items-center text-xs">
-                                            <span className="text-gray-700 dark:text-gray-300 font-medium">ID Number:</span>
+                                            <span
+                                                className="text-gray-700 dark:text-gray-300 font-medium">ID Number:</span>
                                             <span
                                                 className="ml-1 text-gray-600 dark:text-gray-400">{user.id_number}</span>
                                         </div>

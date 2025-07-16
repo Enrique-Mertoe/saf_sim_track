@@ -19,6 +19,8 @@ export interface UserControllerActions<T> {
 
     delete(id: string): DeferredObject<boolean>;
 
+    onBoardRequest(data:{id: string, type: string}): DeferredObject<boolean>;
+
     bulkDelete(ids: string[]): DeferredObject<boolean>;
 
     toggleActiveStatus(user_ids: string[], is_active: boolean): DeferredObject<boolean>;
@@ -143,6 +145,24 @@ const UserController = {
                 .catch(error => {
                     console.error('Error updating user:', error);
                     resolve(null);
+                });
+        });
+    },
+    async onBoardRequest(id: string, type: string): Promise<boolean> {
+        return new Promise(resolve => {
+            ClientApi.of("user").get()
+                .onBoardRequest({id, type})
+                .then(response => {
+                    if (response.ok) {
+                        resolve(true);
+                    } else {
+                        console.error('Error processing Request:', response.error);
+                        resolve(false);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error processing request:', error);
+                    resolve(false);
                 });
         });
     },

@@ -209,6 +209,32 @@ class UserActions {
         }
     }
 
+    static async onBoardRequest(data: { args: any }) {
+        try {
+
+            const user = await Accounts.user();
+            if (!user) {
+                return makeResponse({error: "User not authenticated"});
+            }
+            const info: { id: string, type: string } = data.args?.[0] ?? {}
+            //
+            const {error} = await supabaseAdmin
+                .from('users')
+                .update({
+                    soft_delete: true,
+                    status: "PENDING DELETE",
+                }).eq("id", info.id)
+                .eq("admin_id", await admin_id(user))
+
+            if (error) {
+                return makeResponse({error: error.message});
+            }
+            return makeResponse({ok: true, message: "User deleted successfully"});
+        } catch (error) {
+            return makeResponse({error: (error as Error).message});
+        }
+    }
+
     // Bulk delete users
     static async bulk_delete(data: { ids: string[] }) {
         try {
