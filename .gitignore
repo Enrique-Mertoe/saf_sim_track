@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/supabase/
+/storage_downloads/
+/supabase-storage-migration/
+/migration_progress.json
+/files_index.json
